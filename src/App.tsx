@@ -10,7 +10,7 @@ import Contato from "./pages/Contato";
 import Login from "./pages/Login";
 import LoginFornecedor from "./pages/LoginFornecedor";
 import Download from "./pages/Download";
-import Planos from "./pages/Planos";
+
 import Recursos from "./pages/Recursos";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
@@ -31,7 +31,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/login-fornecedor" element={<LoginFornecedor />} />
           <Route path="/download" element={<Download />} />
-          <Route path="/planos" element={<Planos />} />
+          
           <Route path="/recursos" element={<Recursos />} />
           <Route path="/faq" element={<FAQ />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
