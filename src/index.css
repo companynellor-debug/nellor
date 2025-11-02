@@ -104,15 +104,10 @@ All colors MUST be HSL.
   
   h1 {
     font-weight: 800;
-    background: linear-gradient(135deg, hsl(280 100% 25%), hsl(280 88% 36%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
   
   p {
     line-height: 1.6;
-    color: hsl(0 0% 29%);
   }
 }
 
