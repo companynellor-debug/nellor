@@ -55,37 +55,37 @@ const Home = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden particles-bg gradient-hero">
+      <section className="relative pt-20 pb-24 overflow-hidden bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA]">
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-20 items-center py-32">
-            <div className="text-white space-y-12 animate-slide-in">
-              <h1 className="text-6xl sm:text-7xl lg:text-8xl font-heading font-extrabold leading-tight text-white [text-fill-color:white] [-webkit-text-fill-color:white]">
+          <div className="grid lg:grid-cols-2 gap-12 items-center py-16">
+            <div className="text-white space-y-8 animate-slide-in">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
                 A nova forma de conectar fornecedores e lojistas
               </h1>
-              <p className="text-2xl sm:text-3xl text-white leading-relaxed">
+              <p className="text-lg sm:text-xl text-white/90 leading-relaxed">
                 Compre, revenda e cresça — tudo em um só app.
               </p>
-              <div className="flex flex-col sm:flex-row gap-8 pt-6">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link to="/download">
-                  <Button size="lg" className="w-full sm:w-auto h-20 text-xl px-14 rounded-full bg-white text-primary hover:bg-white/90 shadow-2xl btn-glow font-bold hover:scale-105 transition-all duration-300">
+                  <Button size="lg" className="w-full sm:w-auto rounded-full bg-white text-[#8B5CF6] hover:bg-white/90 shadow-lg font-semibold px-8">
                     Baixar o App
                   </Button>
                 </Link>
                 <Link to="/fornecedor">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto h-20 border-2 border-white text-white hover:bg-white hover:text-primary text-xl px-14 rounded-full backdrop-blur-sm bg-white/10 font-bold transition-all duration-300">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm font-semibold px-8">
                     Sou fornecedor
                   </Button>
                 </Link>
               </div>
             </div>
             
-            <div className="relative animate-fade-in hidden lg:block">
-              <div className="relative z-10 mx-auto max-w-md">
-                <div className="absolute inset-0 bg-purple-500/30 blur-3xl rounded-full transform scale-150"></div>
+            <div className="relative animate-fade-in">
+              <div className="relative z-10 mx-auto max-w-sm">
+                <div className="absolute inset-0 bg-[#EC4899]/20 blur-3xl rounded-full"></div>
                 <img 
-                  src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=900&fit=crop" 
+                  src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=700&fit=crop" 
                   alt="App mockup" 
-                  className="relative w-full h-auto drop-shadow-2xl rounded-[3rem] shadow-purple-glow transform hover:scale-105 transition-transform duration-500" 
+                  className="relative w-full h-auto drop-shadow-2xl rounded-3xl" 
                 />
               </div>
             </div>
@@ -94,23 +94,23 @@ const Home = () => {
       </section>
 
       {/* Benefícios */}
-      <section className="py-40 bg-background">
+      <section className="py-20 bg-[#F9FAFB]">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-5xl sm:text-6xl font-heading font-bold text-center mb-10 text-primary">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-900">
             Por que usar o nellor?
           </h2>
-          <p className="text-center text-muted-foreground text-2xl mb-24 max-w-3xl mx-auto">
+          <p className="text-center text-gray-600 text-base mb-16 max-w-2xl mx-auto">
             Descubra as vantagens que vão transformar seu negócio
           </p>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((benefit, index) => (
-              <Card key={index} className="p-10 shadow-card hover-lift transition-smooth text-center rounded-3xl border-none gradient-card">
-                <div className="w-28 h-28 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-8 shadow-purple-glow animate-glow-pulse">
-                  <benefit.icon className="h-14 w-14 text-white" />
+              <Card key={index} className="p-8 hover:shadow-lg transition-all text-center rounded-2xl border border-gray-200 bg-white">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <benefit.icon className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="font-heading font-bold mb-4 text-2xl text-primary">{benefit.title}</h3>
-                <p className="text-muted-foreground leading-relaxed text-lg">{benefit.description}</p>
+                <h3 className="font-semibold mb-3 text-lg text-gray-900">{benefit.title}</h3>
+                <p className="text-gray-600 leading-relaxed text-sm">{benefit.description}</p>
               </Card>
             ))}
           </div>
@@ -118,37 +118,33 @@ const Home = () => {
       </section>
 
       {/* Como Funciona */}
-      <section className="py-40 bg-muted particles-bg">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-5xl sm:text-6xl font-heading font-bold text-center mb-10 text-primary">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-900">
             Como Funciona
           </h2>
-          <p className="text-center text-muted-foreground text-2xl mb-24 max-w-3xl mx-auto">
+          <p className="text-center text-gray-600 text-base mb-16 max-w-2xl mx-auto">
             Em apenas 3 passos você já pode começar a lucrar
           </p>
           
-          <div className="grid md:grid-cols-3 gap-16 max-w-6xl mx-auto mb-20">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
             {steps.map((step, index) => (
-              <div key={index} className="text-center relative animate-slide-up" style={{animationDelay: `${index * 0.2}s`}}>
-                <div className="w-32 h-32 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-8 shadow-purple-glow relative">
-                  <step.icon className="h-16 w-16 text-white" />
-                  <div className="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary font-bold text-xl shadow-lg">
+              <div key={index} className="text-center relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] rounded-2xl flex items-center justify-center mx-auto mb-6 relative">
+                  <step.icon className="h-10 w-10 text-white" />
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#EC4899] rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                     {index + 1}
                   </div>
                 </div>
-                <h3 className="font-heading font-bold mb-5 text-3xl text-primary">{step.title}</h3>
-                <p className="text-muted-foreground leading-relaxed text-xl">{step.description}</p>
-                
-                {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-16 left-[60%] w-[80%] h-1 bg-gradient-to-r from-primary/40 to-transparent"></div>
-                )}
+                <h3 className="font-semibold mb-3 text-xl text-gray-900">{step.title}</h3>
+                <p className="text-gray-600 leading-relaxed text-sm">{step.description}</p>
               </div>
             ))}
           </div>
           
           <div className="text-center">
             <Link to="/download">
-              <Button size="lg" className="h-20 gradient-cta text-white px-16 rounded-full text-xl font-bold shadow-purple-glow btn-glow hover:scale-105 transition-transform">
+              <Button size="lg" className="rounded-full bg-gradient-to-r from-[#EC4899] to-[#8B5CF6] text-white hover:opacity-90 shadow-lg font-semibold px-10">
                 Baixar o App
               </Button>
             </Link>
@@ -157,27 +153,27 @@ const Home = () => {
       </section>
 
       {/* Depoimentos */}
-      <section className="py-40 gradient-hero text-white particles-bg">
+      <section className="py-20 bg-[#F9FAFB]">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-5xl sm:text-6xl font-heading font-bold text-center mb-10 text-white [text-fill-color:white] [-webkit-text-fill-color:white]">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-900">
             O que nossos clientes dizem
           </h2>
-          <p className="text-center text-white text-2xl mb-24 max-w-3xl mx-auto">
+          <p className="text-center text-gray-600 text-base mb-16 max-w-2xl mx-auto">
             Histórias reais de sucesso com o nellor
           </p>
           
-          <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-10 bg-white/95 backdrop-blur-sm text-foreground rounded-3xl shadow-hover hover-lift transition-smooth">
-                <div className="flex gap-1 mb-8">
+              <Card key={index} className="p-6 bg-white rounded-2xl border border-gray-200 hover:shadow-lg transition-all">
+                <div className="flex gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-7 w-7 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="mb-8 text-xl italic leading-relaxed text-gray-700">"{testimonial.comment}"</p>
-                <div className="border-t pt-6">
-                  <p className="font-bold text-primary text-2xl">{testimonial.name}</p>
-                  <p className="text-lg text-muted-foreground">{testimonial.role}</p>
+                <p className="mb-6 text-sm italic leading-relaxed text-gray-700">"{testimonial.comment}"</p>
+                <div className="border-t pt-4">
+                  <p className="font-semibold text-gray-900 text-base">{testimonial.name}</p>
+                  <p className="text-sm text-gray-600">{testimonial.role}</p>
                 </div>
               </Card>
             ))}
@@ -186,24 +182,24 @@ const Home = () => {
       </section>
 
       {/* CTA Final */}
-      <section className="py-40 gradient-cta text-white particles-bg">
+      <section className="py-20 bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] text-white">
         <div className="container mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-extrabold mb-10 text-white leading-tight [text-fill-color:white] [-webkit-text-fill-color:white]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
             Conecte-se aos melhores fornecedores do Brasil
           </h2>
-          <p className="text-2xl sm:text-3xl mb-16 text-white max-w-4xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
             Baixe agora o app e comece a lucrar hoje mesmo
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-8 justify-center">
-            <Button size="lg" className="h-20 bg-white text-primary hover:bg-white/90 px-14 rounded-full text-xl font-bold shadow-2xl btn-glow hover:scale-105 transition-transform">
-              <svg className="h-8 w-8 mr-4" viewBox="0 0 24 24" fill="currentColor">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-white text-[#8B5CF6] hover:bg-white/90 rounded-full font-semibold shadow-lg px-8">
+              <svg className="h-6 w-6 mr-3" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
               </svg>
               App Store
             </Button>
-            <Button size="lg" className="h-20 bg-white text-primary hover:bg-white/90 px-14 rounded-full text-xl font-bold shadow-2xl btn-glow hover:scale-105 transition-transform">
-              <svg className="h-8 w-8 mr-4" viewBox="0 0 24 24" fill="currentColor">
+            <Button size="lg" className="bg-white text-[#8B5CF6] hover:bg-white/90 rounded-full font-semibold shadow-lg px-8">
+              <svg className="h-6 w-6 mr-3" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" />
               </svg>
               Google Play
