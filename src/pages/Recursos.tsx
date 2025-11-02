@@ -158,53 +158,53 @@ const Recursos = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-40 pb-32 gradient-hero text-white particles-bg">
+      <section className="pt-32 pb-20 bg-gradient-to-r from-primary to-secondary text-white">
         <div className="container mx-auto px-4 sm:px-6 text-center">
-          <h1 className="text-6xl sm:text-7xl lg:text-8xl font-heading font-extrabold mb-10 leading-tight [text-fill-color:white] [-webkit-text-fill-color:white]">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold mb-6">
             Recursos que impulsionam seu negócio
           </h1>
-          <p className="text-2xl sm:text-3xl max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl max-w-3xl mx-auto">
             Tudo que você precisa para comprar, vender e crescer em um único lugar
           </p>
         </div>
       </section>
 
       {/* Recursos */}
-      <section className="py-40 bg-white">
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="space-y-32">
+          <div className="space-y-20">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`grid lg:grid-cols-2 gap-16 items-center ${
+                className={`grid lg:grid-cols-2 gap-12 items-center ${
                   index % 2 === 1 ? "lg:flex-row-reverse" : ""
                 }`}
               >
                 <div className={index % 2 === 1 ? "lg:order-2" : ""}>
-                  <div className="w-32 h-32 bg-gradient-to-br from-primary to-secondary rounded-3xl flex items-center justify-center mb-10 shadow-purple-glow">
-                    <feature.icon className="h-16 w-16 text-white" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mb-6">
+                    <feature.icon className="h-8 w-8 text-white" />
                   </div>
-                  <h2 className="text-5xl font-heading font-bold mb-8 text-primary">
+                  <h2 className="text-3xl font-heading font-bold mb-4 text-primary">
                     {feature.title}
                   </h2>
-                  <p className="text-2xl text-[#6B7280] mb-10 leading-relaxed">
+                  <p className="text-lg text-muted-foreground mb-6">
                     {feature.description}
                   </p>
-                  <div className="space-y-5">
+                  <div className="space-y-3">
                     {feature.benefits.map((benefit, idx) => (
-                      <div key={idx} className="flex items-start gap-4">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
-                          <div className="w-3 h-3 rounded-full bg-primary"></div>
+                      <div key={idx} className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <div className="w-2 h-2 rounded-full bg-primary"></div>
                         </div>
-                        <span className="text-xl leading-relaxed">{benefit}</span>
+                        <span className="text-sm">{benefit}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 
                 <div className={index % 2 === 1 ? "lg:order-1" : ""}>
-                  <Card className="p-12 rounded-3xl shadow-card bg-[#F6F0FF] h-[500px] flex items-center justify-center">
-                    <feature.icon className="h-64 w-64 text-primary/20" />
+                  <Card className="p-8 rounded-2xl bg-muted h-[300px] flex items-center justify-center">
+                    <feature.icon className="h-32 w-32 text-primary/20" />
                   </Card>
                 </div>
               </div>
@@ -214,12 +214,12 @@ const Recursos = () => {
       </section>
 
       {/* Stats */}
-      <section className="py-40 gradient-hero text-white particles-bg">
+      <section className="py-20 bg-gradient-to-r from-primary to-secondary text-white">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-5xl sm:text-6xl font-heading font-bold text-center mb-24 [text-fill-color:white] [-webkit-text-fill-color:white]">
+          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-center mb-12">
             Números que impressionam
           </h2>
-          <div className="grid md:grid-cols-4 gap-12 max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {[
               { number: "50K+", label: "Lojistas Ativos" },
               { number: "5K+", label: "Fornecedores Verificados" },
@@ -227,8 +227,8 @@ const Recursos = () => {
               { number: "98%", label: "Satisfação dos Clientes" },
             ].map((stat, idx) => (
               <div key={idx} className="text-center">
-                <div className="text-7xl font-extrabold mb-6">{stat.number}</div>
-                <div className="text-2xl">{stat.label}</div>
+                <div className="text-4xl font-bold mb-2">{stat.number}</div>
+                <div className="text-lg">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -236,17 +236,17 @@ const Recursos = () => {
       </section>
 
       {/* CTA Final */}
-      <section className="py-40 bg-white">
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-extrabold mb-10 text-primary leading-tight">
+          <h2 className="text-3xl sm:text-4xl font-heading font-bold mb-4 text-primary">
             Experimente todos os recursos gratuitamente
           </h2>
-          <p className="text-2xl sm:text-3xl mb-16 text-[#6B7280] max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl mb-8 text-muted-foreground max-w-2xl mx-auto">
             30 dias de teste grátis, sem cartão de crédito
           </p>
           <Button
             size="lg"
-            className="h-20 px-16 text-xl rounded-full bg-primary hover:bg-primary/90 text-white shadow-purple-glow hover:scale-105 transition-all duration-300 font-bold"
+            className="bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90"
           >
             Começar Teste Grátis
           </Button>
