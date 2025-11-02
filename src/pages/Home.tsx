@@ -59,10 +59,10 @@ const Home = () => {
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center py-20">
             <div className="text-white space-y-10 animate-slide-in">
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-extrabold leading-tight text-white">
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-extrabold leading-tight text-white [text-fill-color:white] [-webkit-text-fill-color:white]">
                 A nova forma de conectar fornecedores e lojistas
               </h1>
-              <p className="text-xl sm:text-2xl text-white/90 leading-relaxed">
+              <p className="text-xl sm:text-2xl text-white leading-relaxed">
                 Compre, revenda e cresça — tudo em um só app.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 pt-4">
@@ -159,10 +159,10 @@ const Home = () => {
       {/* Depoimentos */}
       <section className="py-32 gradient-hero text-white particles-bg">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-4xl sm:text-5xl font-heading font-bold text-center mb-6 text-white">
+          <h2 className="text-4xl sm:text-5xl font-heading font-bold text-center mb-6 text-white [text-fill-color:white] [-webkit-text-fill-color:white]">
             O que nossos clientes dizem
           </h2>
-          <p className="text-center text-white/80 text-lg mb-20 max-w-2xl mx-auto">
+          <p className="text-center text-white text-lg mb-20 max-w-2xl mx-auto">
             Histórias reais de sucesso com o nellor
           </p>
           
@@ -188,10 +188,10 @@ const Home = () => {
       {/* CTA Final */}
       <section className="py-32 gradient-cta text-white particles-bg">
         <div className="container mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-extrabold mb-6 text-white leading-tight">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-extrabold mb-6 text-white leading-tight [text-fill-color:white] [-webkit-text-fill-color:white]">
             Conecte-se aos melhores fornecedores do Brasil
           </h2>
-          <p className="text-xl sm:text-2xl mb-12 text-white/90 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl sm:text-2xl mb-12 text-white max-w-3xl mx-auto leading-relaxed">
             Baixe agora o app e comece a lucrar hoje mesmo
           </p>
           
