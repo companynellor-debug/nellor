@@ -38,11 +38,11 @@ const Download = () => {
               </Button>
             </div>
             
-            <div className="bg-[#F6F0FF] rounded-3xl p-12 max-w-3xl mx-auto">
+            <div className="bg-[#F6F0FF] rounded-3xl p-6 sm:p-12 max-w-3xl mx-auto">
               <img 
-                src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=800&fit=crop" 
+                src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=600&fit=crop" 
                 alt="App nellor preview"
-                className="mx-auto max-w-sm rounded-3xl shadow-2xl"
+                className="mx-auto w-full max-w-[280px] sm:max-w-sm rounded-3xl shadow-2xl object-contain"
               />
             </div>
           </div>
