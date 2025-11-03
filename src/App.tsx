@@ -10,10 +10,16 @@ import Contato from "./pages/Contato";
 import Login from "./pages/Login";
 import LoginFornecedor from "./pages/LoginFornecedor";
 import Download from "./pages/Download";
-
 import Recursos from "./pages/Recursos";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
+
+import ClienteHome from "./pages/cliente/Home";
+import ProdutoDetalhes from "./pages/cliente/ProdutoDetalhes";
+import Carrinho from "./pages/cliente/Carrinho";
+import Chat from "./pages/cliente/Chat";
+import Perfil from "./pages/cliente/Perfil";
+import Avaliacoes from "./pages/cliente/Avaliacoes";
 
 const queryClient = new QueryClient();
 
@@ -31,9 +37,17 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/login-fornecedor" element={<LoginFornecedor />} />
           <Route path="/download" element={<Download />} />
-          
           <Route path="/recursos" element={<Recursos />} />
           <Route path="/faq" element={<FAQ />} />
+          
+          {/* Cliente Panel Routes */}
+          <Route path="/cliente" element={<ClienteHome />} />
+          <Route path="/cliente/produto/:id" element={<ProdutoDetalhes />} />
+          <Route path="/cliente/carrinho" element={<Carrinho />} />
+          <Route path="/cliente/chat" element={<Chat />} />
+          <Route path="/cliente/perfil" element={<Perfil />} />
+          <Route path="/cliente/avaliacoes" element={<Avaliacoes />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

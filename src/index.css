@@ -54,6 +54,13 @@ All colors MUST be HSL.
     
     /* Transições */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Cliente Panel Theme - Roxo escuro #3B006A */
+    --cliente-bg: 276 100% 21%;
+    --cliente-surface: 276 60% 25%;
+    --cliente-accent: 280 100% 75%;
+    --cliente-text: 0 0% 100%;
+    --cliente-text-muted: 0 0% 70%;
   }
 
   .dark {
@@ -84,6 +91,13 @@ All colors MUST be HSL.
     --border: 280 20% 20%;
     --input: 280 20% 20%;
     --ring: 280 88% 65%;
+    
+    /* Cliente Panel Theme - Roxo escuro #3B006A */
+    --cliente-bg: 276 100% 21%;
+    --cliente-surface: 276 60% 25%;
+    --cliente-accent: 280 100% 75%;
+    --cliente-text: 0 0% 100%;
+    --cliente-text-muted: 0 0% 70%;
   }
 }
 
@@ -241,5 +255,14 @@ All colors MUST be HSL.
   .btn-glow:hover::before {
     width: 300px;
     height: 300px;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
