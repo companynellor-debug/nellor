@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import logo from "@/assets/logo.png";
 
 const Header = () => {
   const location = useLocation();
@@ -24,9 +25,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <span className="text-2xl sm:text-3xl font-heading font-bold text-primary">
-              nellor
-            </span>
+            <img src={logo} alt="Nellor" className="h-8 sm:h-10 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Heart, Bell, Shirt, Footprints, Watch, Smartphone, Sparkles, Home as HomeIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { products } from "@/data/products";
+import logo from "@/assets/logo.png";
 
 const ClienteHome = () => {
   const categories = [
@@ -30,9 +31,7 @@ const ClienteHome = () => {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              nellor
-            </h1>
+            <img src={logo} alt="Nellor" className="h-8 w-auto" />
             <div className="flex items-center gap-4">
               <Bell className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
               <Heart className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
