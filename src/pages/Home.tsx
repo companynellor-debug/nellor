@@ -55,24 +55,24 @@ const Home = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 md:pt-32 md:pb-20 overflow-hidden gradient-hero">
+      <section className="relative pt-32 pb-20 overflow-hidden gradient-hero">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-white space-y-4 md:space-y-6">
-              <h1 className="text-3xl md:text-5xl lg:text-7xl font-heading font-bold leading-tight">
+            <div className="text-white space-y-6">
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-bold leading-tight">
                 A nova forma de conectar fornecedores e lojistas
               </h1>
-              <p className="text-base md:text-xl lg:text-2xl text-white/90">
+              <p className="text-xl sm:text-2xl text-white/90">
                 Compre, revenda e cresça — tudo em um só app.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-2 md:pt-4">
-                <Link to="/download" className="w-full sm:w-auto">
-                  <Button className="w-full bg-primary text-white hover:bg-primary/90 px-6 py-3 md:px-8 md:py-6 rounded-full text-base md:text-lg">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link to="/download">
+                  <Button size="lg" className="w-full sm:w-auto bg-white text-primary hover:bg-white/90">
                     Baixar o App
                   </Button>
                 </Link>
-                <Link to="/fornecedor" className="w-full sm:w-auto">
-                  <Button variant="outline" className="w-full border-2 border-white text-white hover:bg-white hover:text-primary px-6 py-3 md:px-8 md:py-6 rounded-full text-base md:text-lg">
+                <Link to="/fornecedor">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-primary">
                     Sou fornecedor
                   </Button>
                 </Link>
