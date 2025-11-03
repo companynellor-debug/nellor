@@ -21,6 +21,10 @@ import Chat from "./pages/cliente/Chat";
 import Perfil from "./pages/cliente/Perfil";
 import Avaliacoes from "./pages/cliente/Avaliacoes";
 import Favoritos from "./pages/cliente/Favoritos";
+import EditarPerfil from "./pages/cliente/EditarPerfil";
+import MeusPedidos from "./pages/cliente/MeusPedidos";
+import Enderecos from "./pages/cliente/Enderecos";
+import Notificacoes from "./pages/cliente/Notificacoes";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +51,10 @@ const App = () => (
           <Route path="/cliente/carrinho" element={<Carrinho />} />
           <Route path="/cliente/chat" element={<Chat />} />
           <Route path="/cliente/perfil" element={<Perfil />} />
+          <Route path="/cliente/editar-perfil" element={<EditarPerfil />} />
+          <Route path="/cliente/meus-pedidos" element={<MeusPedidos />} />
+          <Route path="/cliente/enderecos" element={<Enderecos />} />
+          <Route path="/cliente/notificacoes" element={<Notificacoes />} />
           <Route path="/cliente/avaliacoes" element={<Avaliacoes />} />
           <Route path="/cliente/favoritos" element={<Favoritos />} />
           

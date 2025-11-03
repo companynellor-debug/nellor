@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/button";
 import { User, MapPin, Bell, Package, LogOut, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useProfile } from "@/hooks/useProfile";
 
 const Perfil = () => {
   const navigate = useNavigate();
   const { favorites } = useFavorites();
+  const { profile } = useProfile();
 
   const menuItems = [
-    { icon: Edit, label: "Editar Perfil", action: () => {} },
-    { icon: Package, label: "Meus Pedidos", action: () => {} },
-    { icon: MapPin, label: "Endereços", action: () => {} },
-    { icon: Bell, label: "Notificações", action: () => {} },
+    { icon: Edit, label: "Editar Perfil", action: () => navigate("/cliente/editar-perfil") },
+    { icon: Package, label: "Meus Pedidos", action: () => navigate("/cliente/meus-pedidos") },
+    { icon: MapPin, label: "Endereços", action: () => navigate("/cliente/enderecos") },
+    { icon: Bell, label: "Notificações", action: () => navigate("/cliente/notificacoes") },
     { icon: LogOut, label: "Sair", action: () => navigate("/") },
   ];
 
@@ -32,12 +34,16 @@ const Perfil = () => {
       <main className="container mx-auto px-4 py-6 relative z-10">
         {/* Perfil Card */}
         <Card className="bg-white border shadow-sm p-6 mb-6 text-center">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-4xl mx-auto mb-4">
-            <User className="h-12 w-12 text-white" />
-          </div>
-          <h2 className="text-xl font-bold mb-1">Maria Silva</h2>
-          <p className="text-sm text-muted-foreground mb-4">maria.silva@email.com</p>
-          <Button className="bg-primary hover:bg-primary/90 text-white">
+          {profile.photo ? (
+            <img src={profile.photo} alt="Perfil" className="w-24 h-24 rounded-full object-cover mx-auto mb-4" />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-4xl mx-auto mb-4">
+              <User className="h-12 w-12 text-white" />
+            </div>
+          )}
+          <h2 className="text-xl font-bold mb-1">{profile.name}</h2>
+          <p className="text-sm text-muted-foreground mb-4">{profile.email}</p>
+          <Button onClick={() => navigate("/cliente/editar-perfil")} className="bg-primary hover:bg-primary/90 text-white">
             <Edit className="h-4 w-4 mr-2" />
             Editar Perfil
           </Button>
