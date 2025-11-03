@@ -59,7 +59,7 @@ const Home = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-white space-y-6">
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-heading font-bold leading-tight">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-heading font-bold leading-tight">
                 A nova forma de conectar fornecedores e lojistas
               </h1>
               <p className="text-xl sm:text-2xl text-white/90">
@@ -72,7 +72,7 @@ const Home = () => {
                   </Button>
                 </Link>
                 <Link to="/fornecedor">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-primary">
+                  <Button size="lg" className="w-full sm:w-auto bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-primary">
                     Sou fornecedor
                   </Button>
                 </Link>
