@@ -31,7 +31,7 @@ const ClienteHome = () => {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <img src={logo} alt="Nellor" className="h-8 w-auto" />
+            <img src={logo} alt="Nellor" className="h-12 w-auto" />
             <div className="flex items-center gap-4">
               <Bell className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
               <Heart className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
