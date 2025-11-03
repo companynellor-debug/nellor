@@ -3,17 +3,17 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Heart, Bell } from "lucide-react";
+import { Search, Heart, Bell, Shirt, Footprints, Watch, Smartphone, Sparkles, Home as HomeIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ClienteHome = () => {
   const categories = [
-    { name: "Roupas", emoji: "👕" },
-    { name: "Calçados", emoji: "👟" },
-    { name: "Acessórios", emoji: "⌚" },
-    { name: "Eletrônicos", emoji: "📱" },
-    { name: "Beleza", emoji: "💄" },
-    { name: "Casa", emoji: "🏠" },
+    { name: "Roupas", icon: Shirt },
+    { name: "Calçados", icon: Footprints },
+    { name: "Acessórios", icon: Watch },
+    { name: "Eletrônicos", icon: Smartphone },
+    { name: "Beleza", icon: Sparkles },
+    { name: "Casa", icon: HomeIcon },
   ];
 
   const products = [
@@ -30,27 +30,27 @@ const ClienteHome = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--cliente-bg))] text-[hsl(var(--cliente-text))] pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
       
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[hsl(var(--cliente-surface))]/95 backdrop-blur-lg border-b border-white/10">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               nellor
             </h1>
             <div className="flex items-center gap-4">
-              <Bell className="h-6 w-6 cursor-pointer hover:text-[hsl(var(--cliente-accent))] transition-colors" />
-              <Heart className="h-6 w-6 cursor-pointer hover:text-[hsl(var(--cliente-accent))] transition-colors" />
+              <Bell className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
+              <Heart className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
             </div>
           </div>
           
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[hsl(var(--cliente-text-muted))]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Buscar produtos ou marcas..."
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-[hsl(var(--cliente-accent))]"
+              className="pl-10 bg-muted border-input focus:border-primary"
             />
           </div>
         </div>
@@ -69,34 +69,37 @@ const ClienteHome = () => {
 
         {/* Categorias */}
         <section className="mb-8">
-          <h2 className="text-xl font-bold mb-4">Categorias</h2>
+          <h2 className="text-xl font-bold mb-4 text-foreground">Categorias</h2>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-            {categories.map((category) => (
-              <Card key={category.name} className="bg-white/5 backdrop-blur-sm border-white/10 p-4 text-center cursor-pointer hover:bg-white/10 transition-all hover:scale-105">
-                <div className="text-4xl mb-2">{category.emoji}</div>
-                <p className="text-sm font-medium">{category.name}</p>
-              </Card>
-            ))}
+            {categories.map((category) => {
+              const IconComponent = category.icon;
+              return (
+                <Card key={category.name} className="bg-card border hover:shadow-lg transition-all hover:scale-105 p-4 text-center cursor-pointer">
+                  <IconComponent className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <p className="text-sm font-medium text-foreground">{category.name}</p>
+                </Card>
+              );
+            })}
           </div>
         </section>
 
         {/* Produtos Recomendados */}
         <section>
-          <h2 className="text-xl font-bold mb-4">Recomendados para Você</h2>
+          <h2 className="text-xl font-bold mb-4 text-foreground">Recomendados para Você</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {products.map((product) => (
               <Link key={product.id} to={`/cliente/produto/${product.id}`}>
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10 overflow-hidden hover:bg-white/10 transition-all hover:scale-105 cursor-pointer">
+                <Card className="bg-card border overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
                   <div className="aspect-square overflow-hidden">
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="p-3">
-                    <h3 className="font-medium text-sm mb-2 line-clamp-2">{product.name}</h3>
+                    <h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground">{product.name}</h3>
                     <div className="flex items-center justify-between">
-                      <p className="text-[hsl(var(--cliente-accent))] font-bold">{product.price}</p>
+                      <p className="text-primary font-bold">{product.price}</p>
                       <div className="flex items-center gap-1 text-xs">
-                        <span className="text-yellow-400">⭐</span>
-                        <span>{product.rating}</span>
+                        <span className="text-yellow-500">⭐</span>
+                        <span className="text-foreground">{product.rating}</span>
                       </div>
                     </div>
                   </div>
@@ -108,17 +111,17 @@ const ClienteHome = () => {
 
         {/* Ofertas em Destaque */}
         <section className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Ofertas Relâmpago</h2>
+          <h2 className="text-xl font-bold mb-4 text-foreground">Ofertas Relâmpago</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {products.map((product) => (
               <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-40">
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10 overflow-hidden hover:bg-white/10 transition-all hover:scale-105">
+                <Card className="bg-card border overflow-hidden hover:shadow-lg transition-all hover:scale-105">
                   <div className="aspect-square overflow-hidden">
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="p-3">
-                    <p className="text-xs mb-1 line-clamp-1">{product.name}</p>
-                    <p className="text-[hsl(var(--cliente-accent))] font-bold text-sm">{product.price}</p>
+                    <p className="text-xs mb-1 line-clamp-1 text-foreground">{product.name}</p>
+                    <p className="text-primary font-bold text-sm">{product.price}</p>
                   </div>
                 </Card>
               </Link>

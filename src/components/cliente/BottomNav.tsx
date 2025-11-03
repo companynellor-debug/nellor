@@ -12,7 +12,7 @@ export const BottomNav = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[hsl(var(--cliente-surface))] border-t border-white/10 z-50 backdrop-blur-lg">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 border-t shadow-lg z-50 backdrop-blur-lg">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-4">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -23,7 +23,7 @@ export const BottomNav = () => {
               key={item.path}
               to={item.path}
               className={`flex flex-col items-center gap-1 transition-all duration-300 ${
-                isActive ? "text-[hsl(var(--cliente-accent))]" : "text-[hsl(var(--cliente-text-muted))]"
+                isActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
               <Icon className={`h-6 w-6 ${isActive ? "scale-110" : ""}`} />

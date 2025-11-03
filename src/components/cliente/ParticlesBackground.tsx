@@ -39,7 +39,7 @@ export const ParticlesBackground = () => {
       particles.forEach((particle) => {
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 150, 255, ${particle.opacity})`;
+        ctx.fillStyle = `rgba(139, 92, 246, ${particle.opacity})`;
         ctx.fill();
 
         particle.x += particle.speedX;
@@ -66,7 +66,7 @@ export const ParticlesBackground = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 opacity-30"
+      className="fixed inset-0 pointer-events-none z-0 opacity-10"
     />
   );
 };
