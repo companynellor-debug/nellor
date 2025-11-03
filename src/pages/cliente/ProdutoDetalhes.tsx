@@ -5,40 +5,30 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart, Share2, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
+import { getProductById, getRelatedProducts } from "@/data/products";
 
 const ProdutoDetalhes = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const product = {
-    name: "Tênis Esportivo Premium",
-    price: "R$ 299,90",
-    rating: 4.8,
-    reviews: 124,
-    description: "Tênis esportivo de alta qualidade, perfeito para corridas e treinos intensos. Tecnologia de amortecimento avançada e design moderno.",
-    images: [
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=600&h=600&fit=crop",
-    ],
-    specs: [
-      { label: "Material", value: "Mesh respirável" },
-      { label: "Solado", value: "Borracha antiderrapante" },
-      { label: "Peso", value: "280g" },
-      { label: "Cores", value: "Preto, Branco, Azul" },
-    ],
-    customerReviews: [
-      { name: "João Silva", rating: 5, comment: "Excelente produto! Super confortável.", date: "15/10/2024" },
-      { name: "Maria Santos", rating: 5, comment: "Adorei! Qualidade impecável.", date: "10/10/2024" },
-      { name: "Pedro Costa", rating: 4, comment: "Muito bom, recomendo!", date: "05/10/2024" },
-    ],
-  };
+  const productId = id ? parseInt(id) : 1;
+  const product = getProductById(productId);
 
-  const relatedProducts = [
-    { id: 2, name: "Bolsa de Couro", price: "R$ 189,90", image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&h=300&fit=crop" },
-    { id: 3, name: "Relógio Smart", price: "R$ 399,90", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop" },
-  ];
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Produto não encontrado</h1>
+          <Button onClick={() => navigate("/cliente")} className="bg-primary hover:bg-primary/90 text-white">
+            Voltar para Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const relatedProducts = getRelatedProducts(product.id, product.category, 2);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -130,22 +120,31 @@ const ProdutoDetalhes = () => {
         </Card>
 
         {/* Produtos Relacionados */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-primary mb-4">Você também pode gostar</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {relatedProducts.map((product) => (
-              <Card key={product.id} className="bg-white border shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer">
-                <div className="aspect-square overflow-hidden">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-3">
-                  <p className="text-sm mb-2">{product.name}</p>
-                  <p className="text-primary font-bold">{product.price}</p>
-                </div>
-              </Card>
-            ))}
+        {relatedProducts.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-primary mb-4">Você também pode gostar</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {relatedProducts.map((relatedProduct) => (
+                <Card
+                  key={relatedProduct.id}
+                  onClick={() => {
+                    setSelectedImage(0);
+                    navigate(`/cliente/produto/${relatedProduct.id}`);
+                  }}
+                  className="bg-white border shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                >
+                  <div className="aspect-square overflow-hidden">
+                    <img src={relatedProduct.images[0]} alt={relatedProduct.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm mb-2 line-clamp-2">{relatedProduct.name}</p>
+                    <p className="text-primary font-bold">{relatedProduct.price}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Botões de Ação */}
         <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30">

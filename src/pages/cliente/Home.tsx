@@ -1,10 +1,10 @@
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Heart, Bell, Shirt, Footprints, Watch, Smartphone, Sparkles, Home as HomeIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { products } from "@/data/products";
 
 const ClienteHome = () => {
   const categories = [
@@ -14,13 +14,6 @@ const ClienteHome = () => {
     { name: "Eletrônicos", icon: Smartphone },
     { name: "Beleza", icon: Sparkles },
     { name: "Casa", icon: HomeIcon },
-  ];
-
-  const products = [
-    { id: 1, name: "Tênis Esportivo Premium", price: "R$ 299,90", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=300&fit=crop", rating: 4.8 },
-    { id: 2, name: "Bolsa de Couro Elegante", price: "R$ 189,90", image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&h=300&fit=crop", rating: 4.9 },
-    { id: 3, name: "Relógio Smartwatch", price: "R$ 399,90", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop", rating: 4.7 },
-    { id: 4, name: "Fone Bluetooth Pro", price: "R$ 249,90", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop", rating: 4.6 },
   ];
 
   const banners = [
@@ -91,7 +84,7 @@ const ClienteHome = () => {
               <Link key={product.id} to={`/cliente/produto/${product.id}`}>
                 <Card className="bg-card border overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
                   <div className="aspect-square overflow-hidden">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="p-3">
                     <h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground">{product.name}</h3>
@@ -117,7 +110,7 @@ const ClienteHome = () => {
               <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-40">
                 <Card className="bg-card border overflow-hidden hover:shadow-lg transition-all hover:scale-105">
                   <div className="aspect-square overflow-hidden">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="p-3">
                     <p className="text-xs mb-1 line-clamp-1 text-foreground">{product.name}</p>
