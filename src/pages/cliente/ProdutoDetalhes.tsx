@@ -41,18 +41,18 @@ const ProdutoDetalhes = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--cliente-bg))] text-[hsl(var(--cliente-text))] pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[hsl(var(--cliente-surface))]/95 backdrop-blur-lg border-b border-white/10">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
             <ArrowLeft className="h-6 w-6" />
           </button>
           <div className="flex items-center gap-4">
-            <Share2 className="h-6 w-6 cursor-pointer hover:text-[hsl(var(--cliente-accent))] transition-colors" />
-            <Heart className="h-6 w-6 cursor-pointer hover:text-[hsl(var(--cliente-accent))] transition-colors" />
+            <Share2 className="h-6 w-6 cursor-pointer hover:text-primary transition-colors" />
+            <Heart className="h-6 w-6 cursor-pointer hover:text-primary transition-colors" />
           </div>
         </div>
       </header>
@@ -60,7 +60,7 @@ const ProdutoDetalhes = () => {
       <main className="container mx-auto px-4 py-6 relative z-10">
         {/* Imagens do Produto */}
         <div className="mb-6">
-          <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-white/5">
+          <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-muted">
             <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
           </div>
           <div className="flex gap-2 justify-center">
@@ -69,7 +69,7 @@ const ProdutoDetalhes = () => {
                 key={index}
                 onClick={() => setSelectedImage(index)}
                 className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                  selectedImage === index ? "border-[hsl(var(--cliente-accent))] scale-105" : "border-white/20"
+                  selectedImage === index ? "border-primary scale-105" : "border-border"
                 }`}
               >
                 <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
@@ -79,7 +79,7 @@ const ProdutoDetalhes = () => {
         </div>
 
         {/* Informações do Produto */}
-        <Card className="bg-white/5 backdrop-blur-sm border-white/10 p-6 mb-6">
+        <Card className="bg-white border shadow-sm p-6 mb-6">
           <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
           <div className="flex items-center gap-2 mb-4">
             <div className="flex items-center gap-1">
@@ -87,21 +87,21 @@ const ProdutoDetalhes = () => {
                 <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-400"}`} />
               ))}
             </div>
-            <span className="text-sm text-[hsl(var(--cliente-text-muted))]">
+            <span className="text-sm text-muted-foreground">
               {product.rating} ({product.reviews} avaliações)
             </span>
           </div>
-          <p className="text-3xl font-bold text-[hsl(var(--cliente-accent))] mb-4">{product.price}</p>
-          <p className="text-[hsl(var(--cliente-text-muted))] leading-relaxed">{product.description}</p>
+          <p className="text-3xl font-bold text-primary mb-4">{product.price}</p>
+          <p className="text-muted-foreground leading-relaxed">{product.description}</p>
         </Card>
 
         {/* Especificações */}
-        <Card className="bg-white/5 backdrop-blur-sm border-white/10 p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4">Especificações</h2>
+        <Card className="bg-white border shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-bold text-primary mb-4">Especificações</h2>
           <div className="space-y-3">
             {product.specs.map((spec) => (
-              <div key={spec.label} className="flex justify-between items-center border-b border-white/10 pb-2">
-                <span className="text-[hsl(var(--cliente-text-muted))]">{spec.label}</span>
+              <div key={spec.label} className="flex justify-between items-center border-b pb-2">
+                <span className="text-muted-foreground">{spec.label}</span>
                 <span className="font-medium">{spec.value}</span>
               </div>
             ))}
@@ -109,21 +109,21 @@ const ProdutoDetalhes = () => {
         </Card>
 
         {/* Avaliações */}
-        <Card className="bg-white/5 backdrop-blur-sm border-white/10 p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4">Avaliações dos Clientes</h2>
+        <Card className="bg-white border shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-bold text-primary mb-4">Avaliações dos Clientes</h2>
           <div className="space-y-4">
             {product.customerReviews.map((review, index) => (
-              <div key={index} className="border-b border-white/10 pb-4 last:border-0">
+              <div key={index} className="border-b pb-4 last:border-0">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-medium">{review.name}</p>
-                  <span className="text-xs text-[hsl(var(--cliente-text-muted))]">{review.date}</span>
+                  <span className="text-xs text-muted-foreground">{review.date}</span>
                 </div>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(review.rating)].map((_, i) => (
                     <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-sm text-[hsl(var(--cliente-text-muted))]">{review.comment}</p>
+                <p className="text-sm text-muted-foreground">{review.comment}</p>
               </div>
             ))}
           </div>
@@ -131,16 +131,16 @@ const ProdutoDetalhes = () => {
 
         {/* Produtos Relacionados */}
         <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4">Você também pode gostar</h2>
+          <h2 className="text-xl font-bold text-primary mb-4">Você também pode gostar</h2>
           <div className="grid grid-cols-2 gap-4">
             {relatedProducts.map((product) => (
-              <Card key={product.id} className="bg-white/5 backdrop-blur-sm border-white/10 overflow-hidden hover:bg-white/10 transition-all cursor-pointer">
+              <Card key={product.id} className="bg-white border shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer">
                 <div className="aspect-square overflow-hidden">
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="p-3">
                   <p className="text-sm mb-2">{product.name}</p>
-                  <p className="text-[hsl(var(--cliente-accent))] font-bold">{product.price}</p>
+                  <p className="text-primary font-bold">{product.price}</p>
                 </div>
               </Card>
             ))}
@@ -148,12 +148,12 @@ const ProdutoDetalhes = () => {
         </div>
 
         {/* Botões de Ação */}
-        <div className="fixed bottom-20 left-0 right-0 bg-[hsl(var(--cliente-surface))]/95 backdrop-blur-lg border-t border-white/10 p-4 z-30">
+        <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30">
           <div className="container mx-auto flex gap-3">
-            <Button variant="outline" className="flex-1 border-[hsl(var(--cliente-accent))] text-[hsl(var(--cliente-accent))] hover:bg-[hsl(var(--cliente-accent))]/10">
+            <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10">
               Adicionar ao Carrinho
             </Button>
-            <Button className="flex-1 bg-[hsl(var(--cliente-accent))] hover:bg-[hsl(var(--cliente-accent))]/90 text-white">
+            <Button className="flex-1 bg-primary hover:bg-primary/90 text-white">
               Comprar Agora
             </Button>
           </div>
