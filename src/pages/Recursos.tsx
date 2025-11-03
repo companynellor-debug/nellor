@@ -1,26 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { 
-  ShoppingCart, 
-  MessageSquare, 
-  TrendingUp, 
-  Shield, 
-  Zap, 
-  BarChart3,
-  Smartphone,
-  Lock,
-  CreditCard,
-  Bell,
-  Users,
-  Package
-} from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import marketplaceImg from "@/assets/marketplace-3d.png";
+import chatImg from "@/assets/chat-3d.png";
+import analyticsImg from "@/assets/analytics-3d.png";
+import securityImg from "@/assets/security-3d.png";
+import logisticsImg from "@/assets/logistics-3d.png";
+import inventoryImg from "@/assets/inventory-3d.png";
+import paymentImg from "@/assets/payment-3d.png";
+import mobileImg from "@/assets/mobile-3d.png";
+import privacyImg from "@/assets/privacy-3d.png";
+import notificationsImg from "@/assets/notifications-3d.png";
+import teamImg from "@/assets/team-3d.png";
+import ordersImg from "@/assets/orders-3d.png";
 
 const Recursos = () => {
   const features = [
     {
-      icon: ShoppingCart,
+      image: marketplaceImg,
       title: "Marketplace Completo",
       description: "Acesso a milhares de produtos de centenas de fornecedores verificados em um único lugar. Navegue por categorias, compare preços e encontre exatamente o que precisa.",
       benefits: [
@@ -31,7 +29,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: MessageSquare,
+      image: chatImg,
       title: "Chat Integrado",
       description: "Negocie diretamente com fornecedores através do nosso chat em tempo real. Tire dúvidas, negocie preços e feche negócios mais rápido.",
       benefits: [
@@ -42,7 +40,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: TrendingUp,
+      image: analyticsImg,
       title: "Análises e Relatórios",
       description: "Dashboard completo com todas as métricas do seu negócio. Acompanhe vendas, lucros, produtos mais vendidos e muito mais.",
       benefits: [
@@ -53,7 +51,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: Shield,
+      image: securityImg,
       title: "Segurança Garantida",
       description: "Todos os fornecedores são verificados e certificados. Suas transações são protegidas e você tem garantia de recebimento ou devolução do dinheiro.",
       benefits: [
@@ -64,7 +62,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: Zap,
+      image: logisticsImg,
       title: "Logística Integrada",
       description: "Gestão completa de entregas com rastreamento em tempo real. Escolha entre diversos parceiros logísticos e encontre o melhor custo-benefício.",
       benefits: [
@@ -75,7 +73,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: BarChart3,
+      image: inventoryImg,
       title: "Gestão de Estoque",
       description: "Controle completo do seu estoque com alertas automáticos de reposição. Nunca mais perca vendas por falta de produtos.",
       benefits: [
@@ -86,7 +84,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: CreditCard,
+      image: paymentImg,
       title: "Múltiplas Formas de Pagamento",
       description: "Pague seus fornecedores da forma que preferir: cartão, boleto, PIX ou parcelado. Flexibilidade total para gerenciar seu fluxo de caixa.",
       benefits: [
@@ -97,7 +95,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: Smartphone,
+      image: mobileImg,
       title: "App Mobile Completo",
       description: "Gerencie seu negócio de qualquer lugar com nosso app disponível para iOS e Android. Todas as funcionalidades na palma da sua mão.",
       benefits: [
@@ -108,7 +106,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: Lock,
+      image: privacyImg,
       title: "Privacidade de Dados",
       description: "Seus dados e informações comerciais são completamente privados e criptografados. Conformidade total com LGPD.",
       benefits: [
@@ -119,7 +117,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: Bell,
+      image: notificationsImg,
       title: "Notificações Inteligentes",
       description: "Receba alertas sobre novos produtos, promoções, pedidos e atualizações importantes para não perder nenhuma oportunidade.",
       benefits: [
@@ -130,7 +128,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: Users,
+      image: teamImg,
       title: "Gestão de Equipe",
       description: "Adicione colaboradores e defina permissões específicas para cada membro da sua equipe. Controle total de acessos.",
       benefits: [
@@ -141,7 +139,7 @@ const Recursos = () => {
       ]
     },
     {
-      icon: Package,
+      image: ordersImg,
       title: "Gestão de Pedidos",
       description: "Acompanhe todos os seus pedidos em um só lugar. Desde a compra até a entrega, tenha controle total de toda operação.",
       benefits: [
@@ -181,9 +179,6 @@ const Recursos = () => {
                 }`}
               >
                 <div className={index % 2 === 1 ? "lg:order-2" : ""}>
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mb-6">
-                    <feature.icon className="h-8 w-8 text-white" />
-                  </div>
                   <h2 className="text-3xl font-heading font-bold mb-4 text-primary">
                     {feature.title}
                   </h2>
@@ -203,8 +198,12 @@ const Recursos = () => {
                 </div>
                 
                 <div className={index % 2 === 1 ? "lg:order-1" : ""}>
-                  <Card className="p-8 rounded-2xl bg-muted h-[300px] flex items-center justify-center">
-                    <feature.icon className="h-32 w-32 text-primary/20" />
+                  <Card className="p-4 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 h-[300px] flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title}
+                      className="w-full h-full object-contain"
+                    />
                   </Card>
                 </div>
               </div>
