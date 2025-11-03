@@ -92,21 +92,21 @@ const Fornecedor = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-8 md:gap-16 items-center">
             <div className="space-y-6 md:space-y-10 animate-slide-in text-white">
-              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-heading font-extrabold leading-tight text-white">
+              <h1 className="text-3xl md:text-5xl lg:text-7xl font-heading font-extrabold leading-tight text-white">
                 Venda seus produtos para milhares de lojistas
               </h1>
-              <p className="text-base sm:text-lg text-white leading-relaxed">
+              <p className="text-base md:text-xl lg:text-2xl text-white leading-relaxed">
                 Cadastre-se no nellor e aumente seu alcance em todo o Brasil.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 pt-4">
                 <Link to="/login-fornecedor">
-                  <Button className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 px-5 py-3 md:px-10 md:py-6 rounded-full text-base md:text-lg font-semibold shadow-purple-glow btn-glow">
+                  <Button className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 px-6 py-4 md:px-10 md:py-7 rounded-full text-base md:text-lg font-semibold shadow-purple-glow btn-glow">
                     Entrar como Fornecedor
                   </Button>
                 </Link>
                 <Button 
                   variant="outline"
-                  className="w-full sm:w-auto border-2 border-white/80 text-white hover:bg-white hover:text-primary px-4 py-3 md:px-10 md:py-6 rounded-full text-sm md:text-base"
+                  className="w-full sm:w-auto border-2 border-white/80 text-white hover:bg-white hover:text-primary px-6 py-4 md:px-10 md:py-7 rounded-full text-base backdrop-blur-sm bg-white/10"
                   onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                 >
                   <MessageSquare className="mr-2 h-5 w-5 md:h-6 md:w-6" />
@@ -130,10 +130,10 @@ const Fornecedor = () => {
       {/* Vantagens */}
       <section className="py-32 bg-muted particles-bg">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 text-primary">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 text-primary">
             Vantagens de ser fornecedor
           </h2>
-          <p className="text-center text-muted-foreground text-base sm:text-lg mb-20 max-w-2xl mx-auto">
+          <p className="text-center text-muted-foreground text-sm md:text-lg mb-20 max-w-2xl mx-auto">
             Amplie seu negócio e alcance novos mercados
           </p>
           
@@ -154,10 +154,10 @@ const Fornecedor = () => {
       {/* Planos */}
       <section className="py-32 bg-background">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 text-primary">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 text-primary">
             Planos e Destaques
           </h2>
-          <p className="text-center text-muted-foreground text-base sm:text-lg mb-20 max-w-2xl mx-auto">
+          <p className="text-center text-muted-foreground text-sm md:text-lg mb-20 max-w-2xl mx-auto">
             Escolha o plano ideal para o seu negócio e comece a crescer
           </p>
           
@@ -178,7 +178,7 @@ const Fornecedor = () => {
                 )}
                 <h3 className="text-3xl font-heading font-bold mb-3 text-primary">{plan.name}</h3>
                 <div className="mb-8">
-                  <span className="text-3xl md:text-5xl font-heading font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{plan.price}</span>
+                  <span className="text-4xl md:text-5xl font-heading font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{plan.price}</span>
                   <span className="text-muted-foreground text-lg">{plan.period}</span>
                 </div>
                 <ul className="space-y-4 mb-10">
@@ -190,7 +190,7 @@ const Fornecedor = () => {
                   ))}
                 </ul>
                 <Button 
-                  className={`w-full py-3 md:py-5 rounded-full text-base md:text-lg font-semibold shadow-lg btn-glow ${
+                  className={`w-full py-4 md:py-6 rounded-full text-base md:text-lg font-semibold shadow-lg btn-glow ${
                     plan.highlighted 
                       ? 'gradient-cta text-white hover:scale-105' 
                       : 'bg-primary text-white hover:bg-primary/90'
@@ -207,10 +207,10 @@ const Fornecedor = () => {
       {/* Depoimentos */}
       <section className="py-32 gradient-hero text-white particles-bg">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 text-white">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-heading font-bold text-center mb-6 text-white">
             Fornecedores que confiam no nellor
           </h2>
-          <p className="text-center text-white text-base sm:text-lg mb-20 max-w-2xl mx-auto">
+          <p className="text-center text-white text-sm md:text-lg mb-20 max-w-2xl mx-auto">
             Resultados reais de quem já transformou seu negócio
           </p>
           
@@ -229,14 +229,14 @@ const Fornecedor = () => {
       {/* CTA Final */}
       <section className="py-32 gradient-cta text-white particles-bg">
         <div className="container mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold mb-6 text-white leading-tight">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-heading font-extrabold mb-6 text-white leading-tight">
             Pronto para vender mais?
           </h2>
-          <p className="text-base sm:text-lg mb-12 text-white max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base md:text-xl lg:text-2xl mb-12 text-white max-w-3xl mx-auto leading-relaxed">
             Cadastre sua loja agora mesmo e comece a lucrar hoje
           </p>
           <Link to="/login-fornecedor">
-            <Button className="bg-white text-primary hover:bg-white/90 px-5 py-3 md:px-10 md:py-6 rounded-full text-base md:text-lg font-semibold shadow-2xl btn-glow hover:scale-105 transition-transform">
+            <Button className="bg-white text-primary hover:bg-white/90 px-6 py-4 md:px-12 md:py-7 rounded-full text-base md:text-lg font-semibold shadow-2xl btn-glow hover:scale-105 transition-transform">
               Entrar como Fornecedor
             </Button>
           </Link>
