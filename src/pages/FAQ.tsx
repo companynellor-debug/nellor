@@ -156,7 +156,7 @@ const FAQ = () => {
       {/* Hero Section */}
       <section className="pt-40 pb-32 gradient-hero text-white particles-bg">
         <div className="container mx-auto px-4 sm:px-6 text-center">
-          <h1 className="text-6xl sm:text-7xl lg:text-8xl font-heading font-extrabold mb-10 leading-tight [text-fill-color:white] [-webkit-text-fill-color:white]">
+          <h1 className="text-3xl md:text-6xl lg:text-8xl font-heading font-extrabold mb-10 leading-tight text-white">
             Perguntas Frequentes
           </h1>
           <p className="text-2xl sm:text-3xl max-w-4xl mx-auto leading-relaxed">
@@ -227,15 +227,13 @@ const FAQ = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-8 justify-center">
             <Button
-              size="lg"
-              className="h-20 px-16 text-xl rounded-full bg-primary hover:bg-primary/90 text-white shadow-purple-glow font-bold"
+              className="h-12 px-8 md:h-20 md:px-16 text-base md:text-xl rounded-full bg-primary hover:bg-primary/90 text-white shadow-purple-glow font-bold"
             >
               Falar com Suporte
             </Button>
             <Button
-              size="lg"
               variant="outline"
-              className="h-20 px-16 text-xl rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold"
+              className="h-12 px-8 md:h-20 md:px-16 text-base md:text-xl rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold"
             >
               Enviar Email
             </Button>
