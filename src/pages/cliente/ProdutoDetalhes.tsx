@@ -6,14 +6,25 @@ import { ArrowLeft, Heart, Share2, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import { getProductById, getRelatedProducts } from "@/data/products";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const ProdutoDetalhes = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
 
   const productId = id ? parseInt(id) : 1;
   const product = getProductById(productId);
+  const isProductFavorite = isFavorite(productId);
+
+  const handleToggleFavorite = () => {
+    if (isProductFavorite) {
+      removeFavorite(productId);
+    } else {
+      addFavorite(productId);
+    }
+  };
 
   if (!product) {
     return (
@@ -42,7 +53,9 @@ const ProdutoDetalhes = () => {
           </button>
           <div className="flex items-center gap-4">
             <Share2 className="h-6 w-6 cursor-pointer hover:text-primary transition-colors" />
-            <Heart className="h-6 w-6 cursor-pointer hover:text-primary transition-colors" />
+            <button onClick={handleToggleFavorite} className="p-2 hover:bg-muted rounded-full transition-colors">
+              <Heart className={`h-6 w-6 transition-colors ${isProductFavorite ? "fill-red-500 text-red-500" : "hover:text-primary"}`} />
+            </button>
           </div>
         </div>
       </header>

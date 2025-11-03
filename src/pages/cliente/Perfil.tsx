@@ -4,9 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User, MapPin, Bell, Package, LogOut, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const Perfil = () => {
   const navigate = useNavigate();
+  const { favorites } = useFavorites();
 
   const menuItems = [
     { icon: Edit, label: "Editar Perfil", action: () => {} },
@@ -48,7 +50,7 @@ const Perfil = () => {
             <p className="text-xs text-muted-foreground">Pedidos</p>
           </Card>
           <Card className="bg-white border shadow-sm p-4 text-center">
-            <p className="text-2xl font-bold text-primary">5</p>
+            <p className="text-2xl font-bold text-primary">{favorites.length}</p>
             <p className="text-xs text-muted-foreground">Favoritos</p>
           </Card>
           <Card className="bg-white border shadow-sm p-4 text-center">

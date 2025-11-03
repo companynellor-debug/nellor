@@ -20,6 +20,7 @@ import Carrinho from "./pages/cliente/Carrinho";
 import Chat from "./pages/cliente/Chat";
 import Perfil from "./pages/cliente/Perfil";
 import Avaliacoes from "./pages/cliente/Avaliacoes";
+import Favoritos from "./pages/cliente/Favoritos";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/cliente/chat" element={<Chat />} />
           <Route path="/cliente/perfil" element={<Perfil />} />
           <Route path="/cliente/avaliacoes" element={<Avaliacoes />} />
+          <Route path="/cliente/favoritos" element={<Favoritos />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

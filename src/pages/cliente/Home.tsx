@@ -3,11 +3,14 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, Heart, Bell, Shirt, Footprints, Watch, Smartphone, Sparkles, Home as HomeIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { products } from "@/data/products";
 import logo from "@/assets/logo.png";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const ClienteHome = () => {
+  const navigate = useNavigate();
+  const { favorites } = useFavorites();
   const categories = [
     { name: "Roupas", icon: Shirt },
     { name: "Calçados", icon: Footprints },
@@ -34,7 +37,14 @@ const ClienteHome = () => {
             <img src={logo} alt="Nellor" className="h-12 w-auto" />
             <div className="flex items-center gap-4">
               <Bell className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
-              <Heart className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
+              <button onClick={() => navigate("/cliente/favoritos")} className="relative">
+                <Heart className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
+                {favorites.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {favorites.length}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
           
