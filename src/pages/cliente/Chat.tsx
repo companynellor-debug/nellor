@@ -55,19 +55,19 @@ const Chat = () => {
     const chat = conversations.find(c => c.id === selectedChat);
     
     return (
-      <div className="min-h-screen bg-[hsl(var(--cliente-bg))] text-[hsl(var(--cliente-text))] pb-20">
+      <div className="min-h-screen bg-background pb-20">
         <ParticlesBackground />
 
         {/* Header do Chat */}
-        <header className="sticky top-0 z-40 bg-[hsl(var(--cliente-surface))]/95 backdrop-blur-lg border-b border-white/10">
+        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
           <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-            <button onClick={() => setSelectedChat(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <button onClick={() => setSelectedChat(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
               <ArrowLeft className="h-6 w-6" />
             </button>
             <div className="text-3xl">{chat?.avatar}</div>
             <div>
               <h2 className="font-bold">{chat?.name}</h2>
-              <p className="text-xs text-[hsl(var(--cliente-text-muted))]">Online</p>
+              <p className="text-xs text-muted-foreground">Online</p>
             </div>
           </div>
         </header>
@@ -76,7 +76,7 @@ const Chat = () => {
         <main className="container mx-auto px-4 py-6 relative z-10 space-y-4" style={{ paddingBottom: "100px" }}>
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[75%] ${msg.sender === "me" ? "bg-[hsl(var(--cliente-accent))] text-white" : "bg-white/10"} rounded-2xl px-4 py-3`}>
+              <div className={`max-w-[75%] ${msg.sender === "me" ? "bg-primary text-white" : "bg-white border shadow-sm"} rounded-2xl px-4 py-3`}>
                 <p className="text-sm">{msg.text}</p>
                 <p className="text-xs opacity-70 mt-1">{msg.time}</p>
               </div>
@@ -85,18 +85,17 @@ const Chat = () => {
         </main>
 
         {/* Input de Mensagem */}
-        <div className="fixed bottom-16 left-0 right-0 bg-[hsl(var(--cliente-surface))]/95 backdrop-blur-lg border-t border-white/10 p-4 z-30">
+        <div className="fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30">
           <div className="container mx-auto flex gap-2">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
               placeholder="Digite sua mensagem..."
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
             />
             <Button
               onClick={handleSend}
-              className="bg-[hsl(var(--cliente-accent))] hover:bg-[hsl(var(--cliente-accent))]/90 text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
             >
               <Send className="h-5 w-5" />
             </Button>
@@ -109,14 +108,14 @@ const Chat = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--cliente-bg))] text-[hsl(var(--cliente-text))] pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[hsl(var(--cliente-surface))]/95 backdrop-blur-lg border-b border-white/10">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold">Conversas</h1>
-          <p className="text-sm text-[hsl(var(--cliente-text-muted))]">{conversations.length} conversas ativas</p>
+          <h1 className="text-2xl font-bold text-primary">Conversas</h1>
+          <p className="text-sm text-muted-foreground">{conversations.length} conversas ativas</p>
         </div>
       </header>
 
@@ -126,7 +125,7 @@ const Chat = () => {
             <Card
               key={conv.id}
               onClick={() => setSelectedChat(conv.id)}
-              className="bg-white/5 backdrop-blur-sm border-white/10 p-4 cursor-pointer hover:bg-white/10 transition-all"
+              className="bg-white border shadow-sm p-4 cursor-pointer hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl flex-shrink-0">
@@ -135,12 +134,12 @@ const Chat = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-bold truncate">{conv.name}</h3>
-                    <span className="text-xs text-[hsl(var(--cliente-text-muted))]">{conv.time}</span>
+                    <span className="text-xs text-muted-foreground">{conv.time}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-[hsl(var(--cliente-text-muted))] truncate">{conv.lastMessage}</p>
+                    <p className="text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
                     {conv.unread > 0 && (
-                      <span className="bg-[hsl(var(--cliente-accent))] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ml-2">
+                      <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ml-2">
                         {conv.unread}
                       </span>
                     )}
