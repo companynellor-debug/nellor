@@ -2,49 +2,16 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "@/hooks/useCart";
 
 const Carrinho = () => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Tênis Esportivo Premium",
-      price: 299.9,
-      quantity: 1,
-      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=300&fit=crop",
-    },
-    {
-      id: 2,
-      name: "Bolsa de Couro Elegante",
-      price: 189.9,
-      quantity: 2,
-      image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&h=300&fit=crop",
-    },
-    {
-      id: 3,
-      name: "Relógio Smartwatch",
-      price: 399.9,
-      quantity: 1,
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop",
-    },
-  ]);
+  const navigate = useNavigate();
+  const { cartItems, updateQuantity, removeItem, clearCart, getTotal, itemCount } = useCart();
 
-  const updateQuantity = (id: number, delta: number) => {
-    setCartItems((items) =>
-      items.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
-    );
-  };
-
-  const removeItem = (id: number) => {
-    setCartItems((items) => items.filter((item) => item.id !== id));
-  };
-
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = getTotal();
+  const shipping = cartItems.length > 0 ? 15.00 : 0;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -52,17 +19,24 @@ const Carrinho = () => {
 
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-primary">Meu Carrinho</h1>
-          <p className="text-sm text-muted-foreground">{cartItems.length} {cartItems.length === 1 ? 'item' : 'itens'}</p>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Meu Carrinho</h1>
+            <p className="text-sm text-muted-foreground">{itemCount} {itemCount === 1 ? 'item' : 'itens'}</p>
+          </div>
+          <ShoppingCart className="h-6 w-6 text-primary" />
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
         {cartItems.length === 0 ? (
           <Card className="bg-white border shadow-sm p-12 text-center">
+            <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground text-lg mb-4">Seu carrinho está vazio</p>
-            <Button className="bg-primary hover:bg-primary/90 text-white">
+            <Button 
+              onClick={() => navigate("/cliente/produtos")}
+              className="bg-primary hover:bg-primary/90 text-white"
+            >
               Continuar Comprando
             </Button>
           </Card>
@@ -115,25 +89,37 @@ const Carrinho = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">R$ {total.toFixed(2)}</span>
+                  <span className="font-medium">R$ {total.toFixed(2).replace('.', ',')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Frete</span>
-                  <span className="font-medium text-green-600">Grátis</span>
+                  <span className="font-medium">R$ {shipping.toFixed(2).replace('.', ',')}</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between items-center">
                   <span className="text-xl font-bold">Total</span>
                   <span className="text-2xl font-bold text-primary">
-                    R$ {total.toFixed(2)}
+                    R$ {(total + shipping).toFixed(2).replace('.', ',')}
                   </span>
                 </div>
               </div>
             </Card>
 
-            {/* Botão Finalizar */}
-            <Button className="w-full bg-primary hover:bg-primary/90 text-white h-14 text-lg font-bold">
-              Ir para Pagamento
-            </Button>
+            {/* Botões de Ação */}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => clearCart()}
+              >
+                Limpar Carrinho
+              </Button>
+              <Button 
+                onClick={() => navigate("/cliente/checkout")}
+                className="flex-1 bg-primary hover:bg-primary/90 text-white h-14 text-lg font-bold"
+              >
+                Finalizar Pedido
+              </Button>
+            </div>
           </>
         )}
       </main>

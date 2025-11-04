@@ -3,18 +3,20 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Heart, Share2, Star, Store } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import { getProductById, getRelatedProducts } from "@/data/products";
 import { getStoreById } from "@/data/stores";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useCart } from "@/hooks/useCart";
 
 const ProdutoDetalhes = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const { addToCart } = useCart();
 
   const productId = id ? parseInt(id) : 1;
   const product = getProductById(productId);
@@ -192,10 +194,32 @@ const ProdutoDetalhes = () => {
         {/* Botões de Ação */}
         <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30">
           <div className="container mx-auto flex gap-3">
-            <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10">
+            <Button 
+              variant="outline" 
+              className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2"
+              onClick={() => {
+                if (store) {
+                  const success = addToCart({
+                    productId: product.id,
+                    name: product.name,
+                    price: parseFloat(product.price.replace('R$', '').replace(',', '.')),
+                    image: product.images[0],
+                    storeId: store.id,
+                    storeName: store.name
+                  });
+                  if (success) {
+                    navigate('/cliente/carrinho');
+                  }
+                }
+              }}
+            >
+              <ShoppingCart className="h-5 w-5" />
               Adicionar ao Carrinho
             </Button>
-            <Button className="flex-1 bg-primary hover:bg-primary/90 text-white">
+            <Button 
+              className="flex-1 bg-primary hover:bg-primary/90 text-white"
+              onClick={() => navigate('/cliente/checkout')}
+            >
               Comprar Agora
             </Button>
           </div>

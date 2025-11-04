@@ -2,49 +2,31 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Package, Truck, CheckCircle, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Package, Truck, CheckCircle, Clock, XCircle, AlertCircle, MessageSquare, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useOrders, OrderStatus } from "@/hooks/useOrders";
 
 const MeusPedidos = () => {
   const navigate = useNavigate();
+  const { orders } = useOrders();
 
-  const orders = [
-    {
-      id: "PED001",
-      date: "15/03/2024",
-      total: 1250.00,
-      status: "entregue",
-      items: 3,
-      products: ["Carne Premium 1kg", "Picanha 500g", "Costela 2kg"]
-    },
-    {
-      id: "PED002",
-      date: "10/03/2024",
-      total: 890.00,
-      status: "em_transito",
-      items: 2,
-      products: ["Alcatra 1kg", "Fraldinha 500g"]
-    },
-    {
-      id: "PED003",
-      date: "05/03/2024",
-      total: 560.00,
-      status: "processando",
-      items: 1,
-      products: ["Maminha 1kg"]
-    },
-  ];
-
-  const getStatusInfo = (status: string) => {
+  const getStatusInfo = (status: OrderStatus) => {
     switch (status) {
       case "entregue":
-        return { label: "Entregue", variant: "default" as const, icon: CheckCircle, color: "text-green-600" };
-      case "em_transito":
-        return { label: "Em Trânsito", variant: "secondary" as const, icon: Truck, color: "text-blue-600" };
-      case "processando":
-        return { label: "Processando", variant: "outline" as const, icon: Clock, color: "text-orange-600" };
+        return { label: "Entregue", variant: "default" as const, icon: CheckCircle, color: "bg-green-100 text-green-700" };
+      case "enviado":
+        return { label: "Enviado", variant: "secondary" as const, icon: Truck, color: "bg-blue-100 text-blue-700" };
+      case "preparando":
+        return { label: "Preparando", variant: "secondary" as const, icon: Package, color: "bg-purple-100 text-purple-700" };
+      case "aguardando_confirmacao":
+        return { label: "Aguardando Confirmação", variant: "outline" as const, icon: Clock, color: "bg-yellow-100 text-yellow-700" };
+      case "pendente_pagamento":
+        return { label: "Pendente Pagamento", variant: "outline" as const, icon: AlertCircle, color: "bg-orange-100 text-orange-700" };
+      case "recusado":
+        return { label: "Recusado", variant: "destructive" as const, icon: XCircle, color: "bg-red-100 text-red-700" };
       default:
-        return { label: "Pendente", variant: "outline" as const, icon: Package, color: "text-gray-600" };
+        return { label: "Pendente", variant: "outline" as const, icon: Package, color: "bg-gray-100 text-gray-700" };
     }
   };
 
@@ -73,27 +55,55 @@ const MeusPedidos = () => {
                   <div>
                     <h3 className="font-bold text-lg">Pedido #{order.id}</h3>
                     <p className="text-sm text-muted-foreground">{order.date}</p>
+                    <p className="text-sm font-medium text-primary mt-1">{order.storeName}</p>
                   </div>
-                  <Badge variant={statusInfo.variant} className="gap-1">
+                  <Badge variant={statusInfo.variant} className={`gap-1 ${statusInfo.color}`}>
                     <StatusIcon className="h-3 w-3" />
                     {statusInfo.label}
                   </Badge>
                 </div>
 
                 <div className="space-y-2 mb-3">
-                  {order.products.map((product, idx) => (
-                    <p key={idx} className="text-sm text-muted-foreground">• {product}</p>
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">• {item.name} (x{item.quantity})</span>
+                      <span className="font-medium">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                    </div>
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t">
+                <div className="flex items-center justify-between pt-3 border-t mb-3">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{order.items} {order.items === 1 ? 'item' : 'itens'}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {order.items.reduce((sum, item) => sum + item.quantity, 0)} {order.items.reduce((sum, item) => sum + item.quantity, 0) === 1 ? 'item' : 'itens'}
+                    </span>
                   </div>
                   <p className="font-bold text-lg text-primary">
                     R$ {order.total.toFixed(2).replace('.', ',')}
                   </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-1"
+                    onClick={() => navigate('/cliente/chat', { state: { storeId: order.storeId } })}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Chat
+                  </Button>
+                  {order.canReview && (
+                    <Button 
+                      size="sm" 
+                      className="flex-1 gap-1"
+                      onClick={() => navigate(`/cliente/avaliacoes?orderId=${order.id}`)}
+                    >
+                      <Star className="h-4 w-4" />
+                      Avaliar
+                    </Button>
+                  )}
                 </div>
               </Card>
             );
