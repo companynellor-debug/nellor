@@ -50,11 +50,12 @@ const ClienteHome = () => {
             </div>
           </div>
           
-          <div className="relative">
+          <div className="relative" onClick={() => navigate("/cliente/produtos")}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Buscar produtos ou marcas..."
-              className="pl-10 bg-muted border-input focus:border-primary"
+              className="pl-10 bg-muted border-input focus:border-primary cursor-pointer"
+              readOnly
             />
           </div>
         </div>
@@ -78,7 +79,11 @@ const ClienteHome = () => {
             {categories.map((category) => {
               const IconComponent = category.icon;
               return (
-                <Card key={category.name} className="bg-card border hover:shadow-lg transition-all hover:scale-105 p-4 text-center cursor-pointer">
+                <Card 
+                  key={category.name} 
+                  onClick={() => navigate(`/cliente/produtos?categoria=${category.name}`)}
+                  className="bg-card border hover:shadow-lg transition-all hover:scale-105 p-4 text-center cursor-pointer"
+                >
                   <IconComponent className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <p className="text-sm font-medium text-foreground">{category.name}</p>
                 </Card>

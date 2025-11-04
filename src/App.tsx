@@ -25,6 +25,7 @@ import EditarPerfil from "./pages/cliente/EditarPerfil";
 import MeusPedidos from "./pages/cliente/MeusPedidos";
 import Enderecos from "./pages/cliente/Enderecos";
 import Notificacoes from "./pages/cliente/Notificacoes";
+import Produtos from "./pages/cliente/Produtos";
 
 const queryClient = new QueryClient();
 
@@ -46,7 +47,8 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           
           {/* Cliente Panel Routes */}
-          <Route path="/cliente" element={<ClienteHome />} />
+            <Route path="/cliente" element={<ClienteHome />} />
+            <Route path="/cliente/produtos" element={<Produtos />} />
           <Route path="/cliente/produto/:id" element={<ProdutoDetalhes />} />
           <Route path="/cliente/carrinho" element={<Carrinho />} />
           <Route path="/cliente/chat" element={<Chat />} />
