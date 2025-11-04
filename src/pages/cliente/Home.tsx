@@ -21,9 +21,9 @@ const ClienteHome = () => {
   ];
 
   const banners = [
-    { title: "Mega Promoção", subtitle: "Até 70% OFF", color: "from-purple-600 to-pink-600" },
-    { title: "Novidades", subtitle: "Confira já!", color: "from-blue-600 to-purple-600" },
-    { title: "Frete Grátis", subtitle: "Em compras acima de R$ 99", color: "from-green-600 to-teal-600" },
+    { title: "Mega Promoção", subtitle: "Até 70% OFF", color: "from-purple-600 to-pink-600", link: "/cliente/produtos" },
+    { title: "Novidades", subtitle: "Confira já!", color: "from-blue-600 to-purple-600", link: "/cliente/produtos" },
+    { title: "Frete Grátis", subtitle: "Em compras acima de R$ 99", color: "from-green-600 to-teal-600", link: "/cliente/produtos" },
   ];
 
   return (
@@ -65,7 +65,11 @@ const ClienteHome = () => {
         {/* Banners */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {banners.map((banner, index) => (
-            <Card key={index} className={`bg-gradient-to-r ${banner.color} border-0 p-6 text-white cursor-pointer hover:scale-105 transition-transform`}>
+            <Card 
+              key={index} 
+              onClick={() => navigate(banner.link)}
+              className={`bg-gradient-to-r ${banner.color} border-0 p-6 text-white cursor-pointer hover:scale-105 transition-transform`}
+            >
               <h3 className="text-xl font-bold mb-1">{banner.title}</h3>
               <p className="text-sm opacity-90">{banner.subtitle}</p>
             </Card>
