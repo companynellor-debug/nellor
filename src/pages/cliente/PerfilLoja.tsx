@@ -94,7 +94,7 @@ const PerfilLoja = () => {
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <Button
-                  onClick={() => navigate("/cliente/chat")}
+                  onClick={() => navigate("/cliente/chat", { state: { storeId, storeName: store.name, storeAvatar: store.avatar } })}
                   className="flex-1 bg-primary hover:bg-primary/90 text-white"
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />

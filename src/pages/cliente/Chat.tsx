@@ -4,11 +4,19 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 const Chat = () => {
+  const location = useLocation();
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (location.state?.storeId) {
+      setSelectedChat(location.state.storeId);
+    }
+  }, [location.state]);
 
   const conversations = [
     {
@@ -36,6 +44,18 @@ const Chat = () => {
       avatar: "👕",
     },
   ];
+
+  // Se veio do perfil da loja e não existe na lista, adiciona
+  if (location.state?.storeId && !conversations.find(c => c.id === location.state.storeId)) {
+    conversations.unshift({
+      id: location.state.storeId,
+      name: location.state.storeName || "Loja",
+      lastMessage: "Iniciar conversa",
+      time: "Agora",
+      unread: 0,
+      avatar: "🏪",
+    });
+  }
 
   const messages = [
     { id: 1, text: "Olá! Como posso ajudar?", sender: "other", time: "10:25" },
