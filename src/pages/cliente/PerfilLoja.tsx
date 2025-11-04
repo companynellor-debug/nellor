@@ -47,9 +47,16 @@ const PerfilLoja = () => {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => {
+              window.history.length > 1 ? navigate(-1) : navigate("/cliente");
+            }} 
+            className="rounded-full"
+          >
             <ArrowLeft className="h-6 w-6" />
-          </button>
+          </Button>
           <h1 className="text-lg font-semibold">Perfil da Loja</h1>
           <div className="w-10" />
         </div>
