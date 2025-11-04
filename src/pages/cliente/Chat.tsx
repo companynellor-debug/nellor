@@ -3,7 +3,8 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, ArrowLeft, Paperclip, X, Image as ImageIcon, Video, FileText } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useMessages, MessageAttachment } from "@/hooks/useMessages";
@@ -15,10 +16,27 @@ const Chat = () => {
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
+  const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { sendMessage, getMessagesByStore, markAsRead } = useMessages();
+
+  const handleDownloadImage = () => {
+    if (!viewingImage) return;
+    
+    const link = document.createElement('a');
+    link.href = viewingImage.url;
+    link.download = viewingImage.name || 'imagem.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Download iniciado",
+      description: "A imagem está sendo baixada"
+    });
+  };
   
   const [conversations, setConversations] = useState([
     {
@@ -228,8 +246,8 @@ const Chat = () => {
                             <img 
                               src={attachment.url} 
                               alt={attachment.name}
-                              className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90"
-                              onClick={() => window.open(attachment.url, '_blank')}
+                              className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => setViewingImage({ url: attachment.url, name: attachment.name })}
                             />
                           )}
                           {attachment.type === 'video' && (
@@ -326,6 +344,42 @@ const Chat = () => {
             </div>
           </div>
         </div>
+
+        {/* Modal de Visualização de Imagem */}
+        <Dialog open={!!viewingImage} onOpenChange={(open) => !open && setViewingImage(null)}>
+          <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-black/95">
+            <div className="relative w-full h-full flex items-center justify-center">
+              {viewingImage && (
+                <>
+                  <img 
+                    src={viewingImage.url} 
+                    alt={viewingImage.name}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <Button
+                      onClick={handleDownloadImage}
+                      className="bg-primary hover:bg-primary/90 gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Baixar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setViewingImage(null)}
+                      className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-4 py-2 rounded-full">
+                    {viewingImage.name}
+                  </p>
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <BottomNav />
       </div>
