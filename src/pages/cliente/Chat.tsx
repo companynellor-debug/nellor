@@ -3,15 +3,22 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Send, ArrowLeft, Paperclip, X, Image as ImageIcon, Video, FileText } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useMessages, MessageAttachment } from "@/hooks/useMessages";
+import { toast } from "@/hooks/use-toast";
 
 const Chat = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
   const [message, setMessage] = useState("");
+  const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const { sendMessage, getMessagesByStore, markAsRead } = useMessages();
   
   const [conversations, setConversations] = useState([
     {
@@ -54,16 +61,14 @@ const Chat = () => {
 
   useEffect(() => {
     if (location.state?.storeId) {
-      // Verifica se a conversa já existe
       const conversationExists = conversations.find(c => c.storeId === location.state.storeId);
       
       if (!conversationExists) {
-        // Adiciona nova conversa
         const newConversation = {
           id: location.state.storeId,
           storeId: location.state.storeId,
           name: location.state.storeName || "Loja",
-          lastMessage: "Iniciar conversa",
+          lastMessage: location.state.message || "Iniciar conversa",
           time: "Agora",
           unread: 0,
           avatar: location.state.storeAvatar || "🏪",
@@ -71,24 +76,89 @@ const Chat = () => {
         setConversations(prev => [newConversation, ...prev]);
       }
       
-      // Seleciona o chat da loja
       setSelectedChat(location.state.storeId);
+      markAsRead(location.state.storeId);
+      
+      // Se veio do checkout com mensagem, envia automaticamente
+      if (location.state.message) {
+        setTimeout(() => {
+          sendMessage(location.state.storeId, location.state.message);
+        }, 500);
+      }
     }
   }, [location.state]);
 
-  const messages = [
-    { id: 1, text: "Olá! Como posso ajudar?", sender: "other", time: "10:25" },
-    { id: 2, text: "Oi! Gostaria de saber sobre o prazo de entrega", sender: "me", time: "10:27" },
-    { id: 3, text: "O prazo de entrega é de 5 a 7 dias úteis", sender: "other", time: "10:28" },
-    { id: 4, text: "Você pode rastrear seu pedido pelo app", sender: "other", time: "10:28" },
-    { id: 5, text: "Perfeito! Muito obrigado", sender: "me", time: "10:30" },
-  ];
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selectedChat]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newAttachments: MessageAttachment[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileType = file.type.startsWith('image/') ? 'image' 
+        : file.type.startsWith('video/') ? 'video' 
+        : 'file';
+
+      // Validação de tamanho (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: `${file.name} excede 10MB`,
+          variant: "destructive"
+        });
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        newAttachments.push({
+          type: fileType,
+          url: e.target?.result as string,
+          name: file.name
+        });
+
+        if (newAttachments.length === files.length) {
+          setAttachments(prev => [...prev, ...newAttachments]);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    e.target.value = '';
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSend = () => {
-    if (message.trim()) {
-      setMessage("");
+    if (!selectedChat) return;
+    
+    if (!message.trim() && attachments.length === 0) {
+      toast({
+        title: "Mensagem vazia",
+        description: "Digite uma mensagem ou anexe um arquivo",
+        variant: "destructive"
+      });
+      return;
     }
+
+    sendMessage(selectedChat, message.trim(), attachments.length > 0 ? attachments : undefined);
+    setMessage("");
+    setAttachments([]);
+    
+    toast({
+      title: "Mensagem enviada",
+      description: "Sua mensagem foi enviada com sucesso"
+    });
   };
+
+  const currentMessages = selectedChat ? getMessagesByStore(selectedChat) : [];
 
   if (selectedChat) {
     const chat = conversations.find(c => c.storeId === selectedChat);
@@ -117,32 +187,126 @@ const Chat = () => {
         </header>
 
         {/* Mensagens */}
-        <main className="container mx-auto px-4 py-6 relative z-10 space-y-4" style={{ paddingBottom: "100px" }}>
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[75%] ${msg.sender === "me" ? "bg-primary text-white" : "bg-white border shadow-sm"} rounded-2xl px-4 py-3`}>
-                <p className="text-sm">{msg.text}</p>
-                <p className="text-xs opacity-70 mt-1">{msg.time}</p>
-              </div>
+        <main className="container mx-auto px-4 py-6 relative z-10 space-y-4" style={{ paddingBottom: "120px" }}>
+          {currentMessages.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhuma mensagem ainda</p>
+              <p className="text-sm text-muted-foreground mt-2">Envie uma mensagem para começar a conversa</p>
             </div>
-          ))}
+          ) : (
+            currentMessages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[75%] ${
+                  msg.sender === "user" 
+                    ? "bg-primary text-white" 
+                    : "bg-white border shadow-sm"
+                } rounded-2xl px-4 py-3`}>
+                  {msg.text && <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>}
+                  
+                  {msg.attachments && msg.attachments.length > 0 && (
+                    <div className="space-y-2 mt-2">
+                      {msg.attachments.map((attachment, idx) => (
+                        <div key={idx} className="rounded-lg overflow-hidden">
+                          {attachment.type === 'image' && (
+                            <img 
+                              src={attachment.url} 
+                              alt={attachment.name}
+                              className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90"
+                              onClick={() => window.open(attachment.url, '_blank')}
+                            />
+                          )}
+                          {attachment.type === 'video' && (
+                            <video 
+                              src={attachment.url} 
+                              controls 
+                              className="max-w-full h-auto rounded-lg"
+                            />
+                          )}
+                          {attachment.type === 'file' && (
+                            <a 
+                              href={attachment.url} 
+                              download={attachment.name}
+                              className="flex items-center gap-2 p-2 bg-accent rounded-lg hover:bg-accent/80"
+                            >
+                              <FileText className="h-4 w-4" />
+                              <span className="text-xs truncate">{attachment.name}</span>
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs opacity-70 mt-1">{msg.timestamp}</p>
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
         </main>
 
         {/* Input de Mensagem */}
         <div className="fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30">
-          <div className="container mx-auto flex gap-2">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Digite sua mensagem..."
-            />
-            <Button
-              onClick={handleSend}
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              <Send className="h-5 w-5" />
-            </Button>
+          <div className="container mx-auto">
+            {/* Preview de Anexos */}
+            {attachments.length > 0 && (
+              <div className="mb-3 flex gap-2 overflow-x-auto pb-2">
+                {attachments.map((attachment, idx) => (
+                  <div key={idx} className="relative flex-shrink-0">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-accent flex items-center justify-center">
+                      {attachment.type === 'image' && (
+                        <img src={attachment.url} alt="" className="w-full h-full object-cover" />
+                      )}
+                      {attachment.type === 'video' && (
+                        <Video className="h-8 w-8 text-muted-foreground" />
+                      )}
+                      {attachment.type === 'file' && (
+                        <FileText className="h-8 w-8 text-muted-foreground" />
+                      )}
+                    </div>
+                    <button
+                      onClick={() => removeAttachment(idx)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Input */}
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*,.pdf,.doc,.docx"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-shrink-0"
+              >
+                <Paperclip className="h-5 w-5" />
+              </Button>
+              <Input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                placeholder="Digite sua mensagem..."
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSend}
+                className="bg-primary hover:bg-primary/90 text-white flex-shrink-0"
+              >
+                <Send className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
 
