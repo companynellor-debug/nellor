@@ -15,6 +15,7 @@ export interface Product {
     date: string;
   }[];
   category: string;
+  storeId: number;
 }
 
 export const products: Product[] = [
@@ -43,6 +44,7 @@ export const products: Product[] = [
       { name: "Pedro Costa", rating: 4, comment: "Muito bom, recomendo!", date: "05/10/2024" },
     ],
     category: "Calçados",
+    storeId: 1,
   },
   {
     id: 2,
@@ -69,6 +71,7 @@ export const products: Product[] = [
       { name: "Beatriz Lima", rating: 4, comment: "Muito boa, vale o preço.", date: "08/10/2024" },
     ],
     category: "Acessórios",
+    storeId: 2,
   },
   {
     id: 3,
@@ -95,6 +98,7 @@ export const products: Product[] = [
       { name: "Lucas Martins", rating: 5, comment: "Supera as expectativas!", date: "11/10/2024" },
     ],
     category: "Eletrônicos",
+    storeId: 3,
   },
   {
     id: 4,
@@ -121,6 +125,7 @@ export const products: Product[] = [
       { name: "Rafael Souza", rating: 5, comment: "Melhor fone que já tive!", date: "13/10/2024" },
     ],
     category: "Eletrônicos",
+    storeId: 4,
   },
 ];
 
@@ -132,4 +137,8 @@ export const getRelatedProducts = (currentProductId: number, category: string, l
   return products
     .filter((product) => product.id !== currentProductId && product.category === category)
     .slice(0, limit);
+};
+
+export const getProductsByStore = (storeId: number): Product[] => {
+  return products.filter((product) => product.storeId === storeId);
 };

@@ -2,10 +2,12 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Heart, Share2, Star } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ArrowLeft, Heart, Share2, Star, Store } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import { getProductById, getRelatedProducts } from "@/data/products";
+import { getStoreById } from "@/data/stores";
 import { useFavorites } from "@/hooks/useFavorites";
 
 const ProdutoDetalhes = () => {
@@ -16,6 +18,7 @@ const ProdutoDetalhes = () => {
 
   const productId = id ? parseInt(id) : 1;
   const product = getProductById(productId);
+  const store = product ? getStoreById(product.storeId) : undefined;
   const isProductFavorite = isFavorite(productId);
 
   const handleToggleFavorite = () => {
@@ -80,6 +83,33 @@ const ProdutoDetalhes = () => {
             ))}
           </div>
         </div>
+
+        {/* Store Info */}
+        {store && (
+          <Card
+            onClick={() => navigate(`/cliente/loja/${store.id}`)}
+            className="bg-white border shadow-sm p-4 mb-6 cursor-pointer hover:shadow-md transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={store.avatar} alt={store.name} />
+                <AvatarFallback>{store.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">{store.name}</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    <span>{store.rating}</span>
+                  </div>
+                  <span>•</span>
+                  <span>{store.totalSales.toLocaleString()} vendas</span>
+                </div>
+              </div>
+              <Store className="h-5 w-5 text-primary" />
+            </div>
+          </Card>
+        )}
 
         {/* Informações do Produto */}
         <Card className="bg-white border shadow-sm p-6 mb-6">
