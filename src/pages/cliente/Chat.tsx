@@ -17,29 +17,38 @@ const Chat = () => {
     {
       id: 1,
       storeId: 1,
-      name: "Suporte Nellor",
-      lastMessage: "Como posso ajudar você hoje?",
+      name: "Nike Store Oficial",
+      lastMessage: "Olá! Como posso ajudar você hoje?",
       time: "10:30",
-      unread: 2,
-      avatar: "🎧",
+      unread: 0,
+      avatar: "👟",
     },
     {
       id: 2,
       storeId: 2,
-      name: "Fornecedor Prime",
-      lastMessage: "Seu pedido foi enviado!",
+      name: "Fashion Bags Premium",
+      lastMessage: "Temos novos modelos disponíveis!",
       time: "09:15",
       unread: 0,
-      avatar: "🏪",
+      avatar: "👜",
     },
     {
       id: 3,
       storeId: 3,
-      name: "Fashion Store",
-      lastMessage: "Temos novidades para você",
+      name: "Tech Store Brasil",
+      lastMessage: "Confira nossas ofertas de tecnologia",
       time: "Ontem",
-      unread: 1,
-      avatar: "👕",
+      unread: 0,
+      avatar: "📱",
+    },
+    {
+      id: 4,
+      storeId: 4,
+      name: "Audio Pro Shop",
+      lastMessage: "Novidades em equipamentos de áudio!",
+      time: "Ontem",
+      unread: 0,
+      avatar: "🎧",
     },
   ]);
 
@@ -159,7 +168,7 @@ const Chat = () => {
           {conversations.map((conv) => (
             <Card
               key={conv.id}
-              onClick={() => setSelectedChat(conv.id)}
+              onClick={() => setSelectedChat(conv.storeId)}
               className="bg-white border shadow-sm p-4 cursor-pointer hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-4">
