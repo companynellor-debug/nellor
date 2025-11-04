@@ -36,7 +36,9 @@ const ClienteHome = () => {
           <div className="flex items-center justify-between mb-4">
             <img src={logo} alt="Nellor" className="h-12 w-auto" />
             <div className="flex items-center gap-4">
-              <Bell className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
+              <button onClick={() => navigate("/cliente/notificacoes")}>
+                <Bell className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
+              </button>
               <button onClick={() => navigate("/cliente/favoritos")} className="relative">
                 <Heart className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
                 {favorites.length > 0 && (
