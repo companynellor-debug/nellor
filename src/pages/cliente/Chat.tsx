@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Chat = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
   const [message, setMessage] = useState("");
 
@@ -21,6 +22,7 @@ const Chat = () => {
   const conversations = [
     {
       id: 1,
+      storeId: 1,
       name: "Suporte Nellor",
       lastMessage: "Como posso ajudar você hoje?",
       time: "10:30",
@@ -29,6 +31,7 @@ const Chat = () => {
     },
     {
       id: 2,
+      storeId: 2,
       name: "Fornecedor Prime",
       lastMessage: "Seu pedido foi enviado!",
       time: "09:15",
@@ -37,6 +40,7 @@ const Chat = () => {
     },
     {
       id: 3,
+      storeId: 3,
       name: "Fashion Store",
       lastMessage: "Temos novidades para você",
       time: "Ontem",
@@ -46,14 +50,15 @@ const Chat = () => {
   ];
 
   // Se veio do perfil da loja e não existe na lista, adiciona
-  if (location.state?.storeId && !conversations.find(c => c.id === location.state.storeId)) {
+  if (location.state?.storeId && !conversations.find(c => c.storeId === location.state.storeId)) {
     conversations.unshift({
       id: location.state.storeId,
+      storeId: location.state.storeId,
       name: location.state.storeName || "Loja",
       lastMessage: "Iniciar conversa",
       time: "Agora",
       unread: 0,
-      avatar: "🏪",
+      avatar: location.state.storeAvatar || "🏪",
     });
   }
 
@@ -84,10 +89,15 @@ const Chat = () => {
             <button onClick={() => setSelectedChat(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
               <ArrowLeft className="h-6 w-6" />
             </button>
-            <div className="text-3xl">{chat?.avatar}</div>
-            <div>
-              <h2 className="font-bold">{chat?.name}</h2>
-              <p className="text-xs text-muted-foreground">Online</p>
+            <div 
+              onClick={() => chat?.storeId && navigate(`/cliente/loja/${chat.storeId}`)}
+              className="flex items-center gap-3 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              <div className="text-3xl">{chat?.avatar}</div>
+              <div>
+                <h2 className="font-bold">{chat?.name}</h2>
+                <p className="text-xs text-muted-foreground">Online</p>
+              </div>
             </div>
           </div>
         </header>
