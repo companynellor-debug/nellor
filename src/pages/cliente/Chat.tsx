@@ -12,14 +12,8 @@ const Chat = () => {
   const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    if (location.state?.storeId) {
-      setSelectedChat(location.state.storeId);
-    }
-  }, [location.state]);
-
-  const conversations = [
+  
+  const [conversations, setConversations] = useState([
     {
       id: 1,
       storeId: 1,
@@ -47,20 +41,31 @@ const Chat = () => {
       unread: 1,
       avatar: "👕",
     },
-  ];
+  ]);
 
-  // Se veio do perfil da loja e não existe na lista, adiciona
-  if (location.state?.storeId && !conversations.find(c => c.storeId === location.state.storeId)) {
-    conversations.unshift({
-      id: location.state.storeId,
-      storeId: location.state.storeId,
-      name: location.state.storeName || "Loja",
-      lastMessage: "Iniciar conversa",
-      time: "Agora",
-      unread: 0,
-      avatar: location.state.storeAvatar || "🏪",
-    });
-  }
+  useEffect(() => {
+    if (location.state?.storeId) {
+      // Verifica se a conversa já existe
+      const conversationExists = conversations.find(c => c.storeId === location.state.storeId);
+      
+      if (!conversationExists) {
+        // Adiciona nova conversa
+        const newConversation = {
+          id: location.state.storeId,
+          storeId: location.state.storeId,
+          name: location.state.storeName || "Loja",
+          lastMessage: "Iniciar conversa",
+          time: "Agora",
+          unread: 0,
+          avatar: location.state.storeAvatar || "🏪",
+        };
+        setConversations(prev => [newConversation, ...prev]);
+      }
+      
+      // Seleciona o chat da loja
+      setSelectedChat(location.state.storeId);
+    }
+  }, [location.state]);
 
   const messages = [
     { id: 1, text: "Olá! Como posso ajudar?", sender: "other", time: "10:25" },
@@ -77,7 +82,7 @@ const Chat = () => {
   };
 
   if (selectedChat) {
-    const chat = conversations.find(c => c.id === selectedChat);
+    const chat = conversations.find(c => c.storeId === selectedChat);
     
     return (
       <div className="min-h-screen bg-background pb-20">
