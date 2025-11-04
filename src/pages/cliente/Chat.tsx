@@ -92,14 +92,15 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedChat]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
+    const fileArray = Array.from(files);
     const newAttachments: MessageAttachment[] = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    // Processa todos os arquivos
+    for (const file of fileArray) {
       const fileType = file.type.startsWith('image/') ? 'image' 
         : file.type.startsWith('video/') ? 'video' 
         : 'file';
@@ -114,19 +115,35 @@ const Chat = () => {
         continue;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        newAttachments.push({
-          type: fileType,
-          url: e.target?.result as string,
-          name: file.name
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
         });
 
-        if (newAttachments.length === files.length) {
-          setAttachments(prev => [...prev, ...newAttachments]);
-        }
-      };
-      reader.readAsDataURL(file);
+        newAttachments.push({
+          type: fileType,
+          url: base64,
+          name: file.name
+        });
+      } catch (error) {
+        console.error('Erro ao ler arquivo:', error);
+        toast({
+          title: "Erro ao processar arquivo",
+          description: `Não foi possível processar ${file.name}`,
+          variant: "destructive"
+        });
+      }
+    }
+
+    if (newAttachments.length > 0) {
+      setAttachments(prev => [...prev, ...newAttachments]);
+      toast({
+        title: "Arquivos anexados",
+        description: `${newAttachments.length} arquivo(s) anexado(s) com sucesso`
+      });
     }
 
     e.target.value = '';
