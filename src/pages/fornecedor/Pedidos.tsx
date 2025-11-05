@@ -34,48 +34,51 @@ const Pedidos = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Pedidos</h1>
 
-      {/* Tabela de Pedidos */}
+      {/* Lista de Pedidos */}
       <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium">Pedido</th>
-                <th className="px-6 py-3 text-left text-sm font-medium">Cliente</th>
-                <th className="px-6 py-3 text-left text-sm font-medium">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-medium">Valor</th>
-                <th className="px-6 py-3 text-left text-sm font-medium">Data</th>
-                <th className="px-6 py-3 text-left text-sm font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {orders.map((order) => {
-                const badge = getStatusBadge(order.status);
-                return (
-                  <tr key={order.id} className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">{order.id}</td>
-                    <td className="px-6 py-4">{order.customerName}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.class}`}>
-                        {badge.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">R$ {order.value.toFixed(2)}</td>
-                    <td className="px-6 py-4">{order.date}</td>
-                    <td className="px-6 py-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="divide-y">
+          {orders.map((order) => {
+            const badge = getStatusBadge(order.status);
+            return (
+              <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="font-semibold text-sm sm:text-base mb-1">{order.product}</p>
+                    <p className="text-xs text-muted-foreground">Pedido #{order.id}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${badge.class}`}>
+                    {badge.label}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mb-3 text-xs sm:text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Cliente</p>
+                    <p className="font-medium">{order.customerName}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Data</p>
+                    <p className="font-medium">{order.date}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Valor</p>
+                    <p className="font-semibold text-primary">R$ {order.value.toFixed(2)}</p>
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedOrder(order)}
+                      className="text-xs sm:text-sm"
+                    >
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      Detalhes
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </Card>
 
