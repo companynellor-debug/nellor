@@ -5,13 +5,19 @@ import { FavoritesProvider } from "./hooks/useFavorites";
 import { StoresFavoritesProvider } from "./hooks/useStoresFavorites";
 import { ProfileProvider } from "./hooks/useProfile";
 import { AuthProvider } from "./hooks/useAuth";
+import { SupplierOrdersProvider } from "./hooks/useSupplierOrders";
+import { SupplierProductsProvider } from "./hooks/useSupplierProducts";
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
     <ProfileProvider>
       <FavoritesProvider>
         <StoresFavoritesProvider>
-          <App />
+          <SupplierOrdersProvider>
+            <SupplierProductsProvider>
+              <App />
+            </SupplierProductsProvider>
+          </SupplierOrdersProvider>
         </StoresFavoritesProvider>
       </FavoritesProvider>
     </ProfileProvider>

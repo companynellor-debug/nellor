@@ -30,6 +30,15 @@ import Produtos from "./pages/cliente/Produtos";
 import PerfilLoja from "./pages/cliente/PerfilLoja";
 import Checkout from "./pages/cliente/Checkout";
 
+import FornecedorLayout from "./pages/fornecedor/FornecedorLayout";
+import Dashboard from "./pages/fornecedor/Dashboard";
+import Pedidos from "./pages/fornecedor/Pedidos";
+import ChatFornecedor from "./pages/fornecedor/ChatFornecedor";
+import ProdutosFornecedor from "./pages/fornecedor/Produtos";
+import Financeiro from "./pages/fornecedor/Financeiro";
+import NotificacoesFornecedor from "./pages/fornecedor/Notificacoes";
+import Configuracoes from "./pages/fornecedor/Configuracoes";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -40,7 +49,6 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/fornecedor" element={<Fornecedor />} />
           <Route path="/sobre" element={<Sobre />} />
           <Route path="/contato" element={<Contato />} />
           <Route path="/login" element={<Login />} />
@@ -64,6 +72,18 @@ const App = () => (
           <Route path="/cliente/notificacoes" element={<ProtectedRoute requireType="cliente"><Notificacoes /></ProtectedRoute>} />
           <Route path="/cliente/avaliacoes" element={<ProtectedRoute requireType="cliente"><Avaliacoes /></ProtectedRoute>} />
           <Route path="/cliente/favoritos" element={<ProtectedRoute requireType="cliente"><Favoritos /></ProtectedRoute>} />
+
+          {/* Fornecedor Panel Routes */}
+          <Route path="/fornecedor" element={<ProtectedRoute requireType="fornecedor"><FornecedorLayout /></ProtectedRoute>}>
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="pedidos" element={<Pedidos />} />
+            <Route path="chat" element={<ChatFornecedor />} />
+            <Route path="produtos" element={<ProdutosFornecedor />} />
+            <Route path="financeiro" element={<Financeiro />} />
+            <Route path="notificacoes" element={<NotificacoesFornecedor />} />
+            <Route path="configuracoes" element={<Configuracoes />} />
+          </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
