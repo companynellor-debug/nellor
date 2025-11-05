@@ -37,7 +37,7 @@ const Pedidos = () => {
       {/* Tabela de Pedidos */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[640px]">
             <thead className="bg-muted/50">
               <tr>
                 <th className="px-6 py-3 text-left text-sm font-medium">Pedido</th>

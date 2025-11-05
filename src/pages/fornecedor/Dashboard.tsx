@@ -207,7 +207,7 @@ const Dashboard = () => {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[640px]">
             <thead className="bg-muted/30">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Pedido</th>
