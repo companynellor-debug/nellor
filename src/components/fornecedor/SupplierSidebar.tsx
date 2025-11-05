@@ -28,23 +28,23 @@ export function SupplierSidebar() {
     isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50";
 
   return (
-    <Sidebar collapsible="icon">
-      <div className="p-4 border-b bg-white">
-        <h1 className={`font-heading font-bold text-primary transition-all ${open ? "text-xl" : "text-sm text-center"}`}>
+    <Sidebar collapsible="icon" className="border-r">
+      <div className="p-4 border-b bg-white h-16 flex items-center justify-center">
+        <h1 className={`font-heading font-bold text-primary transition-all ${open ? "text-xl" : "text-base"}`}>
           {open ? "Nellor Supplier" : "NS"}
         </h1>
       </div>
 
       <SidebarContent className="bg-white">
         <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
+          <SidebarGroupContent className="px-2 py-2">
+            <SidebarMenu className="gap-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild className="h-12">
                     <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      {open && <span>{item.title}</span>}
+                      <item.icon className={`shrink-0 ${open ? "h-5 w-5" : "h-6 w-6"}`} />
+                      {open && <span className="text-base">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -56,4 +56,5 @@ export function SupplierSidebar() {
     </Sidebar>
   );
 }
+
 
