@@ -8,7 +8,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -23,20 +22,20 @@ const menuItems = [
 ];
 
 export function SupplierSidebar() {
-  const { open: collapsed } = useSidebar();
+  const { open } = useSidebar();
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50";
 
   return (
-    <Sidebar className={collapsed ? "w-60" : "w-14"} collapsible="icon">
-      <div className="p-4 border-b">
-        <h1 className={`font-heading font-bold text-primary transition-all ${collapsed ? "text-xl" : "text-sm"}`}>
-          {collapsed ? "Nellor Supplier" : "NS"}
+    <Sidebar collapsible="icon">
+      <div className="p-4 border-b bg-white">
+        <h1 className={`font-heading font-bold text-primary transition-all ${open ? "text-xl" : "text-sm text-center"}`}>
+          {open ? "Nellor Supplier" : "NS"}
         </h1>
       </div>
 
-      <SidebarContent>
+      <SidebarContent className="bg-white">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -44,8 +43,8 @@ export function SupplierSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="h-5 w-5" />
-                      {collapsed && <span>{item.title}</span>}
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      {open && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -57,3 +56,4 @@ export function SupplierSidebar() {
     </Sidebar>
   );
 }
+
