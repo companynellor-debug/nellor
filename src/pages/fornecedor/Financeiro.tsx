@@ -90,7 +90,7 @@ const Financeiro = () => {
           <h2 className="text-xl font-bold">Histórico de Transações</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
+          <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
                 <th className="px-6 py-3 text-left text-sm font-medium">Data</th>
