@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
 import { toast } from "sonner";
 
@@ -19,8 +19,8 @@ const Produtos = () => {
     description: '',
     price: '',
     stock: '',
-    images: '',
   });
+  const [imageFiles, setImageFiles] = useState<string[]>([]);
 
   const handleOpenModal = (product?: SupplierProduct) => {
     if (product) {
@@ -31,18 +31,46 @@ const Produtos = () => {
         description: product.description,
         price: product.price.toString(),
         stock: product.stock.toString(),
-        images: product.images.join(', '),
       });
+      setImageFiles(product.images);
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', category: '', description: '', price: '', stock: '', images: '' });
+      setFormData({ name: '', category: '', description: '', price: '', stock: '' });
+      setImageFiles([]);
     }
     setIsModalOpen(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    if (imageFiles.length + files.length > 5) {
+      toast.error("Você pode adicionar no máximo 5 imagens");
+      return;
+    }
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageFiles((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = () => {
     if (!formData.name || !formData.price) {
       toast.error("Preencha os campos obrigatórios");
+      return;
+    }
+
+    if (imageFiles.length === 0) {
+      toast.error("Adicione pelo menos uma imagem");
       return;
     }
 
@@ -52,7 +80,7 @@ const Produtos = () => {
       description: formData.description,
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock) || 0,
-      images: formData.images.split(',').map(img => img.trim()).filter(Boolean),
+      images: imageFiles,
     };
 
     if (editingProduct) {
@@ -184,13 +212,51 @@ const Produtos = () => {
             </div>
 
             <div>
-              <Label>URLs das Imagens (separadas por vírgula)</Label>
-              <Textarea
-                value={formData.images}
-                onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg"
-                rows={2}
-              />
+              <Label>Imagens do Produto (máximo 5)</Label>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    disabled={imageFiles.length >= 5}
+                    className="cursor-pointer"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+                    disabled={imageFiles.length >= 5}
+                  >
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {imageFiles.length}/5 imagens adicionadas
+                </p>
+                {imageFiles.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {imageFiles.map((img, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={img}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-2 justify-end">
