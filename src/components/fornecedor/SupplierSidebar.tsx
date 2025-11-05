@@ -10,6 +10,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
+import logo from "@/assets/logo.png";
 
 const menuItems = [
   { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
@@ -30,9 +31,11 @@ export function SupplierSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r">
       <div className="p-4 border-b bg-white h-16 flex items-center justify-center">
-        <h1 className={`font-heading font-bold text-primary transition-all ${open ? "text-xl" : "text-base"}`}>
-          {open ? "Nellor Supplier" : "NS"}
-        </h1>
+        <img 
+          src={logo} 
+          alt="Nellor" 
+          className={`transition-all ${open ? "h-10" : "h-8"}`} 
+        />
       </div>
 
       <SidebarContent className="bg-white">
