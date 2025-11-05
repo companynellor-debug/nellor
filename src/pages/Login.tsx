@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -17,16 +19,17 @@ const Login = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    login(formData.email, formData.password, formData.name, 'cliente');
+    
     if (isSignup) {
       toast.success("Conta criada com sucesso!");
     } else {
       toast.success("Login realizado com sucesso!");
     }
     
-    // Simular login/cadastro
     setTimeout(() => {
-      navigate("/");
-    }, 1000);
+      navigate("/cliente");
+    }, 500);
   };
 
   return (

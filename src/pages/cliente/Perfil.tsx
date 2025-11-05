@@ -6,18 +6,27 @@ import { User, MapPin, Bell, Package, LogOut, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Perfil = () => {
   const navigate = useNavigate();
   const { favorites } = useFavorites();
   const { profile } = useProfile();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logout realizado com sucesso!");
+    navigate("/");
+  };
 
   const menuItems = [
     { icon: Edit, label: "Editar Perfil", action: () => navigate("/cliente/editar-perfil") },
     { icon: Package, label: "Meus Pedidos", action: () => navigate("/cliente/meus-pedidos") },
     { icon: MapPin, label: "Endereços", action: () => navigate("/cliente/enderecos") },
     { icon: Bell, label: "Notificações", action: () => navigate("/cliente/notificacoes") },
-    { icon: LogOut, label: "Sair", action: () => navigate("/") },
+    { icon: LogOut, label: "Sair", action: handleLogout },
   ];
 
   return (

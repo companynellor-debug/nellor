@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Home from "./pages/Home";
 import Fornecedor from "./pages/Fornecedor";
 import Sobre from "./pages/Sobre";
@@ -49,20 +50,20 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           
           {/* Cliente Panel Routes */}
-          <Route path="/cliente" element={<ClienteHome />} />
-          <Route path="/cliente/produtos" element={<Produtos />} />
-          <Route path="/cliente/produto/:id" element={<ProdutoDetalhes />} />
-          <Route path="/cliente/loja/:id" element={<PerfilLoja />} />
-          <Route path="/cliente/carrinho" element={<Carrinho />} />
-          <Route path="/cliente/checkout" element={<Checkout />} />
-          <Route path="/cliente/chat" element={<Chat />} />
-          <Route path="/cliente/perfil" element={<Perfil />} />
-          <Route path="/cliente/editar-perfil" element={<EditarPerfil />} />
-          <Route path="/cliente/meus-pedidos" element={<MeusPedidos />} />
-          <Route path="/cliente/enderecos" element={<Enderecos />} />
-          <Route path="/cliente/notificacoes" element={<Notificacoes />} />
-          <Route path="/cliente/avaliacoes" element={<Avaliacoes />} />
-          <Route path="/cliente/favoritos" element={<Favoritos />} />
+          <Route path="/cliente" element={<ProtectedRoute requireType="cliente"><ClienteHome /></ProtectedRoute>} />
+          <Route path="/cliente/produtos" element={<ProtectedRoute requireType="cliente"><Produtos /></ProtectedRoute>} />
+          <Route path="/cliente/produto/:id" element={<ProtectedRoute requireType="cliente"><ProdutoDetalhes /></ProtectedRoute>} />
+          <Route path="/cliente/loja/:id" element={<ProtectedRoute requireType="cliente"><PerfilLoja /></ProtectedRoute>} />
+          <Route path="/cliente/carrinho" element={<ProtectedRoute requireType="cliente"><Carrinho /></ProtectedRoute>} />
+          <Route path="/cliente/checkout" element={<ProtectedRoute requireType="cliente"><Checkout /></ProtectedRoute>} />
+          <Route path="/cliente/chat" element={<ProtectedRoute requireType="cliente"><Chat /></ProtectedRoute>} />
+          <Route path="/cliente/perfil" element={<ProtectedRoute requireType="cliente"><Perfil /></ProtectedRoute>} />
+          <Route path="/cliente/editar-perfil" element={<ProtectedRoute requireType="cliente"><EditarPerfil /></ProtectedRoute>} />
+          <Route path="/cliente/meus-pedidos" element={<ProtectedRoute requireType="cliente"><MeusPedidos /></ProtectedRoute>} />
+          <Route path="/cliente/enderecos" element={<ProtectedRoute requireType="cliente"><Enderecos /></ProtectedRoute>} />
+          <Route path="/cliente/notificacoes" element={<ProtectedRoute requireType="cliente"><Notificacoes /></ProtectedRoute>} />
+          <Route path="/cliente/avaliacoes" element={<ProtectedRoute requireType="cliente"><Avaliacoes /></ProtectedRoute>} />
+          <Route path="/cliente/favoritos" element={<ProtectedRoute requireType="cliente"><Favoritos /></ProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

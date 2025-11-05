@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const LoginFornecedor = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({
     companyName: "",
@@ -17,16 +19,17 @@ const LoginFornecedor = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    login(formData.email, formData.password, formData.companyName, 'fornecedor');
+    
     if (isSignup) {
       toast.success("Conta de fornecedor criada com sucesso!");
     } else {
       toast.success("Login de fornecedor realizado com sucesso!");
     }
     
-    // Simular login/cadastro
     setTimeout(() => {
       navigate("/fornecedor");
-    }, 1000);
+    }, 500);
   };
 
   return (
