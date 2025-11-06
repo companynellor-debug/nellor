@@ -10,6 +10,8 @@ export interface CartItem {
   image: string;
   storeId: number;
   storeName: string;
+  minQuantity?: number;
+  minValue?: number;
 }
 
 export const useCart = () => {
@@ -96,6 +98,30 @@ export const useCart = () => {
     return cartItems.length > 0 ? cartItems[0].storeId : null;
   };
 
+  const validateMinimumLimits = () => {
+    const errors: string[] = [];
+    
+    cartItems.forEach(item => {
+      // Validar quantidade mínima
+      if (item.minQuantity && item.quantity < item.minQuantity) {
+        errors.push(`${item.name}: quantidade mínima de ${item.minQuantity} unidades`);
+      }
+      
+      // Validar valor mínimo
+      if (item.minValue) {
+        const itemTotal = item.price * item.quantity;
+        if (itemTotal < item.minValue) {
+          errors.push(`${item.name}: valor mínimo de R$ ${item.minValue.toFixed(2)}`);
+        }
+      }
+    });
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
   return {
     cartItems,
     addToCart,
@@ -104,6 +130,7 @@ export const useCart = () => {
     clearCart,
     getTotal,
     getStoreId,
+    validateMinimumLimits,
     itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0)
   };
 };

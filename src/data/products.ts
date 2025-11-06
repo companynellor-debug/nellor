@@ -16,6 +16,8 @@ export interface Product {
   }[];
   category: string;
   storeId: number;
+  minQuantity?: number;
+  minValue?: number;
 }
 
 export const products: Product[] = [
