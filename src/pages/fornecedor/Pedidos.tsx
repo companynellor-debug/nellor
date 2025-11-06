@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, CheckCircle, Truck, Package, XCircle } from "lucide-react";
 import { useSupplierOrders, OrderStatus, SupplierOrder } from "@/hooks/useSupplierOrders";
@@ -24,6 +24,12 @@ const Pedidos = () => {
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     updateOrderStatus(orderId, newStatus);
+    
+    // Atualizar o estado local do pedido selecionado também
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder({ ...selectedOrder, status: newStatus });
+    }
+    
     toast.success("Status do pedido atualizado!");
     
     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBixi0ezVhTgIHm7A7+OZRQ0PVqzn77BfGgU7ltrzxnkqBil+zPDajTsJGGS36+ikUBELTKXh8LdjHAU7kdfy0YU2Bh1tv+/mnEgND1as5++wXxoFO5ba88Z5KgYpfsz02o07CRhkt+vopFARCUyi4PG3YxwFO5HX8tGFNgYdbb/v5pxIDQ9WrOfvsF8aBTuW2vPGeSoGKX7M9NqNOwkYZLfr6KRQEQlMouDxt2McBTuR1/LRhTYGHW2/7+acSA0PVqzn77BfGgU7ltrzxnkqBil+zPDajTsJGGS36+ikUBEJTKLg8bdjHAU7kdfyzoQzBhxrv+/omkYMD1Wr5u+vYBoEOpbZ88Z5KgYpf8zw2o07CRhkt+vopFARCUyi4PG3YxwFO5HX8s6EMwYca7/v6JpGDA9Vq+bvr2AaBDqW2fPGeSoGKX/M8NqNOwkYZLfr6KRQEQlMouDxt2McBTuR1/LOhDMGHGu/7+iaRgwPVavm769gGgQ6ltnzxnkqBil/zPDajTsJGGS36+ikUBEJTKLg8bdjHAU7kdfyzoQzBhxrv+/omkYMD1Wr5u+vYBoEOpbZ88Z5KgYpf8zw2o07CRhkt+vopFARCUyi4PG3YxwFO5HX8s6EMwYca7/v6JpGDA9Vq+bvr2AaBDqW2fPGeSoGKX/M8NqNOwkYZLfr6KRQEQlMouDxt2McBTuR1/LOhDMGHGu/7+iaRgwPVavm769gGgQ6ltnzxnkqBil/zPDajTsJGGS36+ikUBEJTKLg8bdjHAU7kdfyzoQzBhxrv+/omkYMD1Wr5u+vYBoEOpbZ88Z5KgYpf8zw2o07CRhkt+vopFARCUyi4PG3YxwFO5HX8s6EMwYca7/v6JpGDA9Vq+bvr2AaBDqW2fPGeSoGKX/M8NqNOwkYZLfr6KRQEQ==');
@@ -87,6 +93,9 @@ const Pedidos = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Detalhes do Pedido {selectedOrder?.id}</DialogTitle>
+            <DialogDescription>
+              Visualize e gerencie os detalhes do pedido
+            </DialogDescription>
           </DialogHeader>
 
           {selectedOrder && (

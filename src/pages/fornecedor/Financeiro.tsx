@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DollarSign, TrendingUp, Eye } from "lucide-react";
 import { useSupplierOrders, SupplierOrder } from "@/hooks/useSupplierOrders";
 import { toast } from "sonner";
@@ -144,6 +144,9 @@ const Financeiro = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Detalhes do Pedido {selectedOrder?.id}</DialogTitle>
+            <DialogDescription>
+              Informações completas do pedido
+            </DialogDescription>
           </DialogHeader>
 
           {selectedOrder && (
