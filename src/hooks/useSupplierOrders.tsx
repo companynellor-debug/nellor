@@ -44,6 +44,7 @@ export interface SupplierOrder {
   paymentMethod: string;
   notes?: string;
   trackingCode?: string;
+  tags: string[];
 }
 
 interface SupplierOrdersContextType {
@@ -51,6 +52,8 @@ interface SupplierOrdersContextType {
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   addPaymentProof: (orderId: string, proof: string) => void;
   updateTrackingCode: (orderId: string, trackingCode: string) => void;
+  addTag: (orderId: string, tag: string) => void;
+  removeTag: (orderId: string, tag: string) => void;
 }
 
 const SupplierOrdersContext = createContext<SupplierOrdersContextType | undefined>(undefined);
@@ -89,8 +92,26 @@ export const SupplierOrdersProvider = ({ children }: { children: ReactNode }) =>
     ));
   };
 
+  const addTag = (orderId: string, tag: string) => {
+    setOrders(prev => prev.map(order => {
+      if (order.id === orderId && !order.tags.includes(tag)) {
+        return { ...order, tags: [...order.tags, tag] };
+      }
+      return order;
+    }));
+  };
+
+  const removeTag = (orderId: string, tag: string) => {
+    setOrders(prev => prev.map(order => {
+      if (order.id === orderId) {
+        return { ...order, tags: order.tags.filter(t => t !== tag) };
+      }
+      return order;
+    }));
+  };
+
   return (
-    <SupplierOrdersContext.Provider value={{ orders, updateOrderStatus, addPaymentProof, updateTrackingCode }}>
+    <SupplierOrdersContext.Provider value={{ orders, updateOrderStatus, addPaymentProof, updateTrackingCode, addTag, removeTag }}>
       {children}
     </SupplierOrdersContext.Provider>
   );

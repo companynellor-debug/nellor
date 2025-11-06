@@ -1,13 +1,14 @@
 import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Separator } from "@/components/ui/separator";
-import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X, Search, Filter, MapPin, Phone, Mail, CreditCard, ShoppingCart, Printer, Clock } from "lucide-react";
+import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X, Search, Filter, MapPin, Phone, Mail, CreditCard, ShoppingCart, Printer, Clock, Tag, Plus } from "lucide-react";
 import { useSupplierOrders, OrderStatus, SupplierOrder } from "@/hooks/useSupplierOrders";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -16,15 +17,32 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
 const Pedidos = () => {
-  const { orders, updateOrderStatus, updateTrackingCode } = useSupplierOrders();
+  const { orders, updateOrderStatus, updateTrackingCode, addTag, removeTag } = useSupplierOrders();
   const printRef = useRef<HTMLDivElement>(null);
+
+  // Etiquetas pré-definidas
+  const predefinedTags = [
+    { label: "Urgente", color: "bg-red-100 text-red-800 border-red-300" },
+    { label: "Frágil", color: "bg-orange-100 text-orange-800 border-orange-300" },
+    { label: "Presente", color: "bg-pink-100 text-pink-800 border-pink-300" },
+    { label: "Prioritário", color: "bg-purple-100 text-purple-800 border-purple-300" },
+    { label: "Grande Volume", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    { label: "Primeira Compra", color: "bg-green-100 text-green-800 border-green-300" },
+  ];
+
+  const getTagColor = (tag: string) => {
+    const predefined = predefinedTags.find(t => t.label === tag);
+    return predefined?.color || "bg-gray-100 text-gray-800 border-gray-300";
+  };
   const [selectedOrder, setSelectedOrder] = useState<SupplierOrder | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [trackingCode, setTrackingCode] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
-  // Filtrar pedidos por data, busca e status
+  // Filtrar pedidos por data, busca, status e tags
   const filteredOrders = orders.filter(order => {
     // Filtro de data
     if (dateRange?.from) {
@@ -52,6 +70,14 @@ const Pedidos = () => {
     // Filtro de status
     if (statusFilter !== "all" && order.status !== statusFilter) {
       return false;
+    }
+
+    // Filtro de tags
+    if (selectedTags.length > 0) {
+      const hasAllTags = selectedTags.every(tag => order.tags.includes(tag));
+      if (!hasAllTags) {
+        return false;
+      }
     }
     
     return true;
@@ -111,6 +137,26 @@ const Pedidos = () => {
       toast.success("Código de rastreamento adicionado!");
       setTrackingCode("");
     }
+  };
+
+  const handleAddTag = (orderId: string, tag: string) => {
+    if (tag.trim()) {
+      addTag(orderId, tag.trim());
+      toast.success("Etiqueta adicionada!");
+    }
+  };
+
+  const handleRemoveTag = (orderId: string, tag: string) => {
+    removeTag(orderId, tag);
+    toast.success("Etiqueta removida!");
+  };
+
+  const toggleTagFilter = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
   };
 
   return (
@@ -187,7 +233,7 @@ const Pedidos = () => {
           </Popover>
           
           {/* Botão Limpar Filtros */}
-          {(dateRange || searchQuery || statusFilter !== "all") && (
+          {(dateRange || searchQuery || statusFilter !== "all" || selectedTags.length > 0) && (
             <Button
               variant="ghost"
               size="icon"
@@ -195,12 +241,33 @@ const Pedidos = () => {
                 setDateRange(undefined);
                 setSearchQuery("");
                 setStatusFilter("all");
+                setSelectedTags([]);
               }}
               title="Limpar todos os filtros"
             >
               <X className="h-4 w-4" />
             </Button>
           )}
+        </div>
+
+        {/* Filtro de Etiquetas */}
+        <div className="flex flex-wrap gap-2">
+          {predefinedTags.map((tag) => (
+            <Badge
+              key={tag.label}
+              variant="outline"
+              className={cn(
+                "cursor-pointer transition-all border",
+                selectedTags.includes(tag.label) 
+                  ? tag.color + " font-semibold"
+                  : "bg-white hover:bg-muted"
+              )}
+              onClick={() => toggleTagFilter(tag.label)}
+            >
+              <Tag className="h-3 w-3 mr-1" />
+              {tag.label}
+            </Badge>
+          ))}
         </div>
       </div>
 
@@ -218,9 +285,10 @@ const Pedidos = () => {
                 <Button
                   variant="link"
                   onClick={() => {
-                    setSearchQuery("");
-                    setDateRange(undefined);
-                    setStatusFilter("all");
+                  setSearchQuery("");
+                  setDateRange(undefined);
+                  setStatusFilter("all");
+                  setSelectedTags([]);
                   }}
                   className="mt-2"
                 >
@@ -230,47 +298,63 @@ const Pedidos = () => {
             </div>
           ) : (
             filteredOrders.map((order) => {
-            const badge = getStatusBadge(order.status);
-            return (
-              <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <p className="font-semibold text-sm sm:text-base mb-1">{order.product}</p>
-                    <p className="text-xs text-muted-foreground">Pedido #{order.id}</p>
+              const badge = getStatusBadge(order.status);
+              return (
+                <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm sm:text-base mb-1">{order.product}</p>
+                      <p className="text-xs text-muted-foreground">Pedido #{order.id}</p>
+                      
+                      {/* Etiquetas do Pedido */}
+                      {order.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {order.tags.map((tag) => (
+                            <Badge 
+                              key={tag} 
+                              variant="outline" 
+                              className={cn("text-xs border", getTagColor(tag))}
+                            >
+                              <Tag className="h-3 w-3 mr-1" />
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${badge.class}`}>
+                      {badge.label}
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${badge.class}`}>
-                    {badge.label}
-                  </span>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-3 text-xs sm:text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Cliente</p>
+                      <p className="font-medium">{order.customerName}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Data</p>
+                      <p className="font-medium">{order.date}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Valor</p>
+                      <p className="font-semibold text-primary">R$ {order.value.toFixed(2)}</p>
+                    </div>
+                    <div className="flex items-end justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedOrder(order)}
+                        className="text-xs sm:text-sm"
+                      >
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        Detalhes
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3 mb-3 text-xs sm:text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Cliente</p>
-                    <p className="font-medium">{order.customerName}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Data</p>
-                    <p className="font-medium">{order.date}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Valor</p>
-                    <p className="font-semibold text-primary">R$ {order.value.toFixed(2)}</p>
-                  </div>
-                  <div className="flex items-end justify-end">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedOrder(order)}
-                      className="text-xs sm:text-sm"
-                    >
-                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                      Detalhes
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+              );
+            })
           )}
         </div>
       </Card>
@@ -280,6 +364,7 @@ const Pedidos = () => {
         if (!open) {
           setSelectedOrder(null);
           setTrackingCode("");
+          setNewTag("");
         }
       }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -426,6 +511,111 @@ const Pedidos = () => {
                         </div>
                       );
                     })}
+                  </div>
+                </Card>
+              </div>
+
+              <Separator />
+
+              {/* Gerenciar Etiquetas */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <Tag className="h-5 w-5 text-primary" />
+                  Etiquetas
+                </h3>
+                <Card className="p-4">
+                  <div className="space-y-4">
+                    {/* Etiquetas Atuais */}
+                    {selectedOrder.tags.length > 0 && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Etiquetas do pedido</p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedOrder.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className={cn("border cursor-pointer hover:opacity-70", getTagColor(tag))}
+                              onClick={() => {
+                                handleRemoveTag(selectedOrder.id, tag);
+                                setSelectedOrder({
+                                  ...selectedOrder,
+                                  tags: selectedOrder.tags.filter(t => t !== tag)
+                                });
+                              }}
+                            >
+                              <Tag className="h-3 w-3 mr-1" />
+                              {tag}
+                              <X className="h-3 w-3 ml-1" />
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Adicionar Etiquetas Pré-definidas */}
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Adicionar etiqueta</p>
+                      <div className="flex flex-wrap gap-2">
+                        {predefinedTags
+                          .filter(tag => !selectedOrder.tags.includes(tag.label))
+                          .map((tag) => (
+                            <Badge
+                              key={tag.label}
+                              variant="outline"
+                              className={cn("cursor-pointer border", tag.color, "hover:opacity-80")}
+                              onClick={() => {
+                                handleAddTag(selectedOrder.id, tag.label);
+                                setSelectedOrder({
+                                  ...selectedOrder,
+                                  tags: [...selectedOrder.tags, tag.label]
+                                });
+                              }}
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              {tag.label}
+                            </Badge>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Criar Etiqueta Personalizada */}
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Criar etiqueta personalizada</p>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nome da etiqueta..."
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          maxLength={20}
+                          className="flex-1"
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter" && newTag.trim()) {
+                              handleAddTag(selectedOrder.id, newTag.trim());
+                              setSelectedOrder({
+                                ...selectedOrder,
+                                tags: [...selectedOrder.tags, newTag.trim()]
+                              });
+                              setNewTag("");
+                            }
+                          }}
+                        />
+                        <Button
+                          onClick={() => {
+                            if (newTag.trim()) {
+                              handleAddTag(selectedOrder.id, newTag.trim());
+                              setSelectedOrder({
+                                ...selectedOrder,
+                                tags: [...selectedOrder.tags, newTag.trim()]
+                              });
+                              setNewTag("");
+                            }
+                          }}
+                          disabled={!newTag.trim()}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </Card>
               </div>
