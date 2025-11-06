@@ -19,17 +19,22 @@ const LoginFornecedor = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    login(formData.email, formData.password, formData.companyName, 'fornecedor');
-    
     if (isSignup) {
-      toast.success("Conta de fornecedor criada com sucesso!");
+      // Redirecionar para escolha de plano no cadastro
+      navigate("/fornecedor/escolher-plano", { 
+        state: { 
+          planoData: formData 
+        } 
+      });
     } else {
+      // Login direto
+      login(formData.email, formData.password, formData.companyName, 'fornecedor');
       toast.success("Login de fornecedor realizado com sucesso!");
+      
+      setTimeout(() => {
+        navigate("/fornecedor");
+      }, 500);
     }
-    
-    setTimeout(() => {
-      navigate("/fornecedor");
-    }, 500);
   };
 
   return (
