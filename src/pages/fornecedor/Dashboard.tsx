@@ -1,12 +1,20 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, TrendingDown, Calendar as CalendarIcon, ArrowUpRight } from "lucide-react";
+import { Package, TrendingUp, TrendingDown, Calendar as CalendarIcon, ArrowUpRight, Star } from "lucide-react";
 import { useSupplierOrders } from "@/hooks/useSupplierOrders";
 import { useNavigate } from "react-router-dom";
+import { useReviews } from "@/hooks/useReviews";
+import { useAuth } from "@/hooks/useAuth";
+import { useStores } from "@/hooks/useStores";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const Dashboard = () => {
   const { orders } = useSupplierOrders();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { stores } = useStores();
+  const { storeReviews } = useReviews();
 
   const pendingOrders = orders.filter(o => o.status === 'awaiting_payment').length;
   const deliveredOrders = orders.filter(o => o.status === 'delivered').length;
@@ -15,9 +23,48 @@ const Dashboard = () => {
     .filter(o => o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.value, 0);
 
-  const revenueData: { month: string; value: number }[] = [];
+  // Encontrar a loja do fornecedor
+  const supplierStore = stores.find(s => s.name === user?.name);
+  const myStoreReviews = supplierStore ? storeReviews.filter(r => r.storeId === supplierStore.id) : [];
 
-  const maxValue = revenueData.length > 0 ? Math.max(...revenueData.map(d => d.value)) : 1;
+  // Dados de vendas ao longo do tempo (últimos 6 meses)
+  const salesData = (() => {
+    const monthsData: { [key: string]: number } = {};
+    const now = new Date();
+    
+    // Inicializar últimos 6 meses com 0
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = date.toLocaleDateString('pt-BR', { month: 'short' });
+      monthsData[monthKey] = 0;
+    }
+
+    // Contar vendas entregues por mês
+    orders.filter(o => o.status === 'delivered').forEach(order => {
+      const orderDate = new Date(order.date);
+      const monthKey = orderDate.toLocaleDateString('pt-BR', { month: 'short' });
+      if (monthsData.hasOwnProperty(monthKey)) {
+        monthsData[monthKey] += order.value;
+      }
+    });
+
+    return Object.entries(monthsData).map(([month, value]) => ({
+      month,
+      vendas: value
+    }));
+  })();
+
+  // Distribuição de avaliações (1-5 estrelas)
+  const ratingsDistribution = (() => {
+    const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    myStoreReviews.forEach(review => {
+      dist[review.rating as 1 | 2 | 3 | 4 | 5]++;
+    });
+    return Object.entries(dist).map(([stars, count]) => ({
+      estrelas: `${stars}★`,
+      quantidade: count
+    }));
+  })();
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -54,35 +101,105 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {revenueData.length > 0 && (
+      {/* Gráficos Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Evolução de Vendas */}
         <Card className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-xl font-bold">Receita Total</h2>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-8 w-8 sm:h-10 sm:w-10"
-              onClick={() => navigate('/fornecedor/financeiro')}
-            >
-              <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base sm:text-xl font-bold">Evolução de Vendas</h2>
+            <TrendingUp className="h-5 w-5 text-muted-foreground" />
           </div>
           
-          <div className="flex items-end justify-between gap-2 sm:gap-4 h-48 sm:h-80">
-            {revenueData.map((item) => (
-              <div key={item.month} className="flex flex-col items-center flex-1 gap-2 sm:gap-3">
-                <div className="w-full relative" style={{ height: '100%' }}>
-                  <div 
-                    className="w-full bg-gray-900 rounded-t-xl absolute bottom-0 transition-all hover:bg-gray-800 cursor-pointer"
-                    style={{ height: `${(item.value / maxValue) * 100}%` }}
-                  />
-                </div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">{item.month}</p>
-              </div>
-            ))}
-          </div>
+          {salesData.some(d => d.vendas > 0) ? (
+            <ChartContainer
+              config={{
+                vendas: {
+                  label: "Vendas",
+                  color: "hsl(var(--primary))",
+                },
+              }}
+              className="h-[200px] sm:h-[300px] w-full"
+            >
+              <AreaChart data={salesData}>
+                <defs>
+                  <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="month" 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(value) => `R$${value}`}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area 
+                  type="monotone" 
+                  dataKey="vendas" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorVendas)" 
+                />
+              </AreaChart>
+            </ChartContainer>
+          ) : (
+            <div className="h-[200px] sm:h-[300px] flex items-center justify-center">
+              <p className="text-muted-foreground text-sm">Nenhuma venda registrada ainda</p>
+            </div>
+          )}
         </Card>
-      )}
+
+        {/* Distribuição de Avaliações */}
+        <Card className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base sm:text-xl font-bold">Distribuição de Avaliações</h2>
+            <Star className="h-5 w-5 text-muted-foreground" />
+          </div>
+          
+          {myStoreReviews.length > 0 ? (
+            <ChartContainer
+              config={{
+                quantidade: {
+                  label: "Avaliações",
+                  color: "hsl(var(--primary))",
+                },
+              }}
+              className="h-[200px] sm:h-[300px] w-full"
+            >
+              <BarChart data={ratingsDistribution}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="estrelas" 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  allowDecimals={false}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar 
+                  dataKey="quantidade" 
+                  fill="hsl(var(--primary))" 
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ChartContainer>
+          ) : (
+            <div className="h-[200px] sm:h-[300px] flex items-center justify-center">
+              <p className="text-muted-foreground text-sm">Nenhuma avaliação recebida ainda</p>
+            </div>
+          )}
+        </Card>
+      </div>
 
       {/* Recent Orders */}
       <Card className="overflow-hidden">
