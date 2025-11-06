@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   type: 'cliente' | 'fornecedor';
+  onboardingCompleted?: boolean;
 }
 
 interface AuthContextType {
@@ -13,6 +14,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string, name?: string, type?: 'cliente' | 'fornecedor') => void;
   logout: () => void;
+  completeOnboarding: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,8 +47,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const completeOnboarding = () => {
+    if (user) {
+      setUser({ ...user, onboardingCompleted: true });
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   );

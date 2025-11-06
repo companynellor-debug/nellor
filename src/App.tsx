@@ -39,6 +39,7 @@ import ProdutosFornecedor from "./pages/fornecedor/Produtos";
 import Financeiro from "./pages/fornecedor/Financeiro";
 import NotificacoesFornecedor from "./pages/fornecedor/Notificacoes";
 import EditarLoja from "./pages/fornecedor/EditarLoja";
+import Onboarding from "./pages/fornecedor/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/login-fornecedor" element={<LoginFornecedor />} />
           <Route path="/fornecedor/escolher-plano" element={<EscolherPlano />} />
+          <Route path="/fornecedor/onboarding" element={<ProtectedRoute requireType="fornecedor"><Onboarding /></ProtectedRoute>} />
           <Route path="/download" element={<Download />} />
           <Route path="/recursos" element={<Recursos />} />
           <Route path="/faq" element={<FAQ />} />

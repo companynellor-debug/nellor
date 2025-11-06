@@ -22,35 +22,7 @@ interface SupplierOrdersContextType {
 const SupplierOrdersContext = createContext<SupplierOrdersContextType | undefined>(undefined);
 
 export const SupplierOrdersProvider = ({ children }: { children: ReactNode }) => {
-  const [orders, setOrders] = useState<SupplierOrder[]>([
-    {
-      id: '#1452',
-      customerName: 'João M.',
-      customerEmail: 'joao@email.com',
-      product: 'Produto Premium',
-      value: 120.00,
-      status: 'awaiting_payment',
-      date: '02/11/2024',
-    },
-    {
-      id: '#1453',
-      customerName: 'Maria C.',
-      customerEmail: 'maria@email.com',
-      product: 'Kit Completo',
-      value: 90.00,
-      status: 'preparing',
-      date: '03/11/2024',
-    },
-    {
-      id: '#1454',
-      customerName: 'Pedro S.',
-      customerEmail: 'pedro@email.com',
-      product: 'Combo Especial',
-      value: 200.00,
-      status: 'delivered',
-      date: '01/11/2024',
-    },
-  ]);
+  const [orders, setOrders] = useState<SupplierOrder[]>([]);
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
     setOrders(prev => prev.map(order => 

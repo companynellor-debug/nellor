@@ -80,18 +80,22 @@ const EscolherPlano = () => {
   ];
 
   const handleContinue = () => {
-    if (!selectedPlan) return;
+    if (!selectedPlan) {
+      toast.error("Por favor, selecione um plano");
+      return;
+    }
     
     const plan = plans.find(p => p.id === selectedPlan);
     
-    // Criar conta do fornecedor diretamente
+    // Criar conta do fornecedor
     login(planoData.email, planoData.password, planoData.companyName, 'fornecedor');
     
-    toast.success(`Plano ${plan?.name} ativado! Bem-vindo à nellor!`);
+    toast.success(`Plano ${plan?.name} ativado com sucesso!`);
     
+    // Redirecionar para o onboarding
     setTimeout(() => {
-      navigate("/fornecedor");
-    }, 1000);
+      navigate("/fornecedor/onboarding");
+    }, 500);
   };
 
   return (

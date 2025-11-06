@@ -1,17 +1,24 @@
-import { Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
 import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
 const FornecedorLayout = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+
+  // Redirecionar para onboarding se não completou
+  useEffect(() => {
+    if (user?.type === 'fornecedor' && !user?.onboardingCompleted) {
+      navigate('/fornecedor/onboarding');
+    }
+  }, [user, navigate]);
 
   const handleLogout = () => {
     logout();
