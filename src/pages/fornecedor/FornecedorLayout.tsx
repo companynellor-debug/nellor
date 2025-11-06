@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
@@ -11,14 +11,15 @@ import logo from "@/assets/logo.png";
 
 const FornecedorLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout, user } = useAuth();
 
   // Redirecionar para onboarding se não completou
   useEffect(() => {
-    if (user?.type === 'fornecedor' && !user?.onboardingCompleted) {
+    if (user?.type === 'fornecedor' && !user?.onboardingCompleted && location.pathname !== '/fornecedor/onboarding') {
       navigate('/fornecedor/onboarding');
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]);
 
   const handleLogout = () => {
     logout();
