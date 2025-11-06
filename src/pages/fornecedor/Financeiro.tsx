@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DollarSign, TrendingUp, Eye } from "lucide-react";
-import { useSupplierOrders } from "@/hooks/useSupplierOrders";
+import { useSupplierOrders, SupplierOrder } from "@/hooks/useSupplierOrders";
 import { toast } from "sonner";
 
 const Financeiro = () => {
   const { orders } = useSupplierOrders();
+  const [selectedOrder, setSelectedOrder] = useState<SupplierOrder | null>(null);
 
   const availableBalance = orders
     .filter(o => o.status === 'delivered')
@@ -121,7 +124,12 @@ const Financeiro = () => {
               </div>
               
               <div className="mt-3 flex justify-end">
-                <Button size="sm" variant="outline" className="text-xs sm:text-sm">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-xs sm:text-sm"
+                  onClick={() => setSelectedOrder(order)}
+                >
                   <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Ver Detalhes
                 </Button>
@@ -130,6 +138,59 @@ const Financeiro = () => {
           ))}
         </div>
       </Card>
+
+      {/* Modal de Detalhes */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Pedido {selectedOrder?.id}</DialogTitle>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Informações do Pedido */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Cliente</p>
+                  <p className="font-medium">{selectedOrder.customerName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="font-medium">{selectedOrder.customerEmail}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Produto</p>
+                  <p className="font-medium">{selectedOrder.product}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Valor</p>
+                  <p className="font-medium text-lg">R$ {selectedOrder.value.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Data</p>
+                  <p className="font-medium">{selectedOrder.date}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="font-medium">{getStatusLabel(selectedOrder.status)}</p>
+                </div>
+              </div>
+
+              {/* Comprovante */}
+              {selectedOrder.paymentProof && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Comprovante de Pagamento</p>
+                  <img 
+                    src={selectedOrder.paymentProof} 
+                    alt="Comprovante" 
+                    className="max-w-full h-auto rounded-lg border"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
