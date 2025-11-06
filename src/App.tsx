@@ -11,7 +11,6 @@ import Contato from "./pages/Contato";
 import Login from "./pages/Login";
 import LoginFornecedor from "./pages/LoginFornecedor";
 import EscolherPlano from "./pages/fornecedor/EscolherPlano";
-import Pagamento from "./pages/fornecedor/Pagamento";
 import Download from "./pages/Download";
 import Recursos from "./pages/Recursos";
 import FAQ from "./pages/FAQ";
@@ -55,8 +54,7 @@ const App = () => (
           <Route path="/contato" element={<Contato />} />
           <Route path="/login" element={<Login />} />
           <Route path="/login-fornecedor" element={<LoginFornecedor />} />
-          <Route path="/fornecedor/escolher-plano" element={<EscolherPlano planoData={null as any} />} />
-          <Route path="/fornecedor/pagamento" element={<Pagamento />} />
+          <Route path="/fornecedor/escolher-plano" element={<EscolherPlano />} />
           <Route path="/download" element={<Download />} />
           <Route path="/recursos" element={<Recursos />} />
           <Route path="/faq" element={<FAQ />} />

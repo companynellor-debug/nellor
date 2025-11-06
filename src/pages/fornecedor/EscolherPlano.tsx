@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface PlanoData {
   companyName: string;
@@ -11,13 +13,17 @@ interface PlanoData {
   password: string;
 }
 
-interface EscolherPlanoProps {
-  planoData: PlanoData;
-}
-
-const EscolherPlano = ({ planoData }: EscolherPlanoProps) => {
+const EscolherPlano = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const { planoData } = location.state || {};
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+
+  if (!planoData) {
+    navigate("/login-fornecedor");
+    return null;
+  }
 
   const plans = [
     {
@@ -77,12 +83,15 @@ const EscolherPlano = ({ planoData }: EscolherPlanoProps) => {
     if (!selectedPlan) return;
     
     const plan = plans.find(p => p.id === selectedPlan);
-    navigate("/fornecedor/pagamento", { 
-      state: { 
-        planoData,
-        selectedPlan: plan
-      } 
-    });
+    
+    // Criar conta do fornecedor diretamente
+    login(planoData.email, planoData.password, planoData.companyName, 'fornecedor');
+    
+    toast.success(`Plano ${plan?.name} ativado! Bem-vindo à nellor!`);
+    
+    setTimeout(() => {
+      navigate("/fornecedor");
+    }, 1000);
   };
 
   return (
@@ -162,7 +171,7 @@ const EscolherPlano = ({ planoData }: EscolherPlanoProps) => {
             disabled={!selectedPlan}
             className="bg-white text-primary hover:bg-white/90 px-12"
           >
-            Continuar para Pagamento
+            Ativar Plano e Criar Conta
           </Button>
         </div>
       </div>
