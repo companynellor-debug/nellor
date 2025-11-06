@@ -35,7 +35,7 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
         bio: storeProfile.bio || '',
         avatar: storeProfile.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store',
         banner: storeProfile.banner || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8',
-        rating: 5.0,
+        rating: 0,
         totalSales: 0,
         totalReviews: 0,
         reviews: []

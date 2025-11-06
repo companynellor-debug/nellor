@@ -45,18 +45,14 @@ const EditarLoja = () => {
     });
   }, [storeProfile]);
 
-  // Mock data - em produção viria de um hook/API
+  // Estatísticas reais da loja
   const storeStats = {
-    rating: 4.8,
-    totalReviews: 1234,
-    totalSales: 5678,
+    rating: 0,
+    totalReviews: 0,
+    totalSales: 0,
   };
 
-  const reviews = [
-    { name: "João Silva", date: "15/01/2024", rating: 5, comment: "Ótima loja, produtos de qualidade!" },
-    { name: "Maria Santos", date: "10/01/2024", rating: 4, comment: "Muito bom, recomendo!" },
-    { name: "Pedro Costa", date: "05/01/2024", rating: 5, comment: "Excelente atendimento" },
-  ];
+  const reviews: any[] = [];
 
   const handleSave = () => {
     updateStoreProfile({
@@ -358,14 +354,18 @@ const EditarLoja = () => {
                 <div className="flex-1">
                   <h2 className="text-xl font-bold mb-2">{formData.storeName}</h2>
                   <p className="text-sm text-muted-foreground mb-3">{formData.bio}</p>
-                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{storeStats.rating}</span>
+                  {storeStats.totalReviews > 0 ? (
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{storeStats.rating.toFixed(1)}</span>
+                      </div>
+                      <span className="text-muted-foreground">{storeStats.totalReviews} avaliações</span>
+                      <span className="text-muted-foreground">{storeStats.totalSales.toLocaleString()} vendas</span>
                     </div>
-                    <span className="text-muted-foreground">{storeStats.totalReviews} avaliações</span>
-                    <span className="text-muted-foreground">{storeStats.totalSales.toLocaleString()} vendas</span>
-                  </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Loja nova - Nenhuma avaliação ainda</p>
+                  )}
                 </div>
               </div>
             </Card>
@@ -373,41 +373,56 @@ const EditarLoja = () => {
             {/* Estatísticas */}
             <Card className="p-6">
               <h3 className="text-lg font-bold text-primary mb-4">Estatísticas</h3>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-primary">{storeStats.rating}</p>
-                  <p className="text-xs text-muted-foreground">Avaliação</p>
+              {storeStats.totalReviews > 0 ? (
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-primary">{storeStats.rating.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">Avaliação</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-primary">{storeStats.totalReviews}</p>
+                    <p className="text-xs text-muted-foreground">Avaliações</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-primary">{storeStats.totalSales.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">Vendas</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">{storeStats.totalReviews}</p>
-                  <p className="text-xs text-muted-foreground">Avaliações</p>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-2">Sua loja ainda não possui vendas ou avaliações</p>
+                  <p className="text-xs text-muted-foreground">As estatísticas aparecerão aqui após as primeiras vendas</p>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">{storeStats.totalSales.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Vendas</p>
-                </div>
-              </div>
+              )}
             </Card>
 
             {/* Avaliações Preview */}
             <Card className="p-6">
               <h3 className="text-lg font-bold text-primary mb-4">Avaliações Recentes</h3>
-              <div className="space-y-4">
-                {reviews.map((review, index) => (
-                  <div key={index} className="border-b pb-4 last:border-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium text-sm">{review.name}</p>
-                      <span className="text-xs text-muted-foreground">{review.date}</span>
+              {reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((review, index) => (
+                    <div key={index} className="border-b pb-4 last:border-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-medium text-sm">{review.name}</p>
+                        <span className="text-xs text-muted-foreground">{review.date}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mb-2">
+                        {[...Array(review.rating)].map((_, i) => (
+                          <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{review.comment}</p>
                     </div>
-                    <div className="flex items-center gap-1 mb-2">
-                      {[...Array(review.rating)].map((_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{review.comment}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Star className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                  <p className="text-muted-foreground mb-1">Nenhuma avaliação ainda</p>
+                  <p className="text-xs text-muted-foreground">As avaliações dos clientes aparecerão aqui</p>
+                </div>
+              )}
             </Card>
 
             {/* Produtos Preview */}
