@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X } from "lucide-react";
+import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X, Search, Filter } from "lucide-react";
 import { useSupplierOrders, OrderStatus, SupplierOrder } from "@/hooks/useSupplierOrders";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -17,16 +18,40 @@ const Pedidos = () => {
   const { orders, updateOrderStatus } = useSupplierOrders();
   const [selectedOrder, setSelectedOrder] = useState<SupplierOrder | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Filtrar pedidos por data
+  // Filtrar pedidos por data, busca e status
   const filteredOrders = orders.filter(order => {
-    if (!dateRange?.from) return true;
+    // Filtro de data
+    if (dateRange?.from) {
+      const orderDate = new Date(order.date.split('/').reverse().join('-'));
+      const fromDate = dateRange.from;
+      const toDate = dateRange.to || dateRange.from;
+      
+      if (!(orderDate >= fromDate && orderDate <= toDate)) {
+        return false;
+      }
+    }
     
-    const orderDate = new Date(order.date.split('/').reverse().join('-'));
-    const fromDate = dateRange.from;
-    const toDate = dateRange.to || dateRange.from;
+    // Filtro de busca
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesId = order.id.toLowerCase().includes(query);
+      const matchesCustomer = order.customerName.toLowerCase().includes(query);
+      const matchesProduct = order.product.toLowerCase().includes(query);
+      
+      if (!matchesId && !matchesCustomer && !matchesProduct) {
+        return false;
+      }
+    }
     
-    return orderDate >= fromDate && orderDate <= toDate;
+    // Filtro de status
+    if (statusFilter !== "all" && order.status !== statusFilter) {
+      return false;
+    }
+    
+    return true;
   });
 
   const getStatusBadge = (status: OrderStatus) => {
@@ -56,17 +81,45 @@ const Pedidos = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Pedidos</h1>
+      <div>
+        <h1 className="text-3xl font-bold mb-4">Pedidos</h1>
         
-        {/* Filtro de Data */}
-        <div className="flex gap-2 items-center">
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Campo de Busca */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por número, cliente ou produto..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          {/* Filtro de Status */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="awaiting_payment">Aguardando</SelectItem>
+              <SelectItem value="preparing">Preparando</SelectItem>
+              <SelectItem value="shipped">Enviado</SelectItem>
+              <SelectItem value="delivered">Entregue</SelectItem>
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {/* Filtro de Data */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
-                  "justify-start text-left font-normal",
+                  "w-full sm:w-auto justify-start text-left font-normal",
                   !dateRange && "text-muted-foreground"
                 )}
               >
@@ -74,14 +127,14 @@ const Pedidos = () => {
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <>
-                      {format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} -{" "}
-                      {format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}
+                      {format(dateRange.from, "dd/MM/yy", { locale: ptBR })} -{" "}
+                      {format(dateRange.to, "dd/MM/yy", { locale: ptBR })}
                     </>
                   ) : (
                     format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
                   )
                 ) : (
-                  <span>Filtrar por data</span>
+                  <span>Período</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -99,12 +152,17 @@ const Pedidos = () => {
             </PopoverContent>
           </Popover>
           
-          {dateRange && (
+          {/* Botão Limpar Filtros */}
+          {(dateRange || searchQuery || statusFilter !== "all") && (
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setDateRange(undefined)}
-              title="Limpar filtro"
+              onClick={() => {
+                setDateRange(undefined);
+                setSearchQuery("");
+                setStatusFilter("all");
+              }}
+              title="Limpar todos os filtros"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -118,8 +176,23 @@ const Pedidos = () => {
             <div className="p-8 text-center">
               <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                {dateRange ? "Nenhum pedido encontrado neste período" : "Nenhum pedido no momento"}
+                {searchQuery || dateRange || statusFilter !== "all" 
+                  ? "Nenhum pedido encontrado com os filtros aplicados" 
+                  : "Nenhum pedido no momento"}
               </p>
+              {(searchQuery || dateRange || statusFilter !== "all") && (
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setDateRange(undefined);
+                    setStatusFilter("all");
+                  }}
+                  className="mt-2"
+                >
+                  Limpar filtros
+                </Button>
+              )}
             </div>
           ) : (
             filteredOrders.map((order) => {
