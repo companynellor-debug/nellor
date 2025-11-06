@@ -4,13 +4,14 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, Heart, Bell, Shirt, Footprints, Watch, Smartphone, Sparkles, Home as HomeIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { products } from "@/data/products";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useProducts } from "@/hooks/useProducts";
 
 const ClienteHome = () => {
   const navigate = useNavigate();
   const { favorites } = useFavorites();
+  const { products } = useProducts();
   const categories = [
     { name: "Roupas", icon: Shirt },
     { name: "Calçados", icon: Footprints },

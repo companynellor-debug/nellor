@@ -6,10 +6,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
-import { getProductById, getRelatedProducts } from "@/data/products";
 import { useStores } from "@/hooks/useStores";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
+import { useProducts } from "@/hooks/useProducts";
 
 const ProdutoDetalhes = () => {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ const ProdutoDetalhes = () => {
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { addToCart } = useCart();
   const { stores } = useStores();
+  const { getProductById, getRelatedProducts } = useProducts();
 
   const productId = id ? parseInt(id) : 1;
   const product = getProductById(productId);

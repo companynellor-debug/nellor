@@ -5,14 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { products } from "@/data/products";
 import { useState, useEffect } from "react";
+import { useProducts } from "@/hooks/useProducts";
 
 const Produtos = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("categoria");
   const searchParam = searchParams.get("busca");
+  const { products } = useProducts();
 
   const [searchTerm, setSearchTerm] = useState(searchParam || "");
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || "");

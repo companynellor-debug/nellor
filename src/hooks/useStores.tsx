@@ -18,8 +18,19 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Se o usuário for fornecedor e tiver configurado a loja, adicionar aos stores
     if (user?.type === 'fornecedor' && storeProfile.storeName) {
+      // Gerar ID consistente baseado no user ID
+      const hashCode = (str: string) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash;
+        }
+        return Math.abs(hash);
+      };
+
       const supplierStore: Store = {
-        id: parseInt(user.id.substring(0, 8), 36), // Gerar ID baseado no user ID
+        id: hashCode(user.id),
         name: storeProfile.storeName,
         bio: storeProfile.bio || '',
         avatar: storeProfile.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store',
