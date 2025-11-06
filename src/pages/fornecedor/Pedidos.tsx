@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Separator } from "@/components/ui/separator";
-import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X, Search, Filter, MapPin, Phone, Mail, CreditCard, ShoppingCart } from "lucide-react";
+import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X, Search, Filter, MapPin, Phone, Mail, CreditCard, ShoppingCart, Printer, Clock } from "lucide-react";
 import { useSupplierOrders, OrderStatus, SupplierOrder } from "@/hooks/useSupplierOrders";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -16,11 +16,13 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
 const Pedidos = () => {
-  const { orders, updateOrderStatus } = useSupplierOrders();
+  const { orders, updateOrderStatus, updateTrackingCode } = useSupplierOrders();
+  const printRef = useRef<HTMLDivElement>(null);
   const [selectedOrder, setSelectedOrder] = useState<SupplierOrder | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [trackingCode, setTrackingCode] = useState("");
 
   // Filtrar pedidos por data, busca e status
   const filteredOrders = orders.filter(order => {
@@ -66,18 +68,49 @@ const Pedidos = () => {
     return badges[status];
   };
 
+  const handlePrint = () => {
+    if (printRef.current) {
+      const printContent = printRef.current.innerHTML;
+      const originalContent = document.body.innerHTML;
+      
+      document.body.innerHTML = printContent;
+      window.print();
+      document.body.innerHTML = originalContent;
+      window.location.reload(); // Recarrega para restaurar event listeners
+    }
+  };
+
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     updateOrderStatus(orderId, newStatus);
     
     // Atualizar o estado local do pedido selecionado também
     if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
+      const now = new Date();
+      const newHistoryEntry = {
+        status: newStatus,
+        date: now.toLocaleDateString('pt-BR'),
+        time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+      setSelectedOrder({ 
+        ...selectedOrder, 
+        status: newStatus,
+        statusHistory: [...selectedOrder.statusHistory, newHistoryEntry]
+      });
     }
     
     toast.success("Status do pedido atualizado!");
     
     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBixi0ezVhTgIHm7A7+OZRQ0PVqzn77BfGgU7ltrzxnkqBil+zPDajTsJGGS36+ikUBELTKXh8LdjHAU7kdfy0YU2Bh1tv+/mnEgND1as5++wXxoFO5ba88Z5KgYpfsz02o07CRhkt+vopFARCUyi4PG3YxwFO5HX8tGFNgYdbb/v5pxIDQ9WrOfvsF8aBTuW2vPGeSoGKX7M9NqNOwkYZLfr6KRQEQlMouDxt2McBTuR1/LRhTYGHW2/7+acSA0PVqzn77BfGgU7ltrzxnkqBil+zPDajTsJGGS36+ikUBEJTKLg8bdjHAU7kdfyzoQzBhxrv+/omkYMD1Wr5u+vYBoEOpbZ88Z5KgYpf8zw2o07CRhkt+vopFARCUyi4PG3YxwFO5HX8s6EMwYca7/v6JpGDA9Vq+bvr2AaBDqW2fPGeSoGKX/M8NqNOwkYZLfr6KRQEQlMouDxt2McBTuR1/LOhDMGHGu/7+iaRgwPVavm769gGgQ6ltnzxnkqBil/zPDajTsJGGS36+ikUBEJTKLg8bdjHAU7kdfyzoQzBhxrv+/omkYMD1Wr5u+vYBoEOpbZ88Z5KgYpf8zw2o07CRhkt+vopFARCUyi4PG3YxwFO5HX8s6EMwYca7/v6JpGDA9Vq+bvr2AaBDqW2fPGeSoGKX/M8NqNOwkYZLfr6KRQEQlMouDxt2McBTuR1/LOhDMGHGu/7+iaRgwPVavm769gGgQ6ltnzxnkqBil/zPDajTsJGGS36+ikUBEJTKLg8bdjHAU7kdfyzoQzBhxrv+/omkYMD1Wr5u+vYBoEOpbZ88Z5KgYpf8zw2o07CRhkt+vopFARCUyi4PG3YxwFO5HX8s6EMwYca7/v6JpGDA9Vq+bvr2AaBDqW2fPGeSoGKX/M8NqNOwkYZLfr6KRQEQ==');
     audio.play();
+  };
+
+  const handleAddTrackingCode = () => {
+    if (selectedOrder && trackingCode.trim()) {
+      updateTrackingCode(selectedOrder.id, trackingCode.trim());
+      setSelectedOrder({ ...selectedOrder, trackingCode: trackingCode.trim() });
+      toast.success("Código de rastreamento adicionado!");
+      setTrackingCode("");
+    }
   };
 
   return (
@@ -243,13 +276,31 @@ const Pedidos = () => {
       </Card>
 
       {/* Modal de Detalhes */}
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedOrder(null);
+          setTrackingCode("");
+        }
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Pedido #{selectedOrder?.id}</DialogTitle>
-            <DialogDescription>
-              Todas as informações do pedido
-            </DialogDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-2xl">Pedido #{selectedOrder?.id}</DialogTitle>
+                <DialogDescription>
+                  Todas as informações do pedido
+                </DialogDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrint}
+                className="gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                Imprimir Nota
+              </Button>
+            </div>
           </DialogHeader>
 
           {selectedOrder && (
@@ -312,6 +363,69 @@ const Pedidos = () => {
                     <p className="text-sm font-medium">
                       CEP: {selectedOrder.shippingAddress.zipCode}
                     </p>
+                  </div>
+                </Card>
+              </div>
+
+              <Separator />
+
+              {/* Código de Rastreamento */}
+              {selectedOrder.status === 'shipped' && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-primary" />
+                    Rastreamento
+                  </h3>
+                  <Card className="p-4">
+                    {selectedOrder.trackingCode ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Código de Rastreamento</p>
+                        <p className="font-mono font-semibold text-lg">{selectedOrder.trackingCode}</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">Adicione o código de rastreamento</p>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Ex: BR123456789BR"
+                            value={trackingCode}
+                            onChange={(e) => setTrackingCode(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button onClick={handleAddTrackingCode} disabled={!trackingCode.trim()}>
+                            Adicionar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </div>
+              )}
+
+              {selectedOrder.status === 'shipped' && <Separator />}
+
+              {/* Histórico de Status */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Histórico do Pedido
+                </h3>
+                <Card className="p-4">
+                  <div className="space-y-3">
+                    {selectedOrder.statusHistory.map((entry, index) => {
+                      const badge = getStatusBadge(entry.status);
+                      return (
+                        <div key={index} className="flex items-center gap-3 pb-3 border-b last:border-0 last:pb-0">
+                          <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="font-medium">{badge.label}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {entry.date} às {entry.time}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </Card>
               </div>
@@ -462,6 +576,109 @@ const Pedidos = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Conteúdo para Impressão (invisível) */}
+      <div className="hidden">
+        <div ref={printRef} className="p-8 bg-white text-black">
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Cabeçalho */}
+              <div className="text-center border-b-2 border-black pb-4">
+                <h1 className="text-3xl font-bold mb-2">NOTA DE ENVIO</h1>
+                <p className="text-lg">Pedido #{selectedOrder.id}</p>
+                <p className="text-sm">Data: {selectedOrder.date}</p>
+              </div>
+
+              {/* Destinatário */}
+              <div className="border-2 border-black p-4">
+                <h2 className="font-bold text-xl mb-3">DESTINATÁRIO</h2>
+                <div className="space-y-1">
+                  <p className="font-semibold text-lg">{selectedOrder.customerName}</p>
+                  <p>{selectedOrder.customerPhone}</p>
+                  <p>{selectedOrder.customerEmail}</p>
+                </div>
+              </div>
+
+              {/* Endereço de Entrega */}
+              <div className="border-2 border-black p-4">
+                <h2 className="font-bold text-xl mb-3">ENDEREÇO DE ENTREGA</h2>
+                <div className="space-y-1">
+                  <p className="font-semibold">
+                    {selectedOrder.shippingAddress.street}, {selectedOrder.shippingAddress.number}
+                  </p>
+                  {selectedOrder.shippingAddress.complement && (
+                    <p>Complemento: {selectedOrder.shippingAddress.complement}</p>
+                  )}
+                  <p>{selectedOrder.shippingAddress.neighborhood}</p>
+                  <p>
+                    {selectedOrder.shippingAddress.city} - {selectedOrder.shippingAddress.state}
+                  </p>
+                  <p className="font-bold text-lg">CEP: {selectedOrder.shippingAddress.zipCode}</p>
+                </div>
+              </div>
+
+              {/* Itens */}
+              <div className="border-2 border-black p-4">
+                <h2 className="font-bold text-xl mb-3">ITENS DO PEDIDO</h2>
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-black">
+                      <th className="text-left p-2">Produto</th>
+                      <th className="text-center p-2">Qtd</th>
+                      <th className="text-right p-2">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedOrder.items.map((item) => (
+                      <tr key={item.id} className="border-b border-gray-300">
+                        <td className="p-2">{item.productName}</td>
+                        <td className="text-center p-2">{item.quantity}</td>
+                        <td className="text-right p-2">R$ {item.subtotal.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Total */}
+              <div className="border-2 border-black p-4 bg-gray-100">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span className="font-semibold">R$ {selectedOrder.value.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Frete:</span>
+                    <span className="font-semibold">R$ {selectedOrder.shippingCost.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xl font-bold border-t-2 border-black pt-2">
+                    <span>TOTAL:</span>
+                    <span>R$ {selectedOrder.totalValue.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rastreamento */}
+              {selectedOrder.trackingCode && (
+                <div className="border-2 border-black p-4">
+                  <h2 className="font-bold text-xl mb-2">CÓDIGO DE RASTREAMENTO</h2>
+                  <p className="font-mono text-2xl font-bold text-center py-2">
+                    {selectedOrder.trackingCode}
+                  </p>
+                </div>
+              )}
+
+              {/* Observações */}
+              {selectedOrder.notes && (
+                <div className="border-2 border-black p-4">
+                  <h2 className="font-bold text-xl mb-2">OBSERVAÇÕES</h2>
+                  <p>{selectedOrder.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -20,6 +20,12 @@ export interface ShippingAddress {
   zipCode: string;
 }
 
+export interface StatusHistoryEntry {
+  status: OrderStatus;
+  date: string;
+  time: string;
+}
+
 export interface SupplierOrder {
   id: string;
   customerName: string;
@@ -32,16 +38,19 @@ export interface SupplierOrder {
   shippingCost: number;
   totalValue: number;
   status: OrderStatus;
+  statusHistory: StatusHistoryEntry[];
   date: string;
   paymentProof?: string;
   paymentMethod: string;
   notes?: string;
+  trackingCode?: string;
 }
 
 interface SupplierOrdersContextType {
   orders: SupplierOrder[];
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   addPaymentProof: (orderId: string, proof: string) => void;
+  updateTrackingCode: (orderId: string, trackingCode: string) => void;
 }
 
 const SupplierOrdersContext = createContext<SupplierOrdersContextType | undefined>(undefined);
@@ -50,9 +59,22 @@ export const SupplierOrdersProvider = ({ children }: { children: ReactNode }) =>
   const [orders, setOrders] = useState<SupplierOrder[]>([]);
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    ));
+    setOrders(prev => prev.map(order => {
+      if (order.id === orderId) {
+        const now = new Date();
+        const newHistoryEntry: StatusHistoryEntry = {
+          status,
+          date: now.toLocaleDateString('pt-BR'),
+          time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        };
+        return {
+          ...order,
+          status,
+          statusHistory: [...order.statusHistory, newHistoryEntry]
+        };
+      }
+      return order;
+    }));
   };
 
   const addPaymentProof = (orderId: string, proof: string) => {
@@ -61,8 +83,14 @@ export const SupplierOrdersProvider = ({ children }: { children: ReactNode }) =>
     ));
   };
 
+  const updateTrackingCode = (orderId: string, trackingCode: string) => {
+    setOrders(prev => prev.map(order => 
+      order.id === orderId ? { ...order, trackingCode } : order
+    ));
+  };
+
   return (
-    <SupplierOrdersContext.Provider value={{ orders, updateOrderStatus, addPaymentProof }}>
+    <SupplierOrdersContext.Provider value={{ orders, updateOrderStatus, addPaymentProof, updateTrackingCode }}>
       {children}
     </SupplierOrdersContext.Provider>
   );
