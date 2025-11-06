@@ -10,12 +10,13 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { useOrders } from "@/hooks/useOrders";
 import { toast } from "@/hooks/use-toast";
-import { stores } from "@/data/stores";
+import { useStores } from "@/hooks/useStores";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, clearCart, getTotal, getStoreId } = useCart();
   const { createOrder } = useOrders();
+  const { stores } = useStores();
   
   const [step, setStep] = useState<'address' | 'payment'>('address');
   const [orderId, setOrderId] = useState<string>("");

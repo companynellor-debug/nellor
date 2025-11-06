@@ -5,14 +5,15 @@ import { ArrowLeft, Heart, Store } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
+import { useStores } from "@/hooks/useStores";
 import { products } from "@/data/products";
-import { stores } from "@/data/stores";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Favoritos = () => {
   const navigate = useNavigate();
   const { favorites, removeFavorite } = useFavorites();
   const { favoriteStores, removeFavoriteStore } = useStoresFavorites();
+  const { stores } = useStores();
 
   const favoriteProducts = products.filter((product) => favorites.includes(product.id));
   const favoriteStoresList = stores.filter((store) => favoriteStores.includes(store.id));

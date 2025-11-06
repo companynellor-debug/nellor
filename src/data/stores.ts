@@ -81,3 +81,8 @@ export const stores: Store[] = [
 export const getStoreById = (id: number): Store | undefined => {
   return stores.find((store) => store.id === id);
 };
+
+// Função para obter todas as lojas (será substituída pelo hook useStores)
+export const getAllStores = (): Store[] => {
+  return stores;
+};

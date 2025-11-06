@@ -7,7 +7,7 @@ import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart } from "lucide-reac
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import { getProductById, getRelatedProducts } from "@/data/products";
-import { getStoreById } from "@/data/stores";
+import { useStores } from "@/hooks/useStores";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
 
@@ -17,10 +17,11 @@ const ProdutoDetalhes = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { addToCart } = useCart();
+  const { stores } = useStores();
 
   const productId = id ? parseInt(id) : 1;
   const product = getProductById(productId);
-  const store = product ? getStoreById(product.storeId) : undefined;
+  const store = product ? stores.find(s => s.id === product.storeId) : undefined;
   const isProductFavorite = isFavorite(productId);
 
   const handleToggleFavorite = () => {

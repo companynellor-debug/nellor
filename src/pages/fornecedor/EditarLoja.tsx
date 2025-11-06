@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useStoreProfile } from "@/hooks/useStoreProfile";
+import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 
 const EditarLoja = () => {
   const { storeProfile, updateStoreProfile } = useStoreProfile();
+  const { products } = useSupplierProducts();
   const [formData, setFormData] = useState({
     storeName: '',
     bio: '',
@@ -50,23 +52,6 @@ const EditarLoja = () => {
     { name: "João Silva", date: "15/01/2024", rating: 5, comment: "Ótima loja, produtos de qualidade!" },
     { name: "Maria Santos", date: "10/01/2024", rating: 4, comment: "Muito bom, recomendo!" },
     { name: "Pedro Costa", date: "05/01/2024", rating: 5, comment: "Excelente atendimento" },
-  ];
-
-  const products = [
-    {
-      id: 1,
-      name: "Produto Exemplo 1",
-      price: "R$ 99,90",
-      rating: 4.5,
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e"
-    },
-    {
-      id: 2,
-      name: "Produto Exemplo 2",
-      price: "R$ 149,90",
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f"
-    },
   ];
 
   const handleSave = () => {
@@ -329,24 +314,28 @@ const EditarLoja = () => {
                 Produtos da Loja
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                {products.map((product) => (
-                  <Card
-                    key={product.id}
-                    className="overflow-hidden hover:shadow-md transition-all cursor-pointer"
-                  >
-                    <div className="aspect-square overflow-hidden">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-3">
-                      <p className="text-sm mb-2 line-clamp-2">{product.name}</p>
-                      <div className="flex items-center gap-1 mb-2">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs text-muted-foreground">{product.rating}</span>
+                {products.length === 0 ? (
+                  <div className="col-span-2 text-center py-8 text-muted-foreground">
+                    <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>Nenhum produto cadastrado ainda</p>
+                    <p className="text-sm mt-1">Adicione produtos na aba "Produtos"</p>
+                  </div>
+                ) : (
+                  products.map((product) => (
+                    <Card
+                      key={product.id}
+                      className="overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                    >
+                      <div className="aspect-square overflow-hidden">
+                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                       </div>
-                      <p className="text-primary font-bold text-sm">{product.price}</p>
-                    </div>
-                  </Card>
-                ))}
+                      <div className="p-3">
+                        <p className="text-sm mb-2 line-clamp-2">{product.name}</p>
+                        <p className="text-primary font-bold text-sm">R$ {product.price.toFixed(2)}</p>
+                      </div>
+                    </Card>
+                  ))
+                )}
               </div>
             </Card>
           </div>

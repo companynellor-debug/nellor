@@ -5,15 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Heart, MessageCircle, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getStoreById } from "@/data/stores";
+import { useStores } from "@/hooks/useStores";
 import { getProductsByStore } from "@/data/products";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
 
 const PerfilLoja = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { stores } = useStores();
   const storeId = id ? parseInt(id) : 1;
-  const store = getStoreById(storeId);
+  const store = stores.find(s => s.id === storeId);
   const storeProducts = getProductsByStore(storeId);
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
 
