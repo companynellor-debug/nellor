@@ -22,6 +22,7 @@ import Carrinho from "./pages/cliente/Carrinho";
 import Chat from "./pages/cliente/Chat";
 import Perfil from "./pages/cliente/Perfil";
 import Avaliacoes from "./pages/cliente/Avaliacoes";
+import AvaliarPedido from "./pages/cliente/AvaliarPedido";
 import Favoritos from "./pages/cliente/Favoritos";
 import EditarPerfil from "./pages/cliente/EditarPerfil";
 import MeusPedidos from "./pages/cliente/MeusPedidos";
@@ -65,6 +66,7 @@ const App = () => (
           <Route path="/cliente" element={<ProtectedRoute requireType="cliente"><ClienteHome /></ProtectedRoute>} />
           <Route path="/cliente/produtos" element={<ProtectedRoute requireType="cliente"><Produtos /></ProtectedRoute>} />
           <Route path="/cliente/produto/:id" element={<ProtectedRoute requireType="cliente"><ProdutoDetalhes /></ProtectedRoute>} />
+          <Route path="/loja/:id" element={<PerfilLoja />} />
           <Route path="/cliente/loja/:id" element={<ProtectedRoute requireType="cliente"><PerfilLoja /></ProtectedRoute>} />
           <Route path="/cliente/carrinho" element={<ProtectedRoute requireType="cliente"><Carrinho /></ProtectedRoute>} />
           <Route path="/cliente/checkout" element={<ProtectedRoute requireType="cliente"><Checkout /></ProtectedRoute>} />
@@ -75,6 +77,7 @@ const App = () => (
           <Route path="/cliente/enderecos" element={<ProtectedRoute requireType="cliente"><Enderecos /></ProtectedRoute>} />
           <Route path="/cliente/notificacoes" element={<ProtectedRoute requireType="cliente"><Notificacoes /></ProtectedRoute>} />
           <Route path="/cliente/avaliacoes" element={<ProtectedRoute requireType="cliente"><Avaliacoes /></ProtectedRoute>} />
+          <Route path="/cliente/avaliar-pedido" element={<ProtectedRoute requireType="cliente"><AvaliarPedido /></ProtectedRoute>} />
           <Route path="/cliente/favoritos" element={<ProtectedRoute requireType="cliente"><Favoritos /></ProtectedRoute>} />
 
           {/* Fornecedor Panel Routes */}

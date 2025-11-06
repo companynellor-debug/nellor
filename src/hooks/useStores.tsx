@@ -6,6 +6,8 @@ import { useStoreProfile } from './useStoreProfile';
 interface StoresContextType {
   stores: Store[];
   getAllStores: () => Store[];
+  incrementStoreSales: (storeId: number) => void;
+  updateStoreRating: (storeId: number, newRating: number) => void;
 }
 
 const StoresContext = createContext<StoresContextType | undefined>(undefined);
@@ -59,8 +61,32 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
 
   const getAllStores = () => stores;
 
+  const incrementStoreSales = (storeId: number) => {
+    setStores(prev => prev.map(store => 
+      store.id === storeId 
+        ? { ...store, totalSales: store.totalSales + 1 }
+        : store
+    ));
+  };
+
+  const updateStoreRating = (storeId: number, newRating: number) => {
+    setStores(prev => prev.map(store => {
+      if (store.id === storeId) {
+        const totalReviews = store.totalReviews + 1;
+        const currentTotal = store.rating * store.totalReviews;
+        const newAverage = (currentTotal + newRating) / totalReviews;
+        return {
+          ...store,
+          rating: Math.round(newAverage * 10) / 10,
+          totalReviews
+        };
+      }
+      return store;
+    }));
+  };
+
   return (
-    <StoresContext.Provider value={{ stores, getAllStores }}>
+    <StoresContext.Provider value={{ stores, getAllStores, incrementStoreSales, updateStoreRating }}>
       {children}
     </StoresContext.Provider>
   );

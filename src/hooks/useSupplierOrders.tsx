@@ -49,7 +49,7 @@ export interface SupplierOrder {
 
 interface SupplierOrdersContextType {
   orders: SupplierOrder[];
-  updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  updateOrderStatus: (orderId: string, status: OrderStatus, onDelivered?: () => void) => void;
   addPaymentProof: (orderId: string, proof: string) => void;
   updateTrackingCode: (orderId: string, trackingCode: string) => void;
   addTag: (orderId: string, tag: string) => void;
@@ -61,7 +61,7 @@ const SupplierOrdersContext = createContext<SupplierOrdersContextType | undefine
 export const SupplierOrdersProvider = ({ children }: { children: ReactNode }) => {
   const [orders, setOrders] = useState<SupplierOrder[]>([]);
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus) => {
+  const updateOrderStatus = (orderId: string, status: OrderStatus, onDelivered?: () => void) => {
     setOrders(prev => prev.map(order => {
       if (order.id === orderId) {
         const now = new Date();
@@ -70,6 +70,12 @@ export const SupplierOrdersProvider = ({ children }: { children: ReactNode }) =>
           date: now.toLocaleDateString('pt-BR'),
           time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
         };
+        
+        // Callback quando pedido é marcado como entregue
+        if (status === 'delivered' && onDelivered) {
+          onDelivered();
+        }
+        
         return {
           ...order,
           status,

@@ -10,6 +10,7 @@ import { SupplierProductsProvider } from "./hooks/useSupplierProducts";
 import { StoresProvider } from "./hooks/useStores";
 import { StoreProfileProvider } from "./hooks/useStoreProfile";
 import { ProductsProvider } from "./hooks/useProducts";
+import { ReviewsProvider } from "./hooks/useReviews";
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
@@ -21,7 +22,9 @@ createRoot(document.getElementById("root")!).render(
               <SupplierProductsProvider>
                 <StoresProvider>
                   <ProductsProvider>
-                    <App />
+                    <ReviewsProvider>
+                      <App />
+                    </ReviewsProvider>
                   </ProductsProvider>
                 </StoresProvider>
               </SupplierProductsProvider>

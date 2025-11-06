@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package, Truck, CheckCircle, Clock, XCircle, AlertCircle, MessageSquare, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useOrders, OrderStatus } from "@/hooks/useOrders";
+import { useReviews } from "@/hooks/useReviews";
 
 const MeusPedidos = () => {
   const navigate = useNavigate();
   const { orders } = useOrders();
+  const { hasReviewedOrder } = useReviews();
 
   const getStatusInfo = (status: OrderStatus) => {
     switch (status) {
@@ -94,11 +96,11 @@ const MeusPedidos = () => {
                     <MessageSquare className="h-4 w-4" />
                     Chat
                   </Button>
-                  {order.canReview && (
+                  {order.canReview && !hasReviewedOrder(order.id) && (
                     <Button 
                       size="sm" 
-                      className="flex-1 gap-1"
-                      onClick={() => navigate(`/cliente/avaliacoes?orderId=${order.id}`)}
+                      className="flex-1 gap-1 bg-primary hover:bg-primary/90 text-white"
+                      onClick={() => navigate('/cliente/avaliar-pedido', { state: { order } })}
                     >
                       <Star className="h-4 w-4" />
                       Avaliar

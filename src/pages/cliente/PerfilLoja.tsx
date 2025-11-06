@@ -8,6 +8,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useStores } from "@/hooks/useStores";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
 import { useProducts } from "@/hooks/useProducts";
+import { useReviews } from "@/hooks/useReviews";
+import { useAuth } from "@/hooks/useAuth";
+import { Helmet } from "react-helmet";
 
 const PerfilLoja = () => {
   const navigate = useNavigate();
@@ -18,6 +21,10 @@ const PerfilLoja = () => {
   const store = stores.find(s => s.id === storeId);
   const storeProducts = getProductsByStore(storeId);
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
+  const { getStoreReviews } = useReviews();
+  const { user } = useAuth();
+  
+  const storeReviews = getStoreReviews(storeId);
 
   if (!store) {
     return (
@@ -44,6 +51,15 @@ const PerfilLoja = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <Helmet>
+        <title>{store.name} - Loja Online | Nellor</title>
+        <meta name="description" content={`${store.bio} - ${store.totalSales} vendas realizadas com nota ${store.rating}. Confira os produtos e avaliações de clientes.`} />
+        <meta property="og:title" content={`${store.name} - Loja Online`} />
+        <meta property="og:description" content={store.bio} />
+        <meta property="og:image" content={store.banner} />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href={`${window.location.origin}/loja/${storeId}`} />
+      </Helmet>
       <ParticlesBackground />
 
       {/* Header */}
@@ -94,22 +110,24 @@ const PerfilLoja = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => navigate("/cliente/chat", { state: { storeId, storeName: store.name, storeAvatar: store.avatar } })}
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white"
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Chat
-                </Button>
-                <Button
-                  onClick={handleToggleFavorite}
-                  variant="outline"
-                  className={`px-4 ${isStoreFavorite ? "border-red-500 text-red-500" : "border-primary text-primary"}`}
-                >
-                  <Heart className={`h-5 w-5 ${isStoreFavorite ? "fill-red-500" : ""}`} />
-                </Button>
-              </div>
+              {user && (
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => navigate("/cliente/chat", { state: { storeId, storeName: store.name, storeAvatar: store.avatar } })}
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Chat
+                  </Button>
+                  <Button
+                    onClick={handleToggleFavorite}
+                    variant="outline"
+                    className={`px-4 ${isStoreFavorite ? "border-red-500 text-red-500" : "border-primary text-primary"}`}
+                  >
+                    <Heart className={`h-5 w-5 ${isStoreFavorite ? "fill-red-500" : ""}`} />
+                  </Button>
+                </div>
+              )}
             </Card>
           </div>
 
@@ -135,22 +153,28 @@ const PerfilLoja = () => {
           {/* Store Reviews */}
           <Card className="bg-white border shadow-sm p-6 mb-6">
             <h3 className="text-lg font-bold text-primary mb-4">Avaliações da Loja</h3>
-            <div className="space-y-4">
-              {store.reviews.map((review, index) => (
-                <div key={index} className="border-b pb-4 last:border-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium">{review.name}</p>
-                    <span className="text-xs text-muted-foreground">{review.date}</span>
+            {storeReviews.length > 0 ? (
+              <div className="space-y-4">
+                {storeReviews.map((review) => (
+                  <div key={review.id} className="border-b pb-4 last:border-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium">{review.userName}</p>
+                      <span className="text-xs text-muted-foreground">{review.date}</span>
+                    </div>
+                    <div className="flex items-center gap-1 mb-2">
+                      {[...Array(review.rating)].map((_, i) => (
+                        <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{review.comment}</p>
                   </div>
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{review.comment}</p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                Nenhuma avaliação ainda
+              </p>
+            )}
           </Card>
 
           {/* Store Products */}

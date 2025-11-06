@@ -10,6 +10,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Separator } from "@/components/ui/separator";
 import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X, Search, Filter, MapPin, Phone, Mail, CreditCard, ShoppingCart, Printer, Clock, Tag, Plus } from "lucide-react";
 import { useSupplierOrders, OrderStatus, SupplierOrder } from "@/hooks/useSupplierOrders";
+import { useStores } from "@/hooks/useStores";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -18,7 +20,12 @@ import { DateRange } from "react-day-picker";
 
 const Pedidos = () => {
   const { orders, updateOrderStatus, updateTrackingCode, addTag, removeTag } = useSupplierOrders();
+  const { incrementStoreSales, stores } = useStores();
+  const { user } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
+  
+  // Encontrar ID da loja do fornecedor
+  const supplierStore = stores.find(s => s.name === user?.name);
 
   // Etiquetas pré-definidas
   const predefinedTags = [
@@ -107,7 +114,15 @@ const Pedidos = () => {
   };
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    updateOrderStatus(orderId, newStatus);
+    // Callback para incrementar vendas quando pedido é marcado como entregue
+    const onDelivered = () => {
+      if (supplierStore) {
+        incrementStoreSales(supplierStore.id);
+        toast.success("Venda contabilizada!");
+      }
+    };
+    
+    updateOrderStatus(orderId, newStatus, onDelivered);
     
     // Atualizar o estado local do pedido selecionado também
     if (selectedOrder && selectedOrder.id === orderId) {
