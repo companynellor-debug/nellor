@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { ShoppingBag, MessageSquare, Truck, TrendingUp, Smartphone, UserPlus, ShoppingCart, Star } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import nellorApp from "@/assets/nellor-app.png";
 const Home = () => {
   const benefits = [{
     icon: ShoppingBag,
@@ -81,9 +82,9 @@ const Home = () => {
             
             <div className="relative hidden lg:block">
               <img 
-                src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=900&fit=crop" 
+                src={nellorApp} 
                 alt="App mockup" 
-                className="w-full max-w-sm mx-auto rounded-3xl shadow-2xl" 
+                className="w-full max-w-sm mx-auto rounded-3xl shadow-2xl animate-fade-in" 
               />
             </div>
           </div>
