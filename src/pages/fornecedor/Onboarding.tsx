@@ -18,7 +18,8 @@ import {
   Upload,
   Check,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,6 +35,10 @@ const Onboarding = () => {
     avatar: "",
     banner: ""
   });
+
+  const [avatarFile, setAvatarFile] = useState<string>("");
+  const [bannerFile, setBannerFile] = useState<string>("");
+  const [productImages, setProductImages] = useState<string[]>([]);
 
   const [firstProduct, setFirstProduct] = useState({
     name: "",
@@ -116,31 +121,53 @@ const Onboarding = () => {
             />
           </div>
           <div>
-            <Label htmlFor="avatar">Logo da Loja (URL da imagem)</Label>
-            <div className="flex gap-2">
+            <Label htmlFor="avatar">Logo da Loja</Label>
+            <div className="space-y-2">
               <Input
                 id="avatar"
-                placeholder="https://exemplo.com/logo.png"
-                value={storeData.avatar}
-                onChange={(e) => setStoreData({ ...storeData, avatar: e.target.value })}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setAvatarFile(reader.result as string);
+                      setStoreData({ ...storeData, avatar: reader.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="cursor-pointer"
               />
-              <Button size="icon" variant="outline">
-                <Upload className="h-4 w-4" />
-              </Button>
+              {avatarFile && (
+                <img src={avatarFile} alt="Preview" className="w-24 h-24 rounded-full object-cover" />
+              )}
             </div>
           </div>
           <div>
-            <Label htmlFor="banner">Banner da Loja (URL da imagem)</Label>
-            <div className="flex gap-2">
+            <Label htmlFor="banner">Banner da Loja</Label>
+            <div className="space-y-2">
               <Input
                 id="banner"
-                placeholder="https://exemplo.com/banner.png"
-                value={storeData.banner}
-                onChange={(e) => setStoreData({ ...storeData, banner: e.target.value })}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setBannerFile(reader.result as string);
+                      setStoreData({ ...storeData, banner: reader.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="cursor-pointer"
               />
-              <Button size="icon" variant="outline">
-                <Upload className="h-4 w-4" />
-              </Button>
+              {bannerFile && (
+                <img src={bannerFile} alt="Preview" className="w-full h-32 rounded-lg object-cover" />
+              )}
             </div>
           </div>
         </div>
@@ -179,6 +206,59 @@ const Onboarding = () => {
               onChange={(e) => setFirstProduct({ ...firstProduct, description: e.target.value })}
               rows={3}
             />
+          </div>
+          <div>
+            <Label htmlFor="productImages">Imagens do Produto (máximo 5)</Label>
+            <div className="space-y-2">
+              <Input
+                id="productImages"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (!files) return;
+                  
+                  if (productImages.length + files.length > 5) {
+                    toast.error("Você pode adicionar no máximo 5 imagens");
+                    return;
+                  }
+                  
+                  Array.from(files).forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setProductImages((prev) => [...prev, reader.result as string]);
+                    };
+                    reader.readAsDataURL(file);
+                  });
+                }}
+                disabled={productImages.length >= 5}
+                className="cursor-pointer"
+              />
+              <p className="text-sm text-muted-foreground">
+                {productImages.length}/5 imagens adicionadas
+              </p>
+              {productImages.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {productImages.map((img, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={img}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setProductImages((prev) => prev.filter((_, i) => i !== index))}
+                        className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -264,11 +344,16 @@ const Onboarding = () => {
         return;
       }
       
+      if (productImages.length === 0) {
+        toast.error("Adicione pelo menos uma imagem do produto");
+        return;
+      }
+      
       addProduct({
         name: firstProduct.name,
         category: firstProduct.category,
         description: firstProduct.description,
-        images: [],
+        images: productImages,
         price: parseFloat(firstProduct.price),
         stock: parseInt(firstProduct.stock)
       });

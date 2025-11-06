@@ -21,29 +21,7 @@ interface SupplierProductsContextType {
 const SupplierProductsContext = createContext<SupplierProductsContextType | undefined>(undefined);
 
 export const SupplierProductsProvider = ({ children }: { children: ReactNode }) => {
-  const [products, setProducts] = useState<SupplierProduct[]>([
-    {
-      id: '1',
-      name: 'Produto Premium',
-      category: 'Eletrônicos',
-      description: 'Descrição do produto premium',
-      images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e'],
-      price: 120.00,
-      stock: 50,
-      variations: [
-        { name: 'Cor', options: ['Preto', 'Branco', 'Azul'] },
-      ],
-    },
-    {
-      id: '2',
-      name: 'Kit Completo',
-      category: 'Acessórios',
-      description: 'Kit completo com todos os acessórios',
-      images: ['https://images.unsplash.com/photo-1572635196237-14b3f281503f'],
-      price: 90.00,
-      stock: 30,
-    },
-  ]);
+  const [products, setProducts] = useState<SupplierProduct[]>([]);
 
   const addProduct = (product: Omit<SupplierProduct, 'id'>) => {
     const newProduct = {
