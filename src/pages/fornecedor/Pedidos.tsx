@@ -3,13 +3,31 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, CheckCircle, Truck, Package, XCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X } from "lucide-react";
 import { useSupplierOrders, OrderStatus, SupplierOrder } from "@/hooks/useSupplierOrders";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 
 const Pedidos = () => {
   const { orders, updateOrderStatus } = useSupplierOrders();
   const [selectedOrder, setSelectedOrder] = useState<SupplierOrder | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  // Filtrar pedidos por data
+  const filteredOrders = orders.filter(order => {
+    if (!dateRange?.from) return true;
+    
+    const orderDate = new Date(order.date.split('/').reverse().join('-'));
+    const fromDate = dateRange.from;
+    const toDate = dateRange.to || dateRange.from;
+    
+    return orderDate >= fromDate && orderDate <= toDate;
+  });
 
   const getStatusBadge = (status: OrderStatus) => {
     const badges = {
@@ -38,12 +56,73 @@ const Pedidos = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Pedidos</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Pedidos</h1>
+        
+        {/* Filtro de Data */}
+        <div className="flex gap-2 items-center">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal",
+                  !dateRange && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} -{" "}
+                      {format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
+                  )
+                ) : (
+                  <span>Filtrar por data</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          
+          {dateRange && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDateRange(undefined)}
+              title="Limpar filtro"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
 
-      {/* Lista de Pedidos */}
       <Card className="overflow-hidden">
         <div className="divide-y">
-          {orders.map((order) => {
+          {filteredOrders.length === 0 ? (
+            <div className="p-8 text-center">
+              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                {dateRange ? "Nenhum pedido encontrado neste período" : "Nenhum pedido no momento"}
+              </p>
+            </div>
+          ) : (
+            filteredOrders.map((order) => {
             const badge = getStatusBadge(order.status);
             return (
               <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
@@ -84,7 +163,8 @@ const Pedidos = () => {
                 </div>
               </div>
             );
-          })}
+          })
+          )}
         </div>
       </Card>
 
