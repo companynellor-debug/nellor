@@ -4,6 +4,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminUsuarios from "./pages/admin/Usuarios";
+import AdminFornecedores from "./pages/admin/Fornecedores";
+import AdminVendas from "./pages/admin/Vendas";
+import AdminFinanceiro from "./pages/admin/Financeiro";
+import AdminRelatorios from "./pages/admin/Relatorios";
+import AdminAlertas from "./pages/admin/Alertas";
+import AdminConfiguracoes from "./pages/admin/Configuracoes";
 import Home from "./pages/Home";
 import Fornecedor from "./pages/Fornecedor";
 import Sobre from "./pages/Sobre";
@@ -90,6 +99,18 @@ const App = () => (
             <Route path="financeiro" element={<Financeiro />} />
             <Route path="notificacoes" element={<NotificacoesFornecedor />} />
             <Route path="editar-loja" element={<EditarLoja />} />
+          </Route>
+          
+          {/* Admin Panel */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="usuarios" element={<AdminUsuarios />} />
+            <Route path="fornecedores" element={<AdminFornecedores />} />
+            <Route path="vendas" element={<AdminVendas />} />
+            <Route path="financeiro" element={<AdminFinanceiro />} />
+            <Route path="relatorios" element={<AdminRelatorios />} />
+            <Route path="alertas" element={<AdminAlertas />} />
+            <Route path="configuracoes" element={<AdminConfiguracoes />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

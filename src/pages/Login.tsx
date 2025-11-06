@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,6 +16,29 @@ const Login = () => {
     email: "",
     password: ""
   });
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+
+  const handleLogoClick = () => {
+    const newCount = logoClicks + 1;
+    setLogoClicks(newCount);
+    
+    if (newCount === 5) {
+      setShowAdminDialog(true);
+      setLogoClicks(0);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    if (adminPassword === "natandavi22$") {
+      toast.success("Acesso admin autorizado!");
+      navigate("/admin");
+    } else {
+      toast.error("Senha incorreta!");
+      setAdminPassword("");
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,16 +57,17 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-secondary to-accent p-4">
-      <Card className="w-full max-w-md p-8 shadow-2xl">
-        <div className="text-center mb-8">
-          <Link to="/">
-            <h1 className="text-3xl font-heading font-bold text-primary mb-2">nellor</h1>
-          </Link>
-          <p className="text-muted-foreground">
-            {isSignup ? "Crie sua conta de cliente" : "Entre na sua conta"}
-          </p>
-        </div>
+    <>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-secondary to-accent p-4">
+        <Card className="w-full max-w-md p-8 shadow-2xl">
+          <div className="text-center mb-8">
+            <div onClick={handleLogoClick} className="cursor-pointer">
+              <h1 className="text-3xl font-heading font-bold text-primary mb-2">nellor</h1>
+            </div>
+            <p className="text-muted-foreground">
+              {isSignup ? "Crie sua conta de cliente" : "Entre na sua conta"}
+            </p>
+          </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignup && (
@@ -101,6 +126,36 @@ const Login = () => {
         </div>
       </Card>
     </div>
+
+    <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center text-xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">
+            🔐 Acesso Administrativo
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground text-center">
+            Digite a senha de acesso ao painel admin
+          </p>
+          <Input
+            type="password"
+            placeholder="Senha administrativa"
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdminLogin()}
+            className="text-center"
+          />
+          <Button 
+            onClick={handleAdminLogin}
+            className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700"
+          >
+            Acessar Painel Admin
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
   );
 };
 
