@@ -2,9 +2,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, TrendingUp, TrendingDown, Calendar as CalendarIcon, ArrowUpRight } from "lucide-react";
 import { useSupplierOrders } from "@/hooks/useSupplierOrders";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { orders } = useSupplierOrders();
+  const navigate = useNavigate();
 
   const pendingOrders = orders.filter(o => o.status === 'awaiting_payment').length;
   const deliveredOrders = orders.filter(o => o.status === 'delivered').length;
@@ -56,7 +58,12 @@ const Dashboard = () => {
         <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-base sm:text-xl font-bold">Receita Total</h2>
-            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-8 w-8 sm:h-10 sm:w-10"
+              onClick={() => navigate('/fornecedor/financeiro')}
+            >
               <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
@@ -82,10 +89,22 @@ const Dashboard = () => {
         <div className="p-4 sm:p-6 border-b flex items-center justify-between">
           <h2 className="text-base sm:text-xl font-bold">Pedidos Recentes</h2>
           <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-8 w-8 sm:h-10 sm:w-10"
+              onClick={() => navigate('/fornecedor/pedidos')}
+              title="Filtrar por data"
+            >
               <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-8 w-8 sm:h-10 sm:w-10"
+              onClick={() => navigate('/fornecedor/pedidos')}
+              title="Ver todos os pedidos"
+            >
               <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
