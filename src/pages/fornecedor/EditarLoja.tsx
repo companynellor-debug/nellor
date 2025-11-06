@@ -20,6 +20,8 @@ const EditarLoja = () => {
     whatsapp: '',
     address: '',
     pixKey: '',
+    minOrderQuantity: 0,
+    minOrderValue: 0,
   });
 
   // Carregar dados do perfil da loja ao montar o componente
@@ -32,6 +34,8 @@ const EditarLoja = () => {
       whatsapp: storeProfile.whatsapp || '',
       address: storeProfile.address || '',
       pixKey: storeProfile.pixKey || '',
+      minOrderQuantity: storeProfile.minOrderQuantity || 0,
+      minOrderValue: storeProfile.minOrderValue || 0,
     });
   }, [storeProfile]);
 
@@ -73,7 +77,9 @@ const EditarLoja = () => {
       banner: formData.banner,
       whatsapp: formData.whatsapp,
       address: formData.address,
-      pixKey: formData.pixKey
+      pixKey: formData.pixKey,
+      minOrderQuantity: formData.minOrderQuantity,
+      minOrderValue: formData.minOrderValue
     });
     toast.success("Informações da loja salvas com sucesso!");
   };
@@ -203,6 +209,44 @@ const EditarLoja = () => {
                   onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
                   placeholder="CPF, CNPJ, Email ou Telefone"
                 />
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-semibold mb-3">Configurações de Pedido Mínimo</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure limites mínimos para os pedidos dos seus clientes. Deixe em 0 (zero) se não houver limite.
+                </p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Quantidade Mínima de Peças</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.minOrderQuantity}
+                      onChange={(e) => setFormData({ ...formData, minOrderQuantity: parseInt(e.target.value) || 0 })}
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Mínimo de itens no carrinho
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label>Valor Mínimo do Pedido (R$)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.minOrderValue}
+                      onChange={(e) => setFormData({ ...formData, minOrderValue: parseFloat(e.target.value) || 0 })}
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Valor total mínimo
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </Card>

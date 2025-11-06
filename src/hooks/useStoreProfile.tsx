@@ -9,6 +9,8 @@ export interface StoreProfile {
   whatsapp?: string;
   address?: string;
   pixKey?: string;
+  minOrderQuantity?: number;
+  minOrderValue?: number;
 }
 
 interface StoreProfileContextType {
@@ -29,7 +31,9 @@ export const StoreProfileProvider = ({ children }: { children: ReactNode }) => {
       cnpj: '',
       whatsapp: '',
       address: '',
-      pixKey: ''
+      pixKey: '',
+      minOrderQuantity: 0,
+      minOrderValue: 0
     };
   });
 
