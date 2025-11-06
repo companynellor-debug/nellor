@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X, Search, Filter } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Eye, CheckCircle, Truck, Package, XCircle, CalendarIcon, X, Search, Filter, MapPin, Phone, Mail, CreditCard, ShoppingCart } from "lucide-react";
 import { useSupplierOrders, OrderStatus, SupplierOrder } from "@/hooks/useSupplierOrders";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -243,49 +244,166 @@ const Pedidos = () => {
 
       {/* Modal de Detalhes */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes do Pedido {selectedOrder?.id}</DialogTitle>
+            <DialogTitle className="text-2xl">Pedido #{selectedOrder?.id}</DialogTitle>
             <DialogDescription>
-              Visualize e gerencie os detalhes do pedido
+              Todas as informações do pedido
             </DialogDescription>
           </DialogHeader>
 
           {selectedOrder && (
             <div className="space-y-6">
-              {/* Informações do Pedido */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Cliente</p>
-                  <p className="font-medium">{selectedOrder.customerName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{selectedOrder.customerEmail}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Produto</p>
-                  <p className="font-medium">{selectedOrder.product}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Valor</p>
-                  <p className="font-medium text-lg">R$ {selectedOrder.value.toFixed(2)}</p>
-                </div>
+              {/* Informações do Cliente */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-primary" />
+                  Informações do Cliente
+                </h3>
+                <Card className="p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Nome</p>
+                      <p className="font-medium">{selectedOrder.customerName}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Email</p>
+                      <p className="font-medium">{selectedOrder.customerEmail}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Telefone</p>
+                      <p className="font-medium flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        {selectedOrder.customerPhone}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Data do Pedido</p>
+                      <p className="font-medium">{selectedOrder.date}</p>
+                    </div>
+                  </div>
+                </Card>
               </div>
 
-              {/* Comprovante */}
-              {selectedOrder.paymentProof && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Comprovante de Pagamento</p>
-                  <img 
-                    src={selectedOrder.paymentProof} 
-                    alt="Comprovante" 
-                    className="max-w-full h-auto rounded-lg border"
-                  />
-                </div>
-              )}
+              <Separator />
 
-              {/* Alterar Status */}
+              {/* Endereço de Entrega */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Endereço de Entrega
+                </h3>
+                <Card className="p-4">
+                  <div className="space-y-2">
+                    <p className="font-medium">
+                      {selectedOrder.shippingAddress.street}, {selectedOrder.shippingAddress.number}
+                    </p>
+                    {selectedOrder.shippingAddress.complement && (
+                      <p className="text-sm text-muted-foreground">
+                        Complemento: {selectedOrder.shippingAddress.complement}
+                      </p>
+                    )}
+                    <p className="text-sm">
+                      {selectedOrder.shippingAddress.neighborhood}
+                    </p>
+                    <p className="text-sm">
+                      {selectedOrder.shippingAddress.city} - {selectedOrder.shippingAddress.state}
+                    </p>
+                    <p className="text-sm font-medium">
+                      CEP: {selectedOrder.shippingAddress.zipCode}
+                    </p>
+                  </div>
+                </Card>
+              </div>
+
+              <Separator />
+
+              {/* Itens do Pedido */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5 text-primary" />
+                  Itens do Pedido
+                </h3>
+                <Card className="overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="text-left p-3 text-sm font-semibold">Produto</th>
+                          <th className="text-center p-3 text-sm font-semibold">Quantidade</th>
+                          <th className="text-right p-3 text-sm font-semibold">Preço Unit.</th>
+                          <th className="text-right p-3 text-sm font-semibold">Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {selectedOrder.items.map((item) => (
+                          <tr key={item.id} className="hover:bg-muted/20">
+                            <td className="p-3">{item.productName}</td>
+                            <td className="p-3 text-center font-medium">{item.quantity}x</td>
+                            <td className="p-3 text-right">R$ {item.unitPrice.toFixed(2)}</td>
+                            <td className="p-3 text-right font-semibold">R$ {item.subtotal.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Resumo do Pedido */}
+                  <div className="border-t bg-muted/30 p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="font-medium">R$ {selectedOrder.value.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Frete</span>
+                      <span className="font-medium">R$ {selectedOrder.shippingCost.toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-lg">Total</span>
+                      <span className="font-bold text-lg text-primary">R$ {selectedOrder.totalValue.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              <Separator />
+
+              {/* Informações de Pagamento */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  Pagamento
+                </h3>
+                <Card className="p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Método de Pagamento</p>
+                      <p className="font-medium">{selectedOrder.paymentMethod}</p>
+                    </div>
+                    
+                    {selectedOrder.paymentProof && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Comprovante de Pagamento</p>
+                        <img 
+                          src={selectedOrder.paymentProof} 
+                          alt="Comprovante" 
+                          className="max-w-full h-auto rounded-lg border max-h-96 object-contain"
+                        />
+                      </div>
+                    )}
+                    
+                    {selectedOrder.notes && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Observações</p>
+                        <p className="text-sm bg-muted p-3 rounded-md">{selectedOrder.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+
+              <Separator />
               <div>
                 <p className="text-sm text-muted-foreground mb-2">Alterar Status</p>
                 <Select
