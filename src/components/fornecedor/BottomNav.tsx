@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { DollarSign, Bell, Settings } from "lucide-react";
+import { DollarSign, Bell, Store } from "lucide-react";
 
 export const BottomNavFornecedor = () => {
   const location = useLocation();
@@ -24,7 +24,7 @@ export const BottomNavFornecedor = () => {
   const moreNavItems = [
     { icon: DollarSign, label: "Financeiro", path: "/fornecedor/financeiro" },
     { icon: Bell, label: "Notificações", path: "/fornecedor/notificacoes" },
-    { icon: Settings, label: "Configurações", path: "/fornecedor/configuracoes" },
+    { icon: Store, label: "Editar Loja", path: "/fornecedor/editar-loja" },
   ];
 
   return (
