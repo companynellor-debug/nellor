@@ -45,7 +45,7 @@ const FornecedorLayout = () => {
                 <img 
                   src={logo} 
                   alt="Logo" 
-                  className="h-8 sm:h-10"
+                  className="h-8 sm:h-10 md:hidden"
                 />
               </div>
               

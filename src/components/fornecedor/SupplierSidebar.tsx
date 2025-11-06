@@ -30,11 +30,11 @@ export function SupplierSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r">
-      <div className="p-4 border-b bg-white h-16 flex items-center justify-center">
+      <div className="p-4 border-b bg-white h-16 flex items-center justify-start">
         <img 
           src={logo} 
           alt="Nellor" 
-          className={`transition-all ${open ? "h-10" : "h-8"}`} 
+          className={`transition-all ${open ? "h-12" : "h-8"}`} 
         />
       </div>
 
