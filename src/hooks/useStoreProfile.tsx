@@ -11,6 +11,7 @@ export interface StoreProfile {
   pixKey?: string;
   minOrderQuantity?: number;
   minOrderValue?: number;
+  customCategories?: string[];
 }
 
 interface StoreProfileContextType {
@@ -33,7 +34,8 @@ export const StoreProfileProvider = ({ children }: { children: ReactNode }) => {
       address: '',
       pixKey: '',
       minOrderQuantity: 0,
-      minOrderValue: 0
+      minOrderValue: 0,
+      customCategories: []
     };
   });
 

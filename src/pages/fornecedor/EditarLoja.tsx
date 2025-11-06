@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Upload, Star, Package } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Save, Upload, Star, Package, Plus, X, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 const EditarLoja = () => {
@@ -24,7 +25,9 @@ const EditarLoja = () => {
     pixKey: '',
     minOrderQuantity: 0,
     minOrderValue: 0,
+    customCategories: [] as string[],
   });
+  const [newCategory, setNewCategory] = useState('');
 
   // Carregar dados do perfil da loja ao montar o componente
   useEffect(() => {
@@ -38,6 +41,7 @@ const EditarLoja = () => {
       pixKey: storeProfile.pixKey || '',
       minOrderQuantity: storeProfile.minOrderQuantity || 0,
       minOrderValue: storeProfile.minOrderValue || 0,
+      customCategories: storeProfile.customCategories || [],
     });
   }, [storeProfile]);
 
@@ -64,9 +68,39 @@ const EditarLoja = () => {
       address: formData.address,
       pixKey: formData.pixKey,
       minOrderQuantity: formData.minOrderQuantity,
-      minOrderValue: formData.minOrderValue
+      minOrderValue: formData.minOrderValue,
+      customCategories: formData.customCategories
     });
     toast.success("Informações da loja salvas com sucesso!");
+  };
+
+  const handleAddCategory = () => {
+    const trimmedCategory = newCategory.trim();
+    
+    if (!trimmedCategory) {
+      toast.error("Digite o nome da categoria");
+      return;
+    }
+
+    if (formData.customCategories.includes(trimmedCategory)) {
+      toast.error("Esta categoria já existe");
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      customCategories: [...formData.customCategories, trimmedCategory]
+    });
+    setNewCategory('');
+    toast.success("Categoria adicionada!");
+  };
+
+  const handleRemoveCategory = (category: string) => {
+    setFormData({
+      ...formData,
+      customCategories: formData.customCategories.filter(cat => cat !== category)
+    });
+    toast.success("Categoria removida!");
   };
 
   const handleImageUpload = (type: 'avatar' | 'banner') => {
@@ -231,6 +265,75 @@ const EditarLoja = () => {
                       Valor total mínimo
                     </p>
                   </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Categorias Personalizadas */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Tag className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Categorias Personalizadas</h2>
+            </div>
+            
+            <p className="text-sm text-muted-foreground mb-4">
+              Adicione categorias específicas para seus produtos. Essas categorias aparecerão junto com as categorias padrão ao cadastrar produtos.
+            </p>
+
+            <div className="space-y-4">
+              {/* Input para adicionar nova categoria */}
+              <div className="flex gap-2">
+                <Input
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                  placeholder="Ex: Ferramentas, Esportes, Infantil..."
+                  className="flex-1"
+                />
+                <Button onClick={handleAddCategory} type="button">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar
+                </Button>
+              </div>
+
+              {/* Lista de categorias customizadas */}
+              {formData.customCategories.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {formData.customCategories.map((category) => (
+                    <Badge
+                      key={category}
+                      variant="secondary"
+                      className="px-3 py-1.5 text-sm flex items-center gap-2"
+                    >
+                      {category}
+                      <button
+                        onClick={() => handleRemoveCategory(category)}
+                        className="hover:text-destructive transition-colors"
+                        type="button"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  Nenhuma categoria personalizada adicionada ainda
+                </p>
+              )}
+
+              {/* Info sobre categorias padrão */}
+              <div className="border-t pt-4 mt-4">
+                <p className="text-xs text-muted-foreground mb-2">
+                  <strong>Categorias Padrão do Sistema:</strong>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["Roupas", "Calçados", "Acessórios", "Eletrônicos", "Beleza", "Casa"].map((cat) => (
+                    <Badge key={cat} variant="outline" className="text-xs">
+                      {cat}
+                    </Badge>
+                  ))}
                 </div>
               </div>
             </div>
