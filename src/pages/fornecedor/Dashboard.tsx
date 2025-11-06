@@ -13,16 +13,9 @@ const Dashboard = () => {
     .filter(o => o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.value, 0);
 
-  const revenueData = [
-    { month: 'Jan', value: 4500 },
-    { month: 'Fev', value: 3800 },
-    { month: 'Mar', value: 6200 },
-    { month: 'Abr', value: 4100 },
-    { month: 'Mai', value: 7500 },
-    { month: 'Jun', value: 3200 },
-  ];
+  const revenueData: { month: string; value: number }[] = [];
 
-  const maxValue = Math.max(...revenueData.map(d => d.value));
+  const maxValue = revenueData.length > 0 ? Math.max(...revenueData.map(d => d.value)) : 1;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -38,102 +31,51 @@ const Dashboard = () => {
         <Card className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-4 sm:p-6 col-span-2">
           <p className="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">Receita Total</p>
           <p className="text-2xl sm:text-4xl font-bold mb-1">R$ {totalRevenue.toFixed(0)}</p>
-          <div className="flex items-center gap-1 text-xs sm:text-sm">
-            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
-            <span className="text-green-400">8.5%</span>
-            <span className="opacity-60">do mês passado</span>
-          </div>
         </Card>
 
         {/* Active Orders */}
         <Card className="p-4 sm:p-6">
           <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Pedidos Ativos</p>
           <p className="text-xl sm:text-3xl font-bold mb-1">{totalOrders - deliveredOrders}</p>
-          <div className="flex items-center gap-1 text-xs">
-            <TrendingUp className="h-3 w-3" />
-            <span className="text-green-600">4.1%</span>
-          </div>
         </Card>
 
         {/* New Orders */}
         <Card className="p-4 sm:p-6">
           <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Novos Pedidos</p>
           <p className="text-xl sm:text-3xl font-bold mb-1">{pendingOrders}</p>
-          <div className="flex items-center gap-1 text-xs">
-            <TrendingDown className="h-3 w-3" />
-            <span className="text-red-600">4.3%</span>
-          </div>
         </Card>
 
         {/* Total Delivered */}
         <Card className="p-4 sm:p-6 col-span-2 sm:col-span-1">
           <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Pedidos Entregues</p>
           <p className="text-xl sm:text-3xl font-bold mb-1">{deliveredOrders}</p>
-          <div className="flex items-center gap-1 text-xs">
-            <TrendingUp className="h-3 w-3" />
-            <span className="text-green-600">0.4%</span>
-          </div>
-        </Card>
-
-        {/* Community Growth - Mobile Optimized */}
-        <Card className="p-4 sm:p-6 col-span-2 sm:col-span-1">
-          <h3 className="text-xs sm:text-sm font-semibold mb-3">Crescimento de Vendas</h3>
-          <div className="flex items-center justify-center sm:justify-start gap-4">
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-              <svg className="transform -rotate-90" width="100%" height="100%" viewBox="0 0 80 80">
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="32"
-                  stroke="#e5e7eb"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="32"
-                  stroke="#1f2937"
-                  strokeWidth="8"
-                  fill="none"
-                  strokeDasharray={`${2 * Math.PI * 32 * 0.65} ${2 * Math.PI * 32}`}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-base sm:text-lg font-bold">65%</span>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm text-green-600 font-medium">+8.90%</p>
-              <p className="text-xs text-muted-foreground">do mês passado</p>
-            </div>
-          </div>
         </Card>
       </div>
 
-      {/* Revenue Chart */}
-      <Card className="p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-base sm:text-xl font-bold">Receita Total</h2>
-          <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
-            <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-end justify-between gap-2 sm:gap-4 h-48 sm:h-80">
-          {revenueData.map((item) => (
-            <div key={item.month} className="flex flex-col items-center flex-1 gap-2 sm:gap-3">
-              <div className="w-full relative" style={{ height: '100%' }}>
-                <div 
-                  className="w-full bg-gray-900 rounded-t-xl absolute bottom-0 transition-all hover:bg-gray-800 cursor-pointer"
-                  style={{ height: `${(item.value / maxValue) * 100}%` }}
-                />
+      {revenueData.length > 0 && (
+        <Card className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-xl font-bold">Receita Total</h2>
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+              <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex items-end justify-between gap-2 sm:gap-4 h-48 sm:h-80">
+            {revenueData.map((item) => (
+              <div key={item.month} className="flex flex-col items-center flex-1 gap-2 sm:gap-3">
+                <div className="w-full relative" style={{ height: '100%' }}>
+                  <div 
+                    className="w-full bg-gray-900 rounded-t-xl absolute bottom-0 transition-all hover:bg-gray-800 cursor-pointer"
+                    style={{ height: `${(item.value / maxValue) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">{item.month}</p>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-muted-foreground">{item.month}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Recent Orders */}
       <Card className="overflow-hidden">
@@ -150,34 +92,41 @@ const Dashboard = () => {
         </div>
         
         <div className="divide-y">
-          {orders.slice(0, 5).map((order) => (
-            <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                  <Package className="h-5 w-5 sm:h-6 sm:w-6" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm sm:text-base mb-1">{order.product}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">{order.customerName}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-muted-foreground">ID: {order.id}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      order.status === 'delivered'
-                        ? 'bg-gray-900 text-white'
-                        : order.status === 'cancelled'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.status === 'delivered' ? 'Pago' : order.status === 'cancelled' ? 'Cancelado' : 'Pendente'}
-                    </span>
+          {orders.length === 0 ? (
+            <div className="p-8 text-center">
+              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Nenhum pedido recente</p>
+            </div>
+          ) : (
+            orders.slice(0, 5).map((order) => (
+              <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                    <Package className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm sm:text-base mb-1">{order.product}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-2">{order.customerName}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-muted-foreground">ID: {order.id}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        order.status === 'delivered'
+                          ? 'bg-gray-900 text-white'
+                          : order.status === 'cancelled'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {order.status === 'delivered' ? 'Pago' : order.status === 'cancelled' ? 'Cancelado' : 'Pendente'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-semibold text-sm sm:text-base">R$ {order.value.toFixed(2)}</p>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="font-semibold text-sm sm:text-base">R$ {order.value.toFixed(2)}</p>
-                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </Card>
     </div>
