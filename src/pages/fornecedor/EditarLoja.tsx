@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { useStoreProfile } from "@/hooks/useStoreProfile";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -10,16 +11,29 @@ import { Save, Upload, Star, Package } from "lucide-react";
 import { toast } from "sonner";
 
 const EditarLoja = () => {
+  const { storeProfile, updateStoreProfile } = useStoreProfile();
   const [formData, setFormData] = useState({
-    storeName: 'Minha Loja Premium',
-    bio: 'Produtos de qualidade com os melhores preços do mercado',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=store1',
-    banner: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8',
-    phone: '(11) 99999-9999',
-    whatsapp: '(11) 99999-9999',
-    address: 'Rua das Flores, 123 - São Paulo, SP',
-    pixKey: '11999999999',
+    storeName: '',
+    bio: '',
+    avatar: '',
+    banner: '',
+    whatsapp: '',
+    address: '',
+    pixKey: '',
   });
+
+  // Carregar dados do perfil da loja ao montar o componente
+  useEffect(() => {
+    setFormData({
+      storeName: storeProfile.storeName || '',
+      bio: storeProfile.bio || '',
+      avatar: storeProfile.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store1',
+      banner: storeProfile.banner || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8',
+      whatsapp: storeProfile.whatsapp || '',
+      address: storeProfile.address || '',
+      pixKey: storeProfile.pixKey || '',
+    });
+  }, [storeProfile]);
 
   // Mock data - em produção viria de um hook/API
   const storeStats = {
@@ -52,6 +66,15 @@ const EditarLoja = () => {
   ];
 
   const handleSave = () => {
+    updateStoreProfile({
+      storeName: formData.storeName,
+      bio: formData.bio,
+      avatar: formData.avatar,
+      banner: formData.banner,
+      whatsapp: formData.whatsapp,
+      address: formData.address,
+      pixKey: formData.pixKey
+    });
     toast.success("Informações da loja salvas com sucesso!");
   };
 
@@ -154,23 +177,13 @@ const EditarLoja = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Telefone</Label>
-                  <Input
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-                <div>
-                  <Label>WhatsApp</Label>
-                  <Input
-                    value={formData.whatsapp}
-                    onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
+              <div>
+                <Label>WhatsApp</Label>
+                <Input
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                  placeholder="(00) 00000-0000"
+                />
               </div>
 
               <div>

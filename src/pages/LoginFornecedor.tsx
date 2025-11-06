@@ -12,6 +12,10 @@ const LoginFornecedor = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({
     companyName: "",
+    cnpj: "",
+    whatsapp: "",
+    address: "",
+    pixKey: "",
     email: "",
     password: ""
   });
@@ -51,16 +55,62 @@ const LoginFornecedor = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignup && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Nome da empresa</label>
-              <Input 
-                type="text"
-                placeholder="Sua empresa"
-                value={formData.companyName}
-                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                required
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-2">Nome da empresa</label>
+                <Input 
+                  type="text"
+                  placeholder="Sua empresa"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">CNPJ</label>
+                <Input 
+                  type="text"
+                  placeholder="00.000.000/0000-00"
+                  value={formData.cnpj}
+                  onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">WhatsApp</label>
+                <Input 
+                  type="text"
+                  placeholder="(00) 00000-0000"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Endereço</label>
+                <Input 
+                  type="text"
+                  placeholder="Rua, número, bairro, cidade - UF"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Chave PIX para receber pagamentos</label>
+                <Input 
+                  type="text"
+                  placeholder="CPF, CNPJ, Email ou Telefone"
+                  value={formData.pixKey}
+                  onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
+                  required
+                />
+              </div>
+            </>
           )}
 
           <div>

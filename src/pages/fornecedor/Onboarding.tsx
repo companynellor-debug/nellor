@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
+import { useStoreProfile } from "@/hooks/useStoreProfile";
 import { 
   Store, 
   Package, 
@@ -27,6 +28,7 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const { completeOnboarding } = useAuth();
   const { addProduct } = useSupplierProducts();
+  const { updateStoreProfile } = useStoreProfile();
   const [currentStep, setCurrentStep] = useState(0);
   
   const [storeData, setStoreData] = useState({
@@ -371,6 +373,14 @@ const Onboarding = () => {
   };
 
   const handleFinish = () => {
+    // Salvar os dados da loja no contexto
+    updateStoreProfile({
+      storeName: storeData.storeName,
+      bio: storeData.bio,
+      avatar: storeData.avatar || avatarFile,
+      banner: storeData.banner || bannerFile
+    });
+    
     completeOnboarding();
     toast.success("Configuração concluída! Bem-vindo à sua loja!");
     navigate("/fornecedor/dashboard");
