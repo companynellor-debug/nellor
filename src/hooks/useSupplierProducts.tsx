@@ -8,6 +8,8 @@ export interface SupplierProduct {
   images: string[];
   price: number;
   stock: number;
+  minQuantity?: number;
+  minValue?: number;
   variations?: { name: string; options: string[] }[];
 }
 

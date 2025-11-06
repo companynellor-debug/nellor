@@ -19,6 +19,8 @@ const Produtos = () => {
     description: '',
     price: '',
     stock: '',
+    minQuantity: '',
+    minValue: '',
   });
   const [imageFiles, setImageFiles] = useState<string[]>([]);
 
@@ -31,11 +33,13 @@ const Produtos = () => {
         description: product.description,
         price: product.price.toString(),
         stock: product.stock.toString(),
+        minQuantity: product.minQuantity?.toString() || '',
+        minValue: product.minValue?.toString() || '',
       });
       setImageFiles(product.images);
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', category: '', description: '', price: '', stock: '' });
+      setFormData({ name: '', category: '', description: '', price: '', stock: '', minQuantity: '', minValue: '' });
       setImageFiles([]);
     }
     setIsModalOpen(true);
@@ -80,6 +84,8 @@ const Produtos = () => {
       description: formData.description,
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock) || 0,
+      minQuantity: formData.minQuantity ? parseInt(formData.minQuantity) : undefined,
+      minValue: formData.minValue ? parseFloat(formData.minValue) : undefined,
       images: imageFiles,
     };
 
@@ -208,6 +214,42 @@ const Produtos = () => {
                   onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                   placeholder="0"
                 />
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-3 text-sm">Limites de Pedido (Opcional)</h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Configure limites mínimos específicos para este produto. Deixe em branco se não houver limite.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Quantidade Mínima</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={formData.minQuantity}
+                    onChange={(e) => setFormData({ ...formData, minQuantity: e.target.value })}
+                    placeholder="Ex: 10"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Mínimo de unidades deste produto
+                  </p>
+                </div>
+                <div>
+                  <Label>Valor Mínimo (R$)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.minValue}
+                    onChange={(e) => setFormData({ ...formData, minValue: e.target.value })}
+                    placeholder="Ex: 50.00"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Valor mínimo em compras deste produto
+                  </p>
+                </div>
               </div>
             </div>
 
