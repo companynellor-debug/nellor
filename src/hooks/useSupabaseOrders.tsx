@@ -1,0 +1,207 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export interface Order {
+  id: string;
+  order_number: string;
+  buyer_id: string | null;
+  supplier_id: string;
+  itens: any;
+  subtotal: number;
+  frete: number;
+  desconto: number;
+  total: number;
+  endereco_entrega: any;
+  payment_method: 'pix' | 'boleto' | 'cartao';
+  payment_status: 'pending' | 'paid' | 'refunded' | 'cancelled';
+  order_status: 'pending' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
+  tracking_code: string | null;
+  proof_url: string | null;
+  shipping_company: string | null;
+  estimated_delivery: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const useSupabaseOrders = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .or(`buyer_id.eq.${user.id},supplier_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error: any) {
+      console.error('Error fetching orders:', error);
+      toast({
+        title: 'Erro ao carregar pedidos',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        () => {
+          fetchOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at' | 'buyer_id'>) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([{ 
+          ...orderData, 
+          buyer_id: user.id,
+          order_number: `PED${Date.now()}` // Temporary until trigger generates it
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Pedido criado!',
+        description: `Pedido #${data.order_number} criado com sucesso`,
+      });
+
+      return data;
+    } catch (error: any) {
+      console.error('Error creating order:', error);
+      toast({
+        title: 'Erro ao criar pedido',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: Order['order_status']) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ order_status: status })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Status atualizado',
+        description: 'Status do pedido atualizado com sucesso',
+      });
+    } catch (error: any) {
+      console.error('Error updating order status:', error);
+      toast({
+        title: 'Erro ao atualizar status',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const updatePaymentProof = async (orderId: string, proofUrl: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ proof_url: proofUrl, payment_status: 'paid' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Comprovante enviado',
+        description: 'Comprovante de pagamento enviado com sucesso',
+      });
+    } catch (error: any) {
+      console.error('Error updating payment proof:', error);
+      toast({
+        title: 'Erro ao enviar comprovante',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const updateTrackingCode = async (orderId: string, trackingCode: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ tracking_code: trackingCode })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Código de rastreio atualizado',
+        description: 'Código de rastreio adicionado com sucesso',
+      });
+    } catch (error: any) {
+      console.error('Error updating tracking code:', error);
+      toast({
+        title: 'Erro ao atualizar código',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const getOrderById = (orderId: string) => {
+    return orders.find(order => order.id === orderId);
+  };
+
+  return {
+    orders,
+    loading,
+    createOrder,
+    updateOrderStatus,
+    updatePaymentProof,
+    updateTrackingCode,
+    getOrderById,
+    refetch: fetchOrders
+  };
+};
