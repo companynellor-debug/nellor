@@ -9,7 +9,9 @@ import {
   Bell, 
   Settings,
   Wallet,
-  MessageCircle
+  MessageCircle,
+  Package,
+  Image
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +24,8 @@ const menuItems = [
   { icon: Wallet, label: "Saques", path: "/admin/saques" },
   { icon: BarChart3, label: "Relatórios", path: "/admin/relatorios" },
   { icon: MessageCircle, label: "Suporte", path: "/admin/suporte" },
+  { icon: Package, label: "Categorias", path: "/admin/categorias" },
+  { icon: Image, label: "Banners", path: "/admin/banners" },
   { icon: Bell, label: "Alertas", path: "/admin/alertas" },
   { icon: Settings, label: "Configurações", path: "/admin/configuracoes" },
 ];

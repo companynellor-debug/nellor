@@ -13,6 +13,10 @@ import AdminFinanceiro from "./pages/admin/Financeiro";
 import AdminRelatorios from "./pages/admin/Relatorios";
 import AdminAlertas from "./pages/admin/Alertas";
 import AdminConfiguracoes from "./pages/admin/Configuracoes";
+import AdminSaques from "./pages/admin/Saques";
+import AdminSuporteAdmin from "./pages/admin/SuporteAdmin";
+import AdminCategorias from "./pages/admin/Categorias";
+import AdminBanners from "./pages/admin/Banners";
 import Home from "./pages/Home";
 import Fornecedor from "./pages/Fornecedor";
 import Sobre from "./pages/Sobre";
@@ -53,9 +57,6 @@ import NotificacoesFornecedor from "./pages/fornecedor/Notificacoes";
 import EditarLoja from "./pages/fornecedor/EditarLoja";
 import Onboarding from "./pages/fornecedor/Onboarding";
 import Estatisticas from "./pages/fornecedor/Estatisticas";
-
-import AdminSaques from "./pages/admin/Saques";
-import AdminSuporteAdmin from "./pages/admin/SuporteAdmin";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,8 @@ const App = () => (
             <Route path="configuracoes" element={<AdminConfiguracoes />} />
             <Route path="saques" element={<AdminSaques />} />
             <Route path="suporte" element={<AdminSuporteAdmin />} />
+            <Route path="categorias" element={<AdminCategorias />} />
+            <Route path="banners" element={<AdminBanners />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
