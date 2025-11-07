@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowLeft, SlidersHorizontal } from "lucide-react";
+import { Search, ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
@@ -83,20 +83,14 @@ const Produtos = () => {
       <main className="container mx-auto px-4 py-6 relative z-10">
         {/* Filtro de Categorias */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <SlidersHorizontal className="h-5 w-5 text-foreground" />
-            <h2 className="font-bold text-foreground">Categorias</h2>
-          </div>
+          <h2 className="font-semibold text-foreground mb-3">Categorias</h2>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((category) => (
               <Badge
                 key={category}
                 onClick={() => handleCategoryClick(category)}
-                className={`cursor-pointer whitespace-nowrap ${
-                  selectedCategory === category
-                    ? "bg-primary text-white hover:bg-primary/90"
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
+                variant={selectedCategory === category ? "default" : "secondary"}
+                className="cursor-pointer whitespace-nowrap px-4 py-2"
               >
                 {category}
               </Badge>
