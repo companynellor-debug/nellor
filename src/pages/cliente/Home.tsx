@@ -7,11 +7,22 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProducts } from "@/hooks/useProducts";
+import { useBanners } from "@/hooks/useBanners";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 const ClienteHome = () => {
   const navigate = useNavigate();
   const { favorites } = useFavorites();
   const { products } = useProducts();
+  const { banners } = useBanners();
+  
   const categories = [
     { name: "Roupas", icon: Shirt },
     { name: "Calçados", icon: Footprints },
@@ -21,11 +32,7 @@ const ClienteHome = () => {
     { name: "Casa", icon: HomeIcon },
   ];
 
-  const banners = [
-    { title: "Mega Promoção", subtitle: "Até 70% OFF", color: "from-purple-600 to-pink-600", link: "/cliente/produtos" },
-    { title: "Novidades", subtitle: "Confira já!", color: "from-blue-600 to-purple-600", link: "/cliente/produtos" },
-    { title: "Frete Grátis", subtitle: "Em compras acima de R$ 99", color: "from-green-600 to-teal-600", link: "/cliente/produtos" },
-  ];
+  const activeBanners = banners.filter(b => b.active).sort((a, b) => a.order - b.order);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -63,19 +70,45 @@ const ClienteHome = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
-        {/* Banners */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {banners.map((banner, index) => (
-            <Card 
-              key={index} 
-              onClick={() => navigate(banner.link)}
-              className={`bg-gradient-to-r ${banner.color} border-0 p-6 text-white cursor-pointer hover:scale-105 transition-transform`}
+        {/* Banners Carousel */}
+        {activeBanners.length > 0 && (
+          <div className="mb-8">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 4000,
+                }),
+              ]}
+              className="w-full"
             >
-              <h3 className="text-xl font-bold mb-1">{banner.title}</h3>
-              <p className="text-sm opacity-90">{banner.subtitle}</p>
-            </Card>
-          ))}
-        </div>
+              <CarouselContent>
+                {activeBanners.map((banner) => (
+                  <CarouselItem key={banner.id}>
+                    <div
+                      onClick={() => banner.link && window.open(banner.link, '_blank')}
+                      className={`relative overflow-hidden rounded-lg ${banner.link ? 'cursor-pointer' : ''} group`}
+                    >
+                      <img
+                        src={banner.imageUrl}
+                        alt={banner.title}
+                        className="w-full h-48 md:h-64 object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                        <h3 className="text-white text-2xl font-bold">{banner.title}</h3>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-2" />
+              <CarouselNext className="right-2" />
+            </Carousel>
+          </div>
+        )}
 
         {/* Categorias */}
         <section className="mb-8">
