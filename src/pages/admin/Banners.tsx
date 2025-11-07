@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Image as ImageIcon, ExternalLink } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
 import { useBanners } from "@/hooks/useBanners";
 import {
   Dialog,
@@ -31,7 +31,7 @@ const Banners = () => {
 
   const handleSubmit = () => {
     if (!formData.title || !formData.imageUrl) {
-      toast.error("Preencha o título e a URL da imagem");
+      toast.error("Preencha o título e faça o upload da imagem");
       return;
     }
 
@@ -128,20 +128,10 @@ const Banners = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleFileUpload}
-                  className="mb-2"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Ou insira a URL da imagem abaixo
+                <p className="text-xs text-muted-foreground mt-1">
+                  Formatos aceitos: JPG, PNG, WEBP
                 </p>
-              </div>
-
-              <div>
-                <Label>URL da Imagem</Label>
-                <Input
-                  value={formData.imageUrl}
-                  onChange={(e) => handleImageUrlChange(e.target.value)}
-                  placeholder="https://exemplo.com/imagem.jpg"
-                />
               </div>
 
               {imagePreview && (
@@ -155,14 +145,6 @@ const Banners = () => {
                 </div>
               )}
 
-              <div>
-                <Label>Link de Destino</Label>
-                <Input
-                  value={formData.link}
-                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  placeholder="/produtos ou https://exemplo.com"
-                />
-              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -218,10 +200,6 @@ const Banners = () => {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="font-semibold text-lg">{banner.title}</h3>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <ExternalLink className="h-3 w-3" />
-                          {banner.link}
-                        </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={banner.active ? "default" : "secondary"}>

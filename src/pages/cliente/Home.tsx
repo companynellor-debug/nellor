@@ -64,11 +64,8 @@ const ClienteHome = () => {
         })]} className="w-full">
               <CarouselContent>
                 {activeBanners.map(banner => <CarouselItem key={banner.id}>
-                    <div onClick={() => banner.link && window.open(banner.link, '_blank')} className={`relative overflow-hidden rounded-lg ${banner.link ? 'cursor-pointer' : ''} group`}>
-                      <img src={banner.imageUrl} alt={banner.title} className="w-full h-48 md:h-64 object-cover transition-transform group-hover:scale-105" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
-                        
-                      </div>
+                    <div className="relative overflow-hidden rounded-lg">
+                      <img src={banner.imageUrl} alt={banner.title} className="w-full h-48 md:h-64 object-cover" />
                     </div>
                   </CarouselItem>)}
               </CarouselContent>
