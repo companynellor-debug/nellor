@@ -168,6 +168,26 @@ const Banners = () => {
                 </div>
               )}
 
+              {imagePreview && (
+                <div className="space-y-2">
+                  <Label>Preview do Banner (como aparecerá para clientes)</Label>
+                  <div className="border-2 border-primary/20 rounded-lg p-4 bg-muted/30">
+                    <div className="relative overflow-hidden rounded-lg">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-48 md:h-64 object-cover"
+                      />
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="secondary" className="bg-primary/80 text-white">
+                          Preview
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Data de Início</Label>

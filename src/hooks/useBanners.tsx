@@ -93,12 +93,28 @@ export const useBanners = () => {
     });
   };
 
+  const getExpiringBanners = (daysBeforeExpiration: number = 5) => {
+    const now = new Date();
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + daysBeforeExpiration);
+    
+    return banners.filter(banner => {
+      if (!banner.active || !banner.endDate) return false;
+      
+      const endDate = new Date(banner.endDate);
+      
+      // Banner está ativo e vai expirar nos próximos X dias
+      return endDate > now && endDate <= targetDate;
+    });
+  };
+
   return {
     banners,
     addBanner,
     updateBanner,
     deleteBanner,
     toggleBannerStatus,
-    getActiveBanners
+    getActiveBanners,
+    getExpiringBanners
   };
 };
