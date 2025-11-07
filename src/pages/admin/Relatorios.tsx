@@ -3,39 +3,71 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-
-const growthData = [
-  { month: "Jun", clientes: 2100, fornecedores: 145 },
-  { month: "Jul", clientes: 2280, fornecedores: 152 },
-  { month: "Ago", clientes: 2450, fornecedores: 161 },
-  { month: "Set", clientes: 2620, fornecedores: 170 },
-  { month: "Out", clientes: 2780, fornecedores: 179 },
-  { month: "Nov", clientes: 2847, fornecedores: 184 },
-];
-
-const categoryRevenue = [
-  { category: "Streetwear", revenue: 44600 },
-  { category: "Techwear", revenue: 31850 },
-  { category: "Acessórios", revenue: 25486 },
-  { category: "Calçados", revenue: 19116 },
-  { category: "Outros", revenue: 6372 },
-];
-
-const stateData = [
-  { state: "SP", orders: 520 },
-  { state: "RJ", orders: 310 },
-  { state: "MG", orders: 280 },
-  { state: "RS", orders: 180 },
-  { state: "PR", orders: 150 },
-  { state: "Outros", orders: 83 },
-];
-
+const growthData = [{
+  month: "Jun",
+  clientes: 2100,
+  fornecedores: 145
+}, {
+  month: "Jul",
+  clientes: 2280,
+  fornecedores: 152
+}, {
+  month: "Ago",
+  clientes: 2450,
+  fornecedores: 161
+}, {
+  month: "Set",
+  clientes: 2620,
+  fornecedores: 170
+}, {
+  month: "Out",
+  clientes: 2780,
+  fornecedores: 179
+}, {
+  month: "Nov",
+  clientes: 2847,
+  fornecedores: 184
+}];
+const categoryRevenue = [{
+  category: "Streetwear",
+  revenue: 44600
+}, {
+  category: "Techwear",
+  revenue: 31850
+}, {
+  category: "Acessórios",
+  revenue: 25486
+}, {
+  category: "Calçados",
+  revenue: 19116
+}, {
+  category: "Outros",
+  revenue: 6372
+}];
+const stateData = [{
+  state: "SP",
+  orders: 520
+}, {
+  state: "RJ",
+  orders: 310
+}, {
+  state: "MG",
+  orders: 280
+}, {
+  state: "RS",
+  orders: 180
+}, {
+  state: "PR",
+  orders: 150
+}, {
+  state: "Outros",
+  orders: 83
+}];
 const Relatorios = () => {
-  return (
-    <div className="space-y-8">
+  return <div className="space-y-8">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
             📊 Relatórios
           </h1>
           <p className="text-muted-foreground">Central de análise e insights</p>
@@ -135,12 +167,12 @@ const Relatorios = () => {
 
         <Card className="border-purple-100 bg-gradient-to-br from-purple-50 to-violet-50">
           <CardHeader>
-            <CardTitle>📋 Resumo do Período</CardTitle>
+            <CardTitle className="text-stone-950">📋 Resumo do Período</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">Total de Transações:</span>
-              <span className="font-bold text-lg">1,523</span>
+              <span className="font-bold text-lg text-neutral-700">1,523</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">Receita Total:</span>
@@ -161,8 +193,6 @@ const Relatorios = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Relatorios;
