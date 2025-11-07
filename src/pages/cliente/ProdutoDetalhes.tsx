@@ -220,7 +220,19 @@ const ProdutoDetalhes = () => {
             </Button>
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90 text-white"
-              onClick={() => navigate('/cliente/checkout')}
+              onClick={() => {
+                if (store) {
+                  addToCart({
+                    productId: product.id,
+                    name: product.name,
+                    price: parseFloat(product.price.replace('R$', '').replace(',', '.')),
+                    image: product.images[0],
+                    storeId: store.id,
+                    storeName: store.name
+                  });
+                  navigate('/cliente/checkout');
+                }
+              }}
             >
               Comprar Agora
             </Button>
