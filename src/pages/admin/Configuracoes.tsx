@@ -1,5 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 const configItems = [{
   label: "Nome da Plataforma",
   value: "Nellor",
@@ -18,12 +33,50 @@ const configItems = [{
   editable: false
 }];
 const Configuracoes = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Limpar dados de autenticação
+    localStorage.removeItem('adminAuth');
+    localStorage.removeItem('userAuth');
+    
+    toast.success("Você saiu da sua conta");
+    
+    // Redirecionar para login
+    navigate('/login');
+  };
+
   return <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50 px-0 mx-0">
-          ⚙️ Configurações
-        </h1>
-        <p className="text-muted-foreground">Informações da plataforma (apenas visualização)</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50 px-0 mx-0">
+            ⚙️ Configurações
+          </h1>
+          <p className="text-muted-foreground">Informações da plataforma (apenas visualização)</p>
+        </div>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Sair da Conta
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Tem certeza que deseja sair?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você será desconectado da sua conta de administrador e redirecionado para a página de login.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout} className="bg-destructive hover:bg-destructive/90">
+                Sair
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
