@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, QrCode, Copy, MessageSquare, MapPin, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
@@ -27,6 +28,7 @@ const Checkout = () => {
   const [couponCode, setCouponCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'pix' | 'card'>('pix');
+  const [installments, setInstallments] = useState(1);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -88,7 +90,17 @@ const Checkout = () => {
   const total = getTotal();
   const shipping = 15.00;
   const discount = (total * appliedDiscount) / 100;
-  const finalTotal = total + shipping - discount;
+  
+  // Cálculo de juros: sem juros até 3x, 2.5% ao mês depois
+  const calculateInstallmentInterest = (parcelas: number) => {
+    if (parcelas <= 3) return 0;
+    return 2.5 * (parcelas - 3); // 2.5% ao mês após a 3ª parcela
+  };
+  
+  const interestRate = selectedPaymentMethod === 'card' ? calculateInstallmentInterest(installments) : 0;
+  const interestAmount = ((total + shipping - discount) * interestRate) / 100;
+  const finalTotal = total + shipping - discount + interestAmount;
+  const installmentValue = finalTotal / installments;
 
   const applyCoupon = () => {
     const coupons: { [key: string]: number } = {
@@ -330,10 +342,22 @@ const Checkout = () => {
                     <span>- R$ {discount.toFixed(2).replace('.', ',')}</span>
                   </div>
                 )}
+                {selectedPaymentMethod === 'card' && interestRate > 0 && (
+                  <div className="flex justify-between text-orange-600">
+                    <span>Juros ({interestRate.toFixed(1)}%)</span>
+                    <span>+ R$ {interestAmount.toFixed(2).replace('.', ',')}</span>
+                  </div>
+                )}
                 <div className="border-t pt-2 flex justify-between font-bold text-base">
                   <span>Total</span>
                   <span className="text-primary">R$ {finalTotal.toFixed(2).replace('.', ',')}</span>
                 </div>
+                {selectedPaymentMethod === 'card' && installments > 1 && (
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>{installments}x de</span>
+                    <span>R$ {installmentValue.toFixed(2).replace('.', ',')}</span>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -483,6 +507,37 @@ const Checkout = () => {
                           maxLength={4}
                         />
                       </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="installments">Parcelamento</Label>
+                      <Select
+                        value={installments.toString()}
+                        onValueChange={(value) => setInstallments(Number(value))}
+                      >
+                        <SelectTrigger id="installments">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => {
+                            const interest = calculateInstallmentInterest(num);
+                            const totalWithInterest = (total + shipping - discount) * (1 + interest / 100);
+                            const installmentVal = totalWithInterest / num;
+                            
+                            return (
+                              <SelectItem key={num} value={num.toString()}>
+                                {num}x de R$ {installmentVal.toFixed(2).replace('.', ',')}
+                                {num <= 3 ? ' sem juros' : ` (${interest.toFixed(1)}% juros)`}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      {installments > 3 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Total com juros: R$ {finalTotal.toFixed(2).replace('.', ',')}
+                        </p>
+                      )}
                     </div>
                   </div>
 
