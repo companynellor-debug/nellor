@@ -30,11 +30,13 @@ const AdminLayout = () => {
         </Sheet>
       </header>
 
-      {/* Desktop Sidebar - Always visible */}
-      <AdminSidebar />
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <AdminSidebar />
+      </div>
 
       {/* Main Content */}
-      <div className="pt-20 lg:pt-0 p-4 sm:p-6 lg:ml-64 lg:p-8">
+      <div className="lg:ml-64 pt-20 lg:pt-0 p-4 sm:p-6 lg:p-8">
         <Outlet />
       </div>
     </div>
