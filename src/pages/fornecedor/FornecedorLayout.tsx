@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -13,6 +14,10 @@ const FornecedorLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, user } = useAuth();
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem("fornecedor-dark-mode");
+    return saved ? JSON.parse(saved) : false;
+  });
 
   // Redirecionar para onboarding se não completou
   useEffect(() => {
@@ -20,6 +25,15 @@ const FornecedorLayout = () => {
       navigate('/fornecedor/onboarding');
     }
   }, [user, navigate, location.pathname]);
+
+  useEffect(() => {
+    localStorage.setItem("fornecedor-dark-mode", JSON.stringify(darkMode));
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   const handleLogout = () => {
     logout();
@@ -38,7 +52,7 @@ const FornecedorLayout = () => {
         <SidebarInset className="flex-1">
           <div className="flex flex-col min-h-screen">
             {/* Header */}
-            <header className="h-16 border-b bg-white/95 backdrop-blur-lg flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 shadow-sm">
+            <header className="h-16 border-b bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 shadow-sm">
               {/* Left side - Logo and Sidebar Trigger */}
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="hidden md:block" />
@@ -49,8 +63,13 @@ const FornecedorLayout = () => {
                 />
               </div>
               
-              {/* Right side - Notifications and Logout */}
+              {/* Right side - Theme, Notifications and Logout */}
               <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2 mr-2">
+                  <Sun className="h-4 w-4 text-muted-foreground" />
+                  <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+                  <Moon className="h-4 w-4 text-muted-foreground" />
+                </div>
                 <Button
                   variant="outline"
                   size="icon"
@@ -72,7 +91,7 @@ const FornecedorLayout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
+            <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-6">
               <div className="container mx-auto">
                 <Outlet />
               </div>

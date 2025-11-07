@@ -1,13 +1,12 @@
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, TrendingDown, Calendar as CalendarIcon, ArrowUpRight, Star } from "lucide-react";
+import { Package, TrendingUp, Calendar as CalendarIcon, ArrowUpRight, Star, DollarSign, ShoppingCart } from "lucide-react";
 import { useSupplierOrders } from "@/hooks/useSupplierOrders";
 import { useNavigate } from "react-router-dom";
 import { useReviews } from "@/hooks/useReviews";
 import { useAuth } from "@/hooks/useAuth";
 import { useStores } from "@/hooks/useStores";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const Dashboard = () => {
   const { orders } = useSupplierOrders();
@@ -67,203 +66,188 @@ const Dashboard = () => {
   })();
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">Visão geral do seu desempenho</p>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
+          Dashboard
+        </h1>
+        <p className="text-muted-foreground">Visão geral do seu desempenho</p>
       </div>
 
-      {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        {/* Total Revenue - Destaque */}
-        <Card className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-4 sm:p-6 col-span-2">
-          <p className="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">Receita Total</p>
-          <p className="text-2xl sm:text-4xl font-bold mb-1">R$ {totalRevenue.toFixed(0)}</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Receita Total
+            </CardTitle>
+            <DollarSign className="w-5 h-5 bg-gradient-to-br from-green-500 to-green-600 bg-clip-text text-transparent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+          </CardContent>
         </Card>
 
-        {/* Active Orders */}
-        <Card className="p-4 sm:p-6">
-          <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Pedidos Ativos</p>
-          <p className="text-xl sm:text-3xl font-bold mb-1">{totalOrders - deliveredOrders}</p>
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pedidos Ativos
+            </CardTitle>
+            <ShoppingCart className="w-5 h-5 bg-gradient-to-br from-orange-500 to-orange-600 bg-clip-text text-transparent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{totalOrders - deliveredOrders}</div>
+          </CardContent>
         </Card>
 
-        {/* New Orders */}
-        <Card className="p-4 sm:p-6">
-          <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Novos Pedidos</p>
-          <p className="text-xl sm:text-3xl font-bold mb-1">{pendingOrders}</p>
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Novos Pedidos
+            </CardTitle>
+            <Package className="w-5 h-5 bg-gradient-to-br from-blue-500 to-blue-600 bg-clip-text text-transparent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{pendingOrders}</div>
+          </CardContent>
         </Card>
 
-        {/* Total Delivered */}
-        <Card className="p-4 sm:p-6 col-span-2 sm:col-span-1">
-          <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Pedidos Entregues</p>
-          <p className="text-xl sm:text-3xl font-bold mb-1">{deliveredOrders}</p>
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pedidos Entregues
+            </CardTitle>
+            <TrendingUp className="w-5 h-5 bg-gradient-to-br from-purple-500 to-purple-600 bg-clip-text text-transparent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{deliveredOrders}</div>
+          </CardContent>
         </Card>
       </div>
 
-      {/* Gráficos Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Evolução de Vendas */}
-        <Card className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base sm:text-xl font-bold">Evolução de Vendas</h2>
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
-          </div>
-          
-          {salesData.some(d => d.vendas > 0) ? (
-            <ChartContainer
-              config={{
-                vendas: {
-                  label: "Vendas",
-                  color: "hsl(var(--primary))",
-                },
-              }}
-              className="h-[200px] sm:h-[300px] w-full"
-            >
-              <AreaChart data={salesData}>
-                <defs>
-                  <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="month" 
-                  className="text-xs"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis 
-                  className="text-xs"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(value) => `R$${value}`}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area 
-                  type="monotone" 
-                  dataKey="vendas" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#colorVendas)" 
-                />
-              </AreaChart>
-            </ChartContainer>
-          ) : (
-            <div className="h-[200px] sm:h-[300px] flex items-center justify-center">
-              <p className="text-muted-foreground text-sm">Nenhuma venda registrada ainda</p>
-            </div>
-          )}
+        <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="text-lg">📈 Evolução de Vendas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {salesData.some(d => d.vendas > 0) ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={salesData}>
+                  <defs>
+                    <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" tickFormatter={(value) => `R$${value}`} />
+                  <Tooltip />
+                  <Area 
+                    type="monotone" 
+                    dataKey="vendas" 
+                    stroke="#8B5CF6" 
+                    fillOpacity={1} 
+                    fill="url(#colorVendas)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center">
+                <p className="text-muted-foreground text-sm">Nenhuma venda registrada ainda</p>
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         {/* Distribuição de Avaliações */}
-        <Card className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base sm:text-xl font-bold">Distribuição de Avaliações</h2>
-            <Star className="h-5 w-5 text-muted-foreground" />
-          </div>
-          
-          {myStoreReviews.length > 0 ? (
-            <ChartContainer
-              config={{
-                quantidade: {
-                  label: "Avaliações",
-                  color: "hsl(var(--primary))",
-                },
-              }}
-              className="h-[200px] sm:h-[300px] w-full"
-            >
-              <BarChart data={ratingsDistribution}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="estrelas" 
-                  className="text-xs"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis 
-                  className="text-xs"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  allowDecimals={false}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar 
-                  dataKey="quantidade" 
-                  fill="hsl(var(--primary))" 
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ChartContainer>
-          ) : (
-            <div className="h-[200px] sm:h-[300px] flex items-center justify-center">
-              <p className="text-muted-foreground text-sm">Nenhuma avaliação recebida ainda</p>
-            </div>
-          )}
+        <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="text-lg">⭐ Distribuição de Avaliações</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {myStoreReviews.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={ratingsDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="estrelas" stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="quantidade" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center">
+                <p className="text-muted-foreground text-sm">Nenhuma avaliação recebida ainda</p>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
 
       {/* Recent Orders */}
-      <Card className="overflow-hidden">
-        <div className="p-4 sm:p-6 border-b flex items-center justify-between">
-          <h2 className="text-base sm:text-xl font-bold">Pedidos Recentes</h2>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-8 w-8 sm:h-10 sm:w-10"
-              onClick={() => navigate('/fornecedor/pedidos')}
-              title="Filtrar por data"
-            >
-              <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-8 w-8 sm:h-10 sm:w-10"
-              onClick={() => navigate('/fornecedor/pedidos')}
-              title="Ver todos os pedidos"
-            >
-              <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="divide-y">
-          {orders.length === 0 ? (
-            <div className="p-8 text-center">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum pedido recente</p>
+      <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">📦 Pedidos Recentes</CardTitle>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/fornecedor/pedidos')}
+              >
+                Ver Todos
+              </Button>
             </div>
-          ) : (
-            orders.slice(0, 5).map((order) => (
-              <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                    <Package className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm sm:text-base mb-1">{order.product}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-2">{order.customerName}</p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-muted-foreground">ID: {order.id}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        order.status === 'delivered'
-                          ? 'bg-gray-900 text-white'
-                          : order.status === 'cancelled'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.status === 'delivered' ? 'Pago' : order.status === 'cancelled' ? 'Cancelado' : 'Pendente'}
-                      </span>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y">
+            {orders.length === 0 ? (
+              <div className="p-8 text-center">
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Nenhum pedido recente</p>
+              </div>
+            ) : (
+              orders.slice(0, 5).map((order) => (
+                <div key={order.id} className="p-6 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <Package className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium mb-1">{order.product}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{order.customerName}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-muted-foreground">#{order.id}</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          order.status === 'delivered'
+                            ? 'bg-green-100 text-green-800'
+                            : order.status === 'cancelled'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {order.status === 'delivered' ? 'Entregue' : order.status === 'cancelled' ? 'Cancelado' : 'Pendente'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-semibold">R$ {order.value.toFixed(2)}</p>
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-semibold text-sm sm:text-base">R$ {order.value.toFixed(2)}</p>
-                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
