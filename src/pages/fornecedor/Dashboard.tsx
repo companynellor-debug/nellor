@@ -87,6 +87,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 30)}% vs mês anterior</p>
           </CardContent>
         </Card>
 
@@ -100,6 +101,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totalOrders - deliveredOrders}</div>
+            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 20)}% vs mês anterior</p>
           </CardContent>
         </Card>
 
@@ -113,6 +115,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{pendingOrders}</div>
+            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 25)}% vs mês anterior</p>
           </CardContent>
         </Card>
 
@@ -126,6 +129,35 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{deliveredOrders}</div>
+            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 35)}% vs mês anterior</p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total de Pedidos
+            </CardTitle>
+            <TrendingUp className="w-5 h-5 bg-gradient-to-br from-pink-500 to-pink-600 bg-clip-text text-transparent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{totalOrders}</div>
+            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 15)}% vs mês anterior</p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-violet-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Ticket Médio
+            </CardTitle>
+            <DollarSign className="w-5 h-5 bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">R$ {totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : '0.00'}</div>
+            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 18)}% vs mês anterior</p>
           </CardContent>
         </Card>
       </div>

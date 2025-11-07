@@ -1,16 +1,6 @@
 import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3 } from "lucide-react";
-import { NavLink } from "react-router-dom";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import logo from "@/assets/logo.png";
+import { NavLink, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
@@ -24,40 +14,38 @@ const menuItems = [
 ];
 
 export function SupplierSidebar() {
-  const { open } = useSidebar();
-
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50";
+  const location = useLocation();
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
-      <div className="p-4 border-b bg-white h-16 flex items-center justify-start">
-        <img 
-          src={logo} 
-          alt="Nellor" 
-          className={`transition-all ${open ? "h-12" : "h-8"}`} 
-        />
+    <aside className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-b from-purple-950 to-violet-950 text-white shadow-2xl border-r border-purple-800/30">
+      <div className="p-6 border-b border-purple-800/30">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-200 to-violet-200 bg-clip-text text-transparent">
+          NELLOR
+        </h1>
+        <p className="text-xs text-purple-300 mt-1">Painel Fornecedor</p>
       </div>
 
-      <SidebarContent className="bg-white">
-        <SidebarGroup>
-          <SidebarGroupContent className="px-2 py-2">
-            <SidebarMenu className="gap-2">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-12">
-                    <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className={`shrink-0 ${open ? "h-5 w-5" : "h-6 w-6"}`} />
-                      {open && <span className="text-base">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+      <nav className="p-4 space-y-2">
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.url;
+          return (
+            <NavLink
+              key={item.url}
+              to={item.url}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm",
+                isActive
+                  ? "bg-purple-600/40 text-white shadow-lg shadow-purple-500/20 border border-purple-500/30"
+                  : "text-purple-200 hover:bg-purple-800/30 hover:text-white"
+              )}
+            >
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium">{item.title}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }
 
