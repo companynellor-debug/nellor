@@ -7,14 +7,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-
 const AdminLayout = () => {
   const [open, setOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("admin-dark-mode");
     return saved ? JSON.parse(saved) : false;
   });
-
   useEffect(() => {
     localStorage.setItem("admin-dark-mode", JSON.stringify(darkMode));
     if (darkMode) {
@@ -23,9 +21,7 @@ const AdminLayout = () => {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
-
-  return (
-    <div className="min-h-screen bg-background relative">
+  return <div className="min-h-screen bg-background relative">
       <AdminParticles />
       
       {/* Mobile Header */}
@@ -67,11 +63,9 @@ const AdminLayout = () => {
       </div>
 
       {/* Main Content */}
-      <div className="lg:ml-64 pt-20 lg:pt-0 p-4 sm:p-6 lg:p-8">
+      <div className="lg:ml-64 pt-20 lg:pt-0 p-4 sm:p-6 lg:p-8 bg-slate-950">
         <Outlet />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default AdminLayout;
