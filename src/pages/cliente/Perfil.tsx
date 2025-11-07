@@ -2,7 +2,7 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, MapPin, Bell, Package, LogOut, Edit } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProfile } from "@/hooks/useProfile";
@@ -25,7 +25,9 @@ const Perfil = () => {
     { icon: Edit, label: "Editar Perfil", action: () => navigate("/cliente/editar-perfil") },
     { icon: Package, label: "Meus Pedidos", action: () => navigate("/cliente/meus-pedidos") },
     { icon: MapPin, label: "Endereços", action: () => navigate("/cliente/enderecos") },
+    { icon: CreditCard, label: "Métodos de Pagamento", action: () => navigate("/cliente/metodos-pagamento") },
     { icon: Bell, label: "Notificações", action: () => navigate("/cliente/notificacoes") },
+    { icon: MessageCircle, label: "Suporte", action: () => navigate("/cliente/suporte") },
     { icon: LogOut, label: "Sair", action: handleLogout },
   ];
 

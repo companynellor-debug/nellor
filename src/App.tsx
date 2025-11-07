@@ -40,6 +40,8 @@ import Notificacoes from "./pages/cliente/Notificacoes";
 import Produtos from "./pages/cliente/Produtos";
 import PerfilLoja from "./pages/cliente/PerfilLoja";
 import Checkout from "./pages/cliente/Checkout";
+import MetodosPagamento from "./pages/cliente/MetodosPagamento";
+import Suporte from "./pages/cliente/Suporte";
 
 import FornecedorLayout from "./pages/fornecedor/FornecedorLayout";
 import Dashboard from "./pages/fornecedor/Dashboard";
@@ -50,6 +52,10 @@ import Financeiro from "./pages/fornecedor/Financeiro";
 import NotificacoesFornecedor from "./pages/fornecedor/Notificacoes";
 import EditarLoja from "./pages/fornecedor/EditarLoja";
 import Onboarding from "./pages/fornecedor/Onboarding";
+import Estatisticas from "./pages/fornecedor/Estatisticas";
+
+import AdminSaques from "./pages/admin/Saques";
+import AdminSuporteAdmin from "./pages/admin/SuporteAdmin";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +94,8 @@ const App = () => (
           <Route path="/cliente/avaliacoes" element={<ProtectedRoute requireType="cliente"><Avaliacoes /></ProtectedRoute>} />
           <Route path="/cliente/avaliar-pedido" element={<ProtectedRoute requireType="cliente"><AvaliarPedido /></ProtectedRoute>} />
           <Route path="/cliente/favoritos" element={<ProtectedRoute requireType="cliente"><Favoritos /></ProtectedRoute>} />
+          <Route path="/cliente/metodos-pagamento" element={<ProtectedRoute requireType="cliente"><MetodosPagamento /></ProtectedRoute>} />
+          <Route path="/cliente/suporte" element={<ProtectedRoute requireType="cliente"><Suporte /></ProtectedRoute>} />
 
           {/* Fornecedor Panel Routes */}
           <Route path="/fornecedor" element={<ProtectedRoute requireType="fornecedor"><FornecedorLayout /></ProtectedRoute>}>
@@ -99,6 +107,7 @@ const App = () => (
             <Route path="financeiro" element={<Financeiro />} />
             <Route path="notificacoes" element={<NotificacoesFornecedor />} />
             <Route path="editar-loja" element={<EditarLoja />} />
+            <Route path="estatisticas" element={<Estatisticas />} />
           </Route>
           
           {/* Admin Panel */}
@@ -111,6 +120,8 @@ const App = () => (
             <Route path="relatorios" element={<AdminRelatorios />} />
             <Route path="alertas" element={<AdminAlertas />} />
             <Route path="configuracoes" element={<AdminConfiguracoes />} />
+            <Route path="saques" element={<AdminSaques />} />
+            <Route path="suporte" element={<AdminSuporteAdmin />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

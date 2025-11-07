@@ -20,6 +20,8 @@ const Checkout = () => {
   
   const [step, setStep] = useState<'address' | 'payment'>('address');
   const [orderId, setOrderId] = useState<string>("");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -62,7 +64,31 @@ const Checkout = () => {
   const store = stores.find(s => s.id === storeId);
   const total = getTotal();
   const shipping = 15.00;
-  const finalTotal = total + shipping;
+  const discount = (total * appliedDiscount) / 100;
+  const finalTotal = total + shipping - discount;
+
+  const applyCoupon = () => {
+    // Cupons fictícios para demonstração
+    const coupons: { [key: string]: number } = {
+      'NELLOR10': 10,
+      'NELLOR20': 20,
+      'PRIMEIRACOMPRA': 15
+    };
+    
+    if (coupons[couponCode.toUpperCase()]) {
+      setAppliedDiscount(coupons[couponCode.toUpperCase()]);
+      toast({
+        title: "Cupom aplicado!",
+        description: `Desconto de ${coupons[couponCode.toUpperCase()]}% aplicado`
+      });
+    } else {
+      toast({
+        title: "Cupom inválido",
+        description: "Este cupom não existe ou expirou",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -249,6 +275,23 @@ const Checkout = () => {
             </Card>
 
             <Card className="bg-white border shadow-sm p-4">
+              <h3 className="font-bold text-lg mb-3">Cupom de Desconto</h3>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Digite o código do cupom"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                />
+                <Button onClick={applyCoupon} variant="outline">
+                  Aplicar
+                </Button>
+              </div>
+              {appliedDiscount > 0 && (
+                <p className="text-sm text-green-600">✓ Desconto de {appliedDiscount}% aplicado!</p>
+              )}
+            </Card>
+
+            <Card className="bg-white border shadow-sm p-4">
               <h3 className="font-bold text-lg mb-3">Resumo do Pedido</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -259,6 +302,12 @@ const Checkout = () => {
                   <span className="text-muted-foreground">Frete</span>
                   <span>R$ {shipping.toFixed(2).replace('.', ',')}</span>
                 </div>
+                {appliedDiscount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Desconto ({appliedDiscount}%)</span>
+                    <span>- R$ {discount.toFixed(2).replace('.', ',')}</span>
+                  </div>
+                )}
                 <div className="border-t pt-2 flex justify-between font-bold text-base">
                   <span>Total</span>
                   <span className="text-primary">R$ {finalTotal.toFixed(2).replace('.', ',')}</span>

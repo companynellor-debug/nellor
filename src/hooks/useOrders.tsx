@@ -37,6 +37,7 @@ export interface Order {
   };
   paymentProof?: string;
   canReview?: boolean;
+  trackingCode?: string;
 }
 
 export const useOrders = () => {
@@ -97,11 +98,22 @@ export const useOrders = () => {
     return orders.find(order => order.id === orderId);
   };
 
+  const updateTrackingCode = (orderId: string, trackingCode: string) => {
+    const updated = orders.map(order => {
+      if (order.id === orderId) {
+        return { ...order, trackingCode };
+      }
+      return order;
+    });
+    saveOrders(updated);
+  };
+
   return {
     orders,
     createOrder,
     updateOrderStatus,
     updatePaymentProof,
+    updateTrackingCode,
     getOrderById
   };
 };

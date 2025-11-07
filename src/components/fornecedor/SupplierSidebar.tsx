@@ -1,4 +1,4 @@
-import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store } from "lucide-react";
+import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ const menuItems = [
   { title: "Pedidos", url: "/fornecedor/pedidos", icon: Package },
   { title: "Chat", url: "/fornecedor/chat", icon: MessageSquare },
   { title: "Produtos", url: "/fornecedor/produtos", icon: Tag },
+  { title: "Estatísticas", url: "/fornecedor/estatisticas", icon: BarChart3 },
   { title: "Financeiro", url: "/fornecedor/financeiro", icon: DollarSign },
   { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },

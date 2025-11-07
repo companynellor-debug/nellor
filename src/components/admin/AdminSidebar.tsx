@@ -7,7 +7,9 @@ import {
   DollarSign, 
   BarChart3, 
   Bell, 
-  Settings 
+  Settings,
+  Wallet,
+  MessageCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +19,9 @@ const menuItems = [
   { icon: Store, label: "Fornecedores", path: "/admin/fornecedores" },
   { icon: ShoppingCart, label: "Vendas & Pedidos", path: "/admin/vendas" },
   { icon: DollarSign, label: "Financeiro", path: "/admin/financeiro" },
+  { icon: Wallet, label: "Saques", path: "/admin/saques" },
   { icon: BarChart3, label: "Relatórios", path: "/admin/relatorios" },
+  { icon: MessageCircle, label: "Suporte", path: "/admin/suporte" },
   { icon: Bell, label: "Alertas", path: "/admin/alertas" },
   { icon: Settings, label: "Configurações", path: "/admin/configuracoes" },
 ];
