@@ -4,8 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Calendar, Clock } from "lucide-react";
 import { useBanners } from "@/hooks/useBanners";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +30,9 @@ const Banners = () => {
     imageUrl: "",
     link: "",
     order: 1,
-    active: true
+    active: true,
+    startDate: undefined as Date | undefined,
+    endDate: undefined as Date | undefined
   });
   const [imagePreview, setImagePreview] = useState("");
 
@@ -35,11 +42,17 @@ const Banners = () => {
       return;
     }
 
+    const bannerData = {
+      ...formData,
+      startDate: formData.startDate ? formData.startDate.toISOString() : undefined,
+      endDate: formData.endDate ? formData.endDate.toISOString() : undefined
+    };
+
     if (editingId) {
-      updateBanner(editingId, formData);
+      updateBanner(editingId, bannerData);
       toast.success("Banner atualizado!");
     } else {
-      addBanner(formData);
+      addBanner(bannerData);
       toast.success("Banner criado!");
     }
 
@@ -48,7 +61,15 @@ const Banners = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: "", imageUrl: "", link: "", order: 1, active: true });
+    setFormData({ 
+      title: "", 
+      imageUrl: "", 
+      link: "", 
+      order: 1, 
+      active: true,
+      startDate: undefined,
+      endDate: undefined
+    });
     setImagePreview("");
     setEditingId(null);
   };
@@ -61,7 +82,9 @@ const Banners = () => {
         imageUrl: banner.imageUrl,
         link: banner.link,
         order: banner.order,
-        active: banner.active
+        active: banner.active,
+        startDate: banner.startDate ? new Date(banner.startDate) : undefined,
+        endDate: banner.endDate ? new Date(banner.endDate) : undefined
       });
       setImagePreview(banner.imageUrl);
       setEditingId(id);
@@ -145,6 +168,68 @@ const Banners = () => {
                 </div>
               )}
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Data de Início</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {formData.startDate ? format(formData.startDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={formData.startDate}
+                        onSelect={(date) => setFormData({ ...formData, startDate: date })}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Deixe vazio para início imediato
+                  </p>
+                </div>
+
+                <div>
+                  <Label>Data de Fim</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {formData.endDate ? format(formData.endDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={formData.endDate}
+                        onSelect={(date) => setFormData({ ...formData, endDate: date })}
+                        disabled={(date) => formData.startDate ? date < formData.startDate : false}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Deixe vazio para sem data limite
+                  </p>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -198,8 +283,28 @@ const Banners = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-semibold text-lg">{banner.title}</h3>
+                        {(banner.startDate || banner.endDate) && (
+                          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span>
+                              {banner.startDate && format(new Date(banner.startDate), "dd/MM/yyyy", { locale: ptBR })}
+                              {banner.startDate && banner.endDate && " - "}
+                              {banner.endDate && format(new Date(banner.endDate), "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
+                          </div>
+                        )}
+                        {banner.startDate && new Date(banner.startDate) > new Date() && (
+                          <Badge variant="secondary" className="mt-2">
+                            Agendado
+                          </Badge>
+                        )}
+                        {banner.endDate && new Date(banner.endDate) < new Date() && (
+                          <Badge variant="destructive" className="mt-2">
+                            Expirado
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={banner.active ? "default" : "secondary"}>

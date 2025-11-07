@@ -20,11 +20,10 @@ const ClienteHome = () => {
   const {
     products
   } = useProducts();
-  const {
-    banners
-  } = useBanners();
+  const { banners, getActiveBanners } = useBanners();
   const { categories } = useCategories();
-  const activeBanners = banners.filter(b => b.active).sort((a, b) => a.order - b.order);
+  
+  const activeBanners = getActiveBanners().sort((a, b) => a.order - b.order);
   return <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
       

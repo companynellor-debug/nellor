@@ -7,6 +7,8 @@ export interface Banner {
   link: string;
   order: number;
   active: boolean;
+  startDate?: string;
+  endDate?: string;
   createdAt: string;
 }
 
@@ -69,11 +71,34 @@ export const useBanners = () => {
     saveBanners(updated);
   };
 
+  const getActiveBanners = () => {
+    const now = new Date();
+    return banners.filter(banner => {
+      if (!banner.active) return false;
+      
+      // Verifica data de início
+      if (banner.startDate) {
+        const start = new Date(banner.startDate);
+        if (now < start) return false;
+      }
+      
+      // Verifica data de fim
+      if (banner.endDate) {
+        const end = new Date(banner.endDate);
+        end.setHours(23, 59, 59, 999); // Inclui o dia todo
+        if (now > end) return false;
+      }
+      
+      return true;
+    });
+  };
+
   return {
     banners,
     addBanner,
     updateBanner,
     deleteBanner,
-    toggleBannerStatus
+    toggleBannerStatus,
+    getActiveBanners
   };
 };
