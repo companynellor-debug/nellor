@@ -1,8 +1,9 @@
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Heart, Bell, Shirt, Footprints, Watch, Smartphone, Sparkles, Home as HomeIcon } from "lucide-react";
+import { Search, Heart, Bell } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -21,25 +22,7 @@ const ClienteHome = () => {
   const {
     banners
   } = useBanners();
-  const categories = [{
-    name: "Roupas",
-    icon: Shirt
-  }, {
-    name: "Calçados",
-    icon: Footprints
-  }, {
-    name: "Acessórios",
-    icon: Watch
-  }, {
-    name: "Eletrônicos",
-    icon: Smartphone
-  }, {
-    name: "Beleza",
-    icon: Sparkles
-  }, {
-    name: "Casa",
-    icon: HomeIcon
-  }];
+  const categories = ["Roupas", "Calçados", "Acessórios", "Eletrônicos", "Beleza", "Casa"];
   const activeBanners = banners.filter(b => b.active).sort((a, b) => a.order - b.order);
   return <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
@@ -96,14 +79,17 @@ const ClienteHome = () => {
         {/* Categorias */}
         <section className="mb-8">
           <h2 className="text-xl font-bold mb-4 text-foreground">Categorias</h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-            {categories.map(category => {
-            const IconComponent = category.icon;
-            return <Card key={category.name} onClick={() => navigate(`/cliente/produtos?categoria=${category.name}`)} className="bg-card border hover:shadow-lg transition-all hover:scale-105 p-4 text-center cursor-pointer">
-                  <IconComponent className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <p className="text-sm font-medium text-foreground">{category.name}</p>
-                </Card>;
-          })}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {categories.map(category => (
+              <Badge
+                key={category}
+                onClick={() => navigate(`/cliente/produtos?categoria=${category}`)}
+                variant="secondary"
+                className="cursor-pointer whitespace-nowrap px-4 py-2"
+              >
+                {category}
+              </Badge>
+            ))}
           </div>
         </section>
 
