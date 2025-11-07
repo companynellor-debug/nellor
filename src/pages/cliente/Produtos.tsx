@@ -7,6 +7,7 @@ import { Search, ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 
 const Produtos = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Produtos = () => {
   const categoryParam = searchParams.get("categoria");
   const searchParam = searchParams.get("busca");
   const { products } = useProducts();
+  const { categories } = useCategories();
 
   const [searchTerm, setSearchTerm] = useState(searchParam || "");
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || "");
@@ -22,8 +24,6 @@ const Produtos = () => {
     setSearchTerm(searchParam || "");
     setSelectedCategory(categoryParam || "");
   }, [searchParam, categoryParam]);
-
-  const categories = ["Roupas", "Calçados", "Acessórios", "Eletrônicos", "Beleza", "Casa"];
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = searchTerm
@@ -82,21 +82,23 @@ const Produtos = () => {
 
       <main className="container mx-auto px-4 py-6 relative z-10">
         {/* Filtro de Categorias */}
-        <div className="mb-6">
-          <h2 className="font-semibold text-foreground mb-3">Categorias</h2>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                onClick={() => handleCategoryClick(category)}
-                variant={selectedCategory === category ? "default" : "secondary"}
-                className="cursor-pointer whitespace-nowrap px-4 py-2"
-              >
-                {category}
-              </Badge>
-            ))}
+        {categories.length > 0 && (
+          <div className="mb-6">
+            <h2 className="font-semibold text-foreground mb-3">Categorias</h2>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map((category) => (
+                <Badge
+                  key={category.id}
+                  onClick={() => handleCategoryClick(category.name)}
+                  variant={selectedCategory === category.name ? "default" : "secondary"}
+                  className="cursor-pointer whitespace-nowrap px-4 py-2"
+                >
+                  {category.name}
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Resultados */}
         <div className="mb-4">

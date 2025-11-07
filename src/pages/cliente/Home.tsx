@@ -9,6 +9,7 @@ import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProducts } from "@/hooks/useProducts";
 import { useBanners } from "@/hooks/useBanners";
+import { useCategories } from "@/hooks/useCategories";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 const ClienteHome = () => {
@@ -22,7 +23,7 @@ const ClienteHome = () => {
   const {
     banners
   } = useBanners();
-  const categories = ["Roupas", "Calçados", "Acessórios", "Eletrônicos", "Beleza", "Casa"];
+  const { categories } = useCategories();
   const activeBanners = banners.filter(b => b.active).sort((a, b) => a.order - b.order);
   return <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
@@ -77,21 +78,23 @@ const ClienteHome = () => {
           </div>}
 
         {/* Categorias */}
-        <section className="mb-8">
-          <h2 className="text-xl font-bold mb-4 text-foreground">Categorias</h2>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map(category => (
-              <Badge
-                key={category}
-                onClick={() => navigate(`/cliente/produtos?categoria=${category}`)}
-                variant="secondary"
-                className="cursor-pointer whitespace-nowrap px-4 py-2"
-              >
-                {category}
-              </Badge>
-            ))}
-          </div>
-        </section>
+        {categories.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-xl font-bold mb-4 text-foreground">Categorias</h2>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map(category => (
+                <Badge
+                  key={category.id}
+                  onClick={() => navigate(`/cliente/produtos?categoria=${category.name}`)}
+                  variant="secondary"
+                  className="cursor-pointer whitespace-nowrap px-4 py-2"
+                >
+                  {category.name}
+                </Badge>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Produtos Recomendados */}
         <section>
