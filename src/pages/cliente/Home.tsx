@@ -8,34 +8,40 @@ import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProducts } from "@/hooks/useProducts";
 import { useBanners } from "@/hooks/useBanners";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-
 const ClienteHome = () => {
   const navigate = useNavigate();
-  const { favorites } = useFavorites();
-  const { products } = useProducts();
-  const { banners } = useBanners();
-  
-  const categories = [
-    { name: "Roupas", icon: Shirt },
-    { name: "Calçados", icon: Footprints },
-    { name: "Acessórios", icon: Watch },
-    { name: "Eletrônicos", icon: Smartphone },
-    { name: "Beleza", icon: Sparkles },
-    { name: "Casa", icon: HomeIcon },
-  ];
-
+  const {
+    favorites
+  } = useFavorites();
+  const {
+    products
+  } = useProducts();
+  const {
+    banners
+  } = useBanners();
+  const categories = [{
+    name: "Roupas",
+    icon: Shirt
+  }, {
+    name: "Calçados",
+    icon: Footprints
+  }, {
+    name: "Acessórios",
+    icon: Watch
+  }, {
+    name: "Eletrônicos",
+    icon: Smartphone
+  }, {
+    name: "Beleza",
+    icon: Sparkles
+  }, {
+    name: "Casa",
+    icon: HomeIcon
+  }];
   const activeBanners = banners.filter(b => b.active).sort((a, b) => a.order - b.order);
-
-  return (
-    <div className="min-h-screen bg-background pb-20">
+  return <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
       
       {/* Header */}
@@ -49,84 +55,55 @@ const ClienteHome = () => {
               </button>
               <button onClick={() => navigate("/cliente/favoritos")} className="relative">
                 <Heart className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
-                {favorites.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {favorites.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {favorites.length}
-                  </span>
-                )}
+                  </span>}
               </button>
             </div>
           </div>
           
           <div className="relative" onClick={() => navigate("/cliente/produtos")}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar produtos ou marcas..."
-              className="pl-10 bg-muted border-input focus:border-primary cursor-pointer"
-              readOnly
-            />
+            <Input placeholder="Buscar produtos ou marcas..." className="pl-10 bg-muted border-input focus:border-primary cursor-pointer" readOnly />
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
         {/* Banners Carousel */}
-        {activeBanners.length > 0 && (
-          <div className="mb-8">
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              plugins={[
-                Autoplay({
-                  delay: 4000,
-                }),
-              ]}
-              className="w-full"
-            >
+        {activeBanners.length > 0 && <div className="mb-8">
+            <Carousel opts={{
+          align: "start",
+          loop: true
+        }} plugins={[Autoplay({
+          delay: 4000
+        })]} className="w-full">
               <CarouselContent>
-                {activeBanners.map((banner) => (
-                  <CarouselItem key={banner.id}>
-                    <div
-                      onClick={() => banner.link && window.open(banner.link, '_blank')}
-                      className={`relative overflow-hidden rounded-lg ${banner.link ? 'cursor-pointer' : ''} group`}
-                    >
-                      <img
-                        src={banner.imageUrl}
-                        alt={banner.title}
-                        className="w-full h-48 md:h-64 object-cover transition-transform group-hover:scale-105"
-                      />
+                {activeBanners.map(banner => <CarouselItem key={banner.id}>
+                    <div onClick={() => banner.link && window.open(banner.link, '_blank')} className={`relative overflow-hidden rounded-lg ${banner.link ? 'cursor-pointer' : ''} group`}>
+                      <img src={banner.imageUrl} alt={banner.title} className="w-full h-48 md:h-64 object-cover transition-transform group-hover:scale-105" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
-                        <h3 className="text-white text-2xl font-bold">{banner.title}</h3>
+                        
                       </div>
                     </div>
-                  </CarouselItem>
-                ))}
+                  </CarouselItem>)}
               </CarouselContent>
               <CarouselPrevious className="left-2" />
               <CarouselNext className="right-2" />
             </Carousel>
-          </div>
-        )}
+          </div>}
 
         {/* Categorias */}
         <section className="mb-8">
           <h2 className="text-xl font-bold mb-4 text-foreground">Categorias</h2>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-            {categories.map((category) => {
-              const IconComponent = category.icon;
-              return (
-                <Card 
-                  key={category.name} 
-                  onClick={() => navigate(`/cliente/produtos?categoria=${category.name}`)}
-                  className="bg-card border hover:shadow-lg transition-all hover:scale-105 p-4 text-center cursor-pointer"
-                >
+            {categories.map(category => {
+            const IconComponent = category.icon;
+            return <Card key={category.name} onClick={() => navigate(`/cliente/produtos?categoria=${category.name}`)} className="bg-card border hover:shadow-lg transition-all hover:scale-105 p-4 text-center cursor-pointer">
                   <IconComponent className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <p className="text-sm font-medium text-foreground">{category.name}</p>
-                </Card>
-              );
-            })}
+                </Card>;
+          })}
           </div>
         </section>
 
@@ -134,8 +111,7 @@ const ClienteHome = () => {
         <section>
           <h2 className="text-xl font-bold mb-4 text-foreground">Recomendados para Você</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {products.map((product) => (
-              <Link key={product.id} to={`/cliente/produto/${product.id}`}>
+            {products.map(product => <Link key={product.id} to={`/cliente/produto/${product.id}`}>
                 <Card className="bg-card border overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
                   <div className="aspect-square overflow-hidden">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
@@ -151,8 +127,7 @@ const ClienteHome = () => {
                     </div>
                   </div>
                 </Card>
-              </Link>
-            ))}
+              </Link>)}
           </div>
         </section>
 
@@ -160,8 +135,7 @@ const ClienteHome = () => {
         <section className="mt-8">
           <h2 className="text-xl font-bold mb-4 text-foreground">Ofertas Relâmpago</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {products.map((product) => (
-              <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-40">
+            {products.map(product => <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-40">
                 <Card className="bg-card border overflow-hidden hover:shadow-lg transition-all hover:scale-105">
                   <div className="aspect-square overflow-hidden">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
@@ -171,15 +145,12 @@ const ClienteHome = () => {
                     <p className="text-primary font-bold text-sm">{product.price}</p>
                   </div>
                 </Card>
-              </Link>
-            ))}
+              </Link>)}
           </div>
         </section>
       </main>
 
       <BottomNav />
-    </div>
-  );
+    </div>;
 };
-
 export default ClienteHome;
