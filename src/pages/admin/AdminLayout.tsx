@@ -25,7 +25,7 @@ const AdminLayout = () => {
       <AdminParticles />
       
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-950 to-violet-950 dark:from-purple-900 dark:to-violet-900 border-b border-purple-800/30 p-4 flex items-center justify-between shadow-lg">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-950 to-violet-950 border-b border-purple-800/30 p-4 flex items-center justify-between shadow-lg">
         <h1 className="text-xl font-bold bg-gradient-to-r from-purple-200 to-violet-200 bg-clip-text text-transparent">
           NELLOR
         </h1>
@@ -41,7 +41,7 @@ const AdminLayout = () => {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64 bg-gradient-to-b from-purple-950 to-violet-950 dark:from-purple-900 dark:to-violet-900 border-purple-800/30">
+            <SheetContent side="left" className="p-0 w-64 bg-gradient-to-b from-purple-950 to-violet-950 border-purple-800/30">
               <AdminSidebar onNavigate={() => setOpen(false)} />
             </SheetContent>
           </Sheet>
@@ -63,7 +63,7 @@ const AdminLayout = () => {
       </div>
 
       {/* Main Content */}
-      <div className="lg:ml-64 pt-20 lg:pt-0 p-4 sm:p-6 lg:p-8 bg-slate-950">
+      <div className="lg:ml-64 pt-20 lg:pt-0 p-4 sm:p-6 lg:p-8">
         <Outlet />
       </div>
     </div>;
