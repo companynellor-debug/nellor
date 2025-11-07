@@ -46,6 +46,7 @@ import PerfilLoja from "./pages/cliente/PerfilLoja";
 import Checkout from "./pages/cliente/Checkout";
 import MetodosPagamento from "./pages/cliente/MetodosPagamento";
 import Suporte from "./pages/cliente/Suporte";
+import PedidoConfirmado from "./pages/cliente/PedidoConfirmado";
 
 import FornecedorLayout from "./pages/fornecedor/FornecedorLayout";
 import Dashboard from "./pages/fornecedor/Dashboard";
@@ -86,6 +87,7 @@ const App = () => (
           <Route path="/cliente/loja/:id" element={<ProtectedRoute requireType="cliente"><PerfilLoja /></ProtectedRoute>} />
           <Route path="/cliente/carrinho" element={<ProtectedRoute requireType="cliente"><Carrinho /></ProtectedRoute>} />
           <Route path="/cliente/checkout" element={<ProtectedRoute requireType="cliente"><Checkout /></ProtectedRoute>} />
+          <Route path="/cliente/pedido-confirmado" element={<ProtectedRoute requireType="cliente"><PedidoConfirmado /></ProtectedRoute>} />
           <Route path="/cliente/chat" element={<ProtectedRoute requireType="cliente"><Chat /></ProtectedRoute>} />
           <Route path="/cliente/perfil" element={<ProtectedRoute requireType="cliente"><Perfil /></ProtectedRoute>} />
           <Route path="/cliente/editar-perfil" element={<ProtectedRoute requireType="cliente"><EditarPerfil /></ProtectedRoute>} />

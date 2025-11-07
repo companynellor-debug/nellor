@@ -137,12 +137,13 @@ const Checkout = () => {
   };
 
   const handleSendProof = () => {
-    clearCart();
-    navigate('/cliente/chat', { 
-      state: { 
-        storeId,
-        message: `Olá! Realizei o pagamento do pedido #${orderId}. Segue o comprovante em anexo.`
-      } 
+    toast({
+      title: "Pedido confirmado!",
+      description: "Seu pedido foi registrado com sucesso"
+    });
+    
+    navigate('/cliente/pedido-confirmado', { 
+      state: { orderId }
     });
   };
 
@@ -367,7 +368,23 @@ const Checkout = () => {
               onClick={handleSendProof}
             >
               <MessageSquare className="h-5 w-5" />
-              Enviar Comprovante no Chat
+              Finalizar Pedido
+            </Button>
+
+            <Button 
+              variant="outline"
+              className="w-full py-6 text-lg gap-2"
+              onClick={() => {
+                navigate('/cliente/chat', { 
+                  state: { 
+                    storeId,
+                    message: `Olá! Tenho uma dúvida sobre o pedido #${orderId}.`
+                  } 
+                });
+              }}
+            >
+              <MessageSquare className="h-5 w-5" />
+              Falar com o Fornecedor
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
