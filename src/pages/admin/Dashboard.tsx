@@ -119,7 +119,7 @@ const recentActivities = [{
 const Dashboard = () => {
   return <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
           Dashboard
         </h1>
         <p className="text-muted-foreground">Visão geral da plataforma Nellor</p>
