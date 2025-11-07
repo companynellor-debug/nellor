@@ -345,7 +345,7 @@ const Checkout = () => {
           <div className="space-y-4">
             <Card className="bg-white border shadow-sm p-6">
               <div className="text-center mb-6">
-                <h3 className="font-bold text-xl mb-2">Pagamento via Pix</h3>
+                <h3 className="font-bold text-xl mb-2">Escolha a Forma de Pagamento</h3>
                 <p className="text-sm text-muted-foreground">
                   Pedido #{orderId}
                 </p>
@@ -354,43 +354,148 @@ const Checkout = () => {
                 </p>
               </div>
 
-              {defaultPayment?.type === 'pix' && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <CreditCard className="h-4 w-4" />
-                    <p className="text-sm font-medium">Usando sua chave Pix padrão</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-accent p-4 rounded-lg mb-4 flex items-center justify-center">
-                <QrCode className="h-48 w-48 text-muted-foreground" />
-              </div>
-
-              <div className="space-y-3">
-                <div className="bg-muted p-3 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Chave Pix</p>
-                  <div className="flex items-center justify-between">
-                    <p className="font-mono text-sm">{pixKey}</p>
-                    <Button size="sm" variant="ghost" onClick={copyPixKey}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                  <p className="text-sm text-blue-900">
-                    <strong>Instruções:</strong>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <button
+                  onClick={() => setSelectedPaymentMethod('pix')}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    selectedPaymentMethod === 'pix'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <QrCode className={`h-8 w-8 mx-auto mb-2 ${
+                    selectedPaymentMethod === 'pix' ? 'text-primary' : 'text-muted-foreground'
+                  }`} />
+                  <p className={`font-medium ${
+                    selectedPaymentMethod === 'pix' ? 'text-primary' : 'text-foreground'
+                  }`}>
+                    Pix
                   </p>
-                  <ol className="text-sm text-blue-800 mt-2 space-y-1 list-decimal list-inside">
-                    <li>Abra o app do seu banco</li>
-                    <li>Escolha pagar via Pix QR Code ou Chave</li>
-                    <li>Escaneie o código ou copie a chave</li>
-                    <li>Confirme o pagamento</li>
-                    <li>Finalize o pedido</li>
-                  </ol>
-                </div>
+                  <p className="text-xs text-muted-foreground mt-1">Aprovação imediata</p>
+                </button>
+
+                <button
+                  onClick={() => setSelectedPaymentMethod('card')}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    selectedPaymentMethod === 'card'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <CreditCard className={`h-8 w-8 mx-auto mb-2 ${
+                    selectedPaymentMethod === 'card' ? 'text-primary' : 'text-muted-foreground'
+                  }`} />
+                  <p className={`font-medium ${
+                    selectedPaymentMethod === 'card' ? 'text-primary' : 'text-foreground'
+                  }`}>
+                    Cartão
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Crédito ou débito</p>
+                </button>
               </div>
+
+              {selectedPaymentMethod === 'pix' ? (
+                <>
+                  {defaultPayment?.type === 'pix' && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-800">
+                        <CreditCard className="h-4 w-4" />
+                        <p className="text-sm font-medium">Usando sua chave Pix padrão</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-accent p-4 rounded-lg mb-4 flex items-center justify-center">
+                    <QrCode className="h-48 w-48 text-muted-foreground" />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Chave Pix</p>
+                      <div className="flex items-center justify-between">
+                        <p className="font-mono text-sm">{pixKey}</p>
+                        <Button size="sm" variant="ghost" onClick={copyPixKey}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                      <p className="text-sm text-blue-900">
+                        <strong>Instruções:</strong>
+                      </p>
+                      <ol className="text-sm text-blue-800 mt-2 space-y-1 list-decimal list-inside">
+                        <li>Abra o app do seu banco</li>
+                        <li>Escolha pagar via Pix QR Code ou Chave</li>
+                        <li>Escaneie o código ou copie a chave</li>
+                        <li>Confirme o pagamento</li>
+                        <li>Finalize o pedido</li>
+                      </ol>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {defaultPayment?.type === 'card' && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-800">
+                        <CreditCard className="h-4 w-4" />
+                        <p className="text-sm font-medium">
+                          Usando seu cartão padrão •••• {defaultPayment.cardNumber?.slice(-4)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="cardNumber">Número do Cartão</Label>
+                      <Input
+                        id="cardNumber"
+                        placeholder="0000 0000 0000 0000"
+                        defaultValue={defaultPayment?.type === 'card' ? defaultPayment.cardNumber : ''}
+                        maxLength={19}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cardHolder">Nome no Cartão</Label>
+                      <Input
+                        id="cardHolder"
+                        placeholder="Nome como está no cartão"
+                        defaultValue={defaultPayment?.type === 'card' ? defaultPayment.cardHolder : ''}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="cardExpiry">Validade</Label>
+                        <Input
+                          id="cardExpiry"
+                          placeholder="MM/AA"
+                          defaultValue={defaultPayment?.type === 'card' ? defaultPayment.cardExpiry : ''}
+                          maxLength={5}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cardCvv">CVV</Label>
+                        <Input
+                          id="cardCvv"
+                          placeholder="123"
+                          maxLength={4}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mt-4">
+                    <p className="text-sm text-blue-900">
+                      <strong>Pagamento Seguro:</strong>
+                    </p>
+                    <p className="text-sm text-blue-800 mt-1">
+                      Seus dados são protegidos com criptografia de ponta a ponta.
+                    </p>
+                  </div>
+                </>
+              )}
             </Card>
 
             <Button 
@@ -418,7 +523,10 @@ const Checkout = () => {
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">
-              Após o envio do comprovante, o fornecedor confirmará seu pagamento
+              {selectedPaymentMethod === 'pix' 
+                ? 'Após o envio do comprovante, o fornecedor confirmará seu pagamento'
+                : 'Seu pagamento será processado de forma segura'
+              }
             </p>
           </div>
         )}
