@@ -1,27 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, QrCode, Copy, MessageSquare } from "lucide-react";
+import { ArrowLeft, QrCode, Copy, MessageSquare, MapPin, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { useOrders } from "@/hooks/useOrders";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useStores } from "@/hooks/useStores";
+import { useAddresses } from "@/hooks/useAddresses";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, clearCart, getTotal, getStoreId } = useCart();
   const { createOrder } = useOrders();
   const { stores } = useStores();
+  const { getDefaultAddress } = useAddresses();
+  const { getDefaultPaymentMethod } = usePaymentMethods();
   
   const [step, setStep] = useState<'address' | 'payment'>('address');
   const [orderId, setOrderId] = useState<string>("");
   const [couponCode, setCouponCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'pix' | 'card'>('pix');
   
   const [formData, setFormData] = useState({
     name: "",
@@ -34,6 +39,24 @@ const Checkout = () => {
     state: "",
     zipCode: ""
   });
+
+  // Preencher automaticamente com endereço padrão
+  useEffect(() => {
+    const defaultAddress = getDefaultAddress();
+    if (defaultAddress) {
+      setFormData({
+        name: defaultAddress.name,
+        document: defaultAddress.document,
+        street: defaultAddress.street,
+        number: defaultAddress.number,
+        complement: defaultAddress.complement || "",
+        neighborhood: defaultAddress.neighborhood,
+        city: defaultAddress.city,
+        state: defaultAddress.state,
+        zipCode: defaultAddress.zipCode
+      });
+    }
+  }, []);
 
   if (cartItems.length === 0) {
     return (
@@ -68,7 +91,6 @@ const Checkout = () => {
   const finalTotal = total + shipping - discount;
 
   const applyCoupon = () => {
-    // Cupons fictícios para demonstração
     const coupons: { [key: string]: number } = {
       'NELLOR10': 10,
       'NELLOR20': 20,
@@ -77,16 +99,9 @@ const Checkout = () => {
     
     if (coupons[couponCode.toUpperCase()]) {
       setAppliedDiscount(coupons[couponCode.toUpperCase()]);
-      toast({
-        title: "Cupom aplicado!",
-        description: `Desconto de ${coupons[couponCode.toUpperCase()]}% aplicado`
-      });
+      toast.success(`Desconto de ${coupons[couponCode.toUpperCase()]}% aplicado`);
     } else {
-      toast({
-        title: "Cupom inválido",
-        description: "Este cupom não existe ou expirou",
-        variant: "destructive"
-      });
+      toast.error("Este cupom não existe ou expirou");
     }
   };
 
@@ -99,11 +114,7 @@ const Checkout = () => {
     
     if (!formData.name || !formData.document || !formData.street || 
         !formData.number || !formData.city || !formData.state || !formData.zipCode) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha todos os campos obrigatórios",
-        variant: "destructive"
-      });
+      toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
@@ -126,21 +137,16 @@ const Checkout = () => {
     setStep('payment');
   };
 
-  const pixKey = "pix@nellor.com.br";
+  const defaultPayment = getDefaultPaymentMethod();
+  const pixKey = defaultPayment?.type === 'pix' ? defaultPayment.pixKey : "pix@nellor.com.br";
 
   const copyPixKey = () => {
-    navigator.clipboard.writeText(pixKey);
-    toast({
-      title: "Copiado!",
-      description: "Chave Pix copiada para a área de transferência"
-    });
+    navigator.clipboard.writeText(pixKey || "");
+    toast.success("Chave Pix copiada para a área de transferência");
   };
 
   const handleSendProof = () => {
-    toast({
-      title: "Pedido confirmado!",
-      description: "Seu pedido foi registrado com sucesso"
-    });
+    toast.success("Pedido confirmado!");
     
     navigate('/cliente/pedido-confirmado', { 
       state: { orderId }
@@ -168,6 +174,21 @@ const Checkout = () => {
       <main className="container mx-auto px-4 py-6 relative z-10 max-w-2xl">
         {step === 'address' ? (
           <form onSubmit={handleSubmitAddress} className="space-y-4">
+            {getDefaultAddress() && (
+              <Card className="bg-green-50 border-green-200 p-4">
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-green-900 mb-1">Endereço padrão carregado</p>
+                    <p className="text-sm text-green-700">
+                      Os dados do seu endereço padrão foram preenchidos automaticamente. 
+                      Você pode editá-los antes de continuar.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
             <Card className="bg-white border shadow-sm p-4">
               <h3 className="font-bold text-lg mb-4">Informações Pessoais</h3>
               <div className="space-y-3">
@@ -333,6 +354,15 @@ const Checkout = () => {
                 </p>
               </div>
 
+              {defaultPayment?.type === 'pix' && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <CreditCard className="h-4 w-4" />
+                    <p className="text-sm font-medium">Usando sua chave Pix padrão</p>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-accent p-4 rounded-lg mb-4 flex items-center justify-center">
                 <QrCode className="h-48 w-48 text-muted-foreground" />
               </div>
@@ -357,7 +387,7 @@ const Checkout = () => {
                     <li>Escolha pagar via Pix QR Code ou Chave</li>
                     <li>Escaneie o código ou copie a chave</li>
                     <li>Confirme o pagamento</li>
-                    <li>Envie o comprovante no chat</li>
+                    <li>Finalize o pedido</li>
                   </ol>
                 </div>
               </div>

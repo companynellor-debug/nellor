@@ -4,47 +4,21 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { toast } from "@/hooks/use-toast";
-
-interface Address {
-  id: string;
-  label: string;
-  street: string;
-  number: string;
-  complement?: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  isDefault: boolean;
-}
+import { toast } from "sonner";
+import { useAddresses, Address } from "@/hooks/useAddresses";
 
 const Enderecos = () => {
   const navigate = useNavigate();
-  const [addresses, setAddresses] = useState<Address[]>(() => {
-    const saved = localStorage.getItem('user_addresses');
-    return saved ? JSON.parse(saved) : [
-      {
-        id: '1',
-        label: 'Casa',
-        street: 'Rua das Flores',
-        number: '123',
-        complement: 'Apto 45',
-        neighborhood: 'Centro',
-        city: 'São Paulo',
-        state: 'SP',
-        zipCode: '01234-567',
-        isDefault: true
-      }
-    ];
-  });
+  const { addresses, addAddress, deleteAddress, setDefaultAddress } = useAddresses();
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState<Partial<Address>>({
     label: 'Casa',
+    name: '',
+    document: '',
     street: '',
     number: '',
     complement: '',
@@ -55,23 +29,16 @@ const Enderecos = () => {
     isDefault: false
   });
 
-  useEffect(() => {
-    localStorage.setItem('user_addresses', JSON.stringify(addresses));
-  }, [addresses]);
-
   const handleAddAddress = () => {
-    if (!formData.street || !formData.number || !formData.neighborhood || !formData.city || !formData.state || !formData.zipCode) {
-      toast({
-        title: "Erro",
-        description: "Preencha todos os campos obrigatórios",
-        variant: "destructive"
-      });
+    if (!formData.name || !formData.document || !formData.street || !formData.number || !formData.neighborhood || !formData.city || !formData.state || !formData.zipCode) {
+      toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
-    const newAddress: Address = {
-      id: Date.now().toString(),
+    addAddress({
       label: formData.label || 'Casa',
+      name: formData.name!,
+      document: formData.document!,
       street: formData.street!,
       number: formData.number!,
       complement: formData.complement,
@@ -80,16 +47,13 @@ const Enderecos = () => {
       state: formData.state!,
       zipCode: formData.zipCode!,
       isDefault: formData.isDefault || addresses.length === 0
-    };
+    });
 
-    if (newAddress.isDefault) {
-      setAddresses(prev => prev.map(addr => ({ ...addr, isDefault: false })));
-    }
-
-    setAddresses(prev => [...prev, newAddress]);
     setShowDialog(false);
     setFormData({
       label: 'Casa',
+      name: '',
+      document: '',
       street: '',
       number: '',
       complement: '',
@@ -99,18 +63,17 @@ const Enderecos = () => {
       zipCode: '',
       isDefault: false
     });
-    toast({
-      title: "Endereço adicionado",
-      description: "Seu novo endereço foi salvo com sucesso!",
-    });
+    toast.success("Endereço adicionado com sucesso!");
   };
 
   const handleDeleteAddress = (id: string) => {
-    setAddresses(prev => prev.filter(addr => addr.id !== id));
-    toast({
-      title: "Endereço removido",
-      description: "O endereço foi excluído com sucesso!",
-    });
+    deleteAddress(id);
+    toast.success("Endereço removido!");
+  };
+
+  const handleSetDefault = (id: string) => {
+    setDefaultAddress(id);
+    toast.success("Endereço padrão atualizado!");
   };
 
   const getLabelIcon = (label: string) => {
@@ -147,23 +110,37 @@ const Enderecos = () => {
             return (
               <Card key={address.id} className="bg-white border shadow-sm p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                       <LabelIcon className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-bold">{address.label}</h3>
-                      {address.isDefault && (
-                        <span className="text-xs text-primary">Endereço Padrão</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold">{address.label}</h3>
+                        {address.isDefault && (
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{address.name}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteAddress(address.id)}
-                    className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {!address.isDefault && (
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => handleSetDefault(address.id)}
+                      >
+                        Padrão
+                      </Button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteAddress(address.id)}
+                      className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="text-sm text-muted-foreground space-y-1">
@@ -199,6 +176,26 @@ const Enderecos = () => {
             <DialogTitle>Novo Endereço</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo*</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Seu nome completo"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="document">CPF/CNPJ*</Label>
+              <Input
+                id="document"
+                value={formData.document}
+                onChange={(e) => setFormData({ ...formData, document: e.target.value })}
+                placeholder="000.000.000-00"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="label">Identificação</Label>
               <select
