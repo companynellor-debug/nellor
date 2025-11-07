@@ -30,8 +30,8 @@ const AdminSidebar = ({ onNavigate }: AdminSidebarProps) => {
   const location = useLocation();
 
   return (
-    <aside className="w-full h-full bg-gradient-to-b from-purple-950 to-violet-950 text-white lg:w-64 lg:h-screen lg:fixed lg:left-0 lg:top-0 lg:shadow-2xl lg:border-r border-purple-800/30">
-      <div className="p-6 border-b border-purple-800/30 hidden lg:block">
+    <aside className="hidden lg:block w-64 bg-gradient-to-b from-purple-950 to-violet-950 text-white h-screen fixed left-0 top-0 shadow-2xl border-r border-purple-800/30">
+      <div className="p-6 border-b border-purple-800/30">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-200 to-violet-200 bg-clip-text text-transparent">
           NELLOR
         </h1>
@@ -47,14 +47,14 @@ const AdminSidebar = ({ onNavigate }: AdminSidebarProps) => {
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm",
+                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
                 isActive
                   ? "bg-purple-600/40 text-white shadow-lg shadow-purple-500/20 border border-purple-500/30"
                   : "text-purple-200 hover:bg-purple-800/30 hover:text-white"
               )}
             >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium">{item.label}</span>
+              <item.icon className="w-5 h-5" />
+              <span className="text-sm font-medium">{item.label}</span>
             </Link>
           );
         })}
