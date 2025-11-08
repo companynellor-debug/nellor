@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 import "./index.css";
 import { FavoritesProvider } from "./hooks/useFavorites";
@@ -12,23 +13,25 @@ import { ProductsProvider } from "./hooks/useProducts";
 import { ReviewsProvider } from "./hooks/useReviews";
 
 createRoot(document.getElementById("root")!).render(
-  <SupabaseAuthProvider>
-    <AuthProvider>
-      <ProfileProvider>
-        <FavoritesProvider>
-          <StoresFavoritesProvider>
-            <SupplierOrdersProvider>
-              <StoresProvider>
-                <ProductsProvider>
-                  <ReviewsProvider>
-                    <App />
-                  </ReviewsProvider>
-                </ProductsProvider>
-              </StoresProvider>
-            </SupplierOrdersProvider>
-          </StoresFavoritesProvider>
-        </FavoritesProvider>
-      </ProfileProvider>
-    </AuthProvider>
-  </SupabaseAuthProvider>
+  <BrowserRouter>
+    <SupabaseAuthProvider>
+      <AuthProvider>
+        <ProfileProvider>
+          <FavoritesProvider>
+            <StoresFavoritesProvider>
+              <SupplierOrdersProvider>
+                <StoresProvider>
+                  <ProductsProvider>
+                    <ReviewsProvider>
+                      <App />
+                    </ReviewsProvider>
+                  </ProductsProvider>
+                </StoresProvider>
+              </SupplierOrdersProvider>
+            </StoresFavoritesProvider>
+          </FavoritesProvider>
+        </ProfileProvider>
+      </AuthProvider>
+    </SupabaseAuthProvider>
+  </BrowserRouter>
 );
