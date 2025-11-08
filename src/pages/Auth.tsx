@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/logo.png';
@@ -18,6 +19,9 @@ const Auth = () => {
   const [signupNome, setSignupNome] = useState('');
   const [signupTipo, setSignupTipo] = useState<'cliente' | 'fornecedor'>('cliente');
   const [loading, setLoading] = useState(false);
+  const [logoClickCount, setLogoClickCount] = useState(0);
+  const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
   
   const { signIn, signUp, isAuthenticated } = useSupabaseAuth();
   const navigate = useNavigate();
@@ -27,6 +31,30 @@ const Auth = () => {
     navigate('/cliente');
     return null;
   }
+
+  const handleLogoClick = () => {
+    setLogoClickCount(prev => {
+      const newCount = prev + 1;
+      if (newCount === 5) {
+        setShowAdminDialog(true);
+        return 0;
+      }
+      return newCount;
+    });
+    
+    // Reset counter after 2 seconds
+    setTimeout(() => setLogoClickCount(0), 2000);
+  };
+
+  const handleAdminAccess = () => {
+    if (adminPassword === "admin123") {
+      setShowAdminDialog(false);
+      setAdminPassword("");
+      navigate("/admin/dashboard");
+    } else {
+      alert("Senha incorreta!");
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +88,12 @@ const Auth = () => {
       
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <img src={logo} alt="Nellor" className="h-16 mx-auto mb-4" />
+          <img 
+            src={logo} 
+            alt="Nellor" 
+            className="h-16 mx-auto mb-4 cursor-pointer" 
+            onClick={handleLogoClick}
+          />
           <h1 className="text-3xl font-bold text-foreground">Bem-vindo ao Nellor</h1>
           <p className="text-muted-foreground mt-2">
             Conectando fornecedores e revendedores
@@ -195,6 +228,34 @@ const Auth = () => {
           </Button>
         </div>
       </div>
+
+      {/* Admin Access Dialog */}
+      <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Acesso Admin</DialogTitle>
+            <DialogDescription>
+              Digite a senha de administrador para acessar o painel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Senha</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAdminAccess()}
+                placeholder="Digite a senha"
+              />
+            </div>
+            <Button onClick={handleAdminAccess} className="w-full">
+              Acessar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
