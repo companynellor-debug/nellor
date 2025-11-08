@@ -11,13 +11,13 @@ import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "@/hooks/use-toast";
-import { useStores } from "@/hooks/useStores";
+import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 
 const Chat = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
-  const { stores } = useStores();
+  const { stores } = useSupabaseStores();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
@@ -148,7 +148,7 @@ const Chat = () => {
   };
 
   const currentMessages = selectedUserId ? getMessagesByUser(selectedUserId) : [];
-  const selectedSupplier = selectedUserId ? stores.find(s => s.id.toString() === selectedUserId) : null;
+  const selectedSupplier = selectedUserId ? stores.find(s => s.id === selectedUserId) : null;
 
   if (selectedUserId && selectedSupplier) {
     return (
@@ -166,10 +166,10 @@ const Chat = () => {
               className="flex items-center gap-3 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
             >
               <div className="w-12 h-12 rounded-full overflow-hidden">
-                <img src={selectedSupplier.avatar} alt={selectedSupplier.name} className="w-full h-full object-cover" />
+                <img src={selectedSupplier.foto_perfil_url || '/placeholder.svg'} alt={selectedSupplier.nome} className="w-full h-full object-cover" />
               </div>
               <div>
-                <h2 className="font-bold">{selectedSupplier.name}</h2>
+                <h2 className="font-bold">{selectedSupplier.nome}</h2>
                 <p className="text-xs text-muted-foreground">Online</p>
               </div>
             </div>
@@ -372,7 +372,7 @@ const Chat = () => {
             </div>
           ) : (
             conversations.map((conv) => {
-              const supplier = stores.find(s => s.id.toString() === conv.userId);
+              const supplier = stores.find(s => s.id === conv.userId);
               if (!supplier) return null;
               
               return (
@@ -386,11 +386,11 @@ const Chat = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
-                      <img src={supplier.avatar} alt={supplier.name} className="w-full h-full object-cover" />
+                      <img src={supplier.foto_perfil_url || '/placeholder.svg'} alt={supplier.nome} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold truncate">{supplier.name}</h3>
+                        <h3 className="font-bold truncate">{supplier.nome}</h3>
                         <span className="text-xs text-muted-foreground">
                           {new Date(conv.lastMessage.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>

@@ -71,7 +71,7 @@ const Dashboard = () => {
   const startDate = getStartDate();
   const filteredOrders = orders.filter(o => new Date(o.created_at) >= startDate);
 
-  const pendingOrders = filteredOrders.filter(o => o.order_status === 'preparing').length;
+  const newOrders = filteredOrders.filter(o => o.order_status === 'preparing').length;
   const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
   const totalOrders = filteredOrders.length;
   const totalRevenue = filteredOrders
@@ -185,7 +185,7 @@ const Dashboard = () => {
             <Package className="w-5 h-5 bg-gradient-to-br from-blue-500 to-blue-600 bg-clip-text text-transparent" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{pendingOrders}</div>
+            <div className="text-3xl font-bold">{newOrders}</div>
           </CardContent>
         </Card>
 

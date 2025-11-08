@@ -21,11 +21,11 @@ const PerfilLoja = () => {
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
   const { reviews: allReviews, loading: reviewsLoading } = useSupabaseReviews();
   
-  const store = stores.find(s => s.id === id);
+  const storeProfile = stores.find(s => s.id === id);
   const storeProducts = products.filter(p => p.supplierUuid === id);
   
   // Filtrar avaliações dos produtos desta loja
-  const storeProductIds = storeProducts.map(p => p.supplierUuid).filter(Boolean);
+  const storeProductIds = storeProducts.map(p => p.id?.toString()).filter(Boolean);
   const storeReviews = allReviews.filter(r => storeProductIds.includes(r.product_id));
   const averageRating = storeReviews.length > 0
     ? storeReviews.reduce((sum, r) => sum + r.rating, 0) / storeReviews.length
@@ -41,7 +41,7 @@ const PerfilLoja = () => {
     );
   }
 
-  if (!store) {
+  if (!storeProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -68,11 +68,11 @@ const PerfilLoja = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Helmet>
-        <title>{store.nome} - Loja Online | Nellor</title>
-        <meta name="description" content={`${store.descricao_loja || 'Confira nossos produtos'}`} />
-        <meta property="og:title" content={`${store.nome} - Loja Online`} />
-        <meta property="og:description" content={store.descricao_loja || ''} />
-        <meta property="og:image" content={store.banner_loja_url || ''} />
+        <title>{storeProfile.nome} - Loja Online | Nellor</title>
+        <meta name="description" content={`${storeProfile.descricao_loja || 'Confira nossos produtos'}`} />
+        <meta property="og:title" content={`${storeProfile.nome} - Loja Online`} />
+        <meta property="og:description" content={storeProfile.descricao_loja || ''} />
+        <meta property="og:image" content={storeProfile.banner_loja_url || ''} />
         <meta property="og:type" content="website" />
         <link rel="canonical" href={`${window.location.origin}/loja/${id}`} />
       </Helmet>
@@ -100,8 +100,8 @@ const PerfilLoja = () => {
         {/* Banner */}
         <div className="h-48 overflow-hidden bg-muted">
           <img 
-            src={store.banner_loja_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'} 
-            alt={`Banner ${store.nome}`} 
+            src={storeProfile.banner_loja_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'} 
+            alt={`Banner ${storeProfile.nome}`} 
             className="w-full h-full object-cover" 
           />
         </div>
@@ -113,14 +113,14 @@ const PerfilLoja = () => {
               <div className="flex items-start gap-4 mb-4">
                 <Avatar className="h-24 w-24 border-4 border-white shadow-md">
                   <AvatarImage 
-                    src={store.foto_perfil_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store'} 
-                    alt={store.nome} 
+                    src={storeProfile.foto_perfil_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store'} 
+                    alt={storeProfile.nome} 
                   />
-                  <AvatarFallback>{store.nome.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{storeProfile.nome.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold mb-2">{store.nome}</h2>
-                  <p className="text-sm text-muted-foreground mb-3">{store.descricao_loja || 'Sem descrição'}</p>
+                  <h2 className="text-xl font-bold mb-2">{storeProfile.nome}</h2>
+                  <p className="text-sm text-muted-foreground mb-3">{storeProfile.descricao_loja || 'Sem descrição'}</p>
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />

@@ -13,15 +13,15 @@ const Financeiro = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const availableBalance = orders
-    .filter(o => o.order_status === 'delivered')
+    .filter(o => o.order_status === 'delivered' && o.payment_status === 'paid')
     .reduce((sum, o) => sum + Number(o.total), 0);
 
   const pendingBalance = orders
-    .filter(o => o.order_status !== 'delivered' && o.order_status !== 'cancelled')
+    .filter(o => o.order_status !== 'delivered' && o.order_status !== 'cancelled' && o.payment_status === 'paid')
     .reduce((sum, o) => sum + Number(o.total), 0);
 
   const monthTotal = orders
-    .filter(o => o.order_status !== 'cancelled')
+    .filter(o => o.order_status !== 'cancelled' && o.payment_status === 'paid')
     .reduce((sum, o) => sum + Number(o.total), 0);
 
   const handleWithdraw = () => {
@@ -96,7 +96,7 @@ const Financeiro = () => {
           <h2 className="text-base sm:text-xl font-bold">Histórico de Transações</h2>
         </div>
         <div className="divide-y">
-          {orders.map((order) => (
+          {orders.filter(o => o.order_status !== 'cancelled').map((order) => (
             <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex-1 min-w-0">
