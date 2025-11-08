@@ -6,18 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Star } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useReviews } from "@/hooks/useReviews";
-import { useAuth } from "@/hooks/useAuth";
-import { useStores } from "@/hooks/useStores";
+import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
 
 const AvaliarPedido = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { order } = location.state || {};
-  const { addStoreReview } = useReviews();
-  const { user } = useAuth();
-  const { updateStoreRating } = useStores();
+  const { createReview } = useSupabaseReviews();
+  const { user } = useSupabaseAuth();
   
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -36,7 +34,7 @@ const AvaliarPedido = () => {
     );
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (rating === 0) {
       toast.error("Por favor, selecione uma avaliação");
       return;
@@ -47,19 +45,28 @@ const AvaliarPedido = () => {
       return;
     }
 
-    addStoreReview({
-      storeId: order.storeId,
-      orderId: order.id,
-      userId: user?.id || '',
-      userName: user?.name || 'Usuário',
-      rating,
-      comment: comment.trim()
-    });
+    if (!order.items || order.items.length === 0) {
+      toast.error("Pedido sem produtos para avaliar");
+      return;
+    }
 
-    updateStoreRating(order.storeId, rating);
+    try {
+      // Criar avaliação para o primeiro produto do pedido
+      const firstProduct = order.items[0];
+      
+      await createReview({
+        product_id: firstProduct.product_id,
+        order_id: order.id,
+        rating,
+        comment: comment.trim()
+      });
 
-    toast.success("Avaliação enviada com sucesso!");
-    navigate("/cliente/meus-pedidos");
+      toast.success("Avaliação enviada com sucesso!");
+      navigate("/cliente/meus-pedidos");
+    } catch (error) {
+      console.error('Erro ao criar avaliação:', error);
+      toast.error("Erro ao enviar avaliação. Tente novamente.");
+    }
   };
 
   return (

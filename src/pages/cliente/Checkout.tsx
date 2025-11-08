@@ -190,8 +190,8 @@ const Checkout = () => {
         total: finalTotal,
         endereco_entrega: formData,
         payment_method: selectedPaymentMethod === 'pix' ? 'pix' as const : 'cartao' as const,
-        payment_status: 'pending' as const,
-        order_status: 'pending' as const,
+        payment_status: 'paid' as const, // Aprovado automaticamente
+        order_status: 'preparing' as const, // Status inicial como preparando
         tracking_code: null,
         proof_url: null,
         shipping_company: null,
