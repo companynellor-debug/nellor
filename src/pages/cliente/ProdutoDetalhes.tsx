@@ -324,7 +324,7 @@ const ProdutoDetalhes = () => {
                   name: product.name,
                   price: product.priceNumber,
                   image: product.images[0],
-                  storeId: product.id,
+                  storeId: product.supplierProfileId || '',
                   storeName: supplierProfile?.nome || 'Loja'
                 }, 1);
                 
@@ -371,7 +371,7 @@ const ProdutoDetalhes = () => {
                   name: product.name,
                   price: product.priceNumber,
                   image: product.images[0],
-                  storeId: product.id,
+                  storeId: product.supplierProfileId || '',
                   storeName: supplierProfile?.nome || 'Loja'
                 }, 1);
                 

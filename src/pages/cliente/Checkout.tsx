@@ -86,7 +86,7 @@ const Checkout = () => {
   }
 
   const storeId = getStoreId();
-  const store = stores.find(s => s.id === String(storeId));
+  const store = stores.find(s => s.id === storeId);
   const total = getTotal();
   const shipping = 15.00;
   const discount = (total * appliedDiscount) / 100;
@@ -150,7 +150,7 @@ const Checkout = () => {
 
     try {
       const orderData = {
-        supplier_id: String(storeId),
+        supplier_id: storeId,
         itens: cartItems.map(item => ({
           productId: item.productId,
           name: item.name,

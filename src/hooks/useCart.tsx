@@ -8,7 +8,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   image: string;
-  storeId: number;
+  storeId: string;
   storeName: string;
   minQuantity?: number;
   minValue?: number;
