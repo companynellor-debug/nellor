@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Users, Store, DollarSign, ShoppingCart, TrendingUp, Percent, AlertCircle, Loader2 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useBanners } from "@/hooks/useBanners";
@@ -127,6 +128,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { getExpiringBanners } = useBanners();
   const expiringBanners = getExpiringBanners(5);
+  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
   
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -144,11 +146,35 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [dateFilter]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      
+      // Calcular data de início baseado no filtro
+      const getStartDate = () => {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        
+        if (dateFilter === 'today') {
+          return now;
+        } else if (dateFilter === '7days') {
+          const sevenDaysAgo = new Date(now);
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          return sevenDaysAgo;
+        } else if (dateFilter === '14days') {
+          const fourteenDaysAgo = new Date(now);
+          fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+          return fourteenDaysAgo;
+        } else {
+          const thirtyDaysAgo = new Date(now);
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          return thirtyDaysAgo;
+        }
+      };
+
+      const startDate = getStartDate();
       
       // Total de usuários
       const { count: totalUsers } = await supabase
@@ -161,16 +187,12 @@ const Dashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('tipo', 'fornecedor')
         .eq('ativo', true);
-
-      // Receita últimos 30 dias
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       const { data: recentOrders } = await supabase
         .from('orders')
         .select('total, created_at')
         .eq('payment_status', 'paid')
-        .gte('created_at', thirtyDaysAgo.toISOString());
+        .gte('created_at', startDate.toISOString());
 
       const revenue30Days = recentOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
 
@@ -276,7 +298,7 @@ const Dashboard = () => {
       color: "from-purple-500 to-purple-600",
     },
     {
-      title: "Receita (30 dias)",
+      title: `Receita (${dateFilter === 'today' ? 'hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'})`,
       value: `R$ ${stats.revenue30Days.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: DollarSign,
       color: "from-green-500 to-green-600",
@@ -304,11 +326,43 @@ const Dashboard = () => {
   }
 
   return <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
-          Dashboard
-        </h1>
-        <p className="text-muted-foreground">Visão geral da plataforma Nellor</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground">Visão geral da plataforma Nellor</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={dateFilter === 'today' ? 'default' : 'outline'}
+            onClick={() => setDateFilter('today')}
+            size="sm"
+          >
+            Hoje
+          </Button>
+          <Button
+            variant={dateFilter === '7days' ? 'default' : 'outline'}
+            onClick={() => setDateFilter('7days')}
+            size="sm"
+          >
+            7 dias
+          </Button>
+          <Button
+            variant={dateFilter === '14days' ? 'default' : 'outline'}
+            onClick={() => setDateFilter('14days')}
+            size="sm"
+          >
+            14 dias
+          </Button>
+          <Button
+            variant={dateFilter === '30days' ? 'default' : 'outline'}
+            onClick={() => setDateFilter('30days')}
+            size="sm"
+          >
+            30 dias
+          </Button>
+        </div>
       </div>
 
       {/* Alertas de Banners Expirando */}

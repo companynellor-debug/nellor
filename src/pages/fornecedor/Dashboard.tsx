@@ -12,6 +12,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useSupabaseAuth();
   const { products } = useSupplierProducts();
+  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('today');
   const [orders, setOrders] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
 
@@ -42,16 +43,42 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [profile?.id]);
+  }, [profile?.id, dateFilter]);
 
-  const pendingOrders = orders.filter(o => o.order_status === 'pending').length;
-  const deliveredOrders = orders.filter(o => o.order_status === 'delivered').length;
-  const totalOrders = orders.length;
-  const totalRevenue = orders
+  // Calcular data de início baseado no filtro
+  const getStartDate = () => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    if (dateFilter === 'today') {
+      return now;
+    } else if (dateFilter === '7days') {
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      return sevenDaysAgo;
+    } else if (dateFilter === '14days') {
+      const fourteenDaysAgo = new Date(now);
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      return fourteenDaysAgo;
+    } else {
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      return thirtyDaysAgo;
+    }
+  };
+
+  // Filtrar pedidos por data
+  const startDate = getStartDate();
+  const filteredOrders = orders.filter(o => new Date(o.created_at) >= startDate);
+
+  const pendingOrders = filteredOrders.filter(o => o.order_status === 'pending').length;
+  const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
+  const totalOrders = filteredOrders.length;
+  const totalRevenue = filteredOrders
     .filter(o => o.payment_status === 'paid')
     .reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
 
-  const paidOrders = orders.filter(o => o.payment_status === 'paid');
+  const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
   const ticketMedio = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
 
   // Dados de vendas ao longo do tempo (últimos 6 meses)
@@ -82,11 +109,43 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
-          Dashboard
-        </h1>
-        <p className="text-muted-foreground">Visão geral do seu desempenho</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground">Visão geral do seu desempenho</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={dateFilter === 'today' ? 'default' : 'outline'}
+            onClick={() => setDateFilter('today')}
+            size="sm"
+          >
+            Hoje
+          </Button>
+          <Button
+            variant={dateFilter === '7days' ? 'default' : 'outline'}
+            onClick={() => setDateFilter('7days')}
+            size="sm"
+          >
+            7 dias
+          </Button>
+          <Button
+            variant={dateFilter === '14days' ? 'default' : 'outline'}
+            onClick={() => setDateFilter('14days')}
+            size="sm"
+          >
+            14 dias
+          </Button>
+          <Button
+            variant={dateFilter === '30days' ? 'default' : 'outline'}
+            onClick={() => setDateFilter('30days')}
+            size="sm"
+          >
+            30 dias
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

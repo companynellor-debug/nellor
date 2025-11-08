@@ -1,13 +1,16 @@
-import { Home, ShoppingCart, MessageSquare, User } from "lucide-react";
+import { Home, ShoppingCart, MessageSquare, User, Bell } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 
 export const BottomNav = () => {
   const location = useLocation();
+  const { unreadCount } = useSupabaseNotifications();
 
   const navItems = [
     { icon: Home, label: "Home", path: "/cliente" },
     { icon: ShoppingCart, label: "Carrinho", path: "/cliente/carrinho" },
     { icon: MessageSquare, label: "Chat", path: "/cliente/chat" },
+    { icon: Bell, label: "Notificações", path: "/cliente/notificacoes", badge: unreadCount },
     { icon: User, label: "Perfil", path: "/cliente/perfil" },
   ];
 
@@ -22,11 +25,18 @@ export const BottomNav = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center gap-1 transition-all duration-300 ${
+              className={`flex flex-col items-center gap-1 transition-all duration-300 relative ${
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <Icon className={`h-6 w-6 ${isActive ? "scale-110" : ""}`} />
+              <div className="relative">
+                <Icon className={`h-6 w-6 ${isActive ? "scale-110" : ""}`} />
+                {item.badge && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
+              </div>
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           );

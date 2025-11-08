@@ -9,6 +9,7 @@ import { useStoresFavorites } from "@/hooks/useStoresFavorites";
 import { useProducts } from "@/hooks/useProducts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
+import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { Helmet } from "react-helmet";
 
 const PerfilLoja = () => {
@@ -18,9 +19,17 @@ const PerfilLoja = () => {
   const { products } = useProducts();
   const { user } = useSupabaseAuth();
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
+  const { reviews: allReviews, loading: reviewsLoading } = useSupabaseReviews();
   
   const store = stores.find(s => s.id === id);
   const storeProducts = products.filter(p => p.supplierUuid === id);
+  
+  // Filtrar avaliações dos produtos desta loja
+  const storeProductIds = storeProducts.map(p => p.supplierUuid).filter(Boolean);
+  const storeReviews = allReviews.filter(r => storeProductIds.includes(r.product_id));
+  const averageRating = storeReviews.length > 0
+    ? storeReviews.reduce((sum, r) => sum + r.rating, 0) / storeReviews.length
+    : 0;
 
   if (loading) {
     return (
@@ -113,6 +122,13 @@ const PerfilLoja = () => {
                   <h2 className="text-xl font-bold mb-2">{store.nome}</h2>
                   <p className="text-sm text-muted-foreground mb-3">{store.descricao_loja || 'Sem descrição'}</p>
                   <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span>{averageRating.toFixed(1)}</span>
+                    </div>
+                    <span className="text-muted-foreground">
+                      {storeReviews.length} {storeReviews.length === 1 ? 'avaliação' : 'avaliações'}
+                    </span>
                     <span className="text-muted-foreground">{storeProducts.length} produtos</span>
                   </div>
                 </div>
@@ -122,7 +138,7 @@ const PerfilLoja = () => {
               {user && (
                 <div className="flex gap-3">
                   <Button
-                    onClick={() => navigate("/cliente/chat", { state: { storeId: id, storeName: store.nome, storeAvatar: store.foto_perfil_url } })}
+                    onClick={() => navigate("/cliente/chat", { state: { supplierId: id } })}
                     className="flex-1 bg-primary hover:bg-primary/90 text-white"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
@@ -139,6 +155,45 @@ const PerfilLoja = () => {
               )}
             </Card>
           </div>
+
+          {/* Avaliações da Loja */}
+          {storeReviews.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-primary mb-4">Avaliações da Loja</h3>
+              <Card className="bg-white border shadow-sm p-6">
+                <div className="space-y-4">
+                  {reviewsLoading ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Carregando avaliações...</p>
+                  ) : (
+                    storeReviews.slice(0, 5).map((review) => (
+                      <div key={review.id} className="border-b pb-4 last:border-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={review.buyer?.foto_perfil_url || ''} alt={review.buyer?.nome} />
+                            <AvatarFallback>{review.buyer?.nome?.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{review.buyer?.nome}</p>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(review.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 mb-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-400"}`} />
+                          ))}
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-muted-foreground">{review.comment}</p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </Card>
+            </div>
+          )}
 
           {/* Store Products */}
           <div className="mb-6">

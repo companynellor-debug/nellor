@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart, Package } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -23,6 +25,8 @@ const ProdutoDetalhes = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [supplierProfile, setSupplierProfile] = useState<any>(null);
   const [currentStock, setCurrentStock] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [showQuantityDialog, setShowQuantityDialog] = useState(false);
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { addToCart } = useCart();
   const { stores } = useStores();
@@ -285,6 +289,81 @@ const ProdutoDetalhes = () => {
           </div>
         )}
 
+        {/* Dialog de Quantidade */}
+        <Dialog open={showQuantityDialog} onOpenChange={setShowQuantityDialog}>
+          <DialogContent>
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">Selecione a quantidade</h2>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
+                  -
+                </Button>
+                <Input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (val > 0 && val <= currentStock) {
+                      setQuantity(val);
+                    }
+                  }}
+                  className="text-center w-20"
+                  min="1"
+                  max={currentStock}
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
+                >
+                  +
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Máximo: {currentStock}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowQuantityDialog(false)}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (!product.supplierProfileId) {
+                      toast({
+                        title: 'Erro',
+                        description: 'Informações do fornecedor não encontradas.',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+
+                    addToCart({
+                      productId: product.supplierUuid || '',
+                      name: product.name,
+                      price: product.priceNumber,
+                      image: product.images[0],
+                      storeId: product.supplierProfileId || '',
+                      storeName: supplierProfile?.nome || 'Loja'
+                    }, quantity);
+                    
+                    setShowQuantityDialog(false);
+                    navigate('/cliente/checkout');
+                  }}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                >
+                  Confirmar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Botões de Ação */}
         <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30">
           <div className="container mx-auto flex gap-3">
@@ -343,9 +422,6 @@ const ProdutoDetalhes = () => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Buy now clicked');
-                console.log('Current stock:', currentStock);
-                console.log('Product:', product);
                 
                 if (currentStock === 0) {
                   toast({
@@ -365,17 +441,8 @@ const ProdutoDetalhes = () => {
                   return;
                 }
 
-                console.log('Adding to cart and going to checkout...');
-                addToCart({
-                  productId: product.supplierUuid || '',
-                  name: product.name,
-                  price: product.priceNumber,
-                  image: product.images[0],
-                  storeId: product.supplierProfileId || '',
-                  storeName: supplierProfile?.nome || 'Loja'
-                }, 1);
-                
-                navigate('/cliente/checkout');
+                setQuantity(1);
+                setShowQuantityDialog(true);
               }}
             >
               Comprar Agora

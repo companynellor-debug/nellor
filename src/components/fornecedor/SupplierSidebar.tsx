@@ -1,6 +1,7 @@
 import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 
 const menuItems = [
   { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
@@ -15,6 +16,7 @@ const menuItems = [
 
 export function SupplierSidebar() {
   const location = useLocation();
+  const { unreadCount } = useSupabaseNotifications();
 
   return (
     <aside className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-b from-purple-950 to-violet-950 text-white shadow-2xl border-r border-purple-800/30">
@@ -33,7 +35,7 @@ export function SupplierSidebar() {
               key={item.url}
               to={item.url}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm",
+                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm relative",
                 isActive
                   ? "bg-purple-600/40 text-white shadow-lg shadow-purple-500/20 border border-purple-500/30"
                   : "text-purple-200 hover:bg-purple-800/30 hover:text-white"
@@ -41,6 +43,11 @@ export function SupplierSidebar() {
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
               <span className="font-medium">{item.title}</span>
+              {item.title === "Notificações" && unreadCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </NavLink>
           );
         })}
