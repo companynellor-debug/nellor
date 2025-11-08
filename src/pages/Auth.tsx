@@ -50,7 +50,7 @@ const Auth = () => {
     if (adminPassword === "admin123") {
       setShowAdminDialog(false);
       setAdminPassword("");
-      navigate("/admin/dashboard");
+      navigate("/admin");
     } else {
       alert("Senha incorreta!");
     }
