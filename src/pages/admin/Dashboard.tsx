@@ -1,11 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Users, Store, DollarSign, ShoppingCart, TrendingUp, Percent, AlertCircle } from "lucide-react";
+import { Users, Store, DollarSign, ShoppingCart, TrendingUp, Percent, AlertCircle, Loader2 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useBanners } from "@/hooks/useBanners";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 const statsCards = [{
   title: "Total de Usuários",
   value: "2,847",
@@ -125,6 +127,181 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { getExpiringBanners } = useBanners();
   const expiringBanners = getExpiringBanners(5);
+  
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeSuppliers: 0,
+    revenue30Days: 0,
+    completedOrders: 0,
+    monthlyGrowth: 0,
+    commission: 0,
+  });
+  const [salesData, setSalesData] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [topSuppliers, setTopSuppliers] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Total de usuários
+      const { count: totalUsers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Fornecedores ativos
+      const { count: activeSuppliers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('tipo', 'fornecedor')
+        .eq('ativo', true);
+
+      // Receita últimos 30 dias
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { data: recentOrders } = await supabase
+        .from('orders')
+        .select('total, created_at')
+        .eq('payment_status', 'paid')
+        .gte('created_at', thirtyDaysAgo.toISOString());
+
+      const revenue30Days = recentOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
+
+      // Pedidos concluídos
+      const { count: completedOrders } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('order_status', 'delivered');
+
+      // Comissão Nellor (5% da receita)
+      const commission = revenue30Days * 0.05;
+
+      // Dados de vendas dos últimos 6 meses
+      const salesByMonth = [];
+      for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(new Date(), i);
+        const monthStart = startOfMonth(monthDate);
+        const monthEnd = endOfMonth(monthDate);
+
+        const { data: monthOrders } = await supabase
+          .from('orders')
+          .select('total')
+          .eq('payment_status', 'paid')
+          .gte('created_at', monthStart.toISOString())
+          .lte('created_at', monthEnd.toISOString());
+
+        salesByMonth.push({
+          month: format(monthDate, 'MMM', { locale: ptBR }),
+          pedidos: monthOrders?.length || 0,
+          receita: monthOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0
+        });
+      }
+
+      // Top 5 fornecedores
+      const { data: suppliers } = await supabase
+        .from('analytics')
+        .select('supplier_id, total_vendas, profiles(nome)')
+        .order('total_vendas', { ascending: false })
+        .limit(5);
+
+      const topSuppliersData = suppliers?.map(s => ({
+        name: (s.profiles as any)?.nome || 'Fornecedor',
+        vendas: Number(s.total_vendas)
+      })) || [];
+
+      // Distribuição por categoria
+      const { data: products } = await supabase
+        .from('products')
+        .select('categoria_id, categories(nome)');
+
+      const categoryCount: Record<string, number> = {};
+      products?.forEach(p => {
+        const catName = (p.categories as any)?.nome || 'Outros';
+        categoryCount[catName] = (categoryCount[catName] || 0) + 1;
+      });
+
+      const colors = ['#8B5CF6', '#6366F1', '#A855F7', '#C084FC', '#E9D5FF', '#DDD6FE'];
+      const categoryDataFormatted = Object.entries(categoryCount).map(([name, value], index) => ({
+        name,
+        value,
+        color: colors[index % colors.length]
+      }));
+
+      // Pedidos recentes
+      const { data: latestOrders } = await supabase
+        .from('orders')
+        .select('order_number, total, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      setStats({
+        totalUsers: totalUsers || 0,
+        activeSuppliers: activeSuppliers || 0,
+        revenue30Days,
+        completedOrders: completedOrders || 0,
+        monthlyGrowth: 0, // Pode calcular comparando com mês anterior
+        commission,
+      });
+
+      setSalesData(salesByMonth);
+      setTopSuppliers(topSuppliersData);
+      setCategoryData(categoryDataFormatted);
+      setRecentOrders(latestOrders || []);
+
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statsCards = [
+    {
+      title: "Total de Usuários",
+      value: stats.totalUsers.toLocaleString('pt-BR'),
+      icon: Users,
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      title: "Fornecedores Ativos",
+      value: stats.activeSuppliers.toLocaleString('pt-BR'),
+      icon: Store,
+      color: "from-purple-500 to-purple-600",
+    },
+    {
+      title: "Receita (30 dias)",
+      value: `R$ ${stats.revenue30Days.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: DollarSign,
+      color: "from-green-500 to-green-600",
+    },
+    {
+      title: "Pedidos Concluídos",
+      value: stats.completedOrders.toLocaleString('pt-BR'),
+      icon: ShoppingCart,
+      color: "from-orange-500 to-orange-600",
+    },
+    {
+      title: "Comissão Nellor (5%)",
+      value: `R$ ${stats.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: Percent,
+      color: "from-violet-500 to-violet-600",
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return <div className="space-y-8">
       <div>
@@ -180,7 +357,6 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stat.value}</div>
-              <p className="text-xs text-green-600 mt-1">{stat.change} vs mês anterior</p>
             </CardContent>
           </Card>)}
       </div>
@@ -247,20 +423,32 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Activities */}
+        {/* Recent Orders */}
         <Card className="border-purple-100 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">🔔 Atividades Recentes</CardTitle>
+            <CardTitle className="text-lg">🔔 Pedidos Recentes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.map((activity, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-lg transition-colors bg-violet-700">
-                  <div className="w-2 h-2 rounded-full bg-purple-600 mt-2" />
-                  <div className="flex-1">
-                    <p className="text-sm">{activity.text}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+              {recentOrders.length > 0 ? (
+                recentOrders.map((order) => (
+                  <div key={order.order_number} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="w-2 h-2 rounded-full bg-purple-600 mt-2" />
+                    <div className="flex-1">
+                      <p className="text-sm">
+                        Pedido #{order.order_number} — R$ {Number(order.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                    </div>
                   </div>
-                </div>)}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhum pedido recente
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
