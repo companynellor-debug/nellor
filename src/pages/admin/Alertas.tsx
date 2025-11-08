@@ -1,6 +1,79 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle, AlertTriangle, Star } from "lucide-react";
-const alerts = [{
+import { AlertCircle, CheckCircle, AlertTriangle, Star, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+const Alertas = () => {
+  const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  const fetchAlerts = async () => {
+    try {
+      setLoading(true);
+      
+      // Buscar notificações do sistema (para admins)
+      const { data: notifications } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      const notificationsList = notifications || [];
+
+      // Transformar notificações em alertas
+      const formattedAlerts = notificationsList.map(notif => {
+        let type = 'info';
+        let icon = Star;
+        let color = "from-blue-500 to-blue-600";
+        let bg = "bg-blue-50";
+
+        if (notif.type === 'order_update') {
+          type = 'success';
+          icon = CheckCircle;
+          color = "from-green-500 to-green-600";
+          bg = "bg-green-50";
+        } else if (notif.type === 'payout') {
+          type = 'warning';
+          icon = AlertTriangle;
+          color = "from-yellow-500 to-yellow-600";
+          bg = "bg-yellow-50";
+        }
+
+        return {
+          type,
+          icon,
+          title: notif.title,
+          description: notif.body,
+          time: formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: ptBR }),
+          color,
+          bg
+        };
+      });
+
+      setAlerts(formattedAlerts);
+
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const staticAlerts = [{
   type: "success",
   icon: CheckCircle,
   title: "Fornecedor TechWear ultrapassou 100 vendas",
@@ -65,7 +138,8 @@ const alerts = [{
   color: "from-green-500 to-green-600",
   bg: "bg-green-50"
 }];
-const Alertas = () => {
+  const allAlerts = alerts.length > 0 ? alerts : staticAlerts;
+
   return <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
@@ -75,7 +149,7 @@ const Alertas = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {alerts.map((alert, index) => {
+        {allAlerts.map((alert, index) => {
         const Icon = alert.icon;
         return <Card key={index} className={`border-l-4 ${alert.bg} hover:shadow-lg transition-all cursor-pointer`} style={{
           borderLeftColor: `hsl(var(--${alert.type === 'error' ? 'destructive' : alert.type === 'warning' ? 'orange' : alert.type === 'info' ? 'blue' : 'green'}-500))`

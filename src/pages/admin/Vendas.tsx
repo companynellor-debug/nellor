@@ -1,125 +1,149 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Package, CheckCircle, DollarSign } from "lucide-react";
+import { ShoppingCart, Package, CheckCircle, DollarSign, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-const statsCards = [{
-  title: "Total de Pedidos",
-  value: "1,523",
-  icon: ShoppingCart,
-  color: "from-blue-500 to-blue-600"
-}, {
-  title: "Pedidos Pendentes",
-  value: "47",
-  icon: Package,
-  color: "from-orange-500 to-orange-600"
-}, {
-  title: "Pedidos Concluídos",
-  value: "1,476",
-  icon: CheckCircle,
-  color: "from-green-500 to-green-600"
-}, {
-  title: "Vendas do Mês",
-  value: "R$ 127.430",
-  icon: DollarSign,
-  color: "from-purple-500 to-purple-600"
-}];
-const ordersData = [{
-  id: "#2048",
-  customer: "João M.",
-  supplier: "UrbanCloth",
-  value: "R$ 230,00",
-  status: "completed",
-  date: "02/11"
-}, {
-  id: "#2049",
-  customer: "Maria F.",
-  supplier: "DriftWear",
-  value: "R$ 150,00",
-  status: "pending",
-  date: "02/11"
-}, {
-  id: "#2050",
-  customer: "Lucas S.",
-  supplier: "TechStyle",
-  value: "R$ 380,00",
-  status: "shipped",
-  date: "01/11"
-}, {
-  id: "#2051",
-  customer: "Ana R.",
-  supplier: "UrbanCloth",
-  value: "R$ 290,00",
-  status: "completed",
-  date: "01/11"
-}, {
-  id: "#2052",
-  customer: "Carlos P.",
-  supplier: "NeonWear",
-  value: "R$ 520,00",
-  status: "completed",
-  date: "31/10"
-}];
-const statusDistribution = [{
-  name: "Pendentes",
-  value: 47,
-  color: "#F59E0B"
-}, {
-  name: "Enviados",
-  value: 98,
-  color: "#3B82F6"
-}, {
-  name: "Entregues",
-  value: 1476,
-  color: "#10B981"
-}];
-const dailyOrders = [{
-  day: "Seg",
-  orders: 180
-}, {
-  day: "Ter",
-  orders: 220
-}, {
-  day: "Qua",
-  orders: 195
-}, {
-  day: "Qui",
-  orders: 250
-}, {
-  day: "Sex",
-  orders: 310
-}, {
-  day: "Sáb",
-  orders: 240
-}, {
-  day: "Dom",
-  orders: 128
-}];
+import { supabase } from "@/integrations/supabase/client";
+import { format, subDays } from "date-fns";
+
 const getStatusBadge = (status: string) => {
-  const variants: Record<string, {
-    label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-  }> = {
-    completed: {
-      label: "Concluído",
-      variant: "default"
-    },
-    pending: {
-      label: "Pendente",
-      variant: "secondary"
-    },
-    shipped: {
-      label: "Enviado",
-      variant: "outline"
-    }
+  const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; }> = {
+    delivered: { label: "Entregue", variant: "default" },
+    pending: { label: "Pendente", variant: "secondary" },
+    preparing: { label: "Preparando", variant: "outline" },
+    shipped: { label: "Enviado", variant: "outline" },
+    cancelled: { label: "Cancelado", variant: "destructive" },
   };
-  const {
-    label,
-    variant
-  } = variants[status] || variants.pending;
+  const { label, variant } = variants[status] || variants.pending;
   return <Badge variant={variant}>{label}</Badge>;
 };
+
 const Vendas = () => {
+  const [loading, setLoading] = useState(true);
+  const [totalPedidos, setTotalPedidos] = useState(0);
+  const [pedidosPendentes, setPedidosPendentes] = useState(0);
+  const [pedidosConcluidos, setPedidosConcluidos] = useState(0);
+  const [vendasMes, setVendasMes] = useState(0);
+  const [pedidos, setPedidos] = useState<any[]>([]);
+  const [statusDistribution, setStatusDistribution] = useState<any[]>([]);
+  const [dailyOrders, setDailyOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Buscar pedidos
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('*, profiles!orders_buyer_id_fkey(nome), profiles!orders_supplier_id_fkey(nome)')
+        .order('created_at', { ascending: false });
+
+      const pedidosList = orders || [];
+      setTotalPedidos(pedidosList.length);
+
+      // Contar status
+      const pendentes = pedidosList.filter(p => p.order_status === 'pending').length;
+      const concluidos = pedidosList.filter(p => p.order_status === 'delivered').length;
+      setPedidosPendentes(pendentes);
+      setPedidosConcluidos(concluidos);
+
+      // Vendas do mês
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      
+      const vendasDoMes = pedidosList
+        .filter(p => new Date(p.created_at) >= startOfMonth && p.payment_status === 'paid')
+        .reduce((sum, p) => sum + Number(p.total), 0);
+      setVendasMes(vendasDoMes);
+
+      // Pedidos recentes
+      const pedidosRecentes = pedidosList.slice(0, 10).map(order => ({
+        id: order.order_number,
+        customer: order.profiles?.nome || 'Cliente',
+        supplier: 'Fornecedor',
+        value: `R$ ${Number(order.total).toFixed(2)}`,
+        status: order.order_status,
+        date: format(new Date(order.created_at), 'dd/MM')
+      }));
+      setPedidos(pedidosRecentes);
+
+      // Distribuição de status
+      const statusCount = {
+        pending: pedidosList.filter(p => p.order_status === 'pending').length,
+        shipped: pedidosList.filter(p => p.order_status === 'shipped').length,
+        delivered: pedidosList.filter(p => p.order_status === 'delivered').length,
+      };
+
+      setStatusDistribution([
+        { name: "Pendentes", value: statusCount.pending, color: "#F59E0B" },
+        { name: "Enviados", value: statusCount.shipped, color: "#3B82F6" },
+        { name: "Entregues", value: statusCount.delivered, color: "#10B981" },
+      ]);
+
+      // Pedidos dos últimos 7 dias
+      const daily = [];
+      const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      for (let i = 6; i >= 0; i--) {
+        const date = subDays(new Date(), i);
+        const count = pedidosList.filter(p => 
+          format(new Date(p.created_at), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+        ).length;
+        
+        daily.push({
+          day: diasSemana[date.getDay()],
+          orders: count
+        });
+      }
+      setDailyOrders(daily);
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const statsCards = [
+    {
+      title: "Total de Pedidos",
+      value: totalPedidos.toString(),
+      icon: ShoppingCart,
+      color: "from-blue-500 to-blue-600"
+    },
+    {
+      title: "Pedidos Pendentes",
+      value: pedidosPendentes.toString(),
+      icon: Package,
+      color: "from-orange-500 to-orange-600"
+    },
+    {
+      title: "Pedidos Concluídos",
+      value: pedidosConcluidos.toString(),
+      icon: CheckCircle,
+      color: "from-green-500 to-green-600"
+    },
+    {
+      title: "Vendas do Mês",
+      value: `R$ ${vendasMes.toFixed(2)}`,
+      icon: DollarSign,
+      color: "from-purple-500 to-purple-600"
+    }
+  ];
+
   return <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
@@ -160,14 +184,22 @@ const Vendas = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ordersData.map(order => <TableRow key={order.id} className="hover:bg-purple-50/50">
+                {pedidos.length > 0 ? pedidos.map((order, idx) => (
+                  <TableRow key={idx} className="hover:bg-purple-50/50">
                     <TableCell className="font-medium">{order.id}</TableCell>
                     <TableCell>{order.customer}</TableCell>
                     <TableCell>{order.supplier}</TableCell>
                     <TableCell>{order.value}</TableCell>
                     <TableCell>{getStatusBadge(order.status)}</TableCell>
                     <TableCell>{order.date}</TableCell>
-                  </TableRow>)}
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      Nenhum pedido encontrado
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

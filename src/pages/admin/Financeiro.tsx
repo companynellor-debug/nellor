@@ -1,62 +1,113 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingDown, Percent, TrendingUp } from "lucide-react";
+import { DollarSign, TrendingDown, Percent, TrendingUp, Loader2 } from "lucide-react";
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-const statsCards = [{
-  title: "💰 Receita Total",
-  value: "R$ 127.430",
-  icon: DollarSign,
-  color: "from-green-500 to-green-600"
-}, {
-  title: "💸 Pago aos Fornecedores",
-  value: "R$ 121.058",
-  icon: TrendingDown,
-  color: "from-blue-500 to-blue-600"
-}, {
-  title: "📉 Comissões Nellor",
-  value: "R$ 6.372",
-  icon: Percent,
-  color: "from-purple-500 to-purple-600"
-}, {
-  title: "🏦 Lucro Líquido",
-  value: "R$ 6.372",
-  icon: TrendingUp,
-  color: "from-orange-500 to-orange-600"
-}];
-const cashflowData = [{
-  month: "Jun",
-  entrada: 45000,
-  saida: 42750
-}, {
-  month: "Jul",
-  entrada: 62000,
-  saida: 58900
-}, {
-  month: "Ago",
-  entrada: 78000,
-  saida: 74100
-}, {
-  month: "Set",
-  entrada: 95000,
-  saida: 90250
-}, {
-  month: "Out",
-  entrada: 112000,
-  saida: 106400
-}, {
-  month: "Nov",
-  entrada: 127430,
-  saida: 121058
-}];
-const distributionData = [{
-  name: "Fornecedores",
-  value: 95,
-  color: "#3B82F6"
-}, {
-  name: "Comissão Nellor",
-  value: 5,
-  color: "#8B5CF6"
-}];
+import { supabase } from "@/integrations/supabase/client";
+import { format, subMonths } from "date-fns";
+
 const Financeiro = () => {
+  const [loading, setLoading] = useState(true);
+  const [receitaTotal, setReceitaTotal] = useState(0);
+  const [pagoFornecedores, setPagoFornecedores] = useState(0);
+  const [comissoes, setComissoes] = useState(0);
+  const [cashflowData, setCashflowData] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Buscar transações
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('total, created_at, payment_status')
+        .eq('payment_status', 'paid');
+
+      const ordersList = orders || [];
+      const receita = ordersList.reduce((sum, o) => sum + Number(o.total), 0);
+      setReceitaTotal(receita);
+
+      // Calcular comissão (5%)
+      const comissao = receita * 0.05;
+      setComissoes(comissao);
+
+      // Pago aos fornecedores (95%)
+      const pago = receita * 0.95;
+      setPagoFornecedores(pago);
+
+      // Fluxo de caixa dos últimos 6 meses
+      const cashflow = [];
+      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = subMonths(new Date(), i);
+        const monthOrders = ordersList.filter(o => {
+          const orderDate = new Date(o.created_at);
+          return orderDate.getMonth() === date.getMonth() && 
+                 orderDate.getFullYear() === date.getFullYear();
+        });
+        
+        const entrada = monthOrders.reduce((sum, o) => sum + Number(o.total), 0);
+        const saida = entrada * 0.95;
+
+        cashflow.push({
+          month: meses[date.getMonth()],
+          entrada: Math.round(entrada),
+          saida: Math.round(saida)
+        });
+      }
+      setCashflowData(cashflow);
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const statsCards = [
+    {
+      title: "💰 Receita Total",
+      value: `R$ ${receitaTotal.toFixed(2)}`,
+      icon: DollarSign,
+      color: "from-green-500 to-green-600"
+    },
+    {
+      title: "💸 Pago aos Fornecedores",
+      value: `R$ ${pagoFornecedores.toFixed(2)}`,
+      icon: TrendingDown,
+      color: "from-blue-500 to-blue-600"
+    },
+    {
+      title: "📉 Comissões Nellor",
+      value: `R$ ${comissoes.toFixed(2)}`,
+      icon: Percent,
+      color: "from-purple-500 to-purple-600"
+    },
+    {
+      title: "🏦 Lucro Líquido",
+      value: `R$ ${comissoes.toFixed(2)}`,
+      icon: TrendingUp,
+      color: "from-orange-500 to-orange-600"
+    }
+  ];
+
+  const distributionData = [
+    { name: "Fornecedores", value: 95, color: "#3B82F6" },
+    { name: "Comissão Nellor", value: 5, color: "#8B5CF6" },
+  ];
+
   return <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">

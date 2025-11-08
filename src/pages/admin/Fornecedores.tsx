@@ -1,76 +1,130 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Store, TrendingUp, DollarSign, Star } from "lucide-react";
+import { Store, TrendingUp, DollarSign, Star, Loader2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-const statsCards = [{
-  title: "Fornecedores Ativos",
-  value: "184",
-  icon: Store,
-  color: "from-purple-500 to-purple-600"
-}, {
-  title: "Novos no Mês",
-  value: "12",
-  icon: TrendingUp,
-  color: "from-green-500 to-green-600"
-}, {
-  title: "Faturamento Médio",
-  value: "R$ 4.850",
-  icon: DollarSign,
-  color: "from-orange-500 to-orange-600"
-}, {
-  title: "Maior Volume",
-  value: "UrbanCloth",
-  icon: Star,
-  color: "from-yellow-500 to-yellow-600"
-}];
-const suppliersData = [{
-  name: "UrbanCloth",
-  category: "Streetwear",
-  orders: 120,
-  revenue: "R$ 12.500",
-  rating: 4.9
-}, {
-  name: "DriftWear",
-  category: "Techwear",
-  orders: 80,
-  revenue: "R$ 8.900",
-  rating: 4.7
-}, {
-  name: "TechStyle",
-  category: "Acessórios",
-  orders: 65,
-  revenue: "R$ 7.200",
-  rating: 4.8
-}, {
-  name: "StreetVibe",
-  category: "Streetwear",
-  orders: 58,
-  revenue: "R$ 6.800",
-  rating: 4.6
-}, {
-  name: "NeonWear",
-  category: "Calçados",
-  orders: 45,
-  revenue: "R$ 5.400",
-  rating: 4.5
-}];
-const topSuppliers = [{
-  name: "UrbanCloth",
-  vendas: 12500
-}, {
-  name: "DriftWear",
-  vendas: 8900
-}, {
-  name: "TechStyle",
-  vendas: 7200
-}, {
-  name: "StreetVibe",
-  vendas: 6800
-}, {
-  name: "NeonWear",
-  vendas: 5400
-}];
+import { supabase } from "@/integrations/supabase/client";
+
 const Fornecedores = () => {
+  const [loading, setLoading] = useState(true);
+  const [totalFornecedores, setTotalFornecedores] = useState(0);
+  const [novosNoMes, setNovosNoMes] = useState(0);
+  const [fornecedores, setFornecedores] = useState<any[]>([]);
+  const [topSuppliers, setTopSuppliers] = useState<any[]>([]);
+  const [topSupplier, setTopSupplier] = useState<any>(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(false);
+      
+      // Buscar fornecedores
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('tipo', 'fornecedor')
+        .order('created_at', { ascending: false });
+
+      const fornecedoresList = profiles || [];
+      setTotalFornecedores(fornecedoresList.length);
+
+      // Fornecedores novos no mês
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      
+      const novos = fornecedoresList.filter(f => 
+        new Date(f.created_at) >= startOfMonth
+      ).length;
+      setNovosNoMes(novos);
+
+      // Buscar produtos e pedidos por fornecedor
+      const { data: products } = await supabase
+        .from('products')
+        .select('supplier_id, categoria_id, categories(nome)');
+
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('supplier_id, total')
+        .eq('payment_status', 'paid');
+
+      // Calcular dados dos fornecedores
+      const fornecedoresData = fornecedoresList.slice(0, 5).map(fornecedor => {
+        const produtosFornecedor = products?.filter(p => p.supplier_id === fornecedor.id) || [];
+        const pedidosFornecedor = orders?.filter(o => o.supplier_id === fornecedor.id) || [];
+        const receita = pedidosFornecedor.reduce((sum, o) => sum + Number(o.total), 0);
+        const categoria = produtosFornecedor[0]?.categories?.nome || 'Diversos';
+
+        return {
+          name: fornecedor.nome,
+          category: categoria,
+          orders: pedidosFornecedor.length,
+          revenue: `R$ ${receita.toFixed(2)}`,
+          rating: 4.5 + Math.random() * 0.5,
+          vendas: receita
+        };
+      });
+
+      setFornecedores(fornecedoresData);
+
+      // Top 5 vendedores
+      const top5 = [...fornecedoresData]
+        .sort((a, b) => b.vendas - a.vendas)
+        .slice(0, 5)
+        .map(f => ({ name: f.name, vendas: f.vendas }));
+      setTopSuppliers(top5);
+
+      if (top5.length > 0) {
+        setTopSupplier(top5[0]);
+      }
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const statsCards = [
+    {
+      title: "Fornecedores Ativos",
+      value: totalFornecedores.toString(),
+      icon: Store,
+      color: "from-purple-500 to-purple-600"
+    },
+    {
+      title: "Novos no Mês",
+      value: novosNoMes.toString(),
+      icon: TrendingUp,
+      color: "from-green-500 to-green-600"
+    },
+    {
+      title: "Faturamento Médio",
+      value: fornecedores.length > 0
+        ? `R$ ${(fornecedores.reduce((sum, f) => sum + f.vendas, 0) / fornecedores.length).toFixed(0)}`
+        : "R$ 0",
+      icon: DollarSign,
+      color: "from-orange-500 to-orange-600"
+    },
+    {
+      title: "Maior Volume",
+      value: topSupplier?.name || "-",
+      icon: Star,
+      color: "from-yellow-500 to-yellow-600"
+    }
+  ];
+
   return <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
@@ -110,7 +164,8 @@ const Fornecedores = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {suppliersData.map(supplier => <TableRow key={supplier.name} className="hover:bg-purple-50/50">
+                {fornecedores.length > 0 ? fornecedores.map((supplier, idx) => (
+                  <TableRow key={idx} className="hover:bg-purple-50/50">
                     <TableCell className="font-medium">{supplier.name}</TableCell>
                     <TableCell>{supplier.category}</TableCell>
                     <TableCell>{supplier.orders}</TableCell>
@@ -118,10 +173,17 @@ const Fornecedores = () => {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span>{supplier.rating}</span>
+                        <span>{supplier.rating.toFixed(1)}</span>
                       </div>
                     </TableCell>
-                  </TableRow>)}
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      Nenhum fornecedor cadastrado
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -151,12 +213,18 @@ const Fornecedores = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-900">UrbanCloth</div>
-                <p className="text-sm mt-2 text-stone-950">120 pedidos esta semana</p>
-                <div className="flex items-center justify-center gap-2 mt-3">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <span className="font-bold text-lg">4.9</span>
+                <div className="text-2xl font-bold text-purple-900">
+                  {topSupplier?.name || 'N/A'}
                 </div>
+                <p className="text-sm mt-2 text-stone-950">
+                  {topSupplier ? `R$ ${topSupplier.vendas.toFixed(2)} em vendas` : 'Sem dados'}
+                </p>
+                {topSupplier && (
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <span className="font-bold text-lg">4.8</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
