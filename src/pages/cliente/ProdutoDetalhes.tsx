@@ -38,22 +38,36 @@ const ProdutoDetalhes = () => {
   // Buscar perfil do fornecedor e estoque atual
   useEffect(() => {
     const fetchSupplierData = async () => {
-      if (!product?.supplierProfileId) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, nome, foto_perfil_url, banner_loja_url, descricao_loja')
-        .eq('id', product.supplierProfileId)
-        .single();
-
-      if (profile) {
-        setSupplierProfile(profile);
+      if (!product?.supplierProfileId) {
+        console.log('No supplierProfileId found for product:', product);
+        return;
       }
 
-      // Buscar estoque atual do produto
-      const supabaseProduct = supabaseProducts.find(p => p.id === product.supplierUuid);
-      if (supabaseProduct) {
-        setCurrentStock(supabaseProduct.estoque);
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('id, nome, foto_perfil_url, banner_loja_url, descricao_loja')
+          .eq('id', product.supplierProfileId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching supplier profile:', error);
+          return;
+        }
+
+        if (profile) {
+          setSupplierProfile(profile);
+        }
+
+        // Buscar estoque atual do produto
+        if (product.supplierUuid) {
+          const supabaseProduct = supabaseProducts.find(p => p.id === product.supplierUuid);
+          if (supabaseProduct) {
+            setCurrentStock(supabaseProduct.estoque);
+          }
+        }
+      } catch (error) {
+        console.error('Error in fetchSupplierData:', error);
       }
     };
 
@@ -124,9 +138,12 @@ const ProdutoDetalhes = () => {
         </div>
 
         {/* Store Info */}
-        {supplierProfile && (
+        {supplierProfile && product.supplierProfileId && (
           <Card
-            onClick={() => navigate(`/cliente/loja/${product.supplierProfileId}`)}
+            onClick={() => {
+              console.log('Navigating to store:', product.supplierProfileId);
+              navigate(`/cliente/loja/${product.supplierProfileId}`);
+            }}
             className="bg-white border shadow-sm p-4 mb-6 cursor-pointer hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-3">
@@ -151,6 +168,7 @@ const ProdutoDetalhes = () => {
                 className="text-primary"
                 onClick={(e) => {
                   e.stopPropagation();
+                  console.log('Button clicked, navigating to:', product.supplierProfileId);
                   navigate(`/cliente/loja/${product.supplierProfileId}`);
                 }}
               >
@@ -274,7 +292,14 @@ const ProdutoDetalhes = () => {
               variant="outline" 
               className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2"
               disabled={currentStock === 0}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Add to cart clicked');
+                console.log('Current stock:', currentStock);
+                console.log('Product:', product);
+                console.log('Supplier profile:', supplierProfile);
+                
                 if (currentStock === 0) {
                   toast({
                     title: 'Produto sem estoque',
@@ -283,18 +308,29 @@ const ProdutoDetalhes = () => {
                   });
                   return;
                 }
-                if (supplierProfile && product.supplierProfileId) {
-                  const success = addToCart({
-                    productId: product.id,
-                    name: product.name,
-                    price: parseFloat(product.price.replace('R$', '').replace(',', '.')),
-                    image: product.images[0],
-                    storeId: product.id,
-                    storeName: supplierProfile.nome
-                  }, 1);
-                  if (success) {
-                    navigate('/cliente/carrinho');
-                  }
+                
+                if (!product.supplierProfileId) {
+                  toast({
+                    title: 'Erro',
+                    description: 'Informações do fornecedor não encontradas.',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+
+                console.log('Adding to cart...');
+                const success = addToCart({
+                  productId: product.id,
+                  name: product.name,
+                  price: product.priceNumber,
+                  image: product.images[0],
+                  storeId: product.id,
+                  storeName: supplierProfile?.nome || 'Loja'
+                }, 1);
+                
+                console.log('Add to cart success:', success);
+                if (success) {
+                  navigate('/cliente/carrinho');
                 }
               }}
             >
@@ -304,7 +340,13 @@ const ProdutoDetalhes = () => {
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90 text-white"
               disabled={currentStock === 0}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Buy now clicked');
+                console.log('Current stock:', currentStock);
+                console.log('Product:', product);
+                
                 if (currentStock === 0) {
                   toast({
                     title: 'Produto sem estoque',
@@ -313,17 +355,27 @@ const ProdutoDetalhes = () => {
                   });
                   return;
                 }
-                if (supplierProfile && product.supplierProfileId) {
-                  addToCart({
-                    productId: product.id,
-                    name: product.name,
-                    price: parseFloat(product.price.replace('R$', '').replace(',', '.')),
-                    image: product.images[0],
-                    storeId: product.id,
-                    storeName: supplierProfile.nome
-                  }, 1);
-                  navigate('/cliente/checkout');
+                
+                if (!product.supplierProfileId) {
+                  toast({
+                    title: 'Erro',
+                    description: 'Informações do fornecedor não encontradas.',
+                    variant: 'destructive',
+                  });
+                  return;
                 }
+
+                console.log('Adding to cart and going to checkout...');
+                addToCart({
+                  productId: product.id,
+                  name: product.name,
+                  price: product.priceNumber,
+                  image: product.images[0],
+                  storeId: product.id,
+                  storeName: supplierProfile?.nome || 'Loja'
+                }, 1);
+                
+                navigate('/cliente/checkout');
               }}
             >
               Comprar Agora
