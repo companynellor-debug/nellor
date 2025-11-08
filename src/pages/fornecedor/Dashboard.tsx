@@ -51,7 +51,8 @@ const Dashboard = () => {
     .filter(o => o.payment_status === 'paid')
     .reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
 
-  const ticketMedio = analytics?.ticket_medio || (totalOrders > 0 ? totalRevenue / totalOrders : 0);
+  const paidOrders = orders.filter(o => o.payment_status === 'paid');
+  const ticketMedio = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
 
   // Dados de vendas ao longo do tempo (últimos 6 meses)
   const salesData = (() => {
@@ -100,7 +101,6 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 30)}% vs mês anterior</p>
           </CardContent>
         </Card>
 
@@ -114,7 +114,6 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totalOrders - deliveredOrders}</div>
-            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 20)}% vs mês anterior</p>
           </CardContent>
         </Card>
 
@@ -128,7 +127,6 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{pendingOrders}</div>
-            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 25)}% vs mês anterior</p>
           </CardContent>
         </Card>
 
@@ -142,7 +140,6 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{deliveredOrders}</div>
-            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 35)}% vs mês anterior</p>
           </CardContent>
         </Card>
 
@@ -156,7 +153,6 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totalOrders}</div>
-            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 15)}% vs mês anterior</p>
           </CardContent>
         </Card>
 
@@ -170,7 +166,6 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">R$ {ticketMedio.toFixed(2)}</div>
-            <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 18)}% vs mês anterior</p>
           </CardContent>
         </Card>
 

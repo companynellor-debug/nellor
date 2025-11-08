@@ -7,51 +7,51 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowLeft, Package, Truck, CheckCircle, Clock, XCircle, AlertCircle, MessageSquare, Star, Download, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useOrders, OrderStatus } from "@/hooks/useOrders";
+import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useReviews } from "@/hooks/useReviews";
 import { useState } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const MeusPedidos = () => {
   const navigate = useNavigate();
-  const { orders } = useOrders();
+  const { orders } = useSupabaseOrders();
   const { hasReviewedOrder } = useReviews();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [trackingDialog, setTrackingDialog] = useState(false);
 
   // Separar pedidos ativos e histórico
-  const activeOrders = orders.filter(o => !['entregue', 'recusado'].includes(o.status));
-  const historyOrders = orders.filter(o => ['entregue', 'recusado'].includes(o.status));
+  const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.order_status));
+  const historyOrders = orders.filter(o => ['delivered', 'cancelled'].includes(o.order_status));
 
-  const getStatusInfo = (status: OrderStatus) => {
+  const getStatusInfo = (status: string) => {
     switch (status) {
-      case "entregue":
+      case "delivered":
         return { label: "Entregue", variant: "default" as const, icon: CheckCircle, color: "bg-green-100 text-green-700" };
-      case "enviado":
+      case "shipped":
         return { label: "Enviado", variant: "secondary" as const, icon: Truck, color: "bg-blue-100 text-blue-700" };
-      case "preparando":
+      case "preparing":
         return { label: "Preparando", variant: "secondary" as const, icon: Package, color: "bg-purple-100 text-purple-700" };
-      case "aguardando_confirmacao":
-        return { label: "Aguardando Confirmação", variant: "outline" as const, icon: Clock, color: "bg-yellow-100 text-yellow-700" };
-      case "pendente_pagamento":
-        return { label: "Pendente Pagamento", variant: "outline" as const, icon: AlertCircle, color: "bg-orange-100 text-orange-700" };
-      case "recusado":
-        return { label: "Recusado", variant: "destructive" as const, icon: XCircle, color: "bg-red-100 text-red-700" };
+      case "pending":
+        return { label: "Pendente", variant: "outline" as const, icon: Clock, color: "bg-yellow-100 text-yellow-700" };
+      case "cancelled":
+        return { label: "Cancelado", variant: "destructive" as const, icon: XCircle, color: "bg-red-100 text-red-700" };
       default:
         return { label: "Pendente", variant: "outline" as const, icon: Package, color: "bg-gray-100 text-gray-700" };
     }
   };
 
   const renderOrderCard = (order: any) => {
-    const statusInfo = getStatusInfo(order.status);
+    const statusInfo = getStatusInfo(order.order_status);
     const StatusIcon = statusInfo.icon;
+    const items = Array.isArray(order.itens) ? order.itens : [];
     
     return (
       <Card key={order.id} className="bg-white border shadow-sm p-4 hover:shadow-md transition-all">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-bold text-lg">Pedido #{order.id}</h3>
-                    <p className="text-sm text-muted-foreground">{order.date}</p>
-                    <p className="text-sm font-medium text-primary mt-1">{order.storeName}</p>
+                    <h3 className="font-bold text-lg">Pedido #{order.order_number}</h3>
+                    <p className="text-sm text-muted-foreground">{format(new Date(order.created_at), 'dd/MM/yyyy', { locale: ptBR })}</p>
                   </div>
                   <Badge variant={statusInfo.variant} className={`gap-1 ${statusInfo.color}`}>
                     <StatusIcon className="h-3 w-3" />
@@ -60,10 +60,10 @@ const MeusPedidos = () => {
                 </div>
 
                 <div className="space-y-2 mb-3">
-                  {order.items.map((item, idx) => (
+                  {items.map((item: any, idx: number) => (
                     <div key={idx} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">• {item.name} (x{item.quantity})</span>
-                      <span className="font-medium">R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                      <span className="font-medium">R$ {(Number(item.price) * Number(item.quantity)).toFixed(2).replace('.', ',')}</span>
                     </div>
                   ))}
                 </div>
@@ -72,16 +72,16 @@ const MeusPedidos = () => {
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {order.items.reduce((sum, item) => sum + item.quantity, 0)} {order.items.reduce((sum, item) => sum + item.quantity, 0) === 1 ? 'item' : 'itens'}
+                      {items.reduce((sum: number, item: any) => sum + Number(item.quantity), 0)} {items.reduce((sum: number, item: any) => sum + Number(item.quantity), 0) === 1 ? 'item' : 'itens'}
                     </span>
                   </div>
                   <p className="font-bold text-lg text-primary">
-                    R$ {order.total.toFixed(2).replace('.', ',')}
+                    R$ {Number(order.total).toFixed(2).replace('.', ',')}
                   </p>
                 </div>
 
         <div className="flex gap-2 flex-wrap">
-          {order.trackingCode && (
+          {order.tracking_code && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -99,12 +99,12 @@ const MeusPedidos = () => {
             variant="outline" 
             size="sm" 
             className="flex-1 gap-1"
-            onClick={() => navigate('/cliente/chat', { state: { storeId: order.storeId } })}
+            onClick={() => navigate('/cliente/chat', { state: { storeId: order.supplier_id } })}
           >
             <MessageSquare className="h-4 w-4" />
             Chat
           </Button>
-          {order.canReview && !hasReviewedOrder(order.id) && (
+          {order.order_status === 'delivered' && !hasReviewedOrder(order.id) && (
             <Button 
               size="sm" 
               className="flex-1 gap-1 bg-primary hover:bg-primary/90 text-white"
@@ -114,7 +114,7 @@ const MeusPedidos = () => {
               Avaliar
             </Button>
           )}
-          {['entregue', 'recusado'].includes(order.status) && (
+          {['delivered', 'cancelled'].includes(order.order_status) && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -179,18 +179,18 @@ const MeusPedidos = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Rastreamento do Pedido</DialogTitle>
-            <DialogDescription>Pedido #{selectedOrder?.id}</DialogDescription>
+            <DialogDescription>Pedido #{selectedOrder?.order_number}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground mb-1">Código de Rastreio</p>
-              <p className="font-mono font-bold text-lg">{selectedOrder?.trackingCode}</p>
+              <p className="font-mono font-bold text-lg">{selectedOrder?.tracking_code}</p>
             </div>
             <div className="space-y-2">
-              <p className="font-semibold">Status: {getStatusInfo(selectedOrder?.status).label}</p>
+              <p className="font-semibold">Status: {getStatusInfo(selectedOrder?.order_status).label}</p>
               <Button 
                 className="w-full gap-2" 
-                onClick={() => window.open(`https://rastreamento.correios.com.br/app/index.php?codigo=${selectedOrder?.trackingCode}`, '_blank')}
+                onClick={() => window.open(`https://rastreamento.correios.com.br/app/index.php?codigo=${selectedOrder?.tracking_code}`, '_blank')}
               >
                 <ExternalLink className="h-4 w-4" />
                 Rastrear nos Correios
@@ -205,14 +205,13 @@ const MeusPedidos = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Comprovante de Compra</DialogTitle>
-            <DialogDescription>Pedido #{selectedOrder?.id}</DialogDescription>
+            <DialogDescription>Pedido #{selectedOrder?.order_number}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="border-2 border-dashed border-muted p-6 rounded-lg text-center space-y-2">
               <Package className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="font-bold">{selectedOrder?.storeName}</p>
-              <p className="text-sm text-muted-foreground">Data: {selectedOrder?.date}</p>
-              <p className="text-lg font-bold text-primary">R$ {selectedOrder?.total.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">Data: {selectedOrder?.created_at && format(new Date(selectedOrder.created_at), 'dd/MM/yyyy', { locale: ptBR })}</p>
+              <p className="text-lg font-bold text-primary">R$ {selectedOrder?.total && Number(selectedOrder.total).toFixed(2)}</p>
             </div>
             <Button className="w-full" onClick={() => window.print()}>
               <Download className="h-4 w-4 mr-2" />
