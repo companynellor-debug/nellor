@@ -13,7 +13,6 @@ export const BottomNav = () => {
     { icon: Home, label: "Home", path: "/cliente" },
     { icon: MessageCircle, label: "Chat", path: "/cliente/chat" },
     { icon: ShoppingCart, label: "Carrinho", path: "/cliente/carrinho", badge: totalItems },
-    { icon: Bell, label: "Alertas", path: "/cliente/notificacoes", badge: unreadCount },
     { icon: User, label: "Perfil", path: "/cliente/perfil" },
   ];
 
