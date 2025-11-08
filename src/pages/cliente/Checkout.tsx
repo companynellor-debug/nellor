@@ -9,19 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, QrCode, Copy, MessageSquare, MapPin, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
-import { useOrders } from "@/hooks/useOrders";
+import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { toast } from "sonner";
-import { useStores } from "@/hooks/useStores";
-import { useAddresses } from "@/hooks/useAddresses";
-import { usePaymentMethods } from "@/hooks/usePaymentMethods";
+import { useSupabaseStores } from "@/hooks/useSupabaseStores";
+import { useSupabaseAddresses } from "@/hooks/useSupabaseAddresses";
+import { useSupabasePaymentMethods } from "@/hooks/useSupabasePaymentMethods";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, clearCart, getTotal, getStoreId } = useCart();
-  const { createOrder } = useOrders();
-  const { stores } = useStores();
-  const { getDefaultAddress } = useAddresses();
-  const { getDefaultPaymentMethod } = usePaymentMethods();
+  const { createOrder } = useSupabaseOrders();
+  const { stores } = useSupabaseStores();
+  const { addresses } = useSupabaseAddresses();
+  const { paymentMethods, getDefaultPaymentMethod } = useSupabasePaymentMethods();
   
   const [step, setStep] = useState<'address' | 'payment'>('address');
   const [orderId, setOrderId] = useState<string>("");
@@ -44,7 +44,7 @@ const Checkout = () => {
 
   // Preencher automaticamente com endereço padrão
   useEffect(() => {
-    const defaultAddress = getDefaultAddress();
+    const defaultAddress = addresses.find(addr => addr.is_default);
     if (defaultAddress) {
       setFormData({
         name: defaultAddress.name,
@@ -55,10 +55,10 @@ const Checkout = () => {
         neighborhood: defaultAddress.neighborhood,
         city: defaultAddress.city,
         state: defaultAddress.state,
-        zipCode: defaultAddress.zipCode
+        zipCode: defaultAddress.zip_code
       });
     }
-  }, []);
+  }, [addresses]);
 
   if (cartItems.length === 0) {
     return (
@@ -86,7 +86,7 @@ const Checkout = () => {
   }
 
   const storeId = getStoreId();
-  const store = stores.find(s => s.id === storeId);
+  const store = stores.find(s => s.id === String(storeId));
   const total = getTotal();
   const shipping = 15.00;
   const discount = (total * appliedDiscount) / 100;
@@ -130,39 +130,61 @@ const Checkout = () => {
       return;
     }
 
-    const order = createOrder({
-      total: finalTotal,
-      status: 'pendente_pagamento',
-      items: cartItems.map(item => ({
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image
-      })),
-      storeId: storeId!,
-      storeName: store?.name || "",
-      shippingAddress: formData
-    });
-
-    setOrderId(order.id);
+    // Salvar temporariamente e ir para pagamento
     setStep('payment');
   };
 
   const defaultPayment = getDefaultPaymentMethod();
-  const pixKey = defaultPayment?.type === 'pix' ? defaultPayment.pixKey : "pix@nellor.com.br";
+  const pixKey = defaultPayment?.type === 'pix' ? defaultPayment.pix_key : "pix@nellor.com.br";
 
   const copyPixKey = () => {
     navigator.clipboard.writeText(pixKey || "");
     toast.success("Chave Pix copiada para a área de transferência");
   };
 
-  const handleSendProof = () => {
-    toast.success("Pedido confirmado!");
-    
-    navigate('/cliente/pedido-confirmado', { 
-      state: { orderId }
-    });
+  const handleSendProof = async () => {
+    if (!storeId) {
+      toast.error("Erro: Loja não identificada");
+      return;
+    }
+
+    try {
+      const orderData = {
+        supplier_id: String(storeId),
+        itens: cartItems.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image
+        })),
+        subtotal: total,
+        frete: shipping,
+        desconto: discount,
+        total: finalTotal,
+        endereco_entrega: formData,
+        payment_method: selectedPaymentMethod === 'pix' ? 'pix' as const : 'cartao' as const,
+        payment_status: 'pending' as const,
+        order_status: 'pending' as const,
+        tracking_code: null,
+        proof_url: null,
+        shipping_company: null,
+        estimated_delivery: null
+      };
+
+      const order = await createOrder(orderData);
+      
+      if (order) {
+        clearCart();
+        toast.success("Pedido criado com sucesso! Aguardando confirmação de pagamento.");
+        navigate('/cliente', { 
+          replace: true
+        });
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error("Erro ao criar pedido. Tente novamente.");
+    }
   };
 
   return (
@@ -186,7 +208,7 @@ const Checkout = () => {
       <main className="container mx-auto px-4 py-6 relative z-10 max-w-2xl">
         {step === 'address' ? (
           <form onSubmit={handleSubmitAddress} className="space-y-4">
-            {getDefaultAddress() && (
+            {addresses.find(addr => addr.is_default) && (
               <Card className="bg-green-50 border-green-200 p-4">
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-green-600 mt-0.5" />
@@ -370,9 +392,6 @@ const Checkout = () => {
             <Card className="bg-white border shadow-sm p-6">
               <div className="text-center mb-6">
                 <h3 className="font-bold text-xl mb-2">Escolha a Forma de Pagamento</h3>
-                <p className="text-sm text-muted-foreground">
-                  Pedido #{orderId}
-                </p>
                 <p className="text-2xl font-bold text-primary mt-2">
                   R$ {finalTotal.toFixed(2).replace('.', ',')}
                 </p>
@@ -465,7 +484,7 @@ const Checkout = () => {
                       <div className="flex items-center gap-2 text-green-800">
                         <CreditCard className="h-4 w-4" />
                         <p className="text-sm font-medium">
-                          Usando seu cartão padrão •••• {defaultPayment.cardNumber?.slice(-4)}
+                          Usando seu cartão padrão •••• {defaultPayment.card_number_last4}
                         </p>
                       </div>
                     </div>
@@ -477,7 +496,7 @@ const Checkout = () => {
                       <Input
                         id="cardNumber"
                         placeholder="0000 0000 0000 0000"
-                        defaultValue={defaultPayment?.type === 'card' ? defaultPayment.cardNumber : ''}
+                        defaultValue={defaultPayment?.type === 'card' ? `**** **** **** ${defaultPayment.card_number_last4}` : ''}
                         maxLength={19}
                       />
                     </div>
@@ -486,7 +505,7 @@ const Checkout = () => {
                       <Input
                         id="cardHolder"
                         placeholder="Nome como está no cartão"
-                        defaultValue={defaultPayment?.type === 'card' ? defaultPayment.cardHolder : ''}
+                        defaultValue={defaultPayment?.type === 'card' ? defaultPayment.card_holder : ''}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -495,7 +514,7 @@ const Checkout = () => {
                         <Input
                           id="cardExpiry"
                           placeholder="MM/AA"
-                          defaultValue={defaultPayment?.type === 'card' ? defaultPayment.cardExpiry : ''}
+                          defaultValue={defaultPayment?.type === 'card' ? defaultPayment.card_expiry : ''}
                           maxLength={5}
                         />
                       </div>
@@ -554,10 +573,9 @@ const Checkout = () => {
             </Card>
 
             <Button 
-              className="w-full bg-primary hover:bg-primary/90 py-6 text-lg gap-2"
+              className="w-full bg-primary hover:bg-primary/90 py-6 text-lg"
               onClick={handleSendProof}
             >
-              <MessageSquare className="h-5 w-5" />
               Finalizar Pedido
             </Button>
 
@@ -568,7 +586,7 @@ const Checkout = () => {
                 navigate('/cliente/chat', { 
                   state: { 
                     storeId,
-                    message: `Olá! Tenho uma dúvida sobre o pedido #${orderId}.`
+                    message: `Olá! Tenho uma dúvida sobre este pedido.`
                   } 
                 });
               }}
