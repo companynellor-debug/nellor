@@ -6,27 +6,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Camera, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useProfile } from "@/hooks/useProfile";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 
 const EditarPerfil = () => {
   const navigate = useNavigate();
-  const { profile, updateProfile } = useProfile();
+  const { profile, updateProfile } = useSupabaseAuth();
   const [formData, setFormData] = useState({
-    name: profile.name,
-    email: profile.email,
-    photo: profile.photo || ''
+    nome: profile?.nome || '',
+    email: profile?.email || '',
+    foto_perfil_url: profile?.foto_perfil_url || ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile(formData);
-    toast({
-      title: "Perfil atualizado",
-      description: "Suas informações foram salvas com sucesso!",
-    });
-    navigate("/cliente/perfil");
+    try {
+      await updateProfile(formData);
+      navigate("/cliente/perfil");
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +34,7 @@ const EditarPerfil = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, photo: reader.result as string });
+        setFormData({ ...formData, foto_perfil_url: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
@@ -59,8 +59,8 @@ const EditarPerfil = () => {
             {/* Foto de Perfil */}
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
-                {formData.photo ? (
-                  <img src={formData.photo} alt="Perfil" className="w-24 h-24 rounded-full object-cover" />
+                {formData.foto_perfil_url ? (
+                  <img src={formData.foto_perfil_url} alt="Perfil" className="w-24 h-24 rounded-full object-cover" />
                 ) : (
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                     <User className="h-12 w-12 text-white" />
@@ -85,8 +85,8 @@ const EditarPerfil = () => {
               <Label htmlFor="name">Nome completo</Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 placeholder="Digite seu nome"
                 required
               />

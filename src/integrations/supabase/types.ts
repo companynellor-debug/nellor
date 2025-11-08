@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      addresses: {
+        Row: {
+          city: string
+          complement: string | null
+          created_at: string | null
+          document: string
+          id: string
+          is_default: boolean | null
+          label: string
+          name: string
+          neighborhood: string
+          number: string
+          state: string
+          street: string
+          updated_at: string | null
+          user_id: string
+          zip_code: string
+        }
+        Insert: {
+          city: string
+          complement?: string | null
+          created_at?: string | null
+          document: string
+          id?: string
+          is_default?: boolean | null
+          label: string
+          name: string
+          neighborhood: string
+          number: string
+          state: string
+          street: string
+          updated_at?: string | null
+          user_id: string
+          zip_code: string
+        }
+        Update: {
+          city?: string
+          complement?: string | null
+          created_at?: string | null
+          document?: string
+          id?: string
+          is_default?: boolean | null
+          label?: string
+          name?: string
+          neighborhood?: string
+          number?: string
+          state?: string
+          street?: string
+          updated_at?: string | null
+          user_id?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
       analytics: {
         Row: {
           created_at: string | null
@@ -325,6 +379,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_methods: {
+        Row: {
+          card_brand: string | null
+          card_expiry: string | null
+          card_holder: string | null
+          card_number_last4: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          pix_key: string | null
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          card_brand?: string | null
+          card_expiry?: string | null
+          card_holder?: string | null
+          card_number_last4?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          pix_key?: string | null
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          card_brand?: string | null
+          card_expiry?: string | null
+          card_holder?: string | null
+          card_number_last4?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          pix_key?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       payouts: {
         Row: {

@@ -9,11 +9,11 @@ import { ArrowLeft, CreditCard, Plus, Trash2, QrCode, Star } from "lucide-react"
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
-import { usePaymentMethods } from "@/hooks/usePaymentMethods";
+import { useSupabasePaymentMethods } from "@/hooks/useSupabasePaymentMethods";
 
 const MetodosPagamento = () => {
   const navigate = useNavigate();
-  const { paymentMethods, addPaymentMethod, deletePaymentMethod, setDefaultPaymentMethod } = usePaymentMethods();
+  const { paymentMethods, addPaymentMethod, deletePaymentMethod, setDefaultPaymentMethod } = useSupabasePaymentMethods();
   
   const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
@@ -25,49 +25,55 @@ const MetodosPagamento = () => {
     cardCVV: ""
   });
 
-  const handleSavePixKey = () => {
+  const handleSavePixKey = async () => {
     if (!newPixKey.trim()) {
       toast.error("Digite uma chave Pix válida");
       return;
     }
 
-    addPaymentMethod({
-      type: 'pix',
-      pixKey: newPixKey,
-      isDefault: paymentMethods.length === 0
-    });
+    try {
+      await addPaymentMethod({
+        type: 'pix',
+        pix_key: newPixKey,
+        is_default: paymentMethods.length === 0
+      });
 
-    setNewPixKey("");
-    setPixDialogOpen(false);
-    toast.success("Chave Pix adicionada!");
+      setNewPixKey("");
+      setPixDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding PIX key:', error);
+    }
   };
 
-  const handleSaveCard = () => {
+  const handleSaveCard = async () => {
     if (!cardForm.cardNumber || !cardForm.cardHolder || !cardForm.cardExpiry) {
       toast.error("Preencha todos os campos do cartão");
       return;
     }
 
     const brand = getCardBrand(cardForm.cardNumber);
-    const lastDigits = cardForm.cardNumber.slice(-4);
+    const lastDigits = cardForm.cardNumber.replace(/\s/g, '').slice(-4);
 
-    addPaymentMethod({
-      type: 'card',
-      cardNumber: lastDigits,
-      cardHolder: cardForm.cardHolder.toUpperCase(),
-      cardBrand: brand,
-      cardExpiry: cardForm.cardExpiry,
-      isDefault: paymentMethods.length === 0
-    });
+    try {
+      await addPaymentMethod({
+        type: 'card',
+        card_number_last4: lastDigits,
+        card_holder: cardForm.cardHolder.toUpperCase(),
+        card_brand: brand,
+        card_expiry: cardForm.cardExpiry,
+        is_default: paymentMethods.length === 0
+      });
 
-    setCardForm({
-      cardNumber: "",
-      cardHolder: "",
-      cardExpiry: "",
-      cardCVV: ""
-    });
-    setCardDialogOpen(false);
-    toast.success("Cartão adicionado!");
+      setCardForm({
+        cardNumber: "",
+        cardHolder: "",
+        cardExpiry: "",
+        cardCVV: ""
+      });
+      setCardDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding card:', error);
+    }
   };
 
   const handleDeleteMethod = (id: string) => {
@@ -140,15 +146,15 @@ const MetodosPagamento = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-medium">Chave Pix</p>
-                          {method.isDefault && (
+                          {method.is_default && (
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">{method.pixKey}</p>
+                        <p className="text-sm text-muted-foreground">{method.pix_key}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!method.isDefault && (
+                      {!method.is_default && (
                         <Button 
                           size="sm" 
                           variant="ghost"
@@ -197,16 +203,16 @@ const MetodosPagamento = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium">{method.cardBrand} •••• {method.cardNumber}</p>
-                          {method.isDefault && (
+                          <p className="font-medium">{method.card_brand} •••• {method.card_number_last4}</p>
+                          {method.is_default && (
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">{method.cardHolder}</p>
+                        <p className="text-sm text-muted-foreground">{method.card_holder}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!method.isDefault && (
+                      {!method.is_default && (
                         <Button 
                           size="sm" 
                           variant="ghost"

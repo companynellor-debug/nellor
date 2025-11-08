@@ -1,12 +1,25 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/logo.png";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoClickCount, setLogoClickCount] = useState(0);
+  const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
   
   const navItems = [
     { name: "Início", path: "/" },
@@ -19,14 +32,38 @@ const Header = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const handleLogoClick = () => {
+    setLogoClickCount(prev => {
+      const newCount = prev + 1;
+      if (newCount === 5) {
+        setShowAdminDialog(true);
+        return 0;
+      }
+      return newCount;
+    });
+    
+    // Reset counter after 2 seconds
+    setTimeout(() => setLogoClickCount(0), 2000);
+  };
+
+  const handleAdminAccess = () => {
+    if (adminPassword === "admin123") {
+      setShowAdminDialog(false);
+      setAdminPassword("");
+      navigate("/admin/dashboard");
+    } else {
+      alert("Senha incorreta!");
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <div onClick={handleLogoClick} className="flex items-center cursor-pointer">
             <img src={logo} alt="Nellor" className="h-12 sm:h-14 w-auto" />
-          </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -102,6 +139,34 @@ const Header = () => {
           </nav>
         </div>
       )}
+
+      {/* Admin Access Dialog */}
+      <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Acesso Admin</DialogTitle>
+            <DialogDescription>
+              Digite a senha de administrador para acessar o painel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Senha</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAdminAccess()}
+                placeholder="Digite a senha"
+              />
+            </div>
+            <Button onClick={handleAdminAccess} className="w-full">
+              Acessar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 };

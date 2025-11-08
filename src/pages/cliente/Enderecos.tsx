@@ -9,13 +9,13 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { useAddresses, Address } from "@/hooks/useAddresses";
+import { useSupabaseAddresses } from "@/hooks/useSupabaseAddresses";
 
 const Enderecos = () => {
   const navigate = useNavigate();
-  const { addresses, addAddress, deleteAddress, setDefaultAddress } = useAddresses();
+  const { addresses, addAddress, deleteAddress, setDefaultAddress } = useSupabaseAddresses();
   const [showDialog, setShowDialog] = useState(false);
-  const [formData, setFormData] = useState<Partial<Address>>({
+  const [formData, setFormData] = useState({
     label: 'Casa',
     name: '',
     document: '',
@@ -25,45 +25,46 @@ const Enderecos = () => {
     neighborhood: '',
     city: '',
     state: '',
-    zipCode: '',
-    isDefault: false
+    zip_code: '',
   });
 
-  const handleAddAddress = () => {
-    if (!formData.name || !formData.document || !formData.street || !formData.number || !formData.neighborhood || !formData.city || !formData.state || !formData.zipCode) {
+  const handleAddAddress = async () => {
+    if (!formData.name || !formData.document || !formData.street || !formData.number || !formData.neighborhood || !formData.city || !formData.state || !formData.zip_code) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
-    addAddress({
-      label: formData.label || 'Casa',
-      name: formData.name!,
-      document: formData.document!,
-      street: formData.street!,
-      number: formData.number!,
-      complement: formData.complement,
-      neighborhood: formData.neighborhood!,
-      city: formData.city!,
-      state: formData.state!,
-      zipCode: formData.zipCode!,
-      isDefault: formData.isDefault || addresses.length === 0
-    });
+    try {
+      await addAddress({
+        label: formData.label || 'Casa',
+        name: formData.name!,
+        document: formData.document!,
+        street: formData.street!,
+        number: formData.number!,
+        complement: formData.complement,
+        neighborhood: formData.neighborhood!,
+        city: formData.city!,
+        state: formData.state!,
+        zip_code: formData.zip_code!,
+        is_default: addresses.length === 0
+      });
 
-    setShowDialog(false);
-    setFormData({
-      label: 'Casa',
-      name: '',
-      document: '',
-      street: '',
-      number: '',
-      complement: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      isDefault: false
-    });
-    toast.success("Endereço adicionado com sucesso!");
+      setShowDialog(false);
+      setFormData({
+        label: 'Casa',
+        name: '',
+        document: '',
+        street: '',
+        number: '',
+        complement: '',
+        neighborhood: '',
+        city: '',
+        state: '',
+        zip_code: '',
+      });
+    } catch (error) {
+      console.error('Error adding address:', error);
+    }
   };
 
   const handleDeleteAddress = (id: string) => {
@@ -117,7 +118,7 @@ const Enderecos = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold">{address.label}</h3>
-                        {address.isDefault && (
+                        {address.is_default && (
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                         )}
                       </div>
@@ -125,7 +126,7 @@ const Enderecos = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!address.isDefault && (
+                    {!address.is_default && (
                       <Button 
                         size="sm" 
                         variant="ghost"
@@ -148,7 +149,7 @@ const Enderecos = () => {
                   {address.complement && <p>{address.complement}</p>}
                   <p>{address.neighborhood}</p>
                   <p>{address.city} - {address.state}</p>
-                  <p>CEP: {address.zipCode}</p>
+                  <p>CEP: {address.zip_code}</p>
                 </div>
               </Card>
             );
@@ -277,8 +278,8 @@ const Enderecos = () => {
               <Label htmlFor="zipCode">CEP*</Label>
               <Input
                 id="zipCode"
-                value={formData.zipCode}
-                onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                value={formData.zip_code}
+                onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
                 placeholder="00000-000"
               />
             </div>
