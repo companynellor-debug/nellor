@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SupabaseAuthProvider } from "@/hooks/useSupabaseAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -21,8 +22,7 @@ import Home from "./pages/Home";
 import Fornecedor from "./pages/Fornecedor";
 import Sobre from "./pages/Sobre";
 import Contato from "./pages/Contato";
-import Login from "./pages/Login";
-import LoginFornecedor from "./pages/LoginFornecedor";
+import Auth from "./pages/Auth";
 import EscolherPlano from "./pages/fornecedor/EscolherPlano";
 import Download from "./pages/Download";
 import Recursos from "./pages/Recursos";
@@ -67,17 +67,17 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/sobre" element={<Sobre />} />
-          <Route path="/contato" element={<Contato />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/login-fornecedor" element={<LoginFornecedor />} />
-          <Route path="/fornecedor/escolher-plano" element={<EscolherPlano />} />
-          <Route path="/fornecedor/onboarding" element={<ProtectedRoute requireType="fornecedor"><Onboarding /></ProtectedRoute>} />
-          <Route path="/download" element={<Download />} />
-          <Route path="/recursos" element={<Recursos />} />
-          <Route path="/faq" element={<FAQ />} />
+        <SupabaseAuthProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/sobre" element={<Sobre />} />
+            <Route path="/contato" element={<Contato />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/fornecedor/escolher-plano" element={<EscolherPlano />} />
+            <Route path="/fornecedor/onboarding" element={<ProtectedRoute requireType="fornecedor"><Onboarding /></ProtectedRoute>} />
+            <Route path="/download" element={<Download />} />
+            <Route path="/recursos" element={<Recursos />} />
+            <Route path="/faq" element={<FAQ />} />
           
           {/* Cliente Panel Routes */}
           <Route path="/cliente" element={<ProtectedRoute requireType="cliente"><ClienteHome /></ProtectedRoute>} />
@@ -129,9 +129,10 @@ const App = () => (
             <Route path="banners" element={<AdminBanners />} />
           </Route>
           
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </SupabaseAuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

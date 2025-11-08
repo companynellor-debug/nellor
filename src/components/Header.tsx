@@ -45,7 +45,7 @@ const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/login">
+            <Link to="/auth">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
                 Entrar
               </Button>
@@ -88,7 +88,7 @@ const Header = () => {
               </Link>
             ))}
             <div className="flex flex-col space-y-2 pt-4 border-t">
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="outline" className="w-full border-primary text-primary">
                   Entrar
                 </Button>
