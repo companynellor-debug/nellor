@@ -71,7 +71,7 @@ const Dashboard = () => {
   const startDate = getStartDate();
   const filteredOrders = orders.filter(o => new Date(o.created_at) >= startDate);
 
-  const pendingOrders = filteredOrders.filter(o => o.order_status === 'pending').length;
+  const pendingOrders = filteredOrders.filter(o => o.order_status === 'preparing').length;
   const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
   const totalOrders = filteredOrders.length;
   const totalRevenue = filteredOrders

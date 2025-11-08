@@ -4,10 +4,11 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, Star, Upload, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const AvaliarPedido = () => {
@@ -20,6 +21,8 @@ const AvaliarPedido = () => {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
 
   if (!order) {
     return (
@@ -33,6 +36,46 @@ const AvaliarPedido = () => {
       </div>
     );
   }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    setUploading(true);
+    const files = Array.from(e.target.files);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${user?.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrl);
+      }
+
+      setPhotos([...photos, ...uploadedUrls]);
+      toast.success("Arquivos enviados com sucesso!");
+    } catch (error: any) {
+      console.error('Error uploading files:', error);
+      toast.error("Erro ao enviar arquivos");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(photos.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -58,7 +101,8 @@ const AvaliarPedido = () => {
         product_id: firstProduct.product_id,
         order_id: order.id,
         rating,
-        comment: comment.trim()
+        comment: comment.trim(),
+        photos,
       });
 
       toast.success("Avaliação enviada com sucesso!");
@@ -142,11 +186,45 @@ const AvaliarPedido = () => {
             </p>
           </div>
 
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">
+              Fotos e Vídeos (opcional)
+            </label>
+            <div className="flex flex-wrap gap-3 mb-3">
+              {photos.map((photo, index) => (
+                <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border">
+                  <img src={photo} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => removePhoto(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:bg-muted/20 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                <Upload className="h-6 w-6 text-muted-foreground" />
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Adicione fotos ou vídeos do produto
+            </p>
+          </div>
+
           <Button
             onClick={handleSubmit}
             className="w-full bg-primary hover:bg-primary/90 text-white"
+            disabled={uploading}
           >
-            Enviar Avaliação
+            {uploading ? "Enviando..." : "Enviar Avaliação"}
           </Button>
         </Card>
       </main>

@@ -1,47 +1,11 @@
-import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Package, MessageSquare, XCircle, CheckCircle, Bell, DollarSign, Truck } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { Package, MessageSquare, Bell, DollarSign } from "lucide-react";
+import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface Notification {
-  id: string;
-  title: string;
-  body: string;
-  type: string;
-  created_at: string;
-  read: boolean;
-}
-
 const Notificacoes = () => {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchNotifications();
-    }
-  }, [user]);
-
-  const fetchNotifications = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setNotifications(data || []);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { notifications, loading } = useSupabaseNotifications();
 
   const getIcon = (type: string) => {
     switch(type) {

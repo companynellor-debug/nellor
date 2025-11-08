@@ -1,16 +1,18 @@
-import { Home, ShoppingCart, MessageSquare, User, Bell } from "lucide-react";
+import { Home, ShoppingCart, User, Bell } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
+import { useCart } from "@/hooks/useCart";
 
 export const BottomNav = () => {
   const location = useLocation();
   const { unreadCount } = useSupabaseNotifications();
+  const { cartItems } = useCart();
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const navItems = [
     { icon: Home, label: "Home", path: "/cliente" },
-    { icon: ShoppingCart, label: "Carrinho", path: "/cliente/carrinho" },
-    { icon: MessageSquare, label: "Chat", path: "/cliente/chat" },
-    { icon: Bell, label: "Notificações", path: "/cliente/notificacoes", badge: unreadCount },
+    { icon: ShoppingCart, label: "Carrinho", path: "/cliente/carrinho", badge: totalItems },
+    { icon: Bell, label: "Notif.", path: "/cliente/notificacoes", badge: unreadCount },
     { icon: User, label: "Perfil", path: "/cliente/perfil" },
   ];
 
