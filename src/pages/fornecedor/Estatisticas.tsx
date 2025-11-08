@@ -1,16 +1,16 @@
 import { Card } from "@/components/ui/card";
-import { useSupplierOrders } from "@/hooks/useSupplierOrders";
+import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { TrendingUp, Package, DollarSign, Star } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const Estatisticas = () => {
-  const { orders } = useSupplierOrders();
+  const { orders } = useSupabaseOrders();
   const { products } = useSupplierProducts();
 
-  const deliveredOrders = orders.filter(o => o.status === 'delivered');
-  const totalSales = deliveredOrders.reduce((sum, o) => sum + o.value, 0);
+  const deliveredOrders = orders.filter(o => o.order_status === 'delivered');
+  const totalSales = deliveredOrders.reduce((sum, o) => sum + Number(o.total), 0);
   const totalOrders = deliveredOrders.length;
   const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
 

@@ -3,32 +3,34 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DollarSign, TrendingUp, Eye } from "lucide-react";
-import { useSupplierOrders, SupplierOrder } from "@/hooks/useSupplierOrders";
+import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const Financeiro = () => {
-  const { orders } = useSupplierOrders();
-  const [selectedOrder, setSelectedOrder] = useState<SupplierOrder | null>(null);
+  const { orders } = useSupabaseOrders();
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const availableBalance = orders
-    .filter(o => o.status === 'delivered')
-    .reduce((sum, o) => sum + o.value, 0);
+    .filter(o => o.order_status === 'delivered')
+    .reduce((sum, o) => sum + Number(o.total), 0);
 
   const pendingBalance = orders
-    .filter(o => o.status !== 'delivered' && o.status !== 'cancelled')
-    .reduce((sum, o) => sum + o.value, 0);
+    .filter(o => o.order_status !== 'delivered' && o.order_status !== 'cancelled')
+    .reduce((sum, o) => sum + Number(o.total), 0);
 
   const monthTotal = orders
-    .filter(o => o.status !== 'cancelled')
-    .reduce((sum, o) => sum + o.value, 0);
+    .filter(o => o.order_status !== 'cancelled')
+    .reduce((sum, o) => sum + Number(o.total), 0);
 
   const handleWithdraw = () => {
     toast.success("Solicitação de saque enviada! Você receberá em até 2 dias úteis.");
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: Order['order_status']) => {
     const labels: { [key: string]: string } = {
-      awaiting_payment: 'Pendente',
+      pending: 'Pendente',
       preparing: 'Pendente',
       shipped: 'Pendente',
       delivered: 'Pago',
@@ -98,28 +100,28 @@ const Financeiro = () => {
             <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm sm:text-base mb-1">Pedido #{order.id}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">{order.date}</p>
+                  <p className="font-semibold text-sm sm:text-base mb-1">Pedido #{order.order_number}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                  order.status === 'delivered'
+                  order.order_status === 'delivered'
                     ? 'bg-green-100 text-green-800'
-                    : order.status === 'cancelled'
+                    : order.order_status === 'cancelled'
                     ? 'bg-red-100 text-red-800'
                     : 'bg-orange-100 text-orange-800'
                 }`}>
-                  {getStatusLabel(order.status)}
+                  {getStatusLabel(order.order_status)}
                 </span>
               </div>
               
               <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
                 <div>
                   <p className="text-muted-foreground">Cliente</p>
-                  <p className="font-medium">{order.customerName}</p>
+                  <p className="font-medium">{(order.endereco_entrega as any)?.name || 'Cliente'}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-muted-foreground">Valor</p>
-                  <p className="font-semibold text-base sm:text-lg text-primary">R$ {order.value.toFixed(2)}</p>
+                  <p className="font-semibold text-base sm:text-lg text-primary">R$ {Number(order.total).toFixed(2)}</p>
                 </div>
               </div>
               
@@ -143,7 +145,7 @@ const Financeiro = () => {
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Detalhes do Pedido {selectedOrder?.id}</DialogTitle>
+            <DialogTitle>Detalhes do Pedido #{selectedOrder?.order_number}</DialogTitle>
             <DialogDescription>
               Informações completas do pedido
             </DialogDescription>
@@ -151,40 +153,30 @@ const Financeiro = () => {
 
           {selectedOrder && (
             <div className="space-y-6">
-              {/* Informações do Pedido */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Cliente</p>
-                  <p className="font-medium">{selectedOrder.customerName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{selectedOrder.customerEmail}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Produto</p>
-                  <p className="font-medium">{selectedOrder.product}</p>
+                  <p className="font-medium">{(selectedOrder.endereco_entrega as any)?.name || 'Cliente'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Valor</p>
-                  <p className="font-medium text-lg">R$ {selectedOrder.value.toFixed(2)}</p>
+                  <p className="font-medium text-lg">R$ {Number(selectedOrder.total).toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Data</p>
-                  <p className="font-medium">{selectedOrder.date}</p>
+                  <p className="font-medium">{format(new Date(selectedOrder.created_at), "dd/MM/yyyy", { locale: ptBR })}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="font-medium">{getStatusLabel(selectedOrder.status)}</p>
+                  <p className="font-medium">{getStatusLabel(selectedOrder.order_status)}</p>
                 </div>
               </div>
 
-              {/* Comprovante */}
-              {selectedOrder.paymentProof && (
+              {selectedOrder.proof_url && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Comprovante de Pagamento</p>
                   <img 
-                    src={selectedOrder.paymentProof} 
+                    src={selectedOrder.proof_url} 
                     alt="Comprovante" 
                     className="max-w-full h-auto rounded-lg border"
                   />
