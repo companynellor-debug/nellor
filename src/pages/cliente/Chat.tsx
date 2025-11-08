@@ -7,20 +7,31 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useMessages, MessageAttachment } from "@/hooks/useMessages";
+import { MessageAttachment } from "@/hooks/useMessages";
+import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "@/hooks/use-toast";
+import { useStores } from "@/hooks/useStores";
 
 const Chat = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [selectedChat, setSelectedChat] = useState<number | null>(null);
+  const { user } = useSupabaseAuth();
+  const { stores } = useStores();
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const { sendMessage, getMessagesByStore, markAsRead } = useMessages();
+  const { 
+    sendMessage: sendSupabaseMessage, 
+    getConversations, 
+    getMessagesByUser, 
+    markAsRead,
+    getUnreadCount 
+  } = useSupabaseMessages();
 
   const handleDownloadImage = () => {
     if (!viewingImage) return;
@@ -38,69 +49,17 @@ const Chat = () => {
     });
   };
   
-  const [conversations, setConversations] = useState([
-    {
-      id: 1,
-      storeId: 1,
-      name: "Nike Store Oficial",
-      lastMessage: "Olá! Como posso ajudar você hoje?",
-      time: "10:30",
-      unread: 0,
-      avatar: "👟",
-    },
-    {
-      id: 2,
-      storeId: 2,
-      name: "Fashion Bags Premium",
-      lastMessage: "Temos novos modelos disponíveis!",
-      time: "09:15",
-      unread: 0,
-      avatar: "👜",
-    },
-    {
-      id: 3,
-      storeId: 3,
-      name: "Tech Store Brasil",
-      lastMessage: "Confira nossas ofertas de tecnologia",
-      time: "Ontem",
-      unread: 0,
-      avatar: "📱",
-    },
-    {
-      id: 4,
-      storeId: 4,
-      name: "Audio Pro Shop",
-      lastMessage: "Novidades em equipamentos de áudio!",
-      time: "Ontem",
-      unread: 0,
-      avatar: "🎧",
-    },
-  ]);
+  const conversations = getConversations();
 
   useEffect(() => {
-    if (location.state?.storeId) {
-      const conversationExists = conversations.find(c => c.storeId === location.state.storeId);
+    if (location.state?.supplierId) {
+      setSelectedUserId(location.state.supplierId);
+      markAsRead(location.state.supplierId);
       
-      if (!conversationExists) {
-        const newConversation = {
-          id: location.state.storeId,
-          storeId: location.state.storeId,
-          name: location.state.storeName || "Loja",
-          lastMessage: location.state.message || "Iniciar conversa",
-          time: "Agora",
-          unread: 0,
-          avatar: location.state.storeAvatar || "🏪",
-        };
-        setConversations(prev => [newConversation, ...prev]);
-      }
-      
-      setSelectedChat(location.state.storeId);
-      markAsRead(location.state.storeId);
-      
-      // Se veio do checkout com mensagem, envia automaticamente
+      // Se veio com mensagem, envia automaticamente
       if (location.state.message) {
         setTimeout(() => {
-          sendMessage(location.state.storeId, location.state.message);
+          sendSupabaseMessage(location.state.supplierId, location.state.message);
         }, 500);
       }
     }
@@ -108,7 +67,7 @@ const Chat = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [selectedChat]);
+  }, [selectedUserId, conversations]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -172,7 +131,7 @@ const Chat = () => {
   };
 
   const handleSend = () => {
-    if (!selectedChat) return;
+    if (!selectedUserId) return;
     
     if (!message.trim() && attachments.length === 0) {
       toast({
@@ -183,21 +142,15 @@ const Chat = () => {
       return;
     }
 
-    sendMessage(selectedChat, message.trim(), attachments.length > 0 ? attachments : undefined);
+    sendSupabaseMessage(selectedUserId, message.trim(), attachments.length > 0 ? attachments : undefined);
     setMessage("");
     setAttachments([]);
-    
-    toast({
-      title: "Mensagem enviada",
-      description: "Sua mensagem foi enviada com sucesso"
-    });
   };
 
-  const currentMessages = selectedChat ? getMessagesByStore(selectedChat) : [];
+  const currentMessages = selectedUserId ? getMessagesByUser(selectedUserId) : [];
+  const selectedSupplier = selectedUserId ? stores.find(s => s.id.toString() === selectedUserId) : null;
 
-  if (selectedChat) {
-    const chat = conversations.find(c => c.storeId === selectedChat);
-    
+  if (selectedUserId && selectedSupplier) {
     return (
       <div className="min-h-screen bg-background pb-20">
         <ParticlesBackground />
@@ -205,16 +158,18 @@ const Chat = () => {
         {/* Header do Chat */}
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
           <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-            <button onClick={() => setSelectedChat(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
+            <button onClick={() => setSelectedUserId(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
               <ArrowLeft className="h-6 w-6" />
             </button>
             <div 
-              onClick={() => chat?.storeId && navigate(`/cliente/loja/${chat.storeId}`)}
+              onClick={() => navigate(`/cliente/loja/${selectedSupplier.id}`)}
               className="flex items-center gap-3 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
             >
-              <div className="text-3xl">{chat?.avatar}</div>
+              <div className="w-12 h-12 rounded-full overflow-hidden">
+                <img src={selectedSupplier.avatar} alt={selectedSupplier.name} className="w-full h-full object-cover" />
+              </div>
               <div>
-                <h2 className="font-bold">{chat?.name}</h2>
+                <h2 className="font-bold">{selectedSupplier.name}</h2>
                 <p className="text-xs text-muted-foreground">Online</p>
               </div>
             </div>
@@ -229,53 +184,63 @@ const Chat = () => {
               <p className="text-sm text-muted-foreground mt-2">Envie uma mensagem para começar a conversa</p>
             </div>
           ) : (
-            currentMessages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[75%] ${
-                  msg.sender === "user" 
-                    ? "bg-primary text-white" 
-                    : "bg-white border shadow-sm"
-                } rounded-2xl px-4 py-3`}>
-                  {msg.text && <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>}
-                  
-                  {msg.attachments && msg.attachments.length > 0 && (
-                    <div className="space-y-2 mt-2">
-                      {msg.attachments.map((attachment, idx) => (
-                        <div key={idx} className="rounded-lg overflow-hidden">
-                          {attachment.type === 'image' && (
-                            <img 
-                              src={attachment.url} 
-                              alt={attachment.name}
-                              className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => setViewingImage({ url: attachment.url, name: attachment.name })}
-                            />
-                          )}
-                          {attachment.type === 'video' && (
-                            <video 
-                              src={attachment.url} 
-                              controls 
-                              className="max-w-full h-auto rounded-lg"
-                            />
-                          )}
-                          {attachment.type === 'file' && (
-                            <a 
-                              href={attachment.url} 
-                              download={attachment.name}
-                              className="flex items-center gap-2 p-2 bg-accent rounded-lg hover:bg-accent/80"
-                            >
-                              <FileText className="h-4 w-4" />
-                              <span className="text-xs truncate">{attachment.name}</span>
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <p className="text-xs opacity-70 mt-1">{msg.timestamp}</p>
+            currentMessages.map((msg) => {
+              const isFromMe = msg.from_user === user?.id;
+              return (
+                <div key={msg.id} className={`flex ${isFromMe ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[75%] ${
+                    isFromMe
+                      ? "bg-primary text-white" 
+                      : "bg-white border shadow-sm"
+                  } rounded-2xl px-4 py-3`}>
+                    {msg.text && <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>}
+                    
+                    {msg.attachments && msg.attachments.length > 0 && (
+                      <div className="space-y-2 mt-2">
+                        {msg.attachments.map((attachmentUrl, idx) => {
+                          const isImage = attachmentUrl.startsWith('data:image') || /\.(jpg|jpeg|png|gif|webp)$/i.test(attachmentUrl);
+                          const isVideo = attachmentUrl.startsWith('data:video') || /\.(mp4|webm|ogg)$/i.test(attachmentUrl);
+                          
+                          return (
+                            <div key={idx} className="rounded-lg overflow-hidden">
+                              {isImage && (
+                                <img 
+                                  src={attachmentUrl} 
+                                  alt="Anexo"
+                                  className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => setViewingImage({ url: attachmentUrl, name: `anexo-${idx}` })}
+                                />
+                              )}
+                              {isVideo && (
+                                <video 
+                                  src={attachmentUrl} 
+                                  controls 
+                                  className="max-w-full h-auto rounded-lg"
+                                />
+                              )}
+                              {!isImage && !isVideo && (
+                                <a 
+                                  href={attachmentUrl} 
+                                  download={`arquivo-${idx}`}
+                                  className="flex items-center gap-2 p-2 bg-accent rounded-lg hover:bg-accent/80"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  <span className="text-xs truncate">Arquivo anexo</span>
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    
+                    <p className="text-xs opacity-70 mt-1">
+                      {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
           <div ref={messagesEndRef} />
         </main>
@@ -400,33 +365,50 @@ const Chat = () => {
 
       <main className="container mx-auto px-4 py-6 relative z-10">
         <div className="space-y-3">
-          {conversations.map((conv) => (
-            <Card
-              key={conv.id}
-              onClick={() => setSelectedChat(conv.storeId)}
-              className="bg-white border shadow-sm p-4 cursor-pointer hover:shadow-md transition-all"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl flex-shrink-0">
-                  {conv.avatar}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-bold truncate">{conv.name}</h3>
-                    <span className="text-xs text-muted-foreground">{conv.time}</span>
+          {conversations.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhuma conversa ainda</p>
+              <p className="text-sm text-muted-foreground mt-2">Converse com lojas através dos produtos</p>
+            </div>
+          ) : (
+            conversations.map((conv) => {
+              const supplier = stores.find(s => s.id.toString() === conv.userId);
+              if (!supplier) return null;
+              
+              return (
+                <Card
+                  key={conv.userId}
+                  onClick={() => {
+                    setSelectedUserId(conv.userId);
+                    markAsRead(conv.userId);
+                  }}
+                  className="bg-white border shadow-sm p-4 cursor-pointer hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
+                      <img src={supplier.avatar} alt={supplier.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-bold truncate">{supplier.name}</h3>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(conv.lastMessage.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground truncate">{conv.lastMessage.text}</p>
+                        {conv.unreadCount > 0 && (
+                          <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ml-2">
+                            {conv.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
-                    {conv.unread > 0 && (
-                      <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ml-2">
-                        {conv.unread}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
+                </Card>
+              );
+            })
+          )}
         </div>
       </main>
 
