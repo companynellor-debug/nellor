@@ -3,12 +3,12 @@ import { toast } from '@/hooks/use-toast';
 
 export interface CartItem {
   id: number;
-  productId: number;
+  productId: string; // UUID do produto
   name: string;
   price: number;
   quantity: number;
   image: string;
-  storeId: string;
+  storeId: string; // UUID da loja
   storeName: string;
   minQuantity?: number;
   minValue?: number;

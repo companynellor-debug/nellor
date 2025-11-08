@@ -320,7 +320,7 @@ const ProdutoDetalhes = () => {
 
                 console.log('Adding to cart...');
                 const success = addToCart({
-                  productId: product.id,
+                  productId: product.supplierUuid || '',
                   name: product.name,
                   price: product.priceNumber,
                   image: product.images[0],
@@ -367,7 +367,7 @@ const ProdutoDetalhes = () => {
 
                 console.log('Adding to cart and going to checkout...');
                 addToCart({
-                  productId: product.id,
+                  productId: product.supplierUuid || '',
                   name: product.name,
                   price: product.priceNumber,
                   image: product.images[0],

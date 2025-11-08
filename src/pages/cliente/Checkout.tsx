@@ -152,7 +152,7 @@ const Checkout = () => {
       const orderData = {
         supplier_id: storeId,
         itens: cartItems.map(item => ({
-          productId: item.productId,
+          product_id: item.productId, // UUID do produto
           name: item.name,
           price: item.price,
           quantity: item.quantity,
