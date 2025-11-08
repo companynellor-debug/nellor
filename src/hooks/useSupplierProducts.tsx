@@ -77,7 +77,7 @@ export const useSupplierProducts = () => {
         .insert([{
           supplier_id: user.id,
           nome: product.name,
-          categoria_id: null, // Será vinculado depois
+          categoria_id: product.category || null,
           descricao_curta: product.description,
           descricao_longa: product.description,
           imagens: product.images,
@@ -112,6 +112,7 @@ export const useSupplierProducts = () => {
       const updatePayload: any = {};
       
       if (updatedData.name) updatePayload.nome = updatedData.name;
+      if (updatedData.category) updatePayload.categoria_id = updatedData.category;
       if (updatedData.description) {
         updatePayload.descricao_curta = updatedData.description;
         updatePayload.descricao_longa = updatedData.description;

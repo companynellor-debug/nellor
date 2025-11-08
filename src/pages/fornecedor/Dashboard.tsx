@@ -1,67 +1,80 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, Calendar as CalendarIcon, ArrowUpRight, Star, DollarSign, ShoppingCart } from "lucide-react";
-import { useSupplierOrders } from "@/hooks/useSupplierOrders";
+import { Package, TrendingUp, DollarSign, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useReviews } from "@/hooks/useReviews";
-import { useAuth } from "@/hooks/useAuth";
-import { useStores } from "@/hooks/useStores";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useSupplierProducts } from "@/hooks/useSupplierProducts";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
-  const { orders } = useSupplierOrders();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { stores } = useStores();
-  const { storeReviews } = useReviews();
+  const { profile } = useSupabaseAuth();
+  const { products } = useSupplierProducts();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
 
-  const pendingOrders = orders.filter(o => o.status === 'awaiting_payment').length;
-  const deliveredOrders = orders.filter(o => o.status === 'delivered').length;
+  // Buscar pedidos e analytics do fornecedor
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!profile?.id) return;
+
+      // Buscar pedidos
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('supplier_id', profile.id)
+        .order('created_at', { ascending: false });
+
+      setOrders(ordersData || []);
+
+      // Buscar analytics do mês atual
+      const currentMonth = new Date().toISOString().slice(0, 7) + '-01';
+      const { data: analyticsData } = await supabase
+        .from('analytics')
+        .select('*')
+        .eq('supplier_id', profile.id)
+        .eq('mes_referencia', currentMonth)
+        .single();
+
+      setAnalytics(analyticsData);
+    };
+
+    fetchData();
+  }, [profile?.id]);
+
+  const pendingOrders = orders.filter(o => o.order_status === 'pending').length;
+  const deliveredOrders = orders.filter(o => o.order_status === 'delivered').length;
   const totalOrders = orders.length;
   const totalRevenue = orders
-    .filter(o => o.status !== 'cancelled')
-    .reduce((sum, o) => sum + o.value, 0);
+    .filter(o => o.payment_status === 'paid')
+    .reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
 
-  // Encontrar a loja do fornecedor
-  const supplierStore = stores.find(s => s.name === user?.name);
-  const myStoreReviews = supplierStore ? storeReviews.filter(r => r.storeId === supplierStore.id) : [];
+  const ticketMedio = analytics?.ticket_medio || (totalOrders > 0 ? totalRevenue / totalOrders : 0);
 
   // Dados de vendas ao longo do tempo (últimos 6 meses)
   const salesData = (() => {
     const monthsData: { [key: string]: number } = {};
     const now = new Date();
     
-    // Inicializar últimos 6 meses com 0
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthKey = date.toLocaleDateString('pt-BR', { month: 'short' });
       monthsData[monthKey] = 0;
     }
 
-    // Contar vendas entregues por mês
-    orders.filter(o => o.status === 'delivered').forEach(order => {
-      const orderDate = new Date(order.date);
+    orders.filter(o => o.payment_status === 'paid').forEach(order => {
+      const orderDate = new Date(order.created_at);
       const monthKey = orderDate.toLocaleDateString('pt-BR', { month: 'short' });
       if (monthsData.hasOwnProperty(monthKey)) {
-        monthsData[monthKey] += order.value;
+        monthsData[monthKey] += parseFloat(order.total || 0);
       }
     });
 
     return Object.entries(monthsData).map(([month, value]) => ({
       month,
       vendas: value
-    }));
-  })();
-
-  // Distribuição de avaliações (1-5 estrelas)
-  const ratingsDistribution = (() => {
-    const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    myStoreReviews.forEach(review => {
-      dist[review.rating as 1 | 2 | 3 | 4 | 5]++;
-    });
-    return Object.entries(dist).map(([stars, count]) => ({
-      estrelas: `${stars}★`,
-      quantidade: count
     }));
   })();
 
@@ -156,8 +169,22 @@ const Dashboard = () => {
             <DollarSign className="w-5 h-5 bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">R$ {totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : '0.00'}</div>
+            <div className="text-3xl font-bold">R$ {ticketMedio.toFixed(2)}</div>
             <p className="text-xs text-green-600 mt-1">+{Math.round(Math.random() * 18)}% vs mês anterior</p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-cyan-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total de Produtos
+            </CardTitle>
+            <Package className="w-5 h-5 bg-gradient-to-br from-cyan-500 to-cyan-600 bg-clip-text text-transparent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{products.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Produtos cadastrados</p>
           </CardContent>
         </Card>
       </div>
@@ -199,30 +226,6 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
-
-        {/* Distribuição de Avaliações */}
-        <Card className="border-purple-100 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">⭐ Distribuição de Avaliações</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {myStoreReviews.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={ratingsDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="estrelas" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="quantidade" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center">
-                <p className="text-muted-foreground text-sm">Nenhuma avaliação recebida ainda</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* Recent Orders */}
@@ -256,23 +259,25 @@ const Dashboard = () => {
                       <Package className="h-6 w-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium mb-1">{order.product}</p>
-                      <p className="text-sm text-muted-foreground mb-2">{order.customerName}</p>
+                      <p className="font-medium mb-1">Pedido #{order.order_number}</p>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {new Date(order.created_at).toLocaleDateString('pt-BR')}
+                      </p>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-muted-foreground">#{order.id}</span>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          order.status === 'delivered'
+                          order.order_status === 'delivered'
                             ? 'bg-green-100 text-green-800'
-                            : order.status === 'cancelled'
+                            : order.order_status === 'cancelled'
                             ? 'bg-red-100 text-red-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {order.status === 'delivered' ? 'Entregue' : order.status === 'cancelled' ? 'Cancelado' : 'Pendente'}
+                          {order.order_status === 'delivered' ? 'Entregue' : 
+                           order.order_status === 'cancelled' ? 'Cancelado' : 'Pendente'}
                         </span>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-semibold">R$ {order.value.toFixed(2)}</p>
+                      <p className="font-semibold">R$ {parseFloat(order.total || 0).toFixed(2)}</p>
                     </div>
                   </div>
                 </div>

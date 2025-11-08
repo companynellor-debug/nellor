@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
-import { useStoreProfile } from "@/hooks/useStoreProfile";
+import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { toast } from "sonner";
 
 const Produtos = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useSupplierProducts();
-  const { storeProfile } = useStoreProfile();
+  const { categories } = useSupabaseCategories();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SupplierProduct | null>(null);
   const [formData, setFormData] = useState({
@@ -26,11 +26,6 @@ const Produtos = () => {
     minValue: '',
   });
   const [imageFiles, setImageFiles] = useState<string[]>([]);
-
-  // Categorias padrão do sistema
-  const defaultCategories = ["Roupas", "Calçados", "Acessórios", "Eletrônicos", "Beleza", "Casa"];
-  // Combinar categorias padrão com categorias customizadas da loja
-  const allCategories = [...defaultCategories, ...(storeProfile.customCategories || [])];
 
   const handleOpenModal = (product?: SupplierProduct) => {
     if (product) {
@@ -194,31 +189,13 @@ const Produtos = () => {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border shadow-lg z-50">
-                  <div className="p-2 border-b">
-                    <p className="text-xs font-semibold text-muted-foreground mb-1">Categorias Padrão</p>
-                  </div>
-                  {defaultCategories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.nome}
                     </SelectItem>
                   ))}
-                  {storeProfile.customCategories && storeProfile.customCategories.length > 0 && (
-                    <>
-                      <div className="p-2 border-b border-t mt-1">
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">Minhas Categorias</p>
-                      </div>
-                      {storeProfile.customCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Adicione categorias personalizadas em Editar Loja
-              </p>
             </div>
 
             <div>
