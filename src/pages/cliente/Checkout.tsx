@@ -148,11 +148,37 @@ const Checkout = () => {
       return;
     }
 
+    console.log('=== DEBUG CHECKOUT ===');
+    console.log('storeId:', storeId, 'type:', typeof storeId);
+    console.log('cartItems:', cartItems);
+    console.log('First product ID:', cartItems[0]?.productId, 'type:', typeof cartItems[0]?.productId);
+
+    // Validar se os IDs são UUIDs válidos
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    if (!uuidRegex.test(storeId)) {
+      console.error('Invalid storeId format:', storeId);
+      toast.error("Erro: Dados do carrinho inválidos. Por favor, adicione os produtos novamente.");
+      clearCart();
+      navigate('/cliente/produtos');
+      return;
+    }
+
+    // Verificar se todos os produtos têm UUIDs válidos
+    const invalidProducts = cartItems.filter(item => !uuidRegex.test(item.productId));
+    if (invalidProducts.length > 0) {
+      console.error('Invalid product IDs:', invalidProducts);
+      toast.error("Erro: Dados do carrinho inválidos. Por favor, adicione os produtos novamente.");
+      clearCart();
+      navigate('/cliente/produtos');
+      return;
+    }
+
     try {
       const orderData = {
         supplier_id: storeId,
         itens: cartItems.map(item => ({
-          product_id: item.productId, // UUID do produto
+          product_id: item.productId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
@@ -172,6 +198,7 @@ const Checkout = () => {
         estimated_delivery: null
       };
 
+      console.log('Creating order with data:', orderData);
       const order = await createOrder(orderData);
       
       if (order) {
