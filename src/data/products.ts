@@ -18,6 +18,8 @@ export interface Product {
   storeId: number;
   minQuantity?: number;
   minValue?: number;
+  supplierUuid?: string;
+  supplierProfileId?: string;
 }
 
 // Dados fictícios removidos - agora usando dados reais do Supabase

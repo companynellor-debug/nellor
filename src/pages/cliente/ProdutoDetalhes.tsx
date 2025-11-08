@@ -3,18 +3,26 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart, Package } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStores } from "@/hooks/useStores";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
 import { useProducts } from "@/hooks/useProducts";
+import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const ProdutoDetalhes = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState(0);
+  const [supplierProfile, setSupplierProfile] = useState<any>(null);
+  const [currentStock, setCurrentStock] = useState(0);
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { addToCart } = useCart();
   const { stores } = useStores();
@@ -22,8 +30,35 @@ const ProdutoDetalhes = () => {
 
   const productId = id ? parseInt(id) : 1;
   const product = getProductById(productId);
+  const { reviews, loading: reviewsLoading } = useSupabaseReviews(product?.supplierUuid);
+  const { products: supabaseProducts } = useSupabaseProducts();
   const store = product ? stores.find(s => s.id === product.storeId) : undefined;
   const isProductFavorite = isFavorite(productId);
+
+  // Buscar perfil do fornecedor e estoque atual
+  useEffect(() => {
+    const fetchSupplierData = async () => {
+      if (!product?.supplierProfileId) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, nome, foto_perfil_url, banner_loja_url, descricao_loja')
+        .eq('id', product.supplierProfileId)
+        .single();
+
+      if (profile) {
+        setSupplierProfile(profile);
+      }
+
+      // Buscar estoque atual do produto
+      const supabaseProduct = supabaseProducts.find(p => p.id === product.supplierUuid);
+      if (supabaseProduct) {
+        setCurrentStock(supabaseProduct.estoque);
+      }
+    };
+
+    fetchSupplierData();
+  }, [product, supabaseProducts]);
 
   const handleToggleFavorite = () => {
     if (isProductFavorite) {
@@ -89,28 +124,38 @@ const ProdutoDetalhes = () => {
         </div>
 
         {/* Store Info */}
-        {store && (
+        {supplierProfile && (
           <Card
-            onClick={() => navigate(`/cliente/loja/${store.id}`)}
+            onClick={() => navigate(`/cliente/loja/${product.storeId}`)}
             className="bg-white border shadow-sm p-4 mb-6 cursor-pointer hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={store.avatar} alt={store.name} />
-                <AvatarFallback>{store.name.charAt(0)}</AvatarFallback>
+                <AvatarImage src={supplierProfile.foto_perfil_url} alt={supplierProfile.nome} />
+                <AvatarFallback>{supplierProfile.nome.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <p className="font-semibold text-sm">{store.name}</p>
+                <p className="font-semibold text-sm">{supplierProfile.nome}</p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <span>{store.rating}</span>
+                    <span>{product.rating.toFixed(1)}</span>
                   </div>
                   <span>•</span>
-                  <span>{store.totalSales.toLocaleString()} vendas</span>
+                  <span>{product.reviews} avaliações</span>
                 </div>
               </div>
-              <Store className="h-5 w-5 text-primary" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/cliente/loja/${product.storeId}`);
+                }}
+              >
+                <Store className="h-5 w-5" />
+              </Button>
             </div>
           </Card>
         )}
@@ -125,10 +170,16 @@ const ProdutoDetalhes = () => {
               ))}
             </div>
             <span className="text-sm text-muted-foreground">
-              {product.rating} ({product.reviews} avaliações)
+              {product.rating.toFixed(1)} ({product.reviews} avaliações)
             </span>
           </div>
-          <p className="text-3xl font-bold text-primary mb-4">{product.price}</p>
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-3xl font-bold text-primary">{product.price}</p>
+            <Badge variant={currentStock > 0 ? "default" : "destructive"} className="flex items-center gap-1">
+              <Package className="h-3 w-3" />
+              {currentStock > 0 ? `${currentStock} disponíveis` : 'Sem estoque'}
+            </Badge>
+          </div>
           <p className="text-muted-foreground leading-relaxed">{product.description}</p>
         </Card>
 
@@ -149,20 +200,43 @@ const ProdutoDetalhes = () => {
         <Card className="bg-white border shadow-sm p-6 mb-6">
           <h2 className="text-xl font-bold text-primary mb-4">Avaliações dos Clientes</h2>
           <div className="space-y-4">
-            {product.customerReviews.map((review, index) => (
-              <div key={index} className="border-b pb-4 last:border-0">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">{review.name}</p>
-                  <span className="text-xs text-muted-foreground">{review.date}</span>
+            {reviewsLoading ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Carregando avaliações...</p>
+            ) : reviews.length > 0 ? (
+              reviews.map((review) => (
+                <div key={review.id} className="border-b pb-4 last:border-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={review.buyer?.foto_perfil_url || ''} alt={review.buyer?.nome} />
+                      <AvatarFallback>{review.buyer?.nome?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{review.buyer?.nome}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(review.created_at).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-400"}`} />
+                    ))}
+                  </div>
+                  {review.comment && (
+                    <p className="text-sm text-muted-foreground">{review.comment}</p>
+                  )}
+                  {review.photos && review.photos.length > 0 && (
+                    <div className="flex gap-2 mt-2">
+                      {review.photos.map((photo, idx) => (
+                        <img key={idx} src={photo} alt="Review" className="w-16 h-16 rounded object-cover" />
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-1 mb-2">
-                  {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground">{review.comment}</p>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhuma avaliação ainda. Seja o primeiro a avaliar!</p>
+            )}
           </div>
         </Card>
 
@@ -199,15 +273,24 @@ const ProdutoDetalhes = () => {
             <Button 
               variant="outline" 
               className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2"
+              disabled={currentStock === 0}
               onClick={() => {
-                if (store) {
+                if (currentStock === 0) {
+                  toast({
+                    title: 'Produto sem estoque',
+                    description: 'Este produto não está disponível no momento.',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                if (store && supplierProfile) {
                   const success = addToCart({
                     productId: product.id,
                     name: product.name,
                     price: parseFloat(product.price.replace('R$', '').replace(',', '.')),
                     image: product.images[0],
                     storeId: store.id,
-                    storeName: store.name
+                    storeName: supplierProfile.nome
                   });
                   if (success) {
                     navigate('/cliente/carrinho');
@@ -220,15 +303,24 @@ const ProdutoDetalhes = () => {
             </Button>
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90 text-white"
+              disabled={currentStock === 0}
               onClick={() => {
-                if (store) {
+                if (currentStock === 0) {
+                  toast({
+                    title: 'Produto sem estoque',
+                    description: 'Este produto não está disponível no momento.',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                if (store && supplierProfile) {
                   addToCart({
                     productId: product.id,
                     name: product.name,
                     price: parseFloat(product.price.replace('R$', '').replace(',', '.')),
                     image: product.images[0],
                     storeId: store.id,
-                    storeName: store.name
+                    storeName: supplierProfile.nome
                   });
                   navigate('/cliente/checkout');
                 }
