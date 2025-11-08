@@ -126,7 +126,7 @@ const ProdutoDetalhes = () => {
         {/* Store Info */}
         {supplierProfile && (
           <Card
-            onClick={() => navigate(`/cliente/loja/${product.storeId}`)}
+            onClick={() => navigate(`/cliente/loja/${product.supplierProfileId}`)}
             className="bg-white border shadow-sm p-4 mb-6 cursor-pointer hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-3">
@@ -151,7 +151,7 @@ const ProdutoDetalhes = () => {
                 className="text-primary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/cliente/loja/${product.storeId}`);
+                  navigate(`/cliente/loja/${product.supplierProfileId}`);
                 }}
               >
                 <Store className="h-5 w-5" />
@@ -283,15 +283,15 @@ const ProdutoDetalhes = () => {
                   });
                   return;
                 }
-                if (store && supplierProfile) {
+                if (supplierProfile && product.supplierProfileId) {
                   const success = addToCart({
                     productId: product.id,
                     name: product.name,
                     price: parseFloat(product.price.replace('R$', '').replace(',', '.')),
                     image: product.images[0],
-                    storeId: store.id,
+                    storeId: product.id,
                     storeName: supplierProfile.nome
-                  });
+                  }, 1);
                   if (success) {
                     navigate('/cliente/carrinho');
                   }
@@ -313,15 +313,15 @@ const ProdutoDetalhes = () => {
                   });
                   return;
                 }
-                if (store && supplierProfile) {
+                if (supplierProfile && product.supplierProfileId) {
                   addToCart({
                     productId: product.id,
                     name: product.name,
                     price: parseFloat(product.price.replace('R$', '').replace(',', '.')),
                     image: product.images[0],
-                    storeId: store.id,
+                    storeId: product.id,
                     storeName: supplierProfile.nome
-                  });
+                  }, 1);
                   navigate('/cliente/checkout');
                 }
               }}

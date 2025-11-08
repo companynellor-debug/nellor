@@ -29,7 +29,7 @@ export const useCart = () => {
     localStorage.setItem('cart', JSON.stringify(items));
   };
 
-  const addToCart = (item: Omit<CartItem, 'id' | 'quantity'>) => {
+  const addToCart = (item: Omit<CartItem, 'id' | 'quantity'>, requestedQuantity: number = 1) => {
     const currentStoreId = cartItems.length > 0 ? cartItems[0].storeId : null;
     
     if (currentStoreId && currentStoreId !== item.storeId) {
@@ -46,7 +46,7 @@ export const useCart = () => {
     if (existingItem) {
       const updated = cartItems.map(i => 
         i.productId === item.productId 
-          ? { ...i, quantity: i.quantity + 1 }
+          ? { ...i, quantity: i.quantity + requestedQuantity }
           : i
       );
       saveCart(updated);
@@ -54,7 +54,7 @@ export const useCart = () => {
       const newItem: CartItem = {
         ...item,
         id: Date.now(),
-        quantity: 1
+        quantity: requestedQuantity
       };
       saveCart([...cartItems, newItem]);
     }

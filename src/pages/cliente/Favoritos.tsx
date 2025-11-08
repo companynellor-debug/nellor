@@ -5,15 +5,16 @@ import { ArrowLeft, Heart, Store } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
-import { useStores } from "@/hooks/useStores";
-import { products } from "@/data/products";
+import { useSupabaseStores } from "@/hooks/useSupabaseStores";
+import { useProducts } from "@/hooks/useProducts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Favoritos = () => {
   const navigate = useNavigate();
   const { favorites, removeFavorite } = useFavorites();
   const { favoriteStores, removeFavoriteStore } = useStoresFavorites();
-  const { stores } = useStores();
+  const { stores } = useSupabaseStores();
+  const { products } = useProducts();
 
   const favoriteProducts = products.filter((product) => favorites.includes(product.id));
   const favoriteStoresList = stores.filter((store) => favoriteStores.includes(store.id));
@@ -99,21 +100,13 @@ const Favoritos = () => {
                   >
                     <div className="flex items-center gap-4 p-4 relative">
                       <img 
-                        src={store.avatar} 
-                        alt={store.name} 
+                        src={store.foto_perfil_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store'} 
+                        alt={store.nome} 
                         className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-lg mb-1">{store.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{store.bio}</p>
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="flex items-center gap-1">
-                            <span className="text-yellow-500">⭐</span>
-                            {store.rating}
-                          </span>
-                          <span className="text-muted-foreground">{store.totalReviews} avaliações</span>
-                          <span className="text-muted-foreground">{store.totalSales.toLocaleString()} vendas</span>
-                        </div>
+                        <h3 className="font-bold text-lg mb-1">{store.nome}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{store.descricao_loja || 'Sem descrição'}</p>
                       </div>
                       <button
                         onClick={(e) => {

@@ -5,26 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Heart, MessageCircle, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useStores } from "@/hooks/useStores";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
 import { useProducts } from "@/hooks/useProducts";
-import { useReviews } from "@/hooks/useReviews";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 import { Helmet } from "react-helmet";
 
 const PerfilLoja = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { stores } = useStores();
-  const { getProductsByStore } = useProducts();
-  const storeId = id ? parseInt(id) : 1;
-  const store = stores.find(s => s.id === storeId);
-  const storeProducts = getProductsByStore(storeId);
+  const { stores, loading } = useSupabaseStores();
+  const { products } = useProducts();
+  const { user } = useSupabaseAuth();
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
-  const { getStoreReviews } = useReviews();
-  const { user } = useAuth();
   
-  const storeReviews = getStoreReviews(storeId);
+  const store = stores.find(s => s.id === id);
+  const storeProducts = products.filter(p => p.supplierUuid === id);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!store) {
     return (
@@ -39,26 +45,27 @@ const PerfilLoja = () => {
     );
   }
 
-  const isStoreFavorite = isFavoriteStore(storeId);
+  const isStoreFavorite = id ? isFavoriteStore(id) : false;
 
   const handleToggleFavorite = () => {
+    if (!id) return;
     if (isStoreFavorite) {
-      removeFavoriteStore(storeId);
+      removeFavoriteStore(id);
     } else {
-      addFavoriteStore(storeId);
+      addFavoriteStore(id);
     }
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <Helmet>
-        <title>{store.name} - Loja Online | Nellor</title>
-        <meta name="description" content={`${store.bio} - ${store.totalSales} vendas realizadas com nota ${store.rating}. Confira os produtos e avaliações de clientes.`} />
-        <meta property="og:title" content={`${store.name} - Loja Online`} />
-        <meta property="og:description" content={store.bio} />
-        <meta property="og:image" content={store.banner} />
+        <title>{store.nome} - Loja Online | Nellor</title>
+        <meta name="description" content={`${store.descricao_loja || 'Confira nossos produtos'}`} />
+        <meta property="og:title" content={`${store.nome} - Loja Online`} />
+        <meta property="og:description" content={store.descricao_loja || ''} />
+        <meta property="og:image" content={store.banner_loja_url || ''} />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href={`${window.location.origin}/loja/${storeId}`} />
+        <link rel="canonical" href={`${window.location.origin}/loja/${id}`} />
       </Helmet>
       <ParticlesBackground />
 
@@ -82,8 +89,12 @@ const PerfilLoja = () => {
 
       <main className="relative z-10">
         {/* Banner */}
-        <div className="h-48 overflow-hidden">
-          <img src={store.banner} alt={`Banner ${store.name}`} className="w-full h-full object-cover" />
+        <div className="h-48 overflow-hidden bg-muted">
+          <img 
+            src={store.banner_loja_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'} 
+            alt={`Banner ${store.nome}`} 
+            className="w-full h-full object-cover" 
+          />
         </div>
 
         {/* Store Info */}
@@ -92,19 +103,17 @@ const PerfilLoja = () => {
             <Card className="bg-white border shadow-sm p-6">
               <div className="flex items-start gap-4 mb-4">
                 <Avatar className="h-24 w-24 border-4 border-white shadow-md">
-                  <AvatarImage src={store.avatar} alt={store.name} />
-                  <AvatarFallback>{store.name.charAt(0)}</AvatarFallback>
+                  <AvatarImage 
+                    src={store.foto_perfil_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store'} 
+                    alt={store.nome} 
+                  />
+                  <AvatarFallback>{store.nome.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold mb-2">{store.name}</h2>
-                  <p className="text-sm text-muted-foreground mb-3">{store.bio}</p>
+                  <h2 className="text-xl font-bold mb-2">{store.nome}</h2>
+                  <p className="text-sm text-muted-foreground mb-3">{store.descricao_loja || 'Sem descrição'}</p>
                   <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{store.rating}</span>
-                    </div>
-                    <span className="text-muted-foreground">{store.totalReviews} avaliações</span>
-                    <span className="text-muted-foreground">{store.totalSales.toLocaleString()} vendas</span>
+                    <span className="text-muted-foreground">{storeProducts.length} produtos</span>
                   </div>
                 </div>
               </div>
@@ -113,7 +122,7 @@ const PerfilLoja = () => {
               {user && (
                 <div className="flex gap-3">
                   <Button
-                    onClick={() => navigate("/cliente/chat", { state: { storeId, storeName: store.name, storeAvatar: store.avatar } })}
+                    onClick={() => navigate("/cliente/chat", { state: { storeId: id, storeName: store.nome, storeAvatar: store.foto_perfil_url } })}
                     className="flex-1 bg-primary hover:bg-primary/90 text-white"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
@@ -130,52 +139,6 @@ const PerfilLoja = () => {
               )}
             </Card>
           </div>
-
-          {/* Store Stats */}
-          <Card className="bg-white border shadow-sm p-6 mb-6">
-            <h3 className="text-lg font-bold text-primary mb-4">Estatísticas</h3>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-2xl font-bold text-primary">{store.rating}</p>
-                <p className="text-xs text-muted-foreground">Avaliação</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-primary">{store.totalReviews}</p>
-                <p className="text-xs text-muted-foreground">Avaliações</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-primary">{store.totalSales.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Vendas</p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Store Reviews */}
-          <Card className="bg-white border shadow-sm p-6 mb-6">
-            <h3 className="text-lg font-bold text-primary mb-4">Avaliações da Loja</h3>
-            {storeReviews.length > 0 ? (
-              <div className="space-y-4">
-                {storeReviews.map((review) => (
-                  <div key={review.id} className="border-b pb-4 last:border-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium">{review.userName}</p>
-                      <span className="text-xs text-muted-foreground">{review.date}</span>
-                    </div>
-                    <div className="flex items-center gap-1 mb-2">
-                      {[...Array(review.rating)].map((_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{review.comment}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-4">
-                Nenhuma avaliação ainda
-              </p>
-            )}
-          </Card>
 
           {/* Store Products */}
           <div className="mb-6">

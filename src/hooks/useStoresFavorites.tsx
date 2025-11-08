@@ -2,16 +2,16 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { toast } from "@/hooks/use-toast";
 
 interface StoresFavoritesContextType {
-  favoriteStores: number[];
-  addFavoriteStore: (storeId: number) => void;
-  removeFavoriteStore: (storeId: number) => void;
-  isFavoriteStore: (storeId: number) => boolean;
+  favoriteStores: string[];
+  addFavoriteStore: (storeId: string) => void;
+  removeFavoriteStore: (storeId: string) => void;
+  isFavoriteStore: (storeId: string) => boolean;
 }
 
 const StoresFavoritesContext = createContext<StoresFavoritesContextType | undefined>(undefined);
 
 export const StoresFavoritesProvider = ({ children }: { children: ReactNode }) => {
-  const [favoriteStores, setFavoriteStores] = useState<number[]>(() => {
+  const [favoriteStores, setFavoriteStores] = useState<string[]>(() => {
     const saved = localStorage.getItem("favoriteStores");
     return saved ? JSON.parse(saved) : [];
   });
@@ -20,7 +20,7 @@ export const StoresFavoritesProvider = ({ children }: { children: ReactNode }) =
     localStorage.setItem("favoriteStores", JSON.stringify(favoriteStores));
   }, [favoriteStores]);
 
-  const addFavoriteStore = (storeId: number) => {
+  const addFavoriteStore = (storeId: string) => {
     setFavoriteStores((prev) => {
       if (prev.includes(storeId)) return prev;
       toast({
@@ -31,7 +31,7 @@ export const StoresFavoritesProvider = ({ children }: { children: ReactNode }) =
     });
   };
 
-  const removeFavoriteStore = (storeId: number) => {
+  const removeFavoriteStore = (storeId: string) => {
     setFavoriteStores((prev) => {
       toast({
         title: "Removida dos favoritos",
@@ -41,7 +41,7 @@ export const StoresFavoritesProvider = ({ children }: { children: ReactNode }) =
     });
   };
 
-  const isFavoriteStore = (storeId: number) => favoriteStores.includes(storeId);
+  const isFavoriteStore = (storeId: string) => favoriteStores.includes(storeId);
 
   return (
     <StoresFavoritesContext.Provider value={{ favoriteStores, addFavoriteStore, removeFavoriteStore, isFavoriteStore }}>
