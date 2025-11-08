@@ -30,8 +30,8 @@ const Onboarding = () => {
   const [categories, setCategories] = useState<any[]>([]);
   
   const [storeData, setStoreData] = useState({
-    storeName: profile?.nome || "",
-    bio: profile?.descricao_loja || "",
+    storeName: "",
+    bio: "",
     avatar: "",
     banner: ""
   });
@@ -132,6 +132,68 @@ const Onboarding = () => {
               onChange={(e) => setStoreData({ ...storeData, bio: e.target.value })}
               rows={4}
             />
+          </div>
+          
+          {/* Upload de Banner */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Banner da Loja</label>
+            <div className="relative h-32 rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors">
+              {storeData.banner ? (
+                <img src={storeData.banner} alt="Banner" className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex items-center justify-center h-full bg-muted/50">
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      setStoreData({ ...storeData, banner: event.target?.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Recomendado: 1200x400px</p>
+          </div>
+
+          {/* Upload de Avatar */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Foto de Perfil</label>
+            <div className="flex items-center gap-4">
+              <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors">
+                {storeData.avatar ? (
+                  <img src={storeData.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-full bg-muted/50">
+                    <Camera className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        setStoreData({ ...storeData, avatar: event.target?.result as string });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Recomendado: 400x400px</p>
+            </div>
           </div>
         </div>
       )
@@ -256,6 +318,8 @@ const Onboarding = () => {
         .update({
           nome: storeData.storeName,
           descricao_loja: storeData.bio,
+          foto_perfil_url: storeData.avatar,
+          banner_loja_url: storeData.banner,
           onboarding_completed: true
         })
         .eq('id', user?.id);
