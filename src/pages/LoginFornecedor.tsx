@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { Loader2 } from "lucide-react";
 
 const LoginFornecedor = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signIn, signUp } = useSupabaseAuth();
   const [isSignup, setIsSignup] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyName: "",
     cnpj: "",
@@ -20,24 +22,48 @@ const LoginFornecedor = () => {
     password: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    if (isSignup) {
-      // Redirecionar para escolha de plano no cadastro
-      navigate("/fornecedor/escolher-plano", { 
-        state: { 
-          planoData: formData 
-        } 
-      });
-    } else {
-      // Login direto
-      login(formData.email, formData.password, formData.companyName, 'fornecedor');
-      toast.success("Login de fornecedor realizado com sucesso!");
-      
-      setTimeout(() => {
-        navigate("/fornecedor");
-      }, 500);
+    try {
+      if (isSignup) {
+        // Criar conta de fornecedor
+        const { error } = await signUp(formData.email, formData.password, {
+          nome: formData.companyName,
+          tipo: 'fornecedor',
+          document: formData.cnpj,
+          telefone: formData.whatsapp,
+          pix_key: formData.pixKey,
+          endereco_principal: {
+            address: formData.address
+          }
+        });
+
+        if (error) {
+          toast.error(error.message);
+          setLoading(false);
+          return;
+        }
+
+        toast.success("Conta criada com sucesso! Redirecionando para onboarding...");
+        // O hook useSupabaseAuth já redireciona para onboarding
+      } else {
+        // Login
+        const { error } = await signIn(formData.email, formData.password);
+
+        if (error) {
+          toast.error("Erro ao fazer login: " + error.message);
+          setLoading(false);
+          return;
+        }
+
+        toast.success("Login realizado com sucesso!");
+        // O hook useSupabaseAuth já redireciona baseado no perfil
+      }
+    } catch (error: any) {
+      toast.error("Erro: " + error.message);
+      setLoading(false);
     }
   };
 
@@ -135,8 +161,15 @@ const LoginFornecedor = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-            {isSignup ? "Cadastrar empresa" : "Entrar como fornecedor"}
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isSignup ? "Cadastrando..." : "Entrando..."}
+              </>
+            ) : (
+              isSignup ? "Cadastrar empresa" : "Entrar como fornecedor"
+            )}
           </Button>
         </form>
 

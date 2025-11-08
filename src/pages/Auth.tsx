@@ -72,7 +72,10 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(signupEmail, signupPassword, signupNome, signupTipo);
+      await signUp(signupEmail, signupPassword, {
+        nome: signupNome,
+        tipo: signupTipo
+      });
       // Switch to login tab after successful signup
       setLoginEmail(signupEmail);
     } catch (error) {

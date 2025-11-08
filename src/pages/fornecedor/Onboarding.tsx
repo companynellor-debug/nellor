@@ -1,46 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/hooks/useAuth";
-import { useSupplierProducts } from "@/hooks/useSupplierProducts";
-import { useStoreProfile } from "@/hooks/useStoreProfile";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Store, 
   Package, 
-  DollarSign, 
-  TrendingUp, 
-  Bell, 
-  MessageSquare,
-  Upload,
-  Check,
-  ArrowRight,
-  ArrowLeft,
-  X
+  CheckCircle2, 
+  Upload, 
+  Camera,
+  Loader2,
+  DollarSign,
+  TrendingUp,
+  Bell,
+  MessageSquare
 } from "lucide-react";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { completeOnboarding } = useAuth();
-  const { addProduct } = useSupplierProducts();
-  const { updateStoreProfile } = useStoreProfile();
+  const { completeOnboarding, profile, user } = useSupabaseAuth();
   const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
   
   const [storeData, setStoreData] = useState({
-    storeName: "",
-    bio: "",
+    storeName: profile?.nome || "",
+    bio: profile?.descricao_loja || "",
     avatar: "",
     banner: ""
   });
-
-  const [avatarFile, setAvatarFile] = useState<string>("");
-  const [bannerFile, setBannerFile] = useState<string>("");
-  const [productImages, setProductImages] = useState<string[]>([]);
 
   const [firstProduct, setFirstProduct] = useState({
     name: "",
@@ -49,6 +43,25 @@ const Onboarding = () => {
     price: "",
     stock: ""
   });
+
+  // Carregar categorias do Supabase
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('nome');
+      
+      if (error) {
+        console.error('Erro ao carregar categorias:', error);
+        return;
+      }
+      
+      setCategories(data || []);
+    };
+
+    fetchCategories();
+  }, []);
 
   const steps = [
     {
@@ -98,185 +111,83 @@ const Onboarding = () => {
       )
     },
     {
-      title: "Configure sua Loja",
+      title: "Configure sua loja",
       icon: Store,
-      description: "Personalize a aparência da sua loja",
+      description: "Adicione informações sobre sua loja",
       content: (
         <div className="space-y-4">
           <div>
-            <Label htmlFor="storeName">Nome da Loja *</Label>
+            <label className="block text-sm font-medium mb-2">Nome da loja</label>
             <Input
-              id="storeName"
-              placeholder="Ex: Minha Loja Incrível"
+              placeholder="Ex: Loja do João"
               value={storeData.storeName}
               onChange={(e) => setStoreData({ ...storeData, storeName: e.target.value })}
             />
           </div>
           <div>
-            <Label htmlFor="bio">Descrição da Loja</Label>
+            <label className="block text-sm font-medium mb-2">Bio da loja</label>
             <Textarea
-              id="bio"
               placeholder="Conte um pouco sobre sua loja..."
               value={storeData.bio}
               onChange={(e) => setStoreData({ ...storeData, bio: e.target.value })}
-              rows={3}
+              rows={4}
             />
-          </div>
-          <div>
-            <Label htmlFor="avatar">Logo da Loja</Label>
-            <div className="space-y-2">
-              <Input
-                id="avatar"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setAvatarFile(reader.result as string);
-                      setStoreData({ ...storeData, avatar: reader.result as string });
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-                className="cursor-pointer"
-              />
-              {avatarFile && (
-                <img src={avatarFile} alt="Preview" className="w-24 h-24 rounded-full object-cover" />
-              )}
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="banner">Banner da Loja</Label>
-            <div className="space-y-2">
-              <Input
-                id="banner"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setBannerFile(reader.result as string);
-                      setStoreData({ ...storeData, banner: reader.result as string });
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-                className="cursor-pointer"
-              />
-              {bannerFile && (
-                <img src={bannerFile} alt="Preview" className="w-full h-32 rounded-lg object-cover" />
-              )}
-            </div>
           </div>
         </div>
       )
     },
     {
-      title: "Adicione seu Primeiro Produto",
+      title: "Cadastre seu primeiro produto",
       icon: Package,
-      description: "Vamos começar adicionando um produto à sua loja",
+      description: "Adicione seu primeiro produto à plataforma",
       content: (
         <div className="space-y-4">
           <div>
-            <Label htmlFor="productName">Nome do Produto *</Label>
+            <label className="block text-sm font-medium mb-2">Nome do produto</label>
             <Input
-              id="productName"
-              placeholder="Ex: Camiseta Premium"
+              placeholder="Ex: Camiseta Básica"
               value={firstProduct.name}
               onChange={(e) => setFirstProduct({ ...firstProduct, name: e.target.value })}
             />
           </div>
           <div>
-            <Label htmlFor="category">Categoria *</Label>
-            <Input
-              id="category"
-              placeholder="Ex: Roupas"
-              value={firstProduct.category}
-              onChange={(e) => setFirstProduct({ ...firstProduct, category: e.target.value })}
-            />
+            <label className="block text-sm font-medium mb-2">Categoria</label>
+            <Select value={firstProduct.category} onValueChange={(value) => setFirstProduct({ ...firstProduct, category: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
-            <Label htmlFor="description">Descrição</Label>
+            <label className="block text-sm font-medium mb-2">Descrição</label>
             <Textarea
-              id="description"
               placeholder="Descreva seu produto..."
               value={firstProduct.description}
               onChange={(e) => setFirstProduct({ ...firstProduct, description: e.target.value })}
               rows={3}
             />
           </div>
-          <div>
-            <Label htmlFor="productImages">Imagens do Produto (máximo 5)</Label>
-            <div className="space-y-2">
-              <Input
-                id="productImages"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => {
-                  const files = e.target.files;
-                  if (!files) return;
-                  
-                  if (productImages.length + files.length > 5) {
-                    toast.error("Você pode adicionar no máximo 5 imagens");
-                    return;
-                  }
-                  
-                  Array.from(files).forEach((file) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setProductImages((prev) => [...prev, reader.result as string]);
-                    };
-                    reader.readAsDataURL(file);
-                  });
-                }}
-                disabled={productImages.length >= 5}
-                className="cursor-pointer"
-              />
-              <p className="text-sm text-muted-foreground">
-                {productImages.length}/5 imagens adicionadas
-              </p>
-              {productImages.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {productImages.map((img, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={img}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-md"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setProductImages((prev) => prev.filter((_, i) => i !== index))}
-                        className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="price">Preço (R$) *</Label>
+              <label className="block text-sm font-medium mb-2">Preço (R$)</label>
               <Input
-                id="price"
                 type="number"
+                step="0.01"
                 placeholder="0.00"
                 value={firstProduct.price}
                 onChange={(e) => setFirstProduct({ ...firstProduct, price: e.target.value })}
               />
             </div>
             <div>
-              <Label htmlFor="stock">Estoque *</Label>
+              <label className="block text-sm font-medium mb-2">Estoque</label>
               <Input
-                id="stock"
                 type="number"
                 placeholder="0"
                 value={firstProduct.stock}
@@ -288,48 +199,24 @@ const Onboarding = () => {
       )
     },
     {
-      title: "Tudo Pronto!",
-      icon: Check,
-      description: "Sua loja está configurada e pronta para começar",
+      title: "Tudo pronto!",
+      icon: CheckCircle2,
+      description: "Sua loja está configurada e pronta para vender",
       content: (
-        <div className="space-y-6">
-          <div className="bg-muted/50 p-6 rounded-lg text-center">
-            <Check className="h-16 w-16 mx-auto mb-4 text-green-600" />
-            <h3 className="text-xl font-bold mb-2">Configuração Concluída!</h3>
-            <p className="text-muted-foreground">
-              Sua loja está pronta para receber os primeiros clientes
-            </p>
+        <div className="text-center space-y-6">
+          <div className="mx-auto w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+            <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
           </div>
-          
-          <div className="space-y-3">
-            <h4 className="font-semibold">Próximos passos:</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <Check className="h-4 w-4 mt-0.5 text-green-600" />
-                <span>Adicione mais produtos na aba "Produtos"</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-4 w-4 mt-0.5 text-green-600" />
-                <span>Configure suas informações de contato em "Editar Loja"</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-4 w-4 mt-0.5 text-green-600" />
-                <span>Acompanhe suas vendas no Dashboard</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-4 w-4 mt-0.5 text-green-600" />
-                <span>Responda rapidamente aos clientes no Chat</span>
-              </li>
-            </ul>
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold">Parabéns!</h3>
+            <p className="text-muted-foreground">
+              Sua loja foi configurada com sucesso. Agora você pode começar a gerenciar seus produtos e vendas!
+            </p>
           </div>
         </div>
       )
     }
   ];
-
-  const currentStepData = steps[currentStep];
-  const progress = ((currentStep + 1) / steps.length) * 100;
-  const StepIcon = currentStepData.icon;
 
   const handleNext = () => {
     if (currentStep === 1) {
@@ -338,31 +225,18 @@ const Onboarding = () => {
         return;
       }
     }
-    
+
     if (currentStep === 2) {
-      if (!firstProduct.name.trim() || !firstProduct.category.trim() || 
-          !firstProduct.price || !firstProduct.stock) {
-        toast.error("Por favor, preencha todos os campos obrigatórios do produto");
+      if (!firstProduct.name.trim() || !firstProduct.category || !firstProduct.price || !firstProduct.stock) {
+        toast.error("Por favor, preencha todos os campos do produto");
         return;
       }
-      
-      if (productImages.length === 0) {
-        toast.error("Adicione pelo menos uma imagem do produto");
-        return;
-      }
-      
-      addProduct({
-        name: firstProduct.name,
-        category: firstProduct.category,
-        description: firstProduct.description,
-        images: productImages,
-        price: parseFloat(firstProduct.price),
-        stock: parseInt(firstProduct.stock)
-      });
     }
 
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+    } else {
+      handleFinish();
     }
   };
 
@@ -372,65 +246,113 @@ const Onboarding = () => {
     }
   };
 
-  const handleFinish = () => {
-    // Salvar os dados da loja no contexto
-    updateStoreProfile({
-      storeName: storeData.storeName,
-      bio: storeData.bio,
-      avatar: storeData.avatar || avatarFile,
-      banner: storeData.banner || bannerFile
-    });
-    
-    completeOnboarding();
-    toast.success("Configuração concluída! Bem-vindo à sua loja!");
-    navigate("/fornecedor/dashboard");
+  const handleFinish = async () => {
+    setLoading(true);
+
+    try {
+      // Atualizar perfil do fornecedor
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          nome: storeData.storeName,
+          descricao_loja: storeData.bio,
+          onboarding_completed: true
+        })
+        .eq('id', user?.id);
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      // Criar primeiro produto
+      const { error: productError } = await supabase
+        .from('products')
+        .insert({
+          nome: firstProduct.name,
+          categoria_id: firstProduct.category,
+          descricao_longa: firstProduct.description,
+          preco: parseFloat(firstProduct.price),
+          estoque: parseInt(firstProduct.stock),
+          supplier_id: user?.id,
+          ativo: true
+        });
+
+      if (productError) {
+        throw productError;
+      }
+
+      // Completar onboarding
+      await completeOnboarding();
+
+      toast.success("Onboarding concluído com sucesso!");
+      navigate("/fornecedor/dashboard");
+    } catch (error: any) {
+      console.error('Erro no onboarding:', error);
+      toast.error("Erro ao concluir onboarding: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const CurrentStepIcon = steps[currentStep].icon;
+  const progress = ((currentStep + 1) / steps.length) * 100;
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl p-6 sm:p-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <StepIcon className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">{currentStepData.title}</h1>
-                <p className="text-sm text-muted-foreground">{currentStepData.description}</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl">
+        <CardContent className="p-8">
+          <div className="mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <div className="p-4 bg-primary/10 rounded-full">
+                <CurrentStepIcon className="h-12 w-12 text-primary" />
               </div>
             </div>
-            <div className="text-sm font-medium text-muted-foreground">
-              {currentStep + 1}/{steps.length}
+            <h2 className="text-2xl font-bold text-center mb-2">
+              {steps[currentStep].title}
+            </h2>
+            <p className="text-muted-foreground text-center mb-6">
+              {steps[currentStep].description}
+            </p>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Passo {currentStep + 1} de {steps.length}</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
             </div>
           </div>
-          <Progress value={progress} className="h-2" />
-        </div>
 
-        <div className="mb-8">
-          {currentStepData.content}
-        </div>
+          <div className="mb-8">
+            {steps[currentStep].content}
+          </div>
 
-        <div className="flex gap-3">
-          {currentStep > 0 && (
-            <Button variant="outline" onClick={handleBack} className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
+          <div className="flex justify-between gap-4">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={currentStep === 0 || loading}
+              className="flex-1"
+            >
               Voltar
             </Button>
-          )}
-          
-          {currentStep < steps.length - 1 ? (
-            <Button onClick={handleNext} className="flex-1 gap-2">
-              Próximo
-              <ArrowRight className="h-4 w-4" />
+            <Button
+              onClick={handleNext}
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Finalizando...
+                </>
+              ) : currentStep === steps.length - 1 ? (
+                "Concluir"
+              ) : (
+                "Próximo"
+              )}
             </Button>
-          ) : (
-            <Button onClick={handleFinish} className="flex-1 gap-2">
-              <Check className="h-4 w-4" />
-              Começar a Vender
-            </Button>
-          )}
-        </div>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

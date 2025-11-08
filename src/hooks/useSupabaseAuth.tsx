@@ -26,8 +26,15 @@ interface AuthContextType {
   profile: Profile | null;
   isAuthenticated: boolean;
   loading: boolean;
-  signUp: (email: string, password: string, nome: string, tipo: 'cliente' | 'fornecedor') => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: {
+    nome?: string;
+    tipo?: 'cliente' | 'fornecedor' | 'admin';
+    document?: string;
+    telefone?: string;
+    pix_key?: string;
+    endereco_principal?: any;
+  }) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   completeOnboarding: () => Promise<void>;
@@ -89,7 +96,14 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, nome: string, tipo: 'cliente' | 'fornecedor') => {
+  const signUp = async (email: string, password: string, metadata?: {
+    nome?: string;
+    tipo?: 'cliente' | 'fornecedor' | 'admin';
+    document?: string;
+    telefone?: string;
+    pix_key?: string;
+    endereco_principal?: any;
+  }) => {
     try {
       setLoading(true);
       const redirectUrl = `${window.location.origin}/`;
@@ -100,19 +114,26 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            nome,
-            tipo
+            nome: metadata?.nome,
+            tipo: metadata?.tipo || 'cliente',
+            document: metadata?.document,
+            telefone: metadata?.telefone,
+            pix_key: metadata?.pix_key,
+            endereco_principal: metadata?.endereco_principal
           }
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        return { error };
+      }
 
       toast({
         title: 'Conta criada!',
         description: 'Verifique seu email para confirmar o cadastro.',
       });
 
+      return { error: null };
     } catch (error: any) {
       console.error('Error signing up:', error);
       toast({
@@ -120,7 +141,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         description: error.message,
         variant: 'destructive',
       });
-      throw error;
+      return { error };
     } finally {
       setLoading(false);
     }
@@ -134,7 +155,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        return { error };
+      }
 
       // Fetch profile
       if (data.user) {
@@ -163,6 +186,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         navigate('/cliente');
       }
 
+      return { error: null };
     } catch (error: any) {
       console.error('Error signing in:', error);
       
@@ -178,7 +202,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         description: errorMessage,
         variant: 'destructive',
       });
-      throw error;
+      return { error };
     } finally {
       setLoading(false);
     }

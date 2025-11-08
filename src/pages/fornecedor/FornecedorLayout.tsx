@@ -5,14 +5,14 @@ import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
 const FornecedorLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, user } = useAuth();
+  const { signOut, profile } = useSupabaseAuth();
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("fornecedor-dark-mode");
     return saved ? JSON.parse(saved) : false;
@@ -20,10 +20,10 @@ const FornecedorLayout = () => {
 
   // Redirecionar para onboarding se não completou
   useEffect(() => {
-    if (user?.type === 'fornecedor' && !user?.onboardingCompleted && location.pathname !== '/fornecedor/onboarding') {
+    if (profile?.tipo === 'fornecedor' && !profile?.onboarding_completed && location.pathname !== '/fornecedor/onboarding') {
       navigate('/fornecedor/onboarding');
     }
-  }, [user, navigate, location.pathname]);
+  }, [profile, navigate, location.pathname]);
 
   useEffect(() => {
     localStorage.setItem("fornecedor-dark-mode", JSON.stringify(darkMode));
@@ -34,8 +34,8 @@ const FornecedorLayout = () => {
     }
   }, [darkMode]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     toast.success("Logout realizado com sucesso!");
     navigate("/");
   };
