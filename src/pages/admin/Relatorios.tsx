@@ -15,6 +15,7 @@ const Relatorios = () => {
   const [receitaTotal, setReceitaTotal] = useState(0);
   const [novosClientes, setNovosClientes] = useState(0);
   const [novosFornecedores, setNovosFornecedores] = useState(0);
+  const [stateData, setStateData] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -31,7 +32,7 @@ const Relatorios = () => {
 
       const { data: orders } = await supabase
         .from('orders')
-        .select('total, created_at, payment_status, itens')
+        .select('total, created_at, payment_status, itens, endereco_entrega')
         .eq('payment_status', 'paid');
 
       const clientes = profiles?.filter(p => p.tipo === 'cliente') || [];
@@ -73,6 +74,23 @@ const Relatorios = () => {
       setNovosClientes(clientes.filter(c => new Date(c.created_at) >= startOfMonth).length);
       setNovosFornecedores(fornecedores.filter(f => new Date(f.created_at) >= startOfMonth).length);
 
+      // Calcular pedidos por estado
+      const stateCount: Record<string, number> = {};
+      ordersList.forEach(order => {
+        if (order.endereco_entrega && typeof order.endereco_entrega === 'object') {
+          const endereco = order.endereco_entrega as any;
+          const state = endereco.state || 'Desconhecido';
+          stateCount[state] = (stateCount[state] || 0) + 1;
+        }
+      });
+
+      const stateDataList = Object.entries(stateCount)
+        .map(([state, orders]) => ({ state, orders }))
+        .sort((a, b) => b.orders - a.orders)
+        .slice(0, 6);
+
+      setStateData(stateDataList);
+
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -88,14 +106,6 @@ const Relatorios = () => {
     );
   }
 
-  const stateDataList = [
-    { state: "SP", orders: 520 },
-    { state: "RJ", orders: 310 },
-    { state: "MG", orders: 280 },
-    { state: "RS", orders: 180 },
-    { state: "PR", orders: 150 },
-    { state: "Outros", orders: 83 }
-  ];
   return <div className="space-y-8">
       <div className="flex justify-between items-start">
         <div>
@@ -186,7 +196,7 @@ const Relatorios = () => {
           </CardHeader>
           <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stateDataList} layout="vertical">
+                <BarChart data={stateData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis type="number" stroke="#6b7280" />
                 <YAxis dataKey="state" type="category" stroke="#6b7280" width={60} />

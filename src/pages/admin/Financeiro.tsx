@@ -11,6 +11,9 @@ const Financeiro = () => {
   const [pagoFornecedores, setPagoFornecedores] = useState(0);
   const [comissoes, setComissoes] = useState(0);
   const [cashflowData, setCashflowData] = useState<any[]>([]);
+  const [ticketMedio, setTicketMedio] = useState(0);
+  const [comissaoPorVenda, setComissaoPorVenda] = useState(0);
+  const [totalPedidos, setTotalPedidos] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -29,6 +32,7 @@ const Financeiro = () => {
       const ordersList = orders || [];
       const receita = ordersList.reduce((sum, o) => sum + Number(o.total), 0);
       setReceitaTotal(receita);
+      setTotalPedidos(ordersList.length);
 
       // Calcular comissão (5%)
       const comissao = receita * 0.05;
@@ -37,6 +41,14 @@ const Financeiro = () => {
       // Pago aos fornecedores (95%)
       const pago = receita * 0.95;
       setPagoFornecedores(pago);
+
+      // Ticket médio
+      const ticket = ordersList.length > 0 ? receita / ordersList.length : 0;
+      setTicketMedio(ticket);
+
+      // Comissão por venda
+      const comissaoVenda = ordersList.length > 0 ? comissao / ordersList.length : 0;
+      setComissaoPorVenda(comissaoVenda);
 
       // Fluxo de caixa dos últimos 6 meses
       const cashflow = [];
@@ -104,8 +116,8 @@ const Financeiro = () => {
   ];
 
   const distributionData = [
-    { name: "Fornecedores", value: 95, color: "#3B82F6" },
-    { name: "Comissão Nellor", value: 5, color: "#8B5CF6" },
+    { name: "Fornecedores", value: pagoFornecedores, color: "#3B82F6" },
+    { name: "Comissão Nellor", value: comissoes, color: "#8B5CF6" },
   ];
 
   return <div className="space-y-8">
@@ -170,7 +182,7 @@ const Financeiro = () => {
                 <Pie data={distributionData} cx="50%" cy="50%" labelLine={false} label={({
                 name,
                 value
-              }) => `${name}: ${value}%`} outerRadius={120} dataKey="value">
+              }) => `${name}: R$ ${value.toFixed(2)}`} outerRadius={120} dataKey="value">
                   {distributionData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                 </Pie>
                 <Tooltip />
@@ -192,11 +204,11 @@ const Financeiro = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Ticket Médio:</span>
-              <span className="font-bold text-lg">R$ 83,70</span>
+              <span className="font-bold text-lg">R$ {ticketMedio.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Comissão por Venda:</span>
-              <span className="font-bold text-lg">R$ 4,18</span>
+              <span className="font-bold text-lg">R$ {comissaoPorVenda.toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>
@@ -208,15 +220,15 @@ const Financeiro = () => {
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Por Venda Média:</span>
-              <span className="font-bold text-lg text-green-900">R$ 4,18</span>
+              <span className="font-bold text-lg text-green-900">R$ {comissaoPorVenda.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Por Dia (média):</span>
-              <span className="font-bold text-lg text-green-900">R$ 217</span>
+              <span className="text-muted-foreground">Total no Período:</span>
+              <span className="font-bold text-lg text-green-900">R$ {comissoes.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Projeção Mensal:</span>
-              <span className="font-bold text-lg text-green-900">R$ 6.500</span>
+              <span className="text-muted-foreground">Total de Pedidos:</span>
+              <span className="font-bold text-lg text-green-900">{totalPedidos}</span>
             </div>
           </CardContent>
         </Card>

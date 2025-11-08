@@ -73,72 +73,24 @@ const Alertas = () => {
     );
   }
 
-  const staticAlerts = [{
-  type: "success",
-  icon: CheckCircle,
-  title: "Fornecedor TechWear ultrapassou 100 vendas",
-  description: "Meta mensal atingida com 12 dias de antecedência",
-  time: "5 min atrás",
-  color: "from-green-500 to-green-600",
-  bg: "bg-green-50"
-}, {
-  type: "warning",
-  icon: AlertTriangle,
-  title: "Pedido #2050 pendente há mais de 24h",
-  description: "Fornecedor DriftWear não confirmou o pedido",
-  time: "1 hora atrás",
-  color: "from-yellow-500 to-yellow-600",
-  bg: "bg-yellow-50"
-}, {
-  type: "info",
-  icon: Star,
-  title: "Cliente Ana R. fez o primeiro pedido",
-  description: "Novo cliente cadastrado hoje pela manhã",
-  time: "2 horas atrás",
-  color: "from-blue-500 to-blue-600",
-  bg: "bg-blue-50"
-}, {
-  type: "success",
-  icon: CheckCircle,
-  title: "UrbanCloth atingiu 4.9★ de avaliação",
-  description: "Baseado em 120 avaliações de clientes",
-  time: "3 horas atrás",
-  color: "from-green-500 to-green-600",
-  bg: "bg-green-50"
-}, {
-  type: "warning",
-  icon: AlertTriangle,
-  title: "Estoque baixo reportado por 3 fornecedores",
-  description: "TechStyle, NeonWear e StreetVibe precisam repor",
-  time: "4 horas atrás",
-  color: "from-yellow-500 to-yellow-600",
-  bg: "bg-yellow-50"
-}, {
-  type: "error",
-  icon: AlertCircle,
-  title: "2 pedidos aguardando confirmação",
-  description: "Tempo médio de resposta acima da meta",
-  time: "5 horas atrás",
-  color: "from-red-500 to-red-600",
-  bg: "bg-red-50"
-}, {
-  type: "info",
-  icon: Star,
-  title: "Pico de vendas detectado",
-  description: "310 pedidos realizados hoje (sexta-feira)",
-  time: "6 horas atrás",
-  color: "from-blue-500 to-blue-600",
-  bg: "bg-blue-50"
-}, {
-  type: "success",
-  icon: CheckCircle,
-  title: "Meta de comissão mensal atingida",
-  description: "R$ 6.372 em comissões este mês",
-  time: "1 dia atrás",
-  color: "from-green-500 to-green-600",
-  bg: "bg-green-50"
-}];
-  const allAlerts = alerts.length > 0 ? alerts : staticAlerts;
+  // Mostrar mensagem se não houver alertas
+  if (alerts.length === 0) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
+            🔔 Alertas & Notificações
+          </h1>
+          <p className="text-muted-foreground">Acompanhamento em tempo real da plataforma</p>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">Nenhum alerta no momento</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return <div className="space-y-8">
       <div>
@@ -149,7 +101,7 @@ const Alertas = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {allAlerts.map((alert, index) => {
+        {alerts.map((alert, index) => {
         const Icon = alert.icon;
         return <Card key={index} className={`border-l-4 ${alert.bg} hover:shadow-lg transition-all cursor-pointer`} style={{
           borderLeftColor: `hsl(var(--${alert.type === 'error' ? 'destructive' : alert.type === 'warning' ? 'orange' : alert.type === 'info' ? 'blue' : 'green'}-500))`
