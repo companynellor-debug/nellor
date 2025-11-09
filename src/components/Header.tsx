@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Download } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/logo.png";
 import {
@@ -28,6 +28,7 @@ const Header = () => {
     { name: "Sobre", path: "/sobre" },
     { name: "Fornecedor", path: "/fornecedor" },
     { name: "Contato", path: "/contato" },
+    { name: "Instalar App", path: "/install", icon: Download },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -71,10 +72,11 @@ const Header = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
+                className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
                   isActive(item.path) ? "text-primary" : "text-foreground/80"
                 }`}
               >
+                {item.icon && <item.icon className="w-4 h-4" />}
                 {item.name}
               </Link>
             ))}
@@ -117,10 +119,11 @@ const Header = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`text-sm font-medium transition-colors ${
+                className={`text-sm font-medium transition-colors flex items-center gap-2 ${
                   isActive(item.path) ? "text-primary" : "text-foreground/80"
                 }`}
               >
+                {item.icon && <item.icon className="w-4 h-4" />}
                 {item.name}
               </Link>
             ))}

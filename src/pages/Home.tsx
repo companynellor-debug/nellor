@@ -67,8 +67,13 @@ const Home = () => {
                 Compre, revenda e cresça — tudo em um só app.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Link to="/download">
+                <Link to="/install">
                   <Button size="lg" className="w-full sm:w-auto bg-white text-primary hover:bg-white/90">
+                    Instalar App
+                  </Button>
+                </Link>
+                <Link to="/download">
+                  <Button size="lg" className="w-full sm:w-auto bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-primary">
                     Baixar o App
                   </Button>
                 </Link>
@@ -140,9 +145,14 @@ const Home = () => {
             ))}
           </div>
           
-          <div className="text-center">
-            <Link to="/download">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/install">
               <Button size="lg" className="bg-gradient-to-r from-primary to-secondary text-white">
+                Instalar App
+              </Button>
+            </Link>
+            <Link to="/download">
+              <Button size="lg" variant="outline" className="bg-white">
                 Baixar o App
               </Button>
             </Link>
