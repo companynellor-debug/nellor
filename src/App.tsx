@@ -27,7 +27,6 @@ import Download from "./pages/Download";
 import Recursos from "./pages/Recursos";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
-import Install from "./pages/Install";
 
 import ClienteHome from "./pages/cliente/Home";
 import ProdutoDetalhes from "./pages/cliente/ProdutoDetalhes";
@@ -76,7 +75,6 @@ const App = () => (
             <Route path="/download" element={<Download />} />
             <Route path="/recursos" element={<Recursos />} />
             <Route path="/faq" element={<FAQ />} />
-            <Route path="/install" element={<Install />} />
           
           {/* Cliente Panel Routes */}
           <Route path="/cliente" element={<ProtectedRoute requireType="cliente"><ClienteHome /></ProtectedRoute>} />
