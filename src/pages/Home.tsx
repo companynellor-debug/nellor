@@ -81,11 +81,7 @@ const Home = () => {
             </div>
             
             <div className="relative hidden lg:block">
-              <img 
-                src={nellorApp} 
-                alt="App mockup" 
-                className="w-full max-w-sm mx-auto rounded-3xl shadow-2xl animate-fade-in" 
-              />
+              <img src={nellorApp} alt="App mockup" className="w-full max-w-sm mx-auto rounded-3xl shadow-2xl animate-fade-in" />
             </div>
           </div>
         </div>
@@ -102,15 +98,13 @@ const Home = () => {
           </p>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {benefits.map((benefit, index) => (
-              <Card key={index} className="p-6 text-center">
+            {benefits.map((benefit, index) => <Card key={index} className="p-6 text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                   <benefit.icon className="h-8 w-8 text-white" />
                 </div>
                 <h3 className="font-heading font-bold mb-2 text-lg text-primary">{benefit.title}</h3>
                 <p className="text-muted-foreground text-sm">{benefit.description}</p>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -126,8 +120,7 @@ const Home = () => {
           </p>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
-            {steps.map((step, index) => (
-              <div key={index} className="text-center">
+            {steps.map((step, index) => <div key={index} className="text-center">
                 <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 relative">
                   <step.icon className="h-10 w-10 text-white" />
                   <div className="absolute -top-1 -right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center text-primary font-bold text-sm">
@@ -136,15 +129,12 @@ const Home = () => {
                 </div>
                 <h3 className="font-heading font-bold mb-2 text-lg text-primary">{step.title}</h3>
                 <p className="text-muted-foreground text-sm">{step.description}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
           
           <div className="text-center">
             <Link to="/download">
-              <Button size="lg" className="bg-gradient-to-r from-primary to-secondary text-white">
-                Baixar o App
-              </Button>
+              
             </Link>
           </div>
         </div>
@@ -161,20 +151,16 @@ const Home = () => {
           </p>
           
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6 bg-white/95">
+            {testimonials.map((testimonial, index) => <Card key={index} className="p-6 bg-white/95">
                 <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  ))}
+                  {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />)}
                 </div>
                 <p className="mb-4 italic text-sm">"{testimonial.comment}"</p>
                 <div className="border-t pt-4">
                   <p className="font-bold text-primary">{testimonial.name}</p>
                   <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                 </div>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -190,18 +176,8 @@ const Home = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90">
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-              </svg>
-              App Store
-            </Button>
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90">
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" />
-              </svg>
-              Google Play
-            </Button>
+            
+            
           </div>
         </div>
       </section>
