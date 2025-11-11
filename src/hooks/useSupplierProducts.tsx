@@ -77,14 +77,16 @@ export const useSupplierProducts = () => {
         .insert([{
           supplier_id: user.id,
           nome: product.name,
-          categoria_id: product.category || null,
-          descricao_curta: product.description,
-          descricao_longa: product.description,
-          imagens: product.images,
+          categoria_id: product.category && product.category !== '' ? product.category : null,
+          descricao_curta: product.description || '',
+          descricao_longa: product.description || '',
+          imagens: product.images && product.images.length > 0 ? product.images : [],
           preco: product.price,
-          estoque: product.stock,
-          variacoes: product.variations,
+          estoque: product.stock || 0,
+          variacoes: product.variations || null,
           ativo: true,
+          rating_medio: 0,
+          total_reviews: 0
         }])
         .select()
         .single();
