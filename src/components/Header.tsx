@@ -87,11 +87,6 @@ const Header = () => {
                 Entrar
               </Button>
             </Link>
-            <Link to="/download">
-              <Button className="bg-gradient-to-r from-accent to-secondary hover:opacity-90">
-                Baixar App
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -128,11 +123,6 @@ const Header = () => {
               <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="outline" className="w-full border-primary text-primary">
                   Entrar
-                </Button>
-              </Link>
-              <Link to="/download" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full bg-gradient-to-r from-accent to-secondary">
-                  Baixar App
                 </Button>
               </Link>
             </div>
