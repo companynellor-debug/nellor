@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,16 +35,12 @@ const configItems = [{
 }];
 const Configuracoes = () => {
   const navigate = useNavigate();
+  const { signOut } = useSupabaseAuth();
 
-  const handleLogout = () => {
-    // Limpar dados de autenticação
-    localStorage.removeItem('adminAuth');
-    localStorage.removeItem('userAuth');
-    
+  const handleLogout = async () => {
+    await signOut();
     toast.success("Você saiu da sua conta");
-    
-    // Redirecionar para login
-    navigate('/login');
+    navigate('/');
   };
 
   return <div className="space-y-8">
