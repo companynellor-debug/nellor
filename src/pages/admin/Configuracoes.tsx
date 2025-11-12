@@ -63,7 +63,7 @@ const Configuracoes = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Tem certeza que deseja sair?</AlertDialogTitle>
               <AlertDialogDescription>
-                Você será desconectado da sua conta de administrador e redirecionado para a página de login.
+                Você será desconectado da sua conta de administrador e redirecionado para a página inicial.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
