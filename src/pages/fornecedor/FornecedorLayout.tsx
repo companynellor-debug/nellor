@@ -48,14 +48,14 @@ const FornecedorLayout = () => {
       <div className="flex-1 md:ml-64">
         <div className="flex flex-col min-h-screen">
           {/* Header */}
-          <header className="h-16 border-b bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 shadow-sm">
+          <header className="h-14 sm:h-16 border-b bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-40 shadow-sm">
             {/* Left side - Logo for mobile */}
             <div className="flex items-center gap-4 md:hidden">
-              <img src={logo} alt="Logo" className="h-8 sm:h-10" />
+              <img src={logo} alt="Logo" className="h-7 sm:h-10" />
             </div>
             
-            {/* Right side - Theme, Notifications and Logout */}
-            <div className="flex items-center gap-2 ml-auto">
+            {/* Right side - Theme, Notifications and Logout - Hidden on mobile, visible on desktop */}
+            <div className="hidden sm:flex items-center gap-2 ml-auto">
               <div className="flex items-center gap-2 mr-2">
                 <Sun className="h-4 w-4 text-muted-foreground" />
                 <Switch checked={darkMode} onCheckedChange={setDarkMode} />
