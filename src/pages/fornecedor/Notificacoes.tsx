@@ -34,23 +34,32 @@ const Notificacoes = () => {
           </Card>
         ) : (
           notifications.map((notification) => {
+            const orderData = notification.data as { order_number?: string; total?: number } | null;
+            const orderNumber = orderData?.order_number || '';
+            const total = orderData?.total || 0;
+            
             return (
               <div 
                 key={notification.id} 
-                className={`relative rounded-2xl p-6 bg-gradient-to-r from-purple-900 via-purple-700 to-purple-500 text-white shadow-lg ${notification.read ? 'opacity-60' : ''}`}
+                className={`relative rounded-2xl overflow-hidden bg-gradient-to-r from-purple-900 via-purple-700 to-purple-500 text-white shadow-xl ${notification.read ? 'opacity-60' : ''}`}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                    <img src={logo} alt="Logo" className="w-16 h-16 object-contain" />
+                <div className="flex items-center gap-4 p-6">
+                  <div className="w-24 h-24 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                    <img src={logo} alt="Logo" className="w-20 h-20 object-contain" />
                   </div>
                   
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold mb-1">{notification.title}</h3>
-                    <p className="text-lg opacity-90">{notification.body}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-3xl font-bold mb-2 tracking-tight">{notification.title}</h3>
+                    <p className="text-xl font-medium">valor: R$ {total.toFixed(2).replace('.', ',')}</p>
                   </div>
 
-                  <div className="text-right text-sm opacity-75">
-                    {format(new Date(notification.created_at), "HH:mm", { locale: ptBR })}
+                  <div className="text-right flex flex-col justify-between h-full">
+                    <div className="text-base font-medium mb-8">
+                      {format(new Date(notification.created_at), "HH:mm", { locale: ptBR })}
+                    </div>
+                    <div className="text-sm font-semibold tracking-wider">
+                      #{orderNumber}
+                    </div>
                   </div>
                 </div>
               </div>
