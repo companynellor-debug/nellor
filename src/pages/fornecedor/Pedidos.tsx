@@ -150,24 +150,24 @@ const Pedidos = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-4">Pedidos</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Pedidos</h1>
         
         {/* Filtros */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3 sm:mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por número ou cliente..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-9 sm:h-10 text-sm sm:text-base"
             />
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-sm sm:text-base">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -182,13 +182,13 @@ const Pedidos = () => {
         </div>
 
         {/* Filtro de Tags */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
           {predefinedTags.map((tag) => (
             <Badge
               key={tag.label}
               variant="outline"
               className={cn(
-                "cursor-pointer transition-all border",
+                "cursor-pointer transition-all border text-xs sm:text-sm",
                 selectedTags.includes(tag.label) 
                   ? tag.color + " font-semibold"
                   : "bg-white hover:bg-muted"
@@ -205,9 +205,9 @@ const Pedidos = () => {
       <Card className="overflow-hidden">
         <div className="divide-y">
           {filteredOrders.length === 0 ? (
-            <div className="p-8 text-center">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum pedido encontrado</p>
+            <div className="p-6 sm:p-8 text-center">
+              <Package className="h-10 sm:h-12 w-10 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+              <p className="text-sm sm:text-base text-muted-foreground">Nenhum pedido encontrado</p>
             </div>
           ) : (
             filteredOrders.map((order) => {
@@ -216,42 +216,42 @@ const Pedidos = () => {
               const items = Array.isArray(order.itens) ? order.itens : [];
               
               return (
-                <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm sm:text-base mb-1">Pedido #{order.order_number}</p>
+                <div key={order.id} className="p-3 sm:p-4 md:p-6 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm sm:text-base mb-1 truncate">Pedido #{order.order_number}</p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       </p>
                       
                       {orderTags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
+                        <div className="flex flex-wrap gap-1 mt-1.5 sm:mt-2">
                           {orderTags.map((tag) => (
                             <Badge 
                               key={tag} 
                               variant="outline" 
-                              className={cn("text-xs border", getTagColor(tag))}
+                              className={cn("text-[10px] sm:text-xs border", getTagColor(tag))}
                             >
-                              <Tag className="h-3 w-3 mr-1" />
+                              <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                               {tag}
                             </Badge>
                           ))}
                         </div>
                       )}
                     </div>
-                    <Badge className={badge.color}>
+                    <Badge className={cn(badge.color, "text-xs sm:text-sm whitespace-nowrap")}>
                       {badge.label}
                     </Badge>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-3 text-xs sm:text-sm">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-2 sm:mb-3 text-xs sm:text-sm">
                     <div>
-                      <p className="text-muted-foreground">Cliente</p>
-                      <p className="font-medium">{(order.endereco_entrega as any)?.name || 'Cliente'}</p>
+                      <p className="text-muted-foreground text-[10px] sm:text-xs">Cliente</p>
+                      <p className="font-medium text-xs sm:text-sm truncate">{(order.endereco_entrega as any)?.name || 'Cliente'}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Valor</p>
-                      <p className="font-semibold text-primary">R$ {Number(order.total).toFixed(2)}</p>
+                      <p className="text-muted-foreground text-[10px] sm:text-xs">Valor</p>
+                      <p className="font-semibold text-primary text-sm sm:text-base">R$ {Number(order.total).toFixed(2)}</p>
                     </div>
                   </div>
                   
@@ -259,8 +259,9 @@ const Pedidos = () => {
                     size="sm" 
                     variant="outline"
                     onClick={() => setSelectedOrder(order)}
+                    className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    <Eye className="h-4 w-4 mr-2" />
+                    <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     Ver Detalhes
                   </Button>
                 </div>
