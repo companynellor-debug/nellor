@@ -20,6 +20,24 @@ export const useSupabaseNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const { toast } = useToast();
 
+  const playNotificationSound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+  };
+
   const fetchNotifications = async () => {
     try {
       setLoading(true);
@@ -66,8 +84,9 @@ export const useSupabaseNotifications = () => {
         (payload) => {
           const newNotif = payload.new as Notification;
           
-          // Show toast for new notification
+          // Play sound for new notification
           if (newNotif.sound) {
+            playNotificationSound();
             toast({
               title: newNotif.title,
               description: newNotif.body,
