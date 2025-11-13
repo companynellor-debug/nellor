@@ -107,20 +107,21 @@ const Dashboard = () => {
   })();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
             Dashboard
           </h1>
-          <p className="text-muted-foreground">Visão geral do seu desempenho</p>
+          <p className="text-sm text-muted-foreground">Visão geral do seu desempenho</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-2 sm:pb-0">
           <Button
             variant={dateFilter === 'today' ? 'default' : 'outline'}
             onClick={() => setDateFilter('today')}
             size="sm"
+            className="text-xs sm:text-sm whitespace-nowrap"
           >
             Hoje
           </Button>
@@ -128,131 +129,134 @@ const Dashboard = () => {
             variant={dateFilter === '7days' ? 'default' : 'outline'}
             onClick={() => setDateFilter('7days')}
             size="sm"
+            className="text-xs sm:text-sm whitespace-nowrap"
           >
-            7 dias
+            7d
           </Button>
           <Button
             variant={dateFilter === '14days' ? 'default' : 'outline'}
             onClick={() => setDateFilter('14days')}
             size="sm"
+            className="text-xs sm:text-sm whitespace-nowrap"
           >
-            14 dias
+            14d
           </Button>
           <Button
             variant={dateFilter === '30days' ? 'default' : 'outline'}
             onClick={() => setDateFilter('30days')}
             size="sm"
+            className="text-xs sm:text-sm whitespace-nowrap"
           >
-            30 dias
+            30d
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
           <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Receita Total
             </CardTitle>
-            <DollarSign className="w-5 h-5 bg-gradient-to-br from-green-500 to-green-600 bg-clip-text text-transparent" />
+            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-green-500 to-green-600 bg-clip-text text-transparent" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Pedidos Ativos
             </CardTitle>
-            <ShoppingCart className="w-5 h-5 bg-gradient-to-br from-orange-500 to-orange-600 bg-clip-text text-transparent" />
+            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-orange-500 to-orange-600 bg-clip-text text-transparent" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalOrders - deliveredOrders}</div>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{totalOrders - deliveredOrders}</div>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Novos Pedidos
             </CardTitle>
-            <Package className="w-5 h-5 bg-gradient-to-br from-blue-500 to-blue-600 bg-clip-text text-transparent" />
+            <Package className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-blue-500 to-blue-600 bg-clip-text text-transparent" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{newOrders}</div>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{newOrders}</div>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Pedidos Entregues
             </CardTitle>
-            <TrendingUp className="w-5 h-5 bg-gradient-to-br from-purple-500 to-purple-600 bg-clip-text text-transparent" />
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-purple-500 to-purple-600 bg-clip-text text-transparent" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{deliveredOrders}</div>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{deliveredOrders}</div>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
           <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total de Pedidos
             </CardTitle>
-            <TrendingUp className="w-5 h-5 bg-gradient-to-br from-pink-500 to-pink-600 bg-clip-text text-transparent" />
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-pink-500 to-pink-600 bg-clip-text text-transparent" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalOrders}</div>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{totalOrders}</div>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
           <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-violet-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Ticket Médio
             </CardTitle>
-            <DollarSign className="w-5 h-5 bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent" />
+            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">R$ {ticketMedio.toFixed(2)}</div>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">R$ {ticketMedio.toFixed(2)}</div>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-cyan-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total de Produtos
             </CardTitle>
-            <Package className="w-5 h-5 bg-gradient-to-br from-cyan-500 to-cyan-600 bg-clip-text text-transparent" />
+            <Package className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-cyan-500 to-cyan-600 bg-clip-text text-transparent" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{products.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Produtos cadastrados</p>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{products.length}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Produtos cadastrados</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6">
         {/* Evolução de Vendas */}
         <Card className="border-purple-100 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">📈 Evolução de Vendas</CardTitle>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-sm sm:text-base md:text-lg">📈 Evolução de Vendas</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             {salesData.some(d => d.vendas > 0) ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={salesData}>
                   <defs>
                     <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
@@ -274,8 +278,8 @@ const Dashboard = () => {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center">
-                <p className="text-muted-foreground text-sm">Nenhuma venda registrada ainda</p>
+              <div className="h-[250px] flex items-center justify-center">
+                <p className="text-muted-foreground text-xs sm:text-sm">Nenhuma venda registrada ainda</p>
               </div>
             )}
           </CardContent>
@@ -284,14 +288,15 @@ const Dashboard = () => {
 
       {/* Recent Orders */}
       <Card className="border-purple-100 hover:shadow-lg transition-shadow">
-        <CardHeader>
+        <CardHeader className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">📦 Pedidos Recentes</CardTitle>
+            <CardTitle className="text-sm sm:text-base md:text-lg">📦 Pedidos Recentes</CardTitle>
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => navigate('/fornecedor/pedidos')}
+                className="text-xs sm:text-sm"
               >
                 Ver Todos
               </Button>
@@ -301,24 +306,24 @@ const Dashboard = () => {
         <CardContent className="p-0">
           <div className="divide-y">
             {orders.length === 0 ? (
-              <div className="p-8 text-center">
-                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Nenhum pedido recente</p>
+              <div className="p-6 sm:p-8 text-center">
+                <Package className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-sm">Nenhum pedido recente</p>
               </div>
             ) : (
               orders.slice(0, 5).map((order) => (
-                <div key={order.id} className="p-6 hover:bg-muted/20 transition-colors">
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <Package className="h-6 w-6" />
+                <div key={order.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <Package className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium mb-1">Pedido #{order.order_number}</p>
-                      <p className="text-sm text-muted-foreground mb-2">
+                      <p className="font-medium mb-1 text-sm sm:text-base truncate">Pedido #{order.order_number}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-2">
                         {new Date(order.created_at).toLocaleDateString('pt-BR')}
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${
                           order.order_status === 'delivered'
                             ? 'bg-green-100 text-green-800'
                             : order.order_status === 'cancelled'
@@ -331,7 +336,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-semibold">R$ {parseFloat(order.total || 0).toFixed(2)}</p>
+                      <p className="font-semibold text-sm sm:text-base whitespace-nowrap">R$ {parseFloat(order.total || 0).toFixed(2)}</p>
                     </div>
                   </div>
                 </div>
