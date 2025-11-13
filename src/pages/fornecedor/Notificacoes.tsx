@@ -43,21 +43,21 @@ const Notificacoes = () => {
                 key={notification.id} 
                 className={`relative rounded-xl overflow-hidden bg-gradient-to-r from-purple-900 via-purple-700 to-purple-500 text-white shadow-lg ${notification.read ? 'opacity-60' : ''}`}
               >
-                <div className="flex items-center gap-3 p-4">
-                  <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                    <img src={logo} alt="Logo" className="w-14 h-14 object-contain" />
+                <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                    <img src={logo} alt="Logo" className="w-10 h-10 sm:w-14 sm:h-14 object-contain" />
                   </div>
                   
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold mb-1">{notification.title}</h3>
-                    <p className="text-sm font-medium">valor: R$ {total.toFixed(2).replace('.', ',')}</p>
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <h3 className="text-sm sm:text-lg font-bold mb-0.5 sm:mb-1 truncate">{notification.title}</h3>
+                    <p className="text-xs sm:text-sm font-medium truncate">valor: R$ {total.toFixed(2).replace('.', ',')}</p>
                   </div>
 
-                  <div className="text-right flex flex-col justify-between gap-2">
-                    <div className="text-xs font-medium">
+                  <div className="text-right flex flex-col justify-start gap-1 sm:gap-2 flex-shrink-0">
+                    <div className="text-[10px] sm:text-xs font-medium whitespace-nowrap">
                       {format(new Date(notification.created_at), "HH:mm", { locale: ptBR })}
                     </div>
-                    <div className="text-xs font-semibold tracking-wide">
+                    <div className="text-[10px] sm:text-xs font-semibold tracking-wide truncate max-w-[80px] sm:max-w-none">
                       #{orderNumber}
                     </div>
                   </div>
