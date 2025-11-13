@@ -1,29 +1,12 @@
 import { Card } from "@/components/ui/card";
-import { Package, MessageSquare, Bell, DollarSign } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import logo from "@/assets/logo.png";
 
 const Notificacoes = () => {
   const { notifications, loading } = useSupabaseNotifications();
-
-  const getIcon = (type: string) => {
-    switch(type) {
-      case 'order_update': return Package;
-      case 'message': return MessageSquare;
-      case 'payout': return DollarSign;
-      default: return Bell;
-    }
-  };
-
-  const getColor = (type: string) => {
-    switch(type) {
-      case 'order_update': return 'text-blue-600';
-      case 'message': return 'text-green-600';
-      case 'payout': return 'text-purple-600';
-      default: return 'text-primary';
-    }
-  };
 
   if (loading) {
     return (
@@ -43,7 +26,7 @@ const Notificacoes = () => {
         <h1 className="text-3xl font-bold">Notificações</h1>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {notifications.length === 0 ? (
           <Card className="p-8 text-center">
             <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -51,23 +34,26 @@ const Notificacoes = () => {
           </Card>
         ) : (
           notifications.map((notification) => {
-            const Icon = getIcon(notification.type);
-            const iconColor = getColor(notification.type);
             return (
-              <Card key={notification.id} className={`p-4 ${notification.read ? 'opacity-60' : ''} border-none bg-card hover:shadow-md transition-shadow`}>
-                <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-full bg-muted`}>
-                    <Icon className={`h-6 w-6 ${iconColor}`} />
+              <div 
+                key={notification.id} 
+                className={`relative rounded-2xl p-6 bg-gradient-to-r from-purple-900 via-purple-700 to-purple-500 text-white shadow-lg ${notification.read ? 'opacity-60' : ''}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                    <img src={logo} alt="Logo" className="w-16 h-16 object-contain" />
                   </div>
+                  
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{notification.title}</h3>
-                    <p className="text-muted-foreground">{notification.body}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {format(new Date(notification.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                    </p>
+                    <h3 className="text-2xl font-bold mb-1">{notification.title}</h3>
+                    <p className="text-lg opacity-90">{notification.body}</p>
+                  </div>
+
+                  <div className="text-right text-sm opacity-75">
+                    {format(new Date(notification.created_at), "HH:mm", { locale: ptBR })}
                   </div>
                 </div>
-              </Card>
+              </div>
             );
           })
         )}
