@@ -8,11 +8,13 @@ import { Switch } from "@/components/ui/switch";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
-
 const FornecedorLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut, profile } = useSupabaseAuth();
+  const {
+    signOut,
+    profile
+  } = useSupabaseAuth();
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("fornecedor-dark-mode");
     return saved ? JSON.parse(saved) : false;
@@ -24,7 +26,6 @@ const FornecedorLayout = () => {
       navigate('/fornecedor/onboarding');
     }
   }, [profile, navigate, location.pathname]);
-
   useEffect(() => {
     localStorage.setItem("fornecedor-dark-mode", JSON.stringify(darkMode));
     if (darkMode) {
@@ -33,15 +34,12 @@ const FornecedorLayout = () => {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
-
   const handleLogout = async () => {
     await signOut();
     toast.success("Logout realizado com sucesso!");
     navigate("/");
   };
-
-  return (
-    <div className="min-h-screen flex w-full bg-background">
+  return <div className="min-h-screen flex w-full bg-background">
       {/* Desktop Sidebar - hidden on mobile */}
       <div className="hidden md:block">
         <SupplierSidebar />
@@ -53,11 +51,7 @@ const FornecedorLayout = () => {
           <header className="h-16 border-b bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 shadow-sm">
             {/* Left side - Logo for mobile */}
             <div className="flex items-center gap-4 md:hidden">
-              <img 
-                src={logo} 
-                alt="Logo" 
-                className="h-8 sm:h-10"
-              />
+              <img src={logo} alt="Logo" className="h-8 sm:h-10" />
             </div>
             
             {/* Right side - Theme, Notifications and Logout */}
@@ -67,20 +61,10 @@ const FornecedorLayout = () => {
                 <Switch checked={darkMode} onCheckedChange={setDarkMode} />
                 <Moon className="h-4 w-4 text-muted-foreground" />
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigate('/fornecedor/notificacoes')}
-                className="h-9 w-9"
-              >
+              <Button variant="outline" size="icon" onClick={() => navigate('/fornecedor/notificacoes')} className="h-9 w-9">
                 <Bell className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                size="sm"
-                className="h-9"
-              >
+              <Button variant="outline" onClick={handleLogout} size="sm" className="h-9">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </Button>
@@ -89,7 +73,7 @@ const FornecedorLayout = () => {
 
           {/* Main Content */}
           <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-6">
-            <div className="container mx-auto">
+            <div className="container mx-auto px-[7px]">
               <Outlet />
             </div>
           </main>
@@ -98,8 +82,6 @@ const FornecedorLayout = () => {
 
       {/* Mobile Bottom Navigation */}
       <BottomNavFornecedor />
-    </div>
-  );
+    </div>;
 };
-
 export default FornecedorLayout;
