@@ -48,32 +48,54 @@ const FornecedorLayout = () => {
       <div className="flex-1 md:ml-64">
         <div className="flex flex-col min-h-screen">
           {/* Header */}
-          <header className="h-14 sm:h-16 border-b bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-40 shadow-sm">
+          <header className="h-14 border-b bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 flex items-center justify-between px-2 sm:px-4 md:px-6 sticky top-0 z-40 shadow-sm">
             {/* Left side - Logo for mobile */}
-            <div className="flex items-center gap-4 md:hidden">
-              <img src={logo} alt="Logo" className="h-7 sm:h-10" />
+            <div className="flex items-center md:hidden">
+              <img src={logo} alt="Logo" className="h-8" />
             </div>
             
-            {/* Right side - Theme, Notifications and Logout - Hidden on mobile, visible on desktop */}
-            <div className="hidden sm:flex items-center gap-2 ml-auto">
-              <div className="flex items-center gap-2 mr-2">
+            {/* Right side - Theme, Notifications and Logout */}
+            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+              <div className="hidden sm:flex items-center gap-2 mr-2">
                 <Sun className="h-4 w-4 text-muted-foreground" />
                 <Switch checked={darkMode} onCheckedChange={setDarkMode} />
                 <Moon className="h-4 w-4 text-muted-foreground" />
               </div>
-              <Button variant="outline" size="icon" onClick={() => navigate('/fornecedor/notificacoes')} className="h-9 w-9">
+              
+              {/* Mobile theme toggle - icon only */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setDarkMode(!darkMode)}
+                className="h-8 w-8 sm:hidden"
+              >
+                {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/fornecedor/notificacoes')} 
+                className="h-8 w-8 sm:h-9 sm:w-9"
+              >
                 <Bell className="h-4 w-4" />
               </Button>
-              <Button variant="outline" onClick={handleLogout} size="sm" className="h-9">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
+              
+              <Button 
+                variant="ghost" 
+                onClick={handleLogout} 
+                size="icon"
+                className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline ml-2">Sair</span>
               </Button>
             </div>
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-6">
-            <div className="container mx-auto px-[7px]">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
+            <div className="w-full max-w-full overflow-x-hidden">
               <Outlet />
             </div>
           </main>

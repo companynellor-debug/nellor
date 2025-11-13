@@ -107,21 +107,21 @@ const Dashboard = () => {
   })();
 
   return (
-    <div className="space-y-4 md:space-y-8">
+    <div className="w-full max-w-full space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none">
             Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground">Visão geral do seu desempenho</p>
+          <p className="text-sm text-muted-foreground mt-1">Visão geral do seu desempenho</p>
         </div>
-        <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-2 sm:pb-0">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant={dateFilter === 'today' ? 'default' : 'outline'}
             onClick={() => setDateFilter('today')}
             size="sm"
-            className="text-xs sm:text-sm whitespace-nowrap"
+            className="text-xs sm:text-sm h-8"
           >
             Hoje
           </Button>
@@ -129,41 +129,41 @@ const Dashboard = () => {
             variant={dateFilter === '7days' ? 'default' : 'outline'}
             onClick={() => setDateFilter('7days')}
             size="sm"
-            className="text-xs sm:text-sm whitespace-nowrap"
+            className="text-xs sm:text-sm h-8"
           >
-            7d
+            7 dias
           </Button>
           <Button
             variant={dateFilter === '14days' ? 'default' : 'outline'}
             onClick={() => setDateFilter('14days')}
             size="sm"
-            className="text-xs sm:text-sm whitespace-nowrap"
+            className="text-xs sm:text-sm h-8"
           >
-            14d
+            14 dias
           </Button>
           <Button
             variant={dateFilter === '30days' ? 'default' : 'outline'}
             onClick={() => setDateFilter('30days')}
             size="sm"
-            className="text-xs sm:text-sm whitespace-nowrap"
+            className="text-xs sm:text-sm h-8"
           >
-            30d
+            30 dias
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
           <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Receita Total
             </CardTitle>
-            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-green-500 to-green-600 bg-clip-text text-transparent" />
+            <DollarSign className="w-5 h-5 text-green-600" />
           </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
 
