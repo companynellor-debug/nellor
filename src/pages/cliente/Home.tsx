@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProducts } from "@/hooks/useProducts";
-import { useBanners } from "@/hooks/useBanners";
+import { useSupabaseBanners } from "@/hooks/useSupabaseBanners";
 import { useCategories } from "@/hooks/useCategories";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -20,10 +20,8 @@ const ClienteHome = () => {
   const {
     products
   } = useProducts();
-  const { banners, getActiveBanners } = useBanners();
+  const { banners } = useSupabaseBanners();
   const { categories } = useCategories();
-  
-  const activeBanners = getActiveBanners().sort((a, b) => a.order - b.order);
   return <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
       
@@ -54,24 +52,43 @@ const ClienteHome = () => {
 
       <main className="container mx-auto px-4 py-6 relative z-10">
         {/* Banners Carousel */}
-        {activeBanners.length > 0 && <div className="mb-8">
-            <Carousel opts={{
-          align: "start",
-          loop: true
-        }} plugins={[Autoplay({
-          delay: 4000
-        })]} className="w-full">
+        {banners.length > 0 && (
+          <div className="mb-8">
+            <Carousel 
+              opts={{
+                align: "start",
+                loop: true
+              }} 
+              plugins={[Autoplay({ delay: 4000 })]} 
+              className="w-full"
+            >
               <CarouselContent>
-                {activeBanners.map(banner => <CarouselItem key={banner.id}>
-                    <div className="relative overflow-hidden rounded-lg">
-                      <img src={banner.imageUrl} alt={banner.title} className="w-full h-48 md:h-64 object-cover" />
+                {banners.map(banner => (
+                  <CarouselItem key={banner.id}>
+                    <div className="relative overflow-hidden rounded-lg cursor-pointer"
+                         onClick={() => banner.link_url && navigate(banner.link_url)}>
+                      <img 
+                        src={banner.image_url} 
+                        alt={banner.title || "Banner"} 
+                        className="w-full h-48 md:h-64 object-cover" 
+                      />
+                      {banner.title && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                          <h3 className="text-white font-bold text-lg">{banner.title}</h3>
+                          {banner.subtitle && (
+                            <p className="text-white/90 text-sm">{banner.subtitle}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </CarouselItem>)}
+                  </CarouselItem>
+                ))}
               </CarouselContent>
               <CarouselPrevious className="left-2" />
               <CarouselNext className="right-2" />
             </Carousel>
-          </div>}
+          </div>
+        )}
 
         {/* Categorias */}
         {categories.length > 0 && (
