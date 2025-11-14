@@ -21,7 +21,7 @@ const Estatisticas = () => {
   }));
 
   return (
-    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6">
+    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 max-w-full overflow-x-hidden px-4 md:px-0">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Estatísticas</h1>
         <p className="text-sm md:text-base text-muted-foreground">Análise do desempenho da sua loja</p>
@@ -65,37 +65,39 @@ const Estatisticas = () => {
         </div>
         
         {products.length > 0 ? (
-          <ChartContainer
-            config={{
-              vendas: {
-                label: "Vendas",
-                color: "hsl(var(--primary))",
-              },
-            }}
-            className="h-[250px] md:h-[300px] w-full"
-          >
-            <BarChart data={topProducts}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="name" 
-                className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-              />
-              <YAxis 
-                className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar 
-                dataKey="vendas" 
-                fill="hsl(var(--primary))" 
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ChartContainer>
+          <div className="w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <ChartContainer
+              config={{
+                vendas: {
+                  label: "Vendas",
+                  color: "hsl(var(--primary))",
+                },
+              }}
+              className="h-[250px] md:h-[300px] min-w-[300px] w-full"
+            >
+              <BarChart data={topProducts}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="name" 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar 
+                  dataKey="vendas" 
+                  fill="hsl(var(--primary))" 
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ChartContainer>
+          </div>
         ) : (
           <div className="h-[250px] md:h-[300px] flex items-center justify-center">
             <p className="text-sm md:text-base text-muted-foreground">Nenhum produto cadastrado ainda</p>
