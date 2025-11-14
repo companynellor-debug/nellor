@@ -28,18 +28,13 @@ const FornecedorLayout = () => {
   }, [profile, navigate, location.pathname]);
   useEffect(() => {
     localStorage.setItem("fornecedor-dark-mode", JSON.stringify(darkMode));
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
   }, [darkMode]);
   const handleLogout = async () => {
     await signOut();
     toast.success("Logout realizado com sucesso!");
     navigate("/");
   };
-  return <div className="min-h-screen flex w-full bg-background">
+  return <div className={`min-h-screen flex w-full bg-background ${darkMode ? 'dark' : ''}`}>
       {/* Desktop Sidebar - hidden on mobile */}
       <div className="hidden md:block">
         <SupplierSidebar />
