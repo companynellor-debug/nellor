@@ -33,7 +33,7 @@ const Notificacoes = () => {
           total?: number;
         } | null;
         const orderNumber = orderData?.order_number || '';
-        const total = orderData?.total || 0;
+        const total = orderData?.total;
         return <div key={notification.id} className={`relative rounded-lg md:rounded-xl overflow-hidden bg-gradient-to-r from-purple-900 via-purple-700 to-purple-500 text-white shadow-lg max-w-full ${notification.read ? 'opacity-60' : ''}`}>
                 <div className="flex items-start gap-2 p-3 md:p-4">
                   <div className="w-10 h-10 md:w-14 md:h-14 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
@@ -43,7 +43,7 @@ const Notificacoes = () => {
                   <div className="flex-1 min-w-0 overflow-hidden">
                     <h3 className="text-xs md:text-base font-bold mb-0.5 truncate">{notification.title}</h3>
                     <p className="text-[10px] md:text-sm opacity-90 truncate">{notification.body}</p>
-                    {total > 0 && (
+                    {total != null && total !== undefined && (
                       <p className="text-[10px] md:text-sm font-medium mt-0.5 md:mt-1">R$ {total.toFixed(2).replace('.', ',')}</p>
                     )}
                   </div>
