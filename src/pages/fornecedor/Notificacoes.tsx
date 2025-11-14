@@ -46,18 +46,7 @@ const Notificacoes = () => {
                     {total != null && total !== undefined && <p className="text-[10px] md:text-sm font-medium mt-0.5 md:mt-1 truncate">R$ {total.toFixed(2).replace('.', ',')}</p>}
                   </div>
 
-                  <div className="text-right flex flex-col justify-start gap-0.5 md:gap-1 flex-shrink-0 min-w-[60px]">
-                    <div className="text-[9px] md:text-xs font-medium whitespace-nowrap">
-                      {format(new Date(notification.created_at), "HH:mm", {
-                  locale: ptBR
-                })}
-                    </div>
-                    <div className="text-[9px] md:text-xs opacity-80 whitespace-nowrap">
-                      {format(new Date(notification.created_at), "dd/MM", {
-                  locale: ptBR
-                })}
-                    </div>
-                  </div>
+                  
                 </div>
               </div>;
       })}
