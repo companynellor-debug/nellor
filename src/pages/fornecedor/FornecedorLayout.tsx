@@ -58,30 +58,15 @@ const FornecedorLayout = () => {
               </div>
               
               {/* Mobile theme toggle - icon only */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setDarkMode(!darkMode)}
-                className="h-8 w-8 sm:hidden"
-              >
+              <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="h-8 w-8 sm:hidden bg-slate-50">
                 {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
               
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => navigate('/fornecedor/notificacoes')} 
-                className="h-8 w-8 sm:h-9 sm:w-9"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate('/fornecedor/notificacoes')} className="h-8 w-8 sm:h-9 sm:w-9 bg-slate-50">
                 <Bell className="h-4 w-4" />
               </Button>
               
-              <Button 
-                variant="ghost" 
-                onClick={handleLogout} 
-                size="icon"
-                className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3"
-              >
+              <Button variant="ghost" onClick={handleLogout} size="icon" className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline ml-2">Sair</span>
               </Button>
