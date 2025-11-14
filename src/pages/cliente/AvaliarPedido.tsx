@@ -14,9 +14,11 @@ import { toast } from "sonner";
 const AvaliarPedido = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { order } = location.state || {};
+  const order = location.state?.order;
   const { createReview } = useSupabaseReviews();
   const { user } = useSupabaseAuth();
+
+  console.log('AvaliarPedido - Order received:', order);
   
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -94,16 +96,25 @@ const AvaliarPedido = () => {
     }
 
     try {
-      // Criar avaliação para o primeiro produto do pedido
-      const firstProduct = order.items[0];
+      // Criar avaliação para cada produto do pedido
+      const items = order.items || order.itens || [];
       
-      await createReview({
-        product_id: firstProduct.product_id,
-        order_id: order.id,
-        rating,
-        comment: comment.trim(),
-        photos,
-      });
+      if (items.length === 0) {
+        toast.error("Pedido sem produtos para avaliar");
+        return;
+      }
+
+      for (const item of items) {
+        const productId = item.product_id || item.id;
+        
+        await createReview({
+          product_id: productId,
+          order_id: order.id,
+          rating,
+          comment: comment.trim(),
+          photos,
+        });
+      }
 
       toast.success("Avaliação enviada com sucesso!");
       navigate("/cliente/meus-pedidos");

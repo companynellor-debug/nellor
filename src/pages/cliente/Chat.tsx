@@ -53,23 +53,38 @@ const Chat = () => {
 
   useEffect(() => {
     if (location.state?.supplierId) {
-      setSelectedUserId(location.state.supplierId);
-      markAsRead(location.state.supplierId);
+      const supplierId = location.state.supplierId;
+      const message = location.state.message;
+      
+      setSelectedUserId(supplierId);
+      markAsRead(supplierId);
       
       // Se veio com mensagem, envia automaticamente
-      if (location.state.message) {
+      if (message && user) {
         setTimeout(async () => {
           try {
-            await sendSupabaseMessage(location.state.supplierId, location.state.message);
+            await sendSupabaseMessage(supplierId, message);
+            toast({
+              title: "Mensagem enviada",
+              description: "Sua mensagem foi enviada com sucesso"
+            });
             // Limpa o state para não reenviar
-            window.history.replaceState({}, document.title);
+            navigate('/cliente/chat', { 
+              state: { supplierId },
+              replace: true 
+            });
           } catch (error) {
             console.error('Erro ao enviar mensagem automática:', error);
+            toast({
+              title: "Erro ao enviar mensagem",
+              description: "Tente novamente",
+              variant: "destructive"
+            });
           }
-        }, 500);
+        }, 1000);
       }
     }
-  }, [location.state]);
+  }, [location.state, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

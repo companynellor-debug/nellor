@@ -10,23 +10,26 @@ import { useProducts } from "@/hooks/useProducts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import { Helmet } from "react-helmet";
+import { toast } from "sonner";
 
 const PerfilLoja = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { stores, loading } = useSupabaseStores();
-  const { products } = useProducts();
+  const { products: supabaseProducts } = useSupabaseProducts();
   const { user } = useSupabaseAuth();
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
   const { reviews: allReviews, loading: reviewsLoading } = useSupabaseReviews();
   
   const storeProfile = stores.find(s => s.id === id);
-  // Buscar produtos usando supplier_id que é o UUID do fornecedor
-  const storeProducts = products.filter(p => {
-    // Verifica tanto supplierUuid quanto supplier_id
-    return p.supplierUuid === id || (p as any).supplier_id === id;
-  });
+  // Buscar produtos do fornecedor usando supplier_id
+  const storeProducts = supabaseProducts.filter(p => p.supplier_id === id);
+  
+  console.log('Store ID:', id);
+  console.log('All products:', supabaseProducts.length);
+  console.log('Store products:', storeProducts.length);
   
   // Filtrar avaliações dos produtos desta loja
   const storeProductIds = storeProducts.map(p => p.id?.toString()).filter(Boolean);
@@ -221,15 +224,19 @@ const PerfilLoja = () => {
                   className="bg-white border shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer"
                 >
                   <div className="aspect-square overflow-hidden">
-                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={product.imagens?.[0] || '/placeholder.svg'} 
+                      alt={product.nome} 
+                      className="w-full h-full object-cover hover:scale-105 transition-transform" 
+                    />
                   </div>
                   <div className="p-3">
-                    <p className="text-sm mb-2 line-clamp-2">{product.name}</p>
+                    <p className="text-sm mb-2 line-clamp-2 font-semibold">{product.nome}</p>
                     <div className="flex items-center gap-1 mb-2">
                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs text-muted-foreground">{product.rating}</span>
+                      <span className="text-xs text-muted-foreground">{product.rating_medio || 0}</span>
                     </div>
-                    <p className="text-primary font-bold">{product.price}</p>
+                    <p className="text-primary font-bold">R$ {product.preco?.toFixed(2).replace('.', ',')}</p>
                   </div>
                 </Card>
               ))}
