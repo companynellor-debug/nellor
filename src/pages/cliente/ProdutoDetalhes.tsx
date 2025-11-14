@@ -1,5 +1,6 @@
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
+import { ReviewsList } from "@/components/cliente/ReviewsList";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -220,46 +221,8 @@ const ProdutoDetalhes = () => {
 
         {/* Avaliações */}
         <Card className="bg-white border shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-bold text-primary mb-4">Avaliações dos Clientes</h2>
-          <div className="space-y-4">
-            {reviewsLoading ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Carregando avaliações...</p>
-            ) : reviews.length > 0 ? (
-              reviews.map((review) => (
-                <div key={review.id} className="border-b pb-4 last:border-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={review.buyer?.foto_perfil_url || ''} alt={review.buyer?.nome} />
-                      <AvatarFallback>{review.buyer?.nome?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{review.buyer?.nome}</p>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(review.created_at).toLocaleDateString('pt-BR')}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-400"}`} />
-                    ))}
-                  </div>
-                  {review.comment && (
-                    <p className="text-sm text-muted-foreground">{review.comment}</p>
-                  )}
-                  {review.photos && review.photos.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {review.photos.map((photo, idx) => (
-                        <img key={idx} src={photo} alt="Review" className="w-16 h-16 rounded object-cover" />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">Nenhuma avaliação ainda. Seja o primeiro a avaliar!</p>
-            )}
-          </div>
+          <h2 className="text-xl font-bold text-primary mb-6">Avaliações dos Clientes</h2>
+          <ReviewsList reviews={reviews} loading={reviewsLoading} />
         </Card>
 
         {/* Produtos Relacionados */}

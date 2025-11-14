@@ -1,8 +1,10 @@
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
+import { ReviewsList } from "@/components/cliente/ReviewsList";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Heart, MessageCircle, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
@@ -174,74 +176,47 @@ const PerfilLoja = () => {
             </Card>
           </div>
 
-          {/* Avaliações da Loja */}
-          {storeReviews.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-primary mb-4">Avaliações da Loja</h3>
-              <Card className="bg-white border shadow-sm p-6">
-                <div className="space-y-4">
-                  {reviewsLoading ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">Carregando avaliações...</p>
-                  ) : (
-                    storeReviews.slice(0, 5).map((review) => (
-                      <div key={review.id} className="border-b pb-4 last:border-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={review.buyer?.foto_perfil_url || ''} alt={review.buyer?.nome} />
-                            <AvatarFallback>{review.buyer?.nome?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">{review.buyer?.nome}</p>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(review.created_at).toLocaleDateString('pt-BR')}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 mb-2">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-400"}`} />
-                          ))}
-                        </div>
-                        {review.comment && (
-                          <p className="text-sm text-muted-foreground">{review.comment}</p>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Card>
-            </div>
-          )}
+          {/* Tabs para Produtos e Avaliações */}
+          <Tabs defaultValue="products" className="mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="products">Produtos ({storeProducts.length})</TabsTrigger>
+              <TabsTrigger value="reviews">Avaliações ({storeReviews.length})</TabsTrigger>
+            </TabsList>
 
-          {/* Store Products */}
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-primary mb-4">Produtos da Loja</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {storeProducts.map((product) => (
-                <Card
-                  key={product.id}
-                  onClick={() => navigate(`/cliente/produto/${product.id}`)}
-                  className="bg-white border shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer"
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <img 
-                      src={product.imagens?.[0] || '/placeholder.svg'} 
-                      alt={product.nome} 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform" 
-                    />
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm mb-2 line-clamp-2 font-semibold">{product.nome}</p>
-                    <div className="flex items-center gap-1 mb-2">
-                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs text-muted-foreground">{product.rating_medio || 0}</span>
+            <TabsContent value="products" className="mt-0">
+              <div className="grid grid-cols-2 gap-4">
+                {storeProducts.map((product) => (
+                  <Card
+                    key={product.id}
+                    onClick={() => navigate(`/cliente/produto/${product.id}`)}
+                    className="bg-white border shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                  >
+                    <div className="aspect-square overflow-hidden">
+                      <img 
+                        src={product.imagens?.[0] || '/placeholder.svg'} 
+                        alt={product.nome} 
+                        className="w-full h-full object-cover hover:scale-105 transition-transform" 
+                      />
                     </div>
-                    <p className="text-primary font-bold">R$ {product.preco?.toFixed(2).replace('.', ',')}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
+                    <div className="p-3">
+                      <p className="text-sm mb-2 line-clamp-2 font-semibold">{product.nome}</p>
+                      <div className="flex items-center gap-1 mb-2">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span className="text-xs text-muted-foreground">{product.rating_medio || 0}</span>
+                      </div>
+                      <p className="text-primary font-bold">R$ {product.preco?.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="reviews" className="mt-0">
+              <Card className="bg-white border shadow-sm p-6">
+                <ReviewsList reviews={storeReviews} loading={reviewsLoading} />
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 
