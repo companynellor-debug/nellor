@@ -87,7 +87,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/cliente/enderecos" element={<ProtectedRoute requireType="cliente"><Enderecos /></ProtectedRoute>} />
           <Route path="/cliente/notificacoes" element={<ProtectedRoute requireType="cliente"><Notificacoes /></ProtectedRoute>} />
           <Route path="/cliente/avaliacoes" element={<ProtectedRoute requireType="cliente"><Avaliacoes /></ProtectedRoute>} />
-          <Route path="/cliente/avaliar-pedido" element={<ProtectedRoute requireType="cliente"><AvaliarPedido /></ProtectedRoute>} />
+          <Route path="/cliente/avaliar-pedido/:orderId" element={<ProtectedRoute requireType="cliente"><AvaliarPedido /></ProtectedRoute>} />
           <Route path="/cliente/favoritos" element={<ProtectedRoute requireType="cliente"><Favoritos /></ProtectedRoute>} />
           <Route path="/cliente/metodos-pagamento" element={<ProtectedRoute requireType="cliente"><MetodosPagamento /></ProtectedRoute>} />
           <Route path="/cliente/suporte" element={<ProtectedRoute requireType="cliente"><Suporte /></ProtectedRoute>} />
