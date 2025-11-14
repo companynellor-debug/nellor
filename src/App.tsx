@@ -27,7 +27,6 @@ import Download from "./pages/Download";
 import Recursos from "./pages/Recursos";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
-
 import ClienteHome from "./pages/cliente/Home";
 import ProdutoDetalhes from "./pages/cliente/ProdutoDetalhes";
 import Carrinho from "./pages/cliente/Carrinho";
@@ -46,7 +45,6 @@ import Checkout from "./pages/cliente/Checkout";
 import MetodosPagamento from "./pages/cliente/MetodosPagamento";
 import Suporte from "./pages/cliente/Suporte";
 import PedidoConfirmado from "./pages/cliente/PedidoConfirmado";
-
 import FornecedorLayout from "./pages/fornecedor/FornecedorLayout";
 import Dashboard from "./pages/fornecedor/Dashboard";
 import Pedidos from "./pages/fornecedor/Pedidos";
@@ -57,11 +55,8 @@ import NotificacoesFornecedor from "./pages/fornecedor/Notificacoes";
 import EditarLoja from "./pages/fornecedor/EditarLoja";
 import Onboarding from "./pages/fornecedor/Onboarding";
 import Estatisticas from "./pages/fornecedor/Estatisticas";
-
 const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -105,7 +100,7 @@ const App = () => (
             <Route path="chat" element={<ChatFornecedor />} />
             <Route path="produtos" element={<ProdutosFornecedor />} />
             <Route path="financeiro" element={<Financeiro />} />
-            <Route path="notificacoes" element={<NotificacoesFornecedor />} />
+            <Route path="notificacoes" element={<NotificacoesFornecedor />} className="px-0" />
             <Route path="editar-loja" element={<EditarLoja />} />
             <Route path="estatisticas" element={<Estatisticas />} />
           </Route>
@@ -130,7 +125,5 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>
-  </QueryClientProvider>
-);
-
+  </QueryClientProvider>;
 export default App;
