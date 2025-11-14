@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 import { useSupabaseAddresses } from "@/hooks/useSupabaseAddresses";
 import { useSupabasePaymentMethods } from "@/hooks/useSupabasePaymentMethods";
+import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ const Checkout = () => {
   const { stores } = useSupabaseStores();
   const { addresses } = useSupabaseAddresses();
   const { paymentMethods, getDefaultPaymentMethod } = useSupabasePaymentMethods();
+  const { sendMessage: sendSupabaseMessage } = useSupabaseMessages();
+  const { user } = useSupabaseAuth();
   
   const [step, setStep] = useState<'address' | 'payment'>('address');
   const [orderId, setOrderId] = useState<string>("");
@@ -202,6 +206,16 @@ const Checkout = () => {
       const order = await createOrder(orderData);
       
       if (order) {
+        // Criar mensagem automática para o fornecedor
+        if (user && storeId) {
+          try {
+            const supplierMessage = `Olá! Acabei de realizar o pedido #${order.order_number}. Total: R$ ${finalTotal.toFixed(2).replace('.', ',')}`;
+            await sendSupabaseMessage(storeId, supplierMessage);
+          } catch (error) {
+            console.error('Erro ao enviar mensagem ao fornecedor:', error);
+          }
+        }
+        
         clearCart();
         toast.success("Pedido criado com sucesso! Aguardando confirmação de pagamento.");
         navigate('/cliente', { 

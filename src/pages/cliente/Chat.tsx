@@ -58,8 +58,14 @@ const Chat = () => {
       
       // Se veio com mensagem, envia automaticamente
       if (location.state.message) {
-        setTimeout(() => {
-          sendSupabaseMessage(location.state.supplierId, location.state.message);
+        setTimeout(async () => {
+          try {
+            await sendSupabaseMessage(location.state.supplierId, location.state.message);
+            // Limpa o state para não reenviar
+            window.history.replaceState({}, document.title);
+          } catch (error) {
+            console.error('Erro ao enviar mensagem automática:', error);
+          }
         }, 500);
       }
     }
