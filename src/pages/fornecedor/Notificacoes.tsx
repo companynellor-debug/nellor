@@ -42,7 +42,10 @@ const Notificacoes = () => {
                   
                   <div className="flex-1 min-w-0 overflow-hidden">
                     <h3 className="text-sm sm:text-lg font-bold mb-0.5 sm:mb-1 truncate">{notification.title}</h3>
-                    <p className="text-xs sm:text-sm font-medium truncate">valor: R$ {total.toFixed(2).replace('.', ',')}</p>
+                    <p className="text-xs sm:text-sm opacity-90 truncate">{notification.body}</p>
+                    {total > 0 && (
+                      <p className="text-xs sm:text-sm font-medium mt-0.5 sm:mt-1 truncate">Valor: R$ {total.toFixed(2).replace('.', ',')}</p>
+                    )}
                   </div>
 
                   <div className="text-right flex flex-col justify-start gap-1 sm:gap-2 flex-shrink-0">
@@ -51,9 +54,16 @@ const Notificacoes = () => {
                   locale: ptBR
                 })}
                     </div>
-                    <div className="text-[10px] sm:text-xs font-semibold tracking-wide truncate max-w-[80px] sm:max-w-none">
-                      #{orderNumber}
+                    <div className="text-[10px] sm:text-xs opacity-90 whitespace-nowrap">
+                      {format(new Date(notification.created_at), "dd/MM", {
+                  locale: ptBR
+                })}
                     </div>
+                    {orderNumber && (
+                      <div className="text-[10px] sm:text-xs font-semibold tracking-wide truncate max-w-[80px] sm:max-w-none">
+                        #{orderNumber}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>;
