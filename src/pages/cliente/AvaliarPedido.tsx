@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Star, Upload, X } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,18 +13,68 @@ import { toast } from "sonner";
 
 const AvaliarPedido = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const order = location.state?.order;
+  const { orderId } = useParams();
   const { createReview } = useSupabaseReviews();
   const { user } = useSupabaseAuth();
 
-  console.log('AvaliarPedido - Order received:', order);
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
   const [uploading, setUploading] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!orderId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            order_number,
+            supplier_id,
+            itens
+          `)
+          .eq('id', orderId)
+          .single();
+
+        if (error) throw error;
+        
+        // Buscar informações do fornecedor separadamente
+        const { data: supplierData } = await supabase
+          .from('profiles')
+          .select('nome')
+          .eq('id', data.supplier_id)
+          .single();
+        
+        setOrder({
+          ...data,
+          storeName: supplierData?.nome || 'Loja'
+        });
+      } catch (error: any) {
+        console.error('Error fetching order:', error);
+        toast.error("Erro ao carregar pedido");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p>Carregando pedido...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -90,14 +140,16 @@ const AvaliarPedido = () => {
       return;
     }
 
-    if (!order.items || order.items.length === 0) {
+    const items = Array.isArray(order.itens) ? order.itens : [];
+    
+    if (items.length === 0) {
       toast.error("Pedido sem produtos para avaliar");
       return;
     }
 
     try {
       // Criar avaliação para cada produto do pedido
-      const items = order.items || order.itens || [];
+      const items = Array.isArray(order.itens) ? order.itens : [];
       
       if (items.length === 0) {
         toast.error("Pedido sem produtos para avaliar");
@@ -105,7 +157,12 @@ const AvaliarPedido = () => {
       }
 
       for (const item of items) {
-        const productId = item.product_id || item.id;
+        const productId = item.product_id;
+        
+        if (!productId) {
+          console.error('Product ID not found in item:', item);
+          continue;
+        }
         
         await createReview({
           product_id: productId,
@@ -145,14 +202,14 @@ const AvaliarPedido = () => {
 
       <main className="relative z-10 container mx-auto px-4 py-6">
         <Card className="bg-white border shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-bold mb-2">Pedido #{order.id}</h2>
+          <h2 className="text-xl font-bold mb-2">Pedido #{order.order_number}</h2>
           <p className="text-muted-foreground mb-4">{order.storeName}</p>
           
           <div className="space-y-2">
-            {order.items.map((item: any, index: number) => (
+            {(Array.isArray(order.itens) ? order.itens : []).map((item: any, index: number) => (
               <div key={index} className="flex justify-between text-sm">
                 <span>{item.quantity}x {item.name}</span>
-                <span className="font-medium">{item.price}</span>
+                <span className="font-medium">R$ {Number(item.price).toFixed(2)}</span>
               </div>
             ))}
           </div>
