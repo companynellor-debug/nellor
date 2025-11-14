@@ -205,21 +205,30 @@ const Checkout = () => {
       console.log('Creating order with data:', orderData);
       const order = await createOrder(orderData);
       
-      if (order) {
-        // Criar mensagem automática para o fornecedor
-        if (user && storeId) {
-          try {
-            const supplierMessage = `Olá! Acabei de realizar o pedido #${order.order_number}. Total: R$ ${finalTotal.toFixed(2).replace('.', ',')}`;
-            await sendSupabaseMessage(storeId, supplierMessage);
-          } catch (error) {
-            console.error('Erro ao enviar mensagem ao fornecedor:', error);
-          }
+      if (order && user && storeId) {
+        // Enviar mensagem automática para o fornecedor
+        try {
+          const itemsList = cartItems.map(item => `- ${item.name} (${item.quantity}x)`).join('\n');
+          await sendSupabaseMessage(
+            storeId,
+            `🛍️ Novo pedido realizado!\n\n` +
+            `Número do pedido: #${order.order_number}\n` +
+            `Produtos:\n${itemsList}\n\n` +
+            `Total: R$ ${finalTotal.toFixed(2).replace('.', ',')}\n` +
+            `Forma de pagamento: ${selectedPaymentMethod === 'pix' ? 'PIX' : 'Cartão de Crédito'}\n\n` +
+            `Obrigado!`
+          );
+        } catch (msgError) {
+          console.error('Erro ao enviar mensagem:', msgError);
         }
         
         clearCart();
-        toast.success("Pedido criado com sucesso! Aguardando confirmação de pagamento.");
-        navigate('/cliente', { 
-          replace: true
+        toast.success("Pedido criado com sucesso!");
+        navigate('/cliente/pedido-confirmado', { 
+          state: { 
+            orderId: order.id,
+            orderNumber: order.order_number 
+          } 
         });
       }
     } catch (error) {
