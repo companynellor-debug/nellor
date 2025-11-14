@@ -57,9 +57,6 @@ const Notificacoes = () => {
                   locale: ptBR
                 })}
                     </div>
-                    {orderNumber && <div className="text-[9px] md:text-xs font-semibold tracking-wide truncate max-w-[60px]">
-                        #{orderNumber}
-                      </div>}
                   </div>
                 </div>
               </div>;
