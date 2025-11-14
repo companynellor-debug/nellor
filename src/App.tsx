@@ -100,7 +100,7 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="chat" element={<ChatFornecedor />} />
             <Route path="produtos" element={<ProdutosFornecedor />} />
             <Route path="financeiro" element={<Financeiro />} />
-            <Route path="notificacoes" element={<NotificacoesFornecedor />} className="px-0" />
+            <Route path="notificacoes" element={<NotificacoesFornecedor />} />
             <Route path="editar-loja" element={<EditarLoja />} />
             <Route path="estatisticas" element={<Estatisticas />} />
           </Route>
