@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Bell, CheckCheck } from "lucide-react";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -7,7 +8,9 @@ import logo from "@/assets/logo.png";
 const Notificacoes = () => {
   const {
     notifications,
-    loading
+    loading,
+    markAllAsRead,
+    unreadCount
   } = useSupabaseNotifications();
   if (loading) {
     return <div className="space-y-6">
@@ -18,9 +21,23 @@ const Notificacoes = () => {
       </div>;
   }
   return <div className="space-y-4 md:space-y-6 w-full overflow-hidden px-2 md:px-0">
-      <div className="flex items-center gap-2 md:gap-3">
-        <Bell className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-        <h1 className="text-2xl md:text-3xl font-bold">Notificações</h1>
+      <div className="flex items-center justify-between gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Bell className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold">Notificações</h1>
+        </div>
+        {unreadCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={markAllAsRead}
+            className="flex items-center gap-2"
+          >
+            <CheckCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Marcar todas como lidas</span>
+            <span className="sm:hidden">Marcar lidas</span>
+          </Button>
+        )}
       </div>
 
       <div className="space-y-3 md:space-y-4 w-full mx-0 px-0 py-0 my-0">
