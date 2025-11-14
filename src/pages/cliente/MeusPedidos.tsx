@@ -104,11 +104,24 @@ const MeusPedidos = () => {
             <MessageSquare className="h-4 w-4" />
             Chat
           </Button>
-          {order.order_status === 'delivered' && !hasReviewedOrder(order.id) && (
+          {order.order_status === 'delivered' && (
             <Button 
               size="sm" 
               className="flex-1 gap-1 bg-primary hover:bg-primary/90 text-white"
-              onClick={() => navigate('/cliente/avaliar-pedido', { state: { order } })}
+              onClick={() => {
+                // Formatar o pedido corretamente para a página de avaliação
+                const formattedOrder = {
+                  ...order,
+                  items: Array.isArray(order.itens) ? order.itens.map((item: any) => ({
+                    product_id: item.product_id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    image: item.image
+                  })) : []
+                };
+                navigate('/cliente/avaliar-pedido', { state: { order: formattedOrder } });
+              }}
             >
               <Star className="h-4 w-4" />
               Avaliar

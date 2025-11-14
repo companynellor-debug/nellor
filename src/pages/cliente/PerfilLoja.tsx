@@ -22,7 +22,11 @@ const PerfilLoja = () => {
   const { reviews: allReviews, loading: reviewsLoading } = useSupabaseReviews();
   
   const storeProfile = stores.find(s => s.id === id);
-  const storeProducts = products.filter(p => p.supplierUuid === id);
+  // Buscar produtos usando supplier_id que é o UUID do fornecedor
+  const storeProducts = products.filter(p => {
+    // Verifica tanto supplierUuid quanto supplier_id
+    return p.supplierUuid === id || (p as any).supplier_id === id;
+  });
   
   // Filtrar avaliações dos produtos desta loja
   const storeProductIds = storeProducts.map(p => p.id?.toString()).filter(Boolean);
@@ -138,7 +142,18 @@ const PerfilLoja = () => {
               {user && (
                 <div className="flex gap-3">
                   <Button
-                    onClick={() => navigate("/cliente/chat", { state: { supplierId: id } })}
+                    onClick={() => {
+                      if (!user) {
+                        navigate("/login");
+                        return;
+                      }
+                      navigate("/cliente/chat", { 
+                        state: { 
+                          supplierId: id,
+                          message: `Olá! Tenho interesse em seus produtos.`
+                        } 
+                      });
+                    }}
                     className="flex-1 bg-primary hover:bg-primary/90 text-white"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
