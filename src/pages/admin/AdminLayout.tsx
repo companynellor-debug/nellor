@@ -15,13 +15,8 @@ const AdminLayout = () => {
   });
   useEffect(() => {
     localStorage.setItem("admin-dark-mode", JSON.stringify(darkMode));
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
   }, [darkMode]);
-  return <div className="min-h-screen bg-background relative">
+  return <div className={`min-h-screen bg-background relative ${darkMode ? 'dark' : ''}`}>
       <AdminParticles />
       
       {/* Mobile Header */}
