@@ -21,47 +21,47 @@ const Estatisticas = () => {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Estatísticas</h1>
-        <p className="text-muted-foreground">Análise do desempenho da sua loja</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Estatísticas</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Análise do desempenho da sua loja</p>
       </div>
 
       {/* Cards de Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+        <Card className="p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Total Vendido</p>
-            <DollarSign className="h-5 w-5 text-primary" />
+            <p className="text-xs md:text-sm text-muted-foreground">Total Vendido</p>
+            <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-primary" />
           </div>
-          <p className="text-3xl font-bold">R$ {totalSales.toFixed(2)}</p>
+          <p className="text-2xl md:text-3xl font-bold">R$ {totalSales.toFixed(2)}</p>
           <p className="text-xs text-green-600 mt-1">+12% vs mês anterior</p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Pedidos Entregues</p>
-            <Package className="h-5 w-5 text-primary" />
+            <p className="text-xs md:text-sm text-muted-foreground">Pedidos Entregues</p>
+            <Package className="h-4 w-4 md:h-5 md:w-5 text-primary" />
           </div>
-          <p className="text-3xl font-bold">{totalOrders}</p>
+          <p className="text-2xl md:text-3xl font-bold">{totalOrders}</p>
           <p className="text-xs text-green-600 mt-1">+8% vs mês anterior</p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Ticket Médio</p>
-            <TrendingUp className="h-5 w-5 text-primary" />
+            <p className="text-xs md:text-sm text-muted-foreground">Ticket Médio</p>
+            <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
           </div>
-          <p className="text-3xl font-bold">R$ {averageTicket.toFixed(2)}</p>
+          <p className="text-2xl md:text-3xl font-bold">R$ {averageTicket.toFixed(2)}</p>
           <p className="text-xs text-green-600 mt-1">+5% vs mês anterior</p>
         </Card>
       </div>
 
       {/* Gráfico de Produtos Mais Vendidos */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Produtos Mais Vendidos</h2>
-          <Star className="h-5 w-5 text-muted-foreground" />
+      <Card className="p-4 md:p-6">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-lg md:text-xl font-bold">Produtos Mais Vendidos</h2>
+          <Star className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
         </div>
         
         {products.length > 0 ? (
@@ -72,7 +72,7 @@ const Estatisticas = () => {
                 color: "hsl(var(--primary))",
               },
             }}
-            className="h-[300px] w-full"
+            className="h-[250px] md:h-[300px] w-full"
           >
             <BarChart data={topProducts}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -97,16 +97,16 @@ const Estatisticas = () => {
             </BarChart>
           </ChartContainer>
         ) : (
-          <div className="h-[300px] flex items-center justify-center">
-            <p className="text-muted-foreground">Nenhum produto cadastrado ainda</p>
+          <div className="h-[250px] md:h-[300px] flex items-center justify-center">
+            <p className="text-sm md:text-base text-muted-foreground">Nenhum produto cadastrado ainda</p>
           </div>
         )}
       </Card>
 
       {/* Saldo Disponível */}
-      <Card className="p-6 bg-gradient-to-br from-primary to-primary/80 text-white">
-        <p className="text-sm opacity-90 mb-2">Saldo Disponível para Saque</p>
-        <p className="text-4xl font-bold mb-4">R$ {(totalSales * 0.85).toFixed(2)}</p>
+      <Card className="p-4 md:p-6 bg-gradient-to-br from-primary to-primary/80 text-white">
+        <p className="text-xs md:text-sm opacity-90 mb-2">Saldo Disponível para Saque</p>
+        <p className="text-3xl md:text-4xl font-bold mb-3 md:mb-4">R$ {(totalSales * 0.85).toFixed(2)}</p>
         <p className="text-xs opacity-75">Taxa da plataforma: 15%</p>
       </Card>
     </div>
