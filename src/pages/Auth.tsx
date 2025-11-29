@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,18 +18,45 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupNome, setSignupNome] = useState('');
   const [signupTipo, setSignupTipo] = useState<'cliente' | 'fornecedor'>('cliente');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   
-  const { signIn, signUp, isAuthenticated } = useSupabaseAuth();
+  const { signIn, signUp, isAuthenticated, profile, loading } = useSupabaseAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
-  if (isAuthenticated) {
-    navigate('/cliente');
-    return null;
+  useEffect(() => {
+    if (!loading && isAuthenticated && profile) {
+      if (profile.tipo === 'fornecedor' && !profile.onboarding_completed) {
+        navigate('/fornecedor/onboarding', { replace: true });
+      } else if (profile.tipo === 'fornecedor') {
+        navigate('/fornecedor/dashboard', { replace: true });
+      } else if (profile.tipo === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/cliente', { replace: true });
+      }
+    }
+  }, [isAuthenticated, profile, loading, navigate]);
+
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-950">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If authenticated, show loading while redirecting
+  if (isAuthenticated && profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-950">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const handleLogoClick = () => {
@@ -58,19 +85,19 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     try {
       await signIn(loginEmail, loginPassword);
     } catch (error) {
       // Error is handled in the hook
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     try {
       await signUp(signupEmail, signupPassword, {
         nome: signupNome,
@@ -81,7 +108,7 @@ const Auth = () => {
     } catch (error) {
       // Error is handled in the hook
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -141,8 +168,8 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Entrar
                   </Button>
                 </form>
@@ -215,8 +242,8 @@ const Auth = () => {
                       </Button>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Criar Conta
                   </Button>
                 </form>

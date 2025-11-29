@@ -1,11 +1,50 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ShoppingBag, MessageSquare, Truck, TrendingUp, Smartphone, UserPlus, ShoppingCart, Star } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import nellorApp from "@/assets/nellor-app.png";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { Loader2 } from "lucide-react";
+
 const Home = () => {
+  const { isAuthenticated, profile, loading } = useSupabaseAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && isAuthenticated && profile) {
+      if (profile.tipo === 'fornecedor' && !profile.onboarding_completed) {
+        navigate('/fornecedor/onboarding', { replace: true });
+      } else if (profile.tipo === 'fornecedor') {
+        navigate('/fornecedor/dashboard', { replace: true });
+      } else if (profile.tipo === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/cliente', { replace: true });
+      }
+    }
+  }, [isAuthenticated, profile, loading, navigate]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If authenticated, don't render content (will redirect)
+  if (isAuthenticated && profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const benefits = [{
     icon: ShoppingBag,
     title: "Produtos direto da fábrica",
