@@ -1,4 +1,4 @@
-import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3 } from "lucide-react";
+import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Wallet, Crown } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
@@ -10,6 +10,8 @@ const menuItems = [
   { title: "Produtos", url: "/fornecedor/produtos", icon: Tag },
   { title: "Estatísticas", url: "/fornecedor/estatisticas", icon: BarChart3 },
   { title: "Financeiro", url: "/fornecedor/financeiro", icon: DollarSign },
+  { title: "Recebimentos", url: "/fornecedor/recebimentos", icon: Wallet },
+  { title: "Planos", url: "/fornecedor/planos", icon: Crown },
   { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
 ];

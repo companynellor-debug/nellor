@@ -55,6 +55,8 @@ import NotificacoesFornecedor from "./pages/fornecedor/Notificacoes";
 import EditarLoja from "./pages/fornecedor/EditarLoja";
 import Onboarding from "./pages/fornecedor/Onboarding";
 import Estatisticas from "./pages/fornecedor/Estatisticas";
+import Recebimentos from "./pages/fornecedor/Recebimentos";
+import PlanosFornecedor from "./pages/fornecedor/Planos";
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -103,6 +105,8 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="notificacoes" element={<NotificacoesFornecedor />} />
             <Route path="editar-loja" element={<EditarLoja />} />
             <Route path="estatisticas" element={<Estatisticas />} />
+            <Route path="recebimentos" element={<Recebimentos />} />
+            <Route path="planos" element={<PlanosFornecedor />} />
           </Route>
           
           {/* Admin Panel */}
