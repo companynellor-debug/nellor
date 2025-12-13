@@ -7,7 +7,7 @@ import { Search, ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
-import { useCategories } from "@/hooks/useCategories";
+import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 
 const Produtos = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const Produtos = () => {
   const categoryParam = searchParams.get("categoria");
   const searchParam = searchParams.get("busca");
   const { products } = useProducts();
-  const { categories } = useCategories();
+  const { categories } = useSupabaseCategories();
 
   const [searchTerm, setSearchTerm] = useState(searchParam || "");
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || "");
@@ -89,11 +89,11 @@ const Produtos = () => {
               {categories.map((category) => (
                 <Badge
                   key={category.id}
-                  onClick={() => handleCategoryClick(category.name)}
-                  variant={selectedCategory === category.name ? "default" : "secondary"}
+                  onClick={() => handleCategoryClick(category.slug)}
+                  variant={selectedCategory === category.slug ? "default" : "secondary"}
                   className="cursor-pointer whitespace-nowrap px-4 py-2"
                 >
-                  {category.name}
+                  {category.nome}
                 </Badge>
               ))}
             </div>

@@ -9,7 +9,7 @@ import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProducts } from "@/hooks/useProducts";
 import { useSupabaseBanners } from "@/hooks/useSupabaseBanners";
-import { useCategories } from "@/hooks/useCategories";
+import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 const ClienteHome = () => {
@@ -21,7 +21,7 @@ const ClienteHome = () => {
     products
   } = useProducts();
   const { banners } = useSupabaseBanners();
-  const { categories } = useCategories();
+  const { categories } = useSupabaseCategories();
   return <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
       
@@ -98,11 +98,11 @@ const ClienteHome = () => {
               {categories.map(category => (
                 <Badge
                   key={category.id}
-                  onClick={() => navigate(`/cliente/produtos?categoria=${category.name}`)}
+                  onClick={() => navigate(`/cliente/produtos?categoria=${category.slug}`)}
                   variant="secondary"
                   className="cursor-pointer whitespace-nowrap px-4 py-2"
                 >
-                  {category.name}
+                  {category.nome}
                 </Badge>
               ))}
             </div>
