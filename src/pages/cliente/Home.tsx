@@ -3,7 +3,7 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Heart, Bell, ShoppingCart, ChevronRight } from "lucide-react";
+import { Search, Heart, Bell, ShoppingCart, ChevronRight, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -195,6 +195,18 @@ const ClienteHome = () => {
         {categories.length > 0 && (
           <section className="mb-8">
             <div className="bg-background rounded-xl p-4 shadow-sm border">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-muted-foreground">Categorias</h3>
+                {selectedCategory && (
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    Limpar filtro
+                  </button>
+                )}
+              </div>
               <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide justify-start lg:justify-center">
                 {categories.map(category => (
                   <button
