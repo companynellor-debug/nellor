@@ -401,9 +401,8 @@ const Onboarding = () => {
         <div className="relative z-10 flex flex-col h-full" style={{ minHeight: '700px' }}>
           {/* Header with logo */}
           <div className="pt-8 pb-16 flex flex-col items-center">
-            <img src={logo} alt="Nellor" className="h-12 w-auto mb-4" />
             <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl shadow-lg">
-              <CurrentStepIcon className="h-10 w-10 text-white" />
+              <img src={logo} alt="Nellor" className="h-12 w-auto" />
             </div>
           </div>
 
