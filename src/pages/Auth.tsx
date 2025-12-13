@@ -23,7 +23,6 @@ const Auth = () => {
   const { signIn, signUp, isAuthenticated, profile, loading } = useSupabaseAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (!loading && isAuthenticated && profile) {
       if (profile.tipo === 'fornecedor' && !profile.onboarding_completed) {
@@ -38,19 +37,17 @@ const Auth = () => {
     }
   }, [isAuthenticated, profile, loading, navigate]);
 
-  // Show loading while checking auth state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(280,100%,25%)] via-[hsl(280,88%,36%)] to-[hsl(280,100%,40%)]">
+      <div className="min-h-screen flex items-center justify-center bg-[#7C3AED]">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
 
-  // If authenticated, show loading while redirecting
   if (isAuthenticated && profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(280,100%,25%)] via-[hsl(280,88%,36%)] to-[hsl(280,100%,40%)]">
+      <div className="min-h-screen flex items-center justify-center bg-[#7C3AED]">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
@@ -65,7 +62,6 @@ const Auth = () => {
       }
       return newCount;
     });
-    
     setTimeout(() => setLogoClickCount(0), 2000);
   };
 
@@ -100,101 +96,91 @@ const Auth = () => {
     }
   };
 
-  // Floating dots component
-  const FloatingDots = () => (
-    <>
-      {/* Colored dots */}
-      <div className="absolute top-[15%] left-[8%] w-3 h-3 rounded-full bg-purple-300 animate-pulse" />
-      <div className="absolute top-[25%] right-[12%] w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0.5s' }} />
-      <div className="absolute top-[40%] left-[5%] w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-[60%] right-[8%] w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0.3s' }} />
-      <div className="absolute top-[75%] left-[10%] w-2 h-2 rounded-full bg-pink-400 animate-pulse" style={{ animationDelay: '0.7s' }} />
-      <div className="absolute top-[85%] right-[15%] w-3 h-3 rounded-full bg-purple-200 animate-bounce" style={{ animationDelay: '1.2s' }} />
-      <div className="absolute bottom-[20%] left-[20%] w-2 h-2 rounded-full bg-orange-300 animate-pulse" style={{ animationDelay: '0.4s' }} />
-      <div className="absolute bottom-[35%] right-[25%] w-2.5 h-2.5 rounded-full bg-yellow-300 animate-bounce" style={{ animationDelay: '0.8s' }} />
-    </>
-  );
-
-  // Wave SVG component
-  const WaveBackground = () => (
-    <div className="absolute top-0 left-0 right-0 overflow-hidden">
-      <svg 
-        viewBox="0 0 1440 320" 
-        className="w-full h-auto"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="hsl(280, 88%, 45%)" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="hsl(280, 100%, 50%)" stopOpacity="0.6" />
-          </linearGradient>
-        </defs>
-        <path 
-          fill="url(#waveGradient)"
-          d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,197.3C960,213,1056,203,1152,176C1248,149,1344,107,1392,85.3L1440,64L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
-        />
-      </svg>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[hsl(280,100%,25%)] via-[hsl(280,88%,36%)] to-[hsl(280,100%,40%)]">
-      {/* Wave background */}
-      <WaveBackground />
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Purple top section with wave */}
+      <div className="absolute top-0 left-0 right-0 h-[55%] bg-gradient-to-br from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9]">
+        {/* Wave overlay (darker purple blob) */}
+        <svg 
+          className="absolute bottom-0 left-0 right-0 w-full"
+          viewBox="0 0 1440 320" 
+          preserveAspectRatio="none"
+          style={{ height: '180px' }}
+        >
+          <path 
+            fill="#6D28D9"
+            fillOpacity="0.6"
+            d="M0,64L48,80C96,96,192,128,288,128C384,128,480,96,576,90.7C672,85,768,107,864,128C960,149,1056,171,1152,165.3C1248,160,1344,128,1392,112L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
+          />
+        </svg>
+        
+        {/* Floating colored dots */}
+        <div className="absolute top-[10%] left-[5%] w-2.5 h-2.5 rounded-full bg-white/30" />
+        <div className="absolute top-[20%] right-[10%] w-2 h-2 rounded-full bg-orange-400" />
+        <div className="absolute top-[35%] left-[8%] w-2 h-2 rounded-full bg-yellow-400" />
+        <div className="absolute top-[15%] right-[25%] w-1.5 h-1.5 rounded-full bg-purple-300" />
+      </div>
       
-      {/* Floating dots */}
-      <FloatingDots />
+      {/* White bottom section */}
+      <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-white">
+        {/* Dots on white section */}
+        <div className="absolute top-[15%] left-[6%] w-2 h-2 rounded-full bg-pink-400" />
+        <div className="absolute top-[25%] right-[8%] w-2 h-2 rounded-full bg-blue-400" />
+        <div className="absolute bottom-[25%] left-[12%] w-2.5 h-2.5 rounded-full bg-purple-300" />
+        <div className="absolute bottom-[15%] right-[15%] w-2 h-2 rounded-full bg-orange-300" />
+        <div className="absolute bottom-[30%] right-[30%] w-1.5 h-1.5 rounded-full bg-yellow-400" />
+      </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-12">
-        {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div 
-            className="w-20 h-20 mx-auto mb-4 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
-            onClick={handleLogoClick}
-          >
-            <img 
-              src={logo} 
-              alt="Nellor" 
-              className="w-14 h-14 object-contain"
-            />
-          </div>
-          <h1 className="text-2xl font-bold text-white">
-            {isLogin ? 'Bem-vindo' : 'Criar Conta'}
-          </h1>
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-start pt-16 px-6">
+        {/* Logo */}
+        <div 
+          className="w-20 h-20 bg-[#5B21B6] rounded-2xl flex items-center justify-center mb-4 cursor-pointer hover:scale-105 transition-transform shadow-lg"
+          onClick={handleLogoClick}
+        >
+          <img 
+            src={logo} 
+            alt="Nellor" 
+            className="w-12 h-12 object-contain"
+          />
         </div>
+        
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-white mb-12">
+          {isLogin ? 'welcome' : 'Sign Up'}
+        </h1>
 
-        {/* Form */}
+        {/* Form Card */}
         <div className="w-full max-w-sm">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <>
                 {/* First Name */}
                 <div className="relative">
-                  <label className="text-white/60 text-xs absolute -top-2 left-4 bg-transparent px-1">
-                    Nome
-                  </label>
+                  <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white">
+                    First Name
+                  </span>
                   <Input
                     type="text"
-                    placeholder="Seu nome"
+                    placeholder=""
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     required={!isLogin}
-                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full px-5 focus:border-white/50 focus:ring-0"
+                    className="h-12 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400"
                   />
                 </div>
 
                 {/* Last Name */}
                 <div className="relative">
-                  <label className="text-white/60 text-xs absolute -top-2 left-4 bg-transparent px-1">
-                    Sobrenome
-                  </label>
+                  <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white">
+                    Last Name
+                  </span>
                   <Input
                     type="text"
-                    placeholder="Seu sobrenome"
+                    placeholder=""
                     value={sobrenome}
                     onChange={(e) => setSobrenome(e.target.value)}
-                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full px-5 focus:border-white/50 focus:ring-0"
+                    className="h-12 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400"
                   />
                 </div>
               </>
@@ -202,52 +188,52 @@ const Auth = () => {
 
             {/* Email */}
             <div className="relative">
-              <label className="text-white/60 text-xs absolute -top-2 left-4 bg-transparent px-1">
+              <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white z-10">
                 Email
-              </label>
+              </span>
               <Input
                 type="email"
-                placeholder="seu@email.com"
+                placeholder=""
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full px-5 focus:border-white/50 focus:ring-0"
+                className="h-12 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400"
               />
             </div>
 
             {/* Password */}
             <div className="relative">
-              <label className="text-white/60 text-xs absolute -top-2 left-4 bg-transparent px-1">
-                Senha
-              </label>
+              <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white z-10">
+                Password
+              </span>
               <Input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
+                placeholder=""
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full px-5 pr-16 focus:border-white/50 focus:ring-0"
+                className="h-12 bg-white border border-gray-200 text-gray-800 rounded-full px-5 pr-16 focus:border-purple-400 focus:ring-purple-400"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs uppercase font-medium"
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-500 hover:text-purple-700 text-xs uppercase font-semibold tracking-wide"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? 'HIDE' : 'SHOW'}
               </button>
             </div>
 
-            {/* Account Type Selection (only for signup) */}
+            {/* Account Type (only for signup) */}
             {!isLogin && (
-              <div className="flex gap-2 mt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setTipo('cliente')}
-                  className={`flex-1 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                     tipo === 'cliente'
-                      ? 'bg-white text-primary'
-                      : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+                      ? 'bg-[#6D28D9] text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   Cliente
@@ -255,10 +241,10 @@ const Auth = () => {
                 <button
                   type="button"
                   onClick={() => setTipo('fornecedor')}
-                  className={`flex-1 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                     tipo === 'fornecedor'
-                      ? 'bg-white text-primary'
-                      : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+                      ? 'bg-[#6D28D9] text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   Fornecedor
@@ -270,33 +256,33 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={submitting}
-              className="w-full h-12 bg-[hsl(280,88%,30%)] hover:bg-[hsl(280,88%,25%)] text-white font-semibold rounded-full mt-6 shadow-lg"
+              className="w-full h-12 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-semibold rounded-full mt-4 shadow-md"
             >
               {submitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                isLogin ? 'ENTRAR' : 'CRIAR CONTA'
+                isLogin ? 'SIGN IN' : 'SIGN UP'
               )}
             </Button>
           </form>
 
-          {/* Toggle Login/Signup */}
-          <div className="text-center mt-6">
+          {/* Toggle */}
+          <div className="text-center mt-5">
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-white/80 hover:text-white font-medium uppercase text-sm tracking-wide transition-colors"
+              className="text-gray-600 hover:text-purple-600 font-medium uppercase text-sm tracking-wide"
             >
-              {isLogin ? 'CRIAR CONTA' : 'ENTRAR'}
+              {isLogin ? 'SIGN UP' : 'SIGN IN'}
             </button>
           </div>
 
           {/* Back to home */}
-          <div className="text-center mt-4">
+          <div className="text-center mt-3">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="text-white/50 hover:text-white/80 text-sm transition-colors"
+              className="text-gray-400 hover:text-gray-600 text-sm"
             >
               ← Voltar para home
             </button>
@@ -304,13 +290,13 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Admin Access Dialog */}
+      {/* Admin Dialog */}
       <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
-        <DialogContent className="bg-[hsl(280,88%,30%)] border-white/20 text-white">
+        <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle className="text-white">Acesso Admin</DialogTitle>
-            <DialogDescription className="text-white/60">
-              Digite a senha de administrador para acessar o painel.
+            <DialogTitle>Acesso Admin</DialogTitle>
+            <DialogDescription>
+              Digite a senha de administrador.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -319,13 +305,10 @@ const Auth = () => {
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAdminAccess()}
-              placeholder="Digite a senha"
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+              placeholder="Senha"
+              className="rounded-full"
             />
-            <Button 
-              onClick={handleAdminAccess} 
-              className="w-full bg-white text-primary hover:bg-white/90"
-            >
+            <Button onClick={handleAdminAccess} className="w-full bg-[#6D28D9] hover:bg-[#5B21B6] rounded-full">
               Acessar
             </Button>
           </div>
