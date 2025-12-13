@@ -88,6 +88,34 @@ export const useSupabaseCategories = () => {
     }
   };
 
+  const updateCategory = async (categoryId: string, categoryData: Partial<Omit<Category, 'id' | 'created_at'>>) => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .update(categoryData)
+        .eq('id', categoryId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Categoria atualizada',
+        description: 'Categoria atualizada com sucesso',
+      });
+
+      return data;
+    } catch (error: any) {
+      console.error('Error updating category:', error);
+      toast({
+        title: 'Erro ao atualizar categoria',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const deleteCategory = async (categoryId: string) => {
     try {
       const { error } = await supabase
@@ -116,6 +144,7 @@ export const useSupabaseCategories = () => {
     categories,
     loading,
     createCategory,
+    updateCategory,
     deleteCategory,
     refetch: fetchCategories
   };

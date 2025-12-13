@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const Categorias = () => {
-  const { categories, createCategory, deleteCategory, loading } = useSupabaseCategories();
+  const { categories, createCategory, updateCategory, deleteCategory, loading } = useSupabaseCategories();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -35,11 +35,19 @@ const Categorias = () => {
     const slug = formData.slug || formData.nome.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     try {
-      await createCategory({
-        nome: formData.nome,
-        slug,
-        imagem_url: formData.imagem_url || null
-      });
+      if (editingId) {
+        await updateCategory(editingId, {
+          nome: formData.nome,
+          slug,
+          imagem_url: formData.imagem_url || null
+        });
+      } else {
+        await createCategory({
+          nome: formData.nome,
+          slug,
+          imagem_url: formData.imagem_url || null
+        });
+      }
       setOpen(false);
       resetForm();
     } catch (error) {
@@ -50,6 +58,16 @@ const Categorias = () => {
   const resetForm = () => {
     setFormData({ nome: "", slug: "", imagem_url: "" });
     setEditingId(null);
+  };
+
+  const handleEdit = (category: typeof categories[0]) => {
+    setEditingId(category.id);
+    setFormData({
+      nome: category.nome,
+      slug: category.slug,
+      imagem_url: category.imagem_url || ""
+    });
+    setOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -78,7 +96,7 @@ const Categorias = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nova Categoria</DialogTitle>
+              <DialogTitle>{editingId ? 'Editar Categoria' : 'Nova Categoria'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -106,7 +124,7 @@ const Categorias = () => {
                 />
               </div>
               <Button onClick={handleSubmit} className="w-full">
-                Criar Categoria
+                {editingId ? 'Salvar Alterações' : 'Criar Categoria'}
               </Button>
             </div>
           </DialogContent>
@@ -148,13 +166,22 @@ const Categorias = () => {
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(category.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(category)}
+                    >
+                      <Edit className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(category.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Criado em: {new Date(category.created_at || '').toLocaleDateString('pt-BR')}
