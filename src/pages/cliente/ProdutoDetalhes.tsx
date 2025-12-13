@@ -100,10 +100,10 @@ const ProdutoDetalhes = () => {
     );
   }
 
-  const relatedProducts = getRelatedProducts(product.id, product.category, 2);
+  const relatedProducts = getRelatedProducts(product.id, product.category, 4);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 lg:pb-6">
       <ParticlesBackground />
 
       {/* Header */}
@@ -121,115 +121,148 @@ const ProdutoDetalhes = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 relative z-10">
-        {/* Imagens do Produto */}
-        <div className="mb-6">
-          <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-muted">
-            <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+      <main className="container mx-auto px-4 py-6 relative z-10 max-w-6xl">
+        {/* Layout Desktop: Grid 2 colunas */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
+          
+          {/* Coluna Esquerda: Imagens */}
+          <div className="mb-6 lg:mb-0 lg:sticky lg:top-24">
+            <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-muted max-w-sm mx-auto lg:max-w-md">
+              <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex gap-2 justify-center">
+              {product.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`w-14 h-14 lg:w-16 lg:h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedImage === index ? "border-primary scale-105" : "border-border"
+                  }`}
+                >
+                  <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2 justify-center">
-            {product.images.map((image, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                  selectedImage === index ? "border-primary scale-105" : "border-border"
-                }`}
+
+          {/* Coluna Direita: Informações */}
+          <div className="space-y-4">
+            {/* Store Info */}
+            {supplierProfile && product.supplierProfileId && (
+              <Card
+                onClick={() => navigate(`/cliente/loja/${product.supplierProfileId}`)}
+                className="bg-white border shadow-sm p-3 cursor-pointer hover:shadow-md transition-all"
               >
-                <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
-              </button>
-            ))}
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={supplierProfile.foto_perfil_url} alt={supplierProfile.nome} />
+                    <AvatarFallback>{supplierProfile.nome.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">{supplierProfile.nome}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span>{product.rating.toFixed(1)}</span>
+                      </div>
+                      <span>•</span>
+                      <span>{product.reviews} avaliações</span>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-primary">
+                    <Store className="h-5 w-5" />
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Informações do Produto */}
+            <Card className="bg-white border shadow-sm p-5">
+              <h1 className="text-lg lg:text-xl font-bold mb-2">{product.name}</h1>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {product.rating.toFixed(1)} ({product.reviews} avaliações)
+                </span>
+              </div>
+              <div className="flex items-center gap-3 mb-3">
+                <p className="text-2xl font-bold text-primary">{product.price}</p>
+                <Badge variant={currentStock > 0 ? "default" : "destructive"} className="flex items-center gap-1 text-xs">
+                  <Package className="h-3 w-3" />
+                  {currentStock > 0 ? `${currentStock} em estoque` : 'Sem estoque'}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground leading-relaxed text-sm">{product.description}</p>
+
+              {/* Botões de Ação - Desktop */}
+              <div className="hidden lg:flex gap-3 mt-5 pt-5 border-t">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2"
+                  disabled={currentStock === 0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (currentStock === 0 || !product.supplierProfileId) return;
+                    addToCart({
+                      productId: product.supplierUuid || '',
+                      name: product.name,
+                      price: product.priceNumber,
+                      image: product.images[0],
+                      storeId: product.supplierProfileId || '',
+                      storeName: supplierProfile?.nome || 'Loja'
+                    }, 1);
+                    navigate('/cliente/carrinho');
+                  }}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Adicionar ao Carrinho
+                </Button>
+                <Button 
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                  disabled={currentStock === 0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentStock === 0 || !product.supplierProfileId) return;
+                    setQuantity(1);
+                    setShowQuantityDialog(true);
+                  }}
+                >
+                  Comprar Agora
+                </Button>
+              </div>
+            </Card>
+
+            {/* Especificações */}
+            <Card className="bg-white border shadow-sm p-5">
+              <h2 className="text-base font-bold text-primary mb-3">Especificações</h2>
+              <div className="space-y-2">
+                {product.specs.map((spec) => (
+                  <div key={spec.label} className="flex justify-between items-center border-b border-border/50 pb-2 text-sm">
+                    <span className="text-muted-foreground">{spec.label}</span>
+                    <span className="font-medium">{spec.value}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
           </div>
         </div>
 
-        {/* Store Info */}
-        {supplierProfile && product.supplierProfileId && (
-          <Card
-            onClick={() => {
-              console.log('Navigating to store:', product.supplierProfileId);
-              navigate(`/cliente/loja/${product.supplierProfileId}`);
-            }}
-            className="bg-white border shadow-sm p-4 mb-6 cursor-pointer hover:shadow-md transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={supplierProfile.foto_perfil_url} alt={supplierProfile.nome} />
-                <AvatarFallback>{supplierProfile.nome.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">{supplierProfile.nome}</p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <span>{product.rating.toFixed(1)}</span>
-                  </div>
-                  <span>•</span>
-                  <span>{product.reviews} avaliações</span>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log('Button clicked, navigating to:', product.supplierProfileId);
-                  navigate(`/cliente/loja/${product.supplierProfileId}`);
-                }}
-              >
-                <Store className="h-5 w-5" />
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* Informações do Produto */}
-        <Card className="bg-white border shadow-sm p-6 mb-6">
-          <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-400"}`} />
-              ))}
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {product.rating.toFixed(1)} ({product.reviews} avaliações)
-            </span>
-          </div>
-          <div className="flex items-center gap-3 mb-4">
-            <p className="text-3xl font-bold text-primary">{product.price}</p>
-            <Badge variant={currentStock > 0 ? "default" : "destructive"} className="flex items-center gap-1">
-              <Package className="h-3 w-3" />
-              {currentStock > 0 ? `${currentStock} disponíveis` : 'Sem estoque'}
-            </Badge>
-          </div>
-          <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-        </Card>
-
-        {/* Especificações */}
-        <Card className="bg-white border shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-bold text-primary mb-4">Especificações</h2>
-          <div className="space-y-3">
-            {product.specs.map((spec) => (
-              <div key={spec.label} className="flex justify-between items-center border-b pb-2">
-                <span className="text-muted-foreground">{spec.label}</span>
-                <span className="font-medium">{spec.value}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Avaliações */}
-        <Card className="bg-white border shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-bold text-primary mb-6">Avaliações dos Clientes</h2>
+        {/* Avaliações - Full Width */}
+        <Card className="bg-white border shadow-sm p-5 mt-6">
+          <h2 className="text-base font-bold text-primary mb-4">Avaliações dos Clientes</h2>
           <ReviewsList reviews={reviews} loading={reviewsLoading} />
         </Card>
 
-        {/* Produtos Relacionados */}
+        {/* Produtos Relacionados - Full Width */}
         {relatedProducts.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-primary mb-4">Você também pode gostar</h2>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="mt-6">
+            <h2 className="text-base font-bold text-primary mb-4">Você também pode gostar</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {relatedProducts.map((relatedProduct) => (
                 <Card
                   key={relatedProduct.id}
@@ -243,8 +276,8 @@ const ProdutoDetalhes = () => {
                     <img src={relatedProduct.images[0]} alt={relatedProduct.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="p-3">
-                    <p className="text-sm mb-2 line-clamp-2">{relatedProduct.name}</p>
-                    <p className="text-primary font-bold">{relatedProduct.price}</p>
+                    <p className="text-sm mb-1 line-clamp-2">{relatedProduct.name}</p>
+                    <p className="text-primary font-bold text-sm">{relatedProduct.price}</p>
                   </div>
                 </Card>
               ))}
@@ -327,8 +360,8 @@ const ProdutoDetalhes = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Botões de Ação */}
-        <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30">
+        {/* Botões de Ação - Mobile Only */}
+        <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30 lg:hidden">
           <div className="container mx-auto flex gap-3">
             <Button 
               variant="outline" 
@@ -337,10 +370,6 @@ const ProdutoDetalhes = () => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Add to cart clicked');
-                console.log('Current stock:', currentStock);
-                console.log('Product:', product);
-                console.log('Supplier profile:', supplierProfile);
                 
                 if (currentStock === 0) {
                   toast({
@@ -360,8 +389,7 @@ const ProdutoDetalhes = () => {
                   return;
                 }
 
-                console.log('Adding to cart...');
-                const success = addToCart({
+                addToCart({
                   productId: product.supplierUuid || '',
                   name: product.name,
                   price: product.priceNumber,
@@ -370,14 +398,11 @@ const ProdutoDetalhes = () => {
                   storeName: supplierProfile?.nome || 'Loja'
                 }, 1);
                 
-                console.log('Add to cart success:', success);
-                if (success) {
-                  navigate('/cliente/carrinho');
-                }
+                navigate('/cliente/carrinho');
               }}
             >
               <ShoppingCart className="h-5 w-5" />
-              Adicionar ao Carrinho
+              Adicionar
             </Button>
             <Button 
               className="flex-1 bg-primary hover:bg-primary/90 text-white"
@@ -408,7 +433,7 @@ const ProdutoDetalhes = () => {
                 setShowQuantityDialog(true);
               }}
             >
-              Comprar Agora
+              Comprar
             </Button>
           </div>
         </div>
