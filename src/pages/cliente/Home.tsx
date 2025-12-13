@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
@@ -20,9 +21,15 @@ const ClienteHome = () => {
   const { banners } = useSupabaseBanners();
   const { categories } = useSupabaseCategories();
   const { cartItems } = useCart();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const mainBanners = banners.slice(0, 3);
   const sideBanners = banners.slice(3, 5);
+
+  // Filter products by selected category
+  const filteredProducts = selectedCategory
+    ? products.filter(product => product.category === selectedCategory)
+    : products;
 
   return (
     <div className="min-h-screen bg-muted/30 pb-20 lg:pb-0">
@@ -192,17 +199,27 @@ const ClienteHome = () => {
                 {categories.map(category => (
                   <button
                     key={category.id}
-                    onClick={() => navigate(`/cliente/produtos?categoria=${category.slug}`)}
-                    className="flex flex-col items-center gap-2 min-w-[80px] p-3 hover:bg-muted rounded-xl transition-colors group"
+                    onClick={() => setSelectedCategory(selectedCategory === category.slug ? null : category.slug)}
+                    className={`flex flex-col items-center gap-2 min-w-[80px] p-3 rounded-xl transition-colors group ${
+                      selectedCategory === category.slug 
+                        ? 'bg-primary/20 ring-2 ring-primary' 
+                        : 'hover:bg-muted'
+                    }`}
                   >
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                      selectedCategory === category.slug 
+                        ? 'bg-primary/30' 
+                        : 'bg-primary/10 group-hover:bg-primary/20'
+                    }`}>
                       {category.imagem_url ? (
                         <img src={category.imagem_url} alt={category.nome} className="w-8 h-8 object-contain" />
                       ) : (
                         <span className="text-2xl">🛍️</span>
                       )}
                     </div>
-                    <span className="text-xs text-center text-foreground font-medium whitespace-nowrap">
+                    <span className={`text-xs text-center font-medium whitespace-nowrap ${
+                      selectedCategory === category.slug ? 'text-primary' : 'text-foreground'
+                    }`}>
                       {category.nome}
                     </span>
                   </button>
@@ -226,7 +243,7 @@ const ClienteHome = () => {
             </button>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {products.slice(0, 8).map(product => (
+            {filteredProducts.slice(0, 8).map(product => (
               <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-44 lg:w-52">
                 <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group">
                   <div className="aspect-square overflow-hidden relative">
@@ -249,7 +266,9 @@ const ClienteHome = () => {
         {/* Products Grid - Recomendados */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-foreground">Recomendados para Você</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              {selectedCategory ? `Produtos em ${selectedCategory}` : 'Recomendados para Você'}
+            </h2>
             <button 
               onClick={() => navigate("/cliente/produtos")}
               className="flex items-center gap-1 text-primary hover:underline text-sm font-medium"
@@ -258,7 +277,7 @@ const ClienteHome = () => {
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {products.map(product => (
+            {filteredProducts.map(product => (
               <Link key={product.id} to={`/cliente/produto/${product.id}`}>
                 <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group h-full">
                   <div className="aspect-square overflow-hidden">
