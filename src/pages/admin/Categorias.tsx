@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Package } from "lucide-react";
-import { useCategories } from "@/hooks/useCategories";
+import { Plus, Edit, Trash2, Package, Image } from "lucide-react";
+import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import {
   Dialog,
   DialogContent,
@@ -17,59 +17,50 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const Categorias = () => {
-  const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
+  const { categories, createCategory, deleteCategory, loading } = useSupabaseCategories();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    icon: "📦"
+    nome: "",
+    slug: "",
+    imagem_url: ""
   });
 
-  const handleSubmit = () => {
-    if (!formData.name) {
+  const handleSubmit = async () => {
+    if (!formData.nome) {
       toast.error("Preencha o nome da categoria");
       return;
     }
 
-    if (editingId) {
-      updateCategory(editingId, formData);
-      toast.success("Categoria atualizada!");
-    } else {
-      addCategory(formData);
-      toast.success("Categoria criada!");
-    }
+    const slug = formData.slug || formData.nome.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    setOpen(false);
-    resetForm();
+    try {
+      await createCategory({
+        nome: formData.nome,
+        slug,
+        imagem_url: formData.imagem_url || null
+      });
+      setOpen(false);
+      resetForm();
+    } catch (error) {
+      // Error handled in hook
+    }
   };
 
   const resetForm = () => {
-    setFormData({ name: "", description: "", icon: "📦" });
+    setFormData({ nome: "", slug: "", imagem_url: "" });
     setEditingId(null);
   };
 
-  const handleEdit = (id: string) => {
-    const category = categories.find(c => c.id === id);
-    if (category) {
-      setFormData({
-        name: category.name,
-        description: category.description,
-        icon: category.icon
-      });
-      setEditingId(id);
-      setOpen(true);
-    }
-  };
-
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta categoria?")) {
-      deleteCategory(id);
-      toast.success("Categoria excluída!");
+      try {
+        await deleteCategory(id);
+      } catch (error) {
+        // Error handled in hook
+      }
     }
   };
-
-  const iconOptions = ["📦", "💻", "👕", "🍎", "🏠", "🎮", "📱", "⚽", "🎨", "📚"];
 
   return (
     <div className="space-y-6">
@@ -87,46 +78,35 @@ const Categorias = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingId ? "Editar" : "Nova"} Categoria</DialogTitle>
+              <DialogTitle>Nova Categoria</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label>Nome</Label>
                 <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                   placeholder="Nome da categoria"
                 />
               </div>
               <div>
-                <Label>Descrição</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descrição da categoria"
-                  rows={3}
+                <Label>Slug (opcional)</Label>
+                <Input
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  placeholder="ex: eletronicos (gerado automaticamente se vazio)"
                 />
               </div>
               <div>
-                <Label>Ícone</Label>
-                <div className="grid grid-cols-5 gap-2 mt-2">
-                  {iconOptions.map((icon) => (
-                    <button
-                      key={icon}
-                      onClick={() => setFormData({ ...formData, icon })}
-                      className={`w-12 h-12 flex items-center justify-center text-2xl border-2 rounded-lg transition-all ${
-                        formData.icon === icon
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
+                <Label>URL da Imagem (opcional)</Label>
+                <Input
+                  value={formData.imagem_url}
+                  onChange={(e) => setFormData({ ...formData, imagem_url: e.target.value })}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                />
               </div>
               <Button onClick={handleSubmit} className="w-full">
-                {editingId ? "Atualizar" : "Criar"} Categoria
+                Criar Categoria
               </Button>
             </div>
           </DialogContent>
@@ -140,27 +120,34 @@ const Categorias = () => {
           <Badge variant="secondary">{categories.length}</Badge>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((category) => (
-            <Card key={category.id} className="p-4 hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="text-3xl">{category.icon}</div>
-                  <div>
-                    <h3 className="font-semibold">{category.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(category.createdAt).toLocaleDateString('pt-BR')}
-                    </p>
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Carregando categorias...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {categories.map((category) => (
+              <Card key={category.id} className="p-4 hover:shadow-lg transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    {category.imagem_url ? (
+                      <img 
+                        src={category.imagem_url} 
+                        alt={category.nome}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Image className="w-6 h-6 text-primary" />
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-semibold">{category.nome}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {category.slug}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(category.id)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -169,13 +156,15 @@ const Categorias = () => {
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
-              </div>
-              <p className="text-sm text-muted-foreground">{category.description}</p>
-            </Card>
-          ))}
-        </div>
+                <p className="text-xs text-muted-foreground">
+                  Criado em: {new Date(category.created_at || '').toLocaleDateString('pt-BR')}
+                </p>
+              </Card>
+            ))}
+          </div>
+        )}
 
-        {categories.length === 0 && (
+        {!loading && categories.length === 0 && (
           <div className="text-center py-12">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground">Nenhuma categoria cadastrada</p>
