@@ -1,9 +1,8 @@
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Heart, Bell } from "lucide-react";
+import { Search, Heart, Bell, ShoppingCart, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -12,147 +11,279 @@ import { useSupabaseBanners } from "@/hooks/useSupabaseBanners";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { useCart } from "@/hooks/useCart";
+
 const ClienteHome = () => {
   const navigate = useNavigate();
-  const {
-    favorites
-  } = useFavorites();
-  const {
-    products
-  } = useProducts();
+  const { favorites } = useFavorites();
+  const { products } = useProducts();
   const { banners } = useSupabaseBanners();
   const { categories } = useSupabaseCategories();
-  return <div className="min-h-screen bg-background pb-20">
+  const { cartItems } = useCart();
+
+  const mainBanners = banners.slice(0, 3);
+  const sideBanners = banners.slice(3, 5);
+
+  return (
+    <div className="min-h-screen bg-muted/30 pb-20 lg:pb-0">
       <ParticlesBackground />
       
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <img src={logo} alt="Nellor" className="h-12 w-auto" />
-            <div className="flex items-center gap-4">
-              <button onClick={() => navigate("/cliente/notificacoes")}>
-                <Bell className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
+      {/* Desktop Header */}
+      <header className="sticky top-0 z-40 bg-background border-b shadow-sm">
+        <div className="container mx-auto px-4">
+          {/* Top bar - desktop only */}
+          <div className="hidden lg:flex items-center justify-between py-2 text-sm border-b border-border/50">
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <span>Bem-vindo à Nellor</span>
+            </div>
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <button onClick={() => navigate("/cliente/notificacoes")} className="hover:text-primary transition-colors">
+                Notificações
               </button>
-              <button onClick={() => navigate("/cliente/favoritos")} className="relative">
-                <Heart className="h-6 w-6 text-foreground cursor-pointer hover:text-primary transition-colors" />
-                {favorites.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {favorites.length}
-                  </span>}
+              <button onClick={() => navigate("/cliente/suporte")} className="hover:text-primary transition-colors">
+                Ajuda
               </button>
             </div>
           </div>
-          
-          <div className="relative" onClick={() => navigate("/cliente/produtos")}>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input placeholder="Buscar produtos ou marcas..." className="pl-10 bg-muted border-input focus:border-primary cursor-pointer" readOnly />
+
+          {/* Main header */}
+          <div className="flex items-center justify-between gap-4 py-4">
+            <img 
+              src={logo} 
+              alt="Nellor" 
+              className="h-10 lg:h-12 w-auto cursor-pointer" 
+              onClick={() => navigate("/cliente")}
+            />
+            
+            {/* Search bar - expands on desktop */}
+            <div className="flex-1 max-w-2xl hidden md:block">
+              <div className="relative" onClick={() => navigate("/cliente/produtos")}>
+                <Input 
+                  placeholder="Buscar produtos, marcas e muito mais..." 
+                  className="pl-4 pr-12 py-6 bg-muted border-input focus:border-primary cursor-pointer text-base" 
+                  readOnly 
+                />
+                <button className="absolute right-0 top-0 h-full px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-r-md">
+                  <Search className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile search */}
+            <div className="flex-1 md:hidden" onClick={() => navigate("/cliente/produtos")}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input placeholder="Buscar produtos..." className="pl-10 bg-muted border-input cursor-pointer" readOnly />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 lg:gap-4">
+              <button 
+                onClick={() => navigate("/cliente/notificacoes")}
+                className="p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <Bell className="h-6 w-6 text-foreground" />
+              </button>
+              <button 
+                onClick={() => navigate("/cliente/carrinho")} 
+                className="relative p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <ShoppingCart className="h-6 w-6 text-foreground" />
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItems.length}
+                  </span>
+                )}
+              </button>
+              <button 
+                onClick={() => navigate("/cliente/favoritos")} 
+                className="relative p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <Heart className="h-6 w-6 text-foreground" />
+                {favorites.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {favorites.length}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
-        {/* Banners Carousel */}
+        {/* Banners Section - Desktop: main + side layout */}
         {banners.length > 0 && (
           <div className="mb-8">
-            <Carousel 
-              opts={{
-                align: "start",
-                loop: true
-              }} 
-              plugins={[Autoplay({ delay: 4000 })]} 
-              className="w-full"
-            >
-              <CarouselContent>
-                {banners.map(banner => (
-                  <CarouselItem key={banner.id}>
-                    <div className="relative overflow-hidden rounded-lg cursor-pointer"
-                         onClick={() => banner.link_url && navigate(banner.link_url)}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Main Banner Carousel */}
+              <div className="lg:col-span-2">
+                <Carousel 
+                  opts={{ align: "start", loop: true }} 
+                  plugins={[Autoplay({ delay: 4000 })]} 
+                  className="w-full"
+                >
+                  <CarouselContent>
+                    {mainBanners.map(banner => (
+                      <CarouselItem key={banner.id}>
+                        <div 
+                          className="relative overflow-hidden rounded-xl cursor-pointer"
+                          onClick={() => banner.link_url && navigate(banner.link_url)}
+                        >
+                          <img 
+                            src={banner.image_url} 
+                            alt={banner.title || "Banner"} 
+                            className="w-full h-48 md:h-64 lg:h-80 object-cover" 
+                          />
+                          {banner.title && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                              <h3 className="text-white font-bold text-lg">{banner.title}</h3>
+                              {banner.subtitle && (
+                                <p className="text-white/90 text-sm">{banner.subtitle}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </Carousel>
+              </div>
+
+              {/* Side Banners - Desktop only */}
+              <div className="hidden lg:flex flex-col gap-4">
+                {sideBanners.length > 0 ? (
+                  sideBanners.map(banner => (
+                    <div 
+                      key={banner.id}
+                      className="relative overflow-hidden rounded-xl cursor-pointer flex-1"
+                      onClick={() => banner.link_url && navigate(banner.link_url)}
+                    >
                       <img 
                         src={banner.image_url} 
                         alt={banner.title || "Banner"} 
-                        className="w-full h-48 md:h-64 object-cover" 
+                        className="w-full h-full object-cover" 
                       />
-                      {banner.title && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                          <h3 className="text-white font-bold text-lg">{banner.title}</h3>
-                          {banner.subtitle && (
-                            <p className="text-white/90 text-sm">{banner.subtitle}</p>
-                          )}
-                        </div>
-                      )}
                     </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-2" />
-              <CarouselNext className="right-2" />
-            </Carousel>
+                  ))
+                ) : (
+                  <>
+                    <div className="flex-1 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <p className="text-muted-foreground">Espaço para banner</p>
+                    </div>
+                    <div className="flex-1 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center">
+                      <p className="text-muted-foreground">Espaço para banner</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Categorias */}
+        {/* Categories - Icon style row */}
         {categories.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-xl font-bold mb-4 text-foreground">Categorias</h2>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {categories.map(category => (
-                <Badge
-                  key={category.id}
-                  onClick={() => navigate(`/cliente/produtos?categoria=${category.slug}`)}
-                  variant="secondary"
-                  className="cursor-pointer whitespace-nowrap px-4 py-2"
-                >
-                  {category.nome}
-                </Badge>
-              ))}
+            <div className="bg-background rounded-xl p-4 shadow-sm border">
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide justify-start lg:justify-center">
+                {categories.map(category => (
+                  <button
+                    key={category.id}
+                    onClick={() => navigate(`/cliente/produtos?categoria=${category.slug}`)}
+                    className="flex flex-col items-center gap-2 min-w-[80px] p-3 hover:bg-muted rounded-xl transition-colors group"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      {category.imagem_url ? (
+                        <img src={category.imagem_url} alt={category.nome} className="w-8 h-8 object-contain" />
+                      ) : (
+                        <span className="text-2xl">🛍️</span>
+                      )}
+                    </div>
+                    <span className="text-xs text-center text-foreground font-medium whitespace-nowrap">
+                      {category.nome}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </section>
         )}
 
-        {/* Produtos Recomendados */}
-        <section>
-          <h2 className="text-xl font-bold mb-4 text-foreground">Recomendados para Você</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {products.map(product => <Link key={product.id} to={`/cliente/produto/${product.id}`}>
-                <Card className="bg-card border overflow-hidden hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
-                  <div className="aspect-square overflow-hidden">
-                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+        {/* Flash Deals Section */}
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-foreground">⚡ Ofertas Relâmpago</h2>
+            </div>
+            <button 
+              onClick={() => navigate("/cliente/produtos")}
+              className="flex items-center gap-1 text-primary hover:underline text-sm font-medium"
+            >
+              Ver Tudo <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {products.slice(0, 8).map(product => (
+              <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-44 lg:w-52">
+                <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group">
+                  <div className="aspect-square overflow-hidden relative">
+                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   </div>
                   <div className="p-3">
-                    <h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground">{product.name}</h3>
+                    <p className="text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</p>
+                    <p className="text-primary font-bold text-lg">{product.price}</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-yellow-500 text-sm">⭐</span>
+                      <span className="text-xs text-muted-foreground">{product.rating}</span>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Products Grid - Recomendados */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-foreground">Recomendados para Você</h2>
+            <button 
+              onClick={() => navigate("/cliente/produtos")}
+              className="flex items-center gap-1 text-primary hover:underline text-sm font-medium"
+            >
+              Ver Mais <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {products.map(product => (
+              <Link key={product.id} to={`/cliente/produto/${product.id}`}>
+                <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group h-full">
+                  <div className="aspect-square overflow-hidden">
+                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</h3>
                     <div className="flex items-center justify-between">
                       <p className="text-primary font-bold">{product.price}</p>
                       <div className="flex items-center gap-1 text-xs">
                         <span className="text-yellow-500">⭐</span>
-                        <span className="text-foreground">{product.rating}</span>
+                        <span className="text-muted-foreground">{product.rating}</span>
                       </div>
                     </div>
                   </div>
                 </Card>
-              </Link>)}
-          </div>
-        </section>
-
-        {/* Ofertas em Destaque */}
-        <section className="mt-8">
-          <h2 className="text-xl font-bold mb-4 text-foreground">Ofertas Relâmpago</h2>
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {products.map(product => <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-40">
-                <Card className="bg-card border overflow-hidden hover:shadow-lg transition-all hover:scale-105">
-                  <div className="aspect-square overflow-hidden">
-                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-3">
-                    <p className="text-xs mb-1 line-clamp-1 text-foreground">{product.name}</p>
-                    <p className="text-primary font-bold text-sm">{product.price}</p>
-                  </div>
-                </Card>
-              </Link>)}
+              </Link>
+            ))}
           </div>
         </section>
       </main>
 
       <BottomNav />
-    </div>;
+    </div>
+  );
 };
+
 export default ClienteHome;
