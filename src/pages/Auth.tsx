@@ -1,23 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/logo.png';
-import { ParticlesBackground } from '@/components/cliente/ParticlesBackground';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const Auth = () => {
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupNome, setSignupNome] = useState('');
-  const [signupTipo, setSignupTipo] = useState<'cliente' | 'fornecedor'>('cliente');
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [nome, setNome] = useState('');
+  const [sobrenome, setSobrenome] = useState('');
+  const [tipo, setTipo] = useState<'cliente' | 'fornecedor'>('cliente');
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
@@ -44,8 +41,8 @@ const Auth = () => {
   // Show loading while checking auth state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-950">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(280,100%,25%)] via-[hsl(280,88%,36%)] to-[hsl(280,100%,40%)]">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
@@ -53,8 +50,8 @@ const Auth = () => {
   // If authenticated, show loading while redirecting
   if (isAuthenticated && profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-950">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(280,100%,25%)] via-[hsl(280,88%,36%)] to-[hsl(280,100%,40%)]">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
@@ -69,7 +66,6 @@ const Auth = () => {
       return newCount;
     });
     
-    // Reset counter after 2 seconds
     setTimeout(() => setLogoClickCount(0), 2000);
   };
 
@@ -83,11 +79,20 @@ const Auth = () => {
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await signIn(loginEmail, loginPassword);
+      if (isLogin) {
+        await signIn(email, password);
+      } else {
+        await signUp(email, password, {
+          nome: `${nome} ${sobrenome}`.trim(),
+          tipo: tipo
+        });
+        setEmail(email);
+        setIsLogin(true);
+      }
     } catch (error) {
       // Error is handled in the hook
     } finally {
@@ -95,192 +100,232 @@ const Auth = () => {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await signUp(signupEmail, signupPassword, {
-        nome: signupNome,
-        tipo: signupTipo
-      });
-      // Switch to login tab after successful signup
-      setLoginEmail(signupEmail);
-    } catch (error) {
-      // Error is handled in the hook
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // Floating dots component
+  const FloatingDots = () => (
+    <>
+      {/* Colored dots */}
+      <div className="absolute top-[15%] left-[8%] w-3 h-3 rounded-full bg-purple-300 animate-pulse" />
+      <div className="absolute top-[25%] right-[12%] w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0.5s' }} />
+      <div className="absolute top-[40%] left-[5%] w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-[60%] right-[8%] w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0.3s' }} />
+      <div className="absolute top-[75%] left-[10%] w-2 h-2 rounded-full bg-pink-400 animate-pulse" style={{ animationDelay: '0.7s' }} />
+      <div className="absolute top-[85%] right-[15%] w-3 h-3 rounded-full bg-purple-200 animate-bounce" style={{ animationDelay: '1.2s' }} />
+      <div className="absolute bottom-[20%] left-[20%] w-2 h-2 rounded-full bg-orange-300 animate-pulse" style={{ animationDelay: '0.4s' }} />
+      <div className="absolute bottom-[35%] right-[25%] w-2.5 h-2.5 rounded-full bg-yellow-300 animate-bounce" style={{ animationDelay: '0.8s' }} />
+    </>
+  );
+
+  // Wave SVG component
+  const WaveBackground = () => (
+    <div className="absolute top-0 left-0 right-0 overflow-hidden">
+      <svg 
+        viewBox="0 0 1440 320" 
+        className="w-full h-auto"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="hsl(280, 88%, 45%)" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="hsl(280, 100%, 50%)" stopOpacity="0.6" />
+          </linearGradient>
+        </defs>
+        <path 
+          fill="url(#waveGradient)"
+          d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,197.3C960,213,1056,203,1152,176C1248,149,1344,107,1392,85.3L1440,64L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
+        />
+      </svg>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-950 p-4">
-      <ParticlesBackground />
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[hsl(280,100%,25%)] via-[hsl(280,88%,36%)] to-[hsl(280,100%,40%)]">
+      {/* Wave background */}
+      <WaveBackground />
       
-      <div className="w-full max-w-md relative z-10">
+      {/* Floating dots */}
+      <FloatingDots />
+
+      {/* Content */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-12">
+        {/* Logo and Title */}
         <div className="text-center mb-8">
-          <img 
-            src={logo} 
-            alt="Nellor" 
-            className="h-16 mx-auto mb-4 cursor-pointer" 
+          <div 
+            className="w-20 h-20 mx-auto mb-4 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
             onClick={handleLogoClick}
-          />
-          <h1 className="text-3xl font-bold text-foreground">Bem-vindo ao Nellor</h1>
-          <p className="text-muted-foreground mt-2">
-            Conectando fornecedores e revendedores
-          </p>
+          >
+            <img 
+              src={logo} 
+              alt="Nellor" 
+              className="w-14 h-14 object-contain"
+            />
+          </div>
+          <h1 className="text-2xl font-bold text-white">
+            {isLogin ? 'Bem-vindo' : 'Criar Conta'}
+          </h1>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Entrar</TabsTrigger>
-            <TabsTrigger value="signup">Criar Conta</TabsTrigger>
-          </TabsList>
+        {/* Form */}
+        <div className="w-full max-w-sm">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <>
+                {/* First Name */}
+                <div className="relative">
+                  <label className="text-white/60 text-xs absolute -top-2 left-4 bg-transparent px-1">
+                    Nome
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Seu nome"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    required={!isLogin}
+                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full px-5 focus:border-white/50 focus:ring-0"
+                  />
+                </div>
 
-          <TabsContent value="login">
-            <Card>
-              <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>
-                  Entre com suas credenciais para acessar sua conta
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Entrar
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                {/* Last Name */}
+                <div className="relative">
+                  <label className="text-white/60 text-xs absolute -top-2 left-4 bg-transparent px-1">
+                    Sobrenome
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Seu sobrenome"
+                    value={sobrenome}
+                    onChange={(e) => setSobrenome(e.target.value)}
+                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full px-5 focus:border-white/50 focus:ring-0"
+                  />
+                </div>
+              </>
+            )}
 
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
-                <CardTitle>Criar Conta</CardTitle>
-                <CardDescription>
-                  Preencha os dados abaixo para criar sua conta
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-nome">Nome Completo</Label>
-                    <Input
-                      id="signup-nome"
-                      type="text"
-                      placeholder="Seu nome"
-                      value={signupNome}
-                      onChange={(e) => setSignupNome(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Mínimo 6 caracteres"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Tipo de Conta</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        type="button"
-                        variant={signupTipo === 'cliente' ? 'default' : 'outline'}
-                        onClick={() => setSignupTipo('cliente')}
-                        className="w-full"
-                      >
-                        Cliente
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={signupTipo === 'fornecedor' ? 'default' : 'outline'}
-                        onClick={() => setSignupTipo('fornecedor')}
-                        className="w-full"
-                      >
-                        Fornecedor
-                      </Button>
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Criar Conta
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            {/* Email */}
+            <div className="relative">
+              <label className="text-white/60 text-xs absolute -top-2 left-4 bg-transparent px-1">
+                Email
+              </label>
+              <Input
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full px-5 focus:border-white/50 focus:ring-0"
+              />
+            </div>
 
-        <div className="text-center mt-4">
-          <Button variant="link" onClick={() => navigate('/')}>
-            Voltar para home
-          </Button>
+            {/* Password */}
+            <div className="relative">
+              <label className="text-white/60 text-xs absolute -top-2 left-4 bg-transparent px-1">
+                Senha
+              </label>
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-full px-5 pr-16 focus:border-white/50 focus:ring-0"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs uppercase font-medium"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Account Type Selection (only for signup) */}
+            {!isLogin && (
+              <div className="flex gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setTipo('cliente')}
+                  className={`flex-1 py-2 rounded-full text-sm font-medium transition-all ${
+                    tipo === 'cliente'
+                      ? 'bg-white text-primary'
+                      : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  Cliente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipo('fornecedor')}
+                  className={`flex-1 py-2 rounded-full text-sm font-medium transition-all ${
+                    tipo === 'fornecedor'
+                      ? 'bg-white text-primary'
+                      : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  Fornecedor
+                </button>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-12 bg-[hsl(280,88%,30%)] hover:bg-[hsl(280,88%,25%)] text-white font-semibold rounded-full mt-6 shadow-lg"
+            >
+              {submitting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                isLogin ? 'ENTRAR' : 'CRIAR CONTA'
+              )}
+            </Button>
+          </form>
+
+          {/* Toggle Login/Signup */}
+          <div className="text-center mt-6">
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-white/80 hover:text-white font-medium uppercase text-sm tracking-wide transition-colors"
+            >
+              {isLogin ? 'CRIAR CONTA' : 'ENTRAR'}
+            </button>
+          </div>
+
+          {/* Back to home */}
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-white/50 hover:text-white/80 text-sm transition-colors"
+            >
+              ← Voltar para home
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Admin Access Dialog */}
       <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
-        <DialogContent>
+        <DialogContent className="bg-[hsl(280,88%,30%)] border-white/20 text-white">
           <DialogHeader>
-            <DialogTitle>Acesso Admin</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">Acesso Admin</DialogTitle>
+            <DialogDescription className="text-white/60">
               Digite a senha de administrador para acessar o painel.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="admin-password">Senha</Label>
-              <Input
-                id="admin-password"
-                type="password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAdminAccess()}
-                placeholder="Digite a senha"
-              />
-            </div>
-            <Button onClick={handleAdminAccess} className="w-full">
+            <Input
+              type="password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAdminAccess()}
+              placeholder="Digite a senha"
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+            />
+            <Button 
+              onClick={handleAdminAccess} 
+              className="w-full bg-white text-primary hover:bg-white/90"
+            >
               Acessar
             </Button>
           </div>
