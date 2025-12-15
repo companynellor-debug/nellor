@@ -1,103 +1,208 @@
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { MessageCircle, User, Clock, ArrowLeft, Send } from "lucide-react";
-import { useSupportMessages } from "@/hooks/useSupportMessages";
-import { useState, useEffect, useRef } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageCircle, User, Clock, ArrowLeft, Send, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface SupportTicket {
+  id: string;
+  user_id: string;
+  assunto: string;
+  mensagem: string;
+  resposta_admin: string | null;
+  status: 'open' | 'pending' | 'closed';
+  created_at: string | null;
+  updated_at: string | null;
+  profiles?: {
+    nome: string;
+    tipo: string;
+  };
+}
 
 const SuporteAdmin = () => {
-  const { getConversations, getMessagesByUser, sendMessage, markAsRead, messages } = useSupportMessages();
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  const conversations = getConversations();
-  const pendingCount = conversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
-  
-  const selectedConversation = conversations.find(c => c.userId === selectedUserId);
-  const chatMessages = selectedUserId ? getMessagesByUser(selectedUserId) : [];
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [response, setResponse] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (selectedUserId) {
-      markAsRead(selectedUserId);
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [selectedUserId, chatMessages.length]);
+    fetchTickets();
+  }, []);
 
-  const handleSendMessage = () => {
-    if (!message.trim() || !selectedUserId || !selectedConversation) return;
-    
-    sendMessage(
-      selectedUserId,
-      selectedConversation.userName,
-      selectedConversation.userType,
-      message,
-      'admin'
-    );
-    setMessage("");
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select(`
+          *,
+          profiles:user_id(nome, tipo)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTickets(data || []);
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+      toast.error('Erro ao carregar tickets');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (selectedUserId && selectedConversation) {
+  const handleRespond = async () => {
+    if (!selectedTicket || !response.trim()) return;
+
+    try {
+      setSending(true);
+      const { error } = await supabase
+        .from('support_tickets')
+        .update({
+          resposta_admin: response,
+          status: 'pending'
+        })
+        .eq('id', selectedTicket.id);
+
+      if (error) throw error;
+      
+      toast.success('Resposta enviada!');
+      setResponse("");
+      fetchTickets();
+      setSelectedTicket(prev => prev ? { ...prev, resposta_admin: response, status: 'pending' } : null);
+    } catch (error) {
+      console.error('Error responding:', error);
+      toast.error('Erro ao enviar resposta');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleCloseTicket = async (ticketId: string) => {
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .update({ status: 'closed' })
+        .eq('id', ticketId);
+
+      if (error) throw error;
+      toast.success('Ticket fechado!');
+      fetchTickets();
+      if (selectedTicket?.id === ticketId) {
+        setSelectedTicket(prev => prev ? { ...prev, status: 'closed' } : null);
+      }
+    } catch (error) {
+      console.error('Error closing ticket:', error);
+      toast.error('Erro ao fechar ticket');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'open':
+        return <Badge variant="destructive">Aberto</Badge>;
+      case 'pending':
+        return <Badge variant="secondary">Aguardando</Badge>;
+      case 'closed':
+        return <Badge variant="default">Fechado</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const pendingCount = tickets.filter(t => t.status === 'open').length;
+  const totalCount = tickets.length;
+  const closedCount = tickets.filter(t => t.status === 'closed').length;
+
+  if (loading) {
     return (
-      <div className="flex flex-col h-[calc(100vh-120px)]">
-        <div className="border-b bg-white p-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setSelectedUserId(null)}>
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (selectedTicket) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => setSelectedTicket(null)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-            <User className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="font-semibold">{selectedConversation.userName}</h2>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold">{selectedTicket.assunto}</h2>
             <p className="text-sm text-muted-foreground">
-              {selectedConversation.userType === 'cliente' ? 'Cliente' : 'Fornecedor'}
+              {selectedTicket.profiles?.nome || 'Usuário'} • 
+              {selectedTicket.profiles?.tipo === 'cliente' ? ' Cliente' : ' Fornecedor'} •
+              {selectedTicket.created_at && format(new Date(selectedTicket.created_at), " dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
             </p>
           </div>
+          {getStatusBadge(selectedTicket.status)}
         </div>
 
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-3">
-            {chatMessages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                    msg.sender === 'admin'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  }`}
-                >
-                  <p className="text-sm whitespace-pre-wrap break-words">{msg.text}</p>
-                  <p className={`text-xs mt-1 ${
-                    msg.sender === 'admin' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                  }`}>
-                    {msg.timestamp}
-                  </p>
+        <Card className="p-6">
+          <div className="space-y-6">
+            {/* Mensagem do usuário */}
+            <div className="flex gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <User className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium mb-1">{selectedTicket.profiles?.nome || 'Usuário'}</p>
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="whitespace-pre-wrap">{selectedTicket.mensagem}</p>
                 </div>
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+            </div>
 
-        <div className="border-t bg-white p-4">
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Digite sua resposta..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1"
-            />
-            <Button onClick={handleSendMessage} size="icon">
-              <Send className="h-4 w-4" />
-            </Button>
+            {/* Resposta do admin */}
+            {selectedTicket.resposta_admin && (
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <MessageCircle className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium mb-1">Suporte Nellor</p>
+                  <div className="bg-primary/10 p-4 rounded-lg">
+                    <p className="whitespace-pre-wrap">{selectedTicket.resposta_admin}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Campo de resposta */}
+            {selectedTicket.status !== 'closed' && (
+              <div className="pt-4 border-t">
+                <Textarea
+                  placeholder="Digite sua resposta..."
+                  value={response}
+                  onChange={(e) => setResponse(e.target.value)}
+                  rows={4}
+                  className="mb-3"
+                />
+                <div className="flex gap-2">
+                  <Button onClick={handleRespond} disabled={sending || !response.trim()}>
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                    Enviar Resposta
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleCloseTicket(selectedTicket.id)}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Fechar Ticket
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -105,15 +210,15 @@ const SuporteAdmin = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2 dark:text-white dark:bg-none">Suporte</h1>
-        <p className="text-muted-foreground">Mensagens de clientes e fornecedores</p>
+        <h1 className="text-3xl font-bold mb-2 dark:text-white">Suporte</h1>
+        <p className="text-muted-foreground">Tickets de suporte de clientes e fornecedores</p>
       </div>
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Mensagens Pendentes</p>
+            <p className="text-sm text-muted-foreground">Tickets Abertos</p>
             <Clock className="h-5 w-5 text-yellow-600" />
           </div>
           <p className="text-3xl font-bold">{pendingCount}</p>
@@ -121,38 +226,38 @@ const SuporteAdmin = () => {
 
         <Card className="p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Total de Mensagens</p>
+            <p className="text-sm text-muted-foreground">Total de Tickets</p>
             <MessageCircle className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-3xl font-bold">{messages.length}</p>
+          <p className="text-3xl font-bold">{totalCount}</p>
         </Card>
 
         <Card className="p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Taxa de Resposta</p>
-            <User className="h-5 w-5 text-green-600" />
+            <p className="text-sm text-muted-foreground">Tickets Fechados</p>
+            <CheckCircle className="h-5 w-5 text-green-600" />
           </div>
-          <p className="text-3xl font-bold">92%</p>
+          <p className="text-3xl font-bold">{closedCount}</p>
         </Card>
       </div>
 
-      {/* Lista de Conversas */}
+      {/* Lista de Tickets */}
       <Card>
         <div className="p-6 border-b">
-          <h2 className="text-xl font-bold">Conversas Recentes</h2>
+          <h2 className="text-xl font-bold">Tickets Recentes</h2>
         </div>
         <div className="divide-y">
-          {conversations.length === 0 ? (
+          {tickets.length === 0 ? (
             <div className="p-8 text-center">
               <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">Nenhuma conversa ainda</p>
+              <p className="text-muted-foreground">Nenhum ticket de suporte</p>
             </div>
           ) : (
-            conversations.map((conv) => (
+            tickets.map((ticket) => (
               <div
-                key={conv.userId}
+                key={ticket.id}
                 className="p-6 hover:bg-muted/20 transition-colors cursor-pointer"
-                onClick={() => setSelectedUserId(conv.userId)}
+                onClick={() => setSelectedTicket(ticket)}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
@@ -162,20 +267,18 @@ const SuporteAdmin = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold">{conv.userName}</p>
-                          {conv.unreadCount > 0 && (
-                            <Badge variant="destructive" className="h-5 min-w-5 flex items-center justify-center px-1.5">
-                              {conv.unreadCount}
-                            </Badge>
-                          )}
+                          <p className="font-semibold">{ticket.profiles?.nome || 'Usuário'}</p>
+                          {getStatusBadge(ticket.status)}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {conv.userType === 'cliente' ? 'Cliente' : 'Fornecedor'} • {conv.lastMessage.timestamp}
+                          {ticket.profiles?.tipo === 'cliente' ? 'Cliente' : 'Fornecedor'} • 
+                          {ticket.created_at && format(new Date(ticket.created_at), " dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </p>
                       </div>
                     </div>
                     <div className="mb-2">
-                      <p className="text-sm text-muted-foreground line-clamp-2">{conv.lastMessage.text}</p>
+                      <p className="font-medium text-sm">{ticket.assunto}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{ticket.mensagem}</p>
                     </div>
                   </div>
                 </div>

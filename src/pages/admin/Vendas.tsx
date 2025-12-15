@@ -37,10 +37,14 @@ const Vendas = () => {
     try {
       setLoading(true);
       
-      // Buscar pedidos
+      // Buscar pedidos com nomes de comprador e fornecedor
       const { data: orders } = await supabase
         .from('orders')
-        .select('*, profiles!orders_buyer_id_fkey(nome), profiles!orders_supplier_id_fkey(nome)')
+        .select(`
+          *,
+          buyer:profiles!orders_buyer_id_fkey(nome),
+          supplier:profiles!orders_supplier_id_fkey(nome)
+        `)
         .order('created_at', { ascending: false });
 
       const pedidosList = orders || [];
@@ -62,11 +66,11 @@ const Vendas = () => {
         .reduce((sum, p) => sum + Number(p.total), 0);
       setVendasMes(vendasDoMes);
 
-      // Pedidos recentes
+      // Pedidos recentes com nomes corretos
       const pedidosRecentes = pedidosList.slice(0, 10).map(order => ({
         id: order.order_number,
-        customer: order.profiles?.nome || 'Cliente',
-        supplier: 'Fornecedor',
+        customer: (order.buyer as any)?.nome || 'Cliente',
+        supplier: (order.supplier as any)?.nome || 'Fornecedor',
         value: `R$ ${Number(order.total).toFixed(2)}`,
         status: order.order_status,
         date: format(new Date(order.created_at), 'dd/MM')

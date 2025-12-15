@@ -32,8 +32,13 @@ const Relatorios = () => {
 
       const { data: orders } = await supabase
         .from('orders')
-        .select('total, created_at, payment_status, itens, endereco_entrega')
+        .select('total, created_at, payment_status, itens, endereco_entrega, supplier_id')
         .eq('payment_status', 'paid');
+
+      // Buscar produtos com categorias
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, categoria_id, categories(nome)');
 
       const clientes = profiles?.filter(p => p.tipo === 'cliente') || [];
       const fornecedores = profiles?.filter(p => p.tipo === 'fornecedor') || [];
@@ -56,14 +61,46 @@ const Relatorios = () => {
       }
       setGrowthData(growth);
 
-      // Receita por categoria (simulado)
-      setCategoryRevenueData([
-        { category: "Streetwear", revenue: ordersList.length > 0 ? Math.random() * 50000 : 0 },
-        { category: "Techwear", revenue: ordersList.length > 0 ? Math.random() * 40000 : 0 },
-        { category: "Acessórios", revenue: ordersList.length > 0 ? Math.random() * 30000 : 0 },
-        { category: "Calçados", revenue: ordersList.length > 0 ? Math.random() * 25000 : 0 },
-        { category: "Outros", revenue: ordersList.length > 0 ? Math.random() * 10000 : 0 },
-      ]);
+      // Calcular receita real por categoria baseado nos pedidos
+      const categoryRevenue: Record<string, number> = {};
+      const productCategoryMap: Record<string, string> = {};
+      
+      // Mapear produtos para categorias
+      products?.forEach(p => {
+        const catName = (p.categories as any)?.nome || 'Outros';
+        productCategoryMap[p.id] = catName;
+      });
+
+      // Calcular receita por categoria baseado nos itens dos pedidos
+      ordersList.forEach(order => {
+        if (order.itens && Array.isArray(order.itens)) {
+          order.itens.forEach((item: any) => {
+            const productId = item.product_id || item.productId;
+            const category = productCategoryMap[productId] || 'Outros';
+            const itemTotal = (item.quantity || 1) * (item.price || item.preco || 0);
+            categoryRevenue[category] = (categoryRevenue[category] || 0) + itemTotal;
+          });
+        }
+      });
+
+      const categoryRevenueFormatted = Object.entries(categoryRevenue)
+        .map(([category, revenue]) => ({ category, revenue }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+      
+      // Se não houver dados, mostrar categorias com 0
+      if (categoryRevenueFormatted.length === 0) {
+        const { data: categories } = await supabase
+          .from('categories')
+          .select('nome')
+          .limit(5);
+        
+        categories?.forEach(cat => {
+          categoryRevenueFormatted.push({ category: cat.nome, revenue: 0 });
+        });
+      }
+
+      setCategoryRevenueData(categoryRevenueFormatted);
 
       // Estatísticas
       setTotalTransactions(ordersList.length);
