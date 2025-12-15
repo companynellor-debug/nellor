@@ -6,7 +6,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, AreaChart, A
 import { fetchAllRows } from "@/lib/fetchAllRows";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
 const Indicadores = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
@@ -17,14 +16,12 @@ const Indicadores = () => {
     totalPedidos: 0,
     pedidosMes: 0,
     ticketMedio: 0,
-    valuationEstimado: 0,
+    valuationEstimado: 0
   });
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
-
   useEffect(() => {
     fetchData();
   }, []);
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -33,7 +30,7 @@ const Indicadores = () => {
       const allOrders = await fetchAllRows<any>({
         table: "orders",
         select: "id, total, created_at, payment_status, order_status",
-        build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled"),
+        build: q => q.eq("payment_status", "paid").neq("order_status", "cancelled")
       });
 
       // GMV Total (valor total de todas as transações)
@@ -43,12 +40,10 @@ const Indicadores = () => {
       const now = new Date();
       const startOfCurrentMonth = startOfMonth(now);
       const endOfCurrentMonth = endOfMonth(now);
-
-      const pedidosMesAtual = allOrders.filter((o) => {
+      const pedidosMesAtual = allOrders.filter(o => {
         const orderDate = new Date(o.created_at);
         return orderDate >= startOfCurrentMonth && orderDate <= endOfCurrentMonth;
       });
-
       const gmvMes = pedidosMesAtual.reduce((sum, o) => sum + Number(o.total), 0);
 
       // Receita Nellor (7.5% de cada pedido)
@@ -67,23 +62,21 @@ const Indicadores = () => {
         const monthDate = subMonths(now, i);
         const monthStart = startOfMonth(monthDate);
         const monthEnd = endOfMonth(monthDate);
-
-        const monthOrders = allOrders.filter((o) => {
+        const monthOrders = allOrders.filter(o => {
           const orderDate = new Date(o.created_at);
           return orderDate >= monthStart && orderDate <= monthEnd;
         });
-
         const monthGMV = monthOrders.reduce((sum, o) => sum + Number(o.total), 0);
         const monthReceita = monthGMV * 0.075;
-
         monthlyDataArr.push({
-          month: format(monthDate, "MMM", { locale: ptBR }),
+          month: format(monthDate, "MMM", {
+            locale: ptBR
+          }),
           gmv: Math.round(monthGMV),
           receita: Math.round(monthReceita),
-          pedidos: monthOrders.length,
+          pedidos: monthOrders.length
         });
       }
-
       setData({
         gmvTotal,
         gmvMes,
@@ -92,9 +85,8 @@ const Indicadores = () => {
         totalPedidos: allOrders.length,
         pedidosMes: pedidosMesAtual.length,
         ticketMedio,
-        valuationEstimado,
+        valuationEstimado
       });
-
       setMonthlyData(monthlyDataArr);
     } catch (error) {
       console.error("Erro ao carregar indicadores:", error);
@@ -102,17 +94,16 @@ const Indicadores = () => {
       setLoading(false);
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
+    return <div className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+      </div>;
   }
-
   const formatCurrency = (value: number) => {
-    return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `R$ ${value.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
   };
 
   // Divisão societária
@@ -124,14 +115,16 @@ const Indicadores = () => {
   // Valuation por sócio
   const valuationNatan = data.valuationEstimado * 0.5;
   const valuationGustavo = data.valuationEstimado * 0.5;
-
-  const societyData = [
-    { name: "Natan (50%)", value: parteNatan, color: "#8B5CF6" },
-    { name: "Gustavo (50%)", value: parteGustavo, color: "#06B6D4" },
-  ];
-
-  return (
-    <div className="space-y-8">
+  const societyData = [{
+    name: "Natan (50%)",
+    value: parteNatan,
+    color: "#8B5CF6"
+  }, {
+    name: "Gustavo (50%)",
+    value: parteGustavo,
+    color: "#06B6D4"
+  }];
+  return <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
           📊 Indicadores da Nellor
@@ -231,7 +224,7 @@ const Indicadores = () => {
                 </p>
               </div>
               <div className="p-4 rounded-lg bg-cyan-100 dark:bg-cyan-900/30">
-                <p className="text-sm text-muted-foreground">Parte Gustavo (50%)</p>
+                <p className="text-sm text-muted-foreground">Parte vinicius  (50%)</p>
                 <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
                   {formatCurrency(parteGustavo)}
                 </p>
@@ -239,19 +232,11 @@ const Indicadores = () => {
             </div>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie
-                  data={societyData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
-                >
-                  {societyData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                <Pie data={societyData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" label={({
+                name,
+                value
+              }) => `${name}: ${formatCurrency(value)}`}>
+                  {societyData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                 </Pie>
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
               </PieChart>
@@ -351,22 +336,8 @@ const Indicadores = () => {
               <YAxis stroke="#6b7280" />
               <Tooltip formatter={(value: number) => formatCurrency(value)} />
               <Legend />
-              <Area
-                type="monotone"
-                dataKey="gmv"
-                name="GMV"
-                stroke="#8B5CF6"
-                fillOpacity={1}
-                fill="url(#colorGMV)"
-              />
-              <Area
-                type="monotone"
-                dataKey="receita"
-                name="Receita Nellor"
-                stroke="#06B6D4"
-                fillOpacity={1}
-                fill="url(#colorReceita)"
-              />
+              <Area type="monotone" dataKey="gmv" name="GMV" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorGMV)" />
+              <Area type="monotone" dataKey="receita" name="Receita Nellor" stroke="#06B6D4" fillOpacity={1} fill="url(#colorReceita)" />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
@@ -398,8 +369,6 @@ const Indicadores = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default Indicadores;
