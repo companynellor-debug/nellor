@@ -6,6 +6,7 @@ import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminIndicadores from "./pages/admin/Indicadores";
 import AdminUsuarios from "./pages/admin/Usuarios";
 import AdminFornecedores from "./pages/admin/Fornecedores";
 import AdminVendas from "./pages/admin/Vendas";
@@ -113,6 +114,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="indicadores" element={<AdminIndicadores />} />
             <Route path="usuarios" element={<AdminUsuarios />} />
             <Route path="fornecedores" element={<AdminFornecedores />} />
             <Route path="vendas" element={<AdminVendas />} />

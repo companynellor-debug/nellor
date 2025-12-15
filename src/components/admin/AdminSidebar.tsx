@@ -11,12 +11,14 @@ import {
   Wallet,
   MessageCircle,
   Package,
-  Image
+  Image,
+  PieChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
+  { icon: PieChart, label: "Indicadores", path: "/admin/indicadores" },
   { icon: Users, label: "Usuários", path: "/admin/usuarios" },
   { icon: Store, label: "Fornecedores", path: "/admin/fornecedores" },
   { icon: ShoppingCart, label: "Vendas & Pedidos", path: "/admin/vendas" },

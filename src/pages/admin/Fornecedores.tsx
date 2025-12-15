@@ -52,12 +52,14 @@ const Fornecedores = () => {
         .from('products')
         .select('supplier_id, categoria_id, categories(nome)');
 
+      // Buscar TODOS os pedidos pagos e não cancelados
       const { data: orders } = await supabase
         .from('orders')
-        .select('supplier_id, total')
-        .eq('payment_status', 'paid');
+        .select('supplier_id, total, payment_status, order_status')
+        .eq('payment_status', 'paid')
+        .neq('order_status', 'cancelled');
 
-      // Calcular dados dos fornecedores
+      // Calcular dados dos fornecedores com faturamento REAL
       const fornecedoresData = fornecedoresList.map(fornecedor => {
         const produtosFornecedor = products?.filter(p => p.supplier_id === fornecedor.id) || [];
         const pedidosFornecedor = orders?.filter(o => o.supplier_id === fornecedor.id) || [];
@@ -73,18 +75,17 @@ const Fornecedores = () => {
           revenue: receita,
           rating: 4.5 + Math.random() * 0.5,
           vendas: receita,
-          // Novas colunas para Stripe Connect
-          plano: 'Grátis', // TODO: Obter do campo real quando existir
+          plano: 'Grátis',
           stripeConnected: !!fornecedor.stripe_account_id,
           stripeAccountId: fornecedor.stripe_account_id,
-          lastPayout: null, // TODO: Popular via Stripe API
+          lastPayout: null,
           ativo: fornecedor.ativo !== false
         };
       });
 
       setFornecedores(fornecedoresData);
 
-      // Top 5 vendedores
+      // Top 5 vendedores por faturamento real
       const top5 = [...fornecedoresData]
         .sort((a, b) => b.vendas - a.vendas)
         .slice(0, 5)
