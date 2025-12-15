@@ -1,51 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Users, Store, DollarSign, ShoppingCart, TrendingUp, Percent, AlertCircle, Loader2 } from "lucide-react";
+import { Users, Store, DollarSign, ShoppingCart, Percent, Loader2 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useBanners } from "@/hooks/useBanners";
-import { format, differenceInDays, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-const statsCards = [{
-  title: "Total de Usuários",
-  value: "2,847",
-  icon: Users,
-  color: "from-blue-500 to-blue-600",
-  change: "+12%"
-}, {
-  title: "Fornecedores Ativos",
-  value: "184",
-  icon: Store,
-  color: "from-purple-500 to-purple-600",
-  change: "+8%"
-}, {
-  title: "Receita (30 dias)",
-  value: "R$ 127.430",
-  icon: DollarSign,
-  color: "from-green-500 to-green-600",
-  change: "+23%"
-}, {
-  title: "Pedidos Concluídos",
-  value: "1,523",
-  icon: ShoppingCart,
-  color: "from-orange-500 to-orange-600",
-  change: "+18%"
-}, {
-  title: "Crescimento Mensal",
-  value: "15.8%",
-  icon: TrendingUp,
-  color: "from-pink-500 to-pink-600",
-  change: "+3%"
-}, {
-  title: "Comissão Nellor",
-  value: "R$ 6,372",
-  icon: Percent,
-  color: "from-violet-500 to-violet-600",
-  change: "+21%"
-}];
+const oldStatsCards = [];
 const salesData = [{
   month: "Jun",
   pedidos: 420,
@@ -126,8 +88,6 @@ const recentActivities = [{
 }];
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { getExpiringBanners } = useBanners();
-  const expiringBanners = getExpiringBanners(5);
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
   
   const [loading, setLoading] = useState(true);
@@ -202,8 +162,8 @@ const Dashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('order_status', 'delivered');
 
-      // Comissão Nellor (5% da receita)
-      const commission = revenue30Days * 0.05;
+      // Comissão Nellor (7.5% de cada pedido pago)
+      const commission = revenue30Days * 0.075;
 
       // Dados de vendas dos últimos 6 meses
       const salesByMonth = [];
@@ -226,17 +186,25 @@ const Dashboard = () => {
         });
       }
 
-      // Top 5 fornecedores
-      const { data: suppliers } = await supabase
-        .from('analytics')
-        .select('supplier_id, total_vendas, profiles(nome)')
-        .order('total_vendas', { ascending: false })
-        .limit(5);
+      // Top 5 fornecedores baseado em pedidos pagos
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('supplier_id, total, profiles!orders_supplier_id_fkey(nome)')
+        .eq('payment_status', 'paid');
 
-      const topSuppliersData = suppliers?.map(s => ({
-        name: (s.profiles as any)?.nome || 'Fornecedor',
-        vendas: Number(s.total_vendas)
-      })) || [];
+      const supplierRevenue: Record<string, { name: string; vendas: number }> = {};
+      allOrders?.forEach(order => {
+        const supplierId = order.supplier_id;
+        const supplierName = (order.profiles as any)?.nome || 'Fornecedor';
+        if (!supplierRevenue[supplierId]) {
+          supplierRevenue[supplierId] = { name: supplierName, vendas: 0 };
+        }
+        supplierRevenue[supplierId].vendas += Number(order.total);
+      });
+
+      const topSuppliersData = Object.values(supplierRevenue)
+        .sort((a, b) => b.vendas - a.vendas)
+        .slice(0, 5);
 
       // Distribuição por categoria
       const { data: products } = await supabase
@@ -310,7 +278,7 @@ const Dashboard = () => {
       color: "from-orange-500 to-orange-600",
     },
     {
-      title: "Comissão Nellor (5%)",
+      title: "Comissão Nellor (7,5%)",
       value: `R$ ${stats.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: Percent,
       color: "from-violet-500 to-violet-600",
@@ -364,41 +332,6 @@ const Dashboard = () => {
           </Button>
         </div>
       </div>
-
-      {/* Alertas de Banners Expirando */}
-      {expiringBanners.length > 0 && (
-        <Alert className="border-orange-200 bg-orange-50">
-          <AlertCircle className="h-5 w-5 text-orange-600" />
-          <AlertTitle className="text-orange-900 font-semibold">
-            {expiringBanners.length} {expiringBanners.length === 1 ? 'banner está' : 'banners estão'} próximo{expiringBanners.length === 1 ? '' : 's'} de expirar
-          </AlertTitle>
-          <AlertDescription className="text-orange-800">
-            <div className="mt-2 space-y-2">
-              {expiringBanners.map(banner => {
-                const daysLeft = differenceInDays(new Date(banner.endDate!), new Date());
-                return (
-                  <div key={banner.id} className="flex items-center justify-between p-2 bg-white rounded">
-                    <div>
-                      <p className="font-medium">{banner.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Expira em {daysLeft} {daysLeft === 1 ? 'dia' : 'dias'} 
-                        ({format(new Date(banner.endDate!), "dd/MM/yyyy", { locale: ptBR })})
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => navigate('/admin/banners')}
-                      className="text-sm text-orange-700 hover:text-orange-900 underline"
-                    >
-                      Gerenciar
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statsCards.map(stat => <Card key={stat.title} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">

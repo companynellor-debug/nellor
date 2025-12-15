@@ -1,16 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Image as ImageIcon, Calendar, Clock } from "lucide-react";
-import { useBanners } from "@/hooks/useBanners";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { Plus, Edit, Trash2, Image as ImageIcon, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -21,8 +16,20 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
+interface Banner {
+  id: string;
+  title: string | null;
+  subtitle: string | null;
+  image_url: string;
+  link_url: string | null;
+  order_index: number | null;
+  ativo: boolean | null;
+  created_at: string | null;
+}
+
 const Banners = () => {
-  const { banners, addBanner, updateBanner, deleteBanner, toggleBannerStatus } = useBanners();
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -30,34 +37,75 @@ const Banners = () => {
     imageUrl: "",
     link: "",
     order: 1,
-    active: true,
-    startDate: undefined as Date | undefined,
-    endDate: undefined as Date | undefined
+    active: true
   });
   const [imagePreview, setImagePreview] = useState("");
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    fetchBanners();
+  }, []);
+
+  const fetchBanners = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('banners')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      setBanners(data || []);
+    } catch (error) {
+      console.error('Error fetching banners:', error);
+      toast.error('Erro ao carregar banners');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!formData.title || !formData.imageUrl) {
       toast.error("Preencha o título e faça o upload da imagem");
       return;
     }
 
-    const bannerData = {
-      ...formData,
-      startDate: formData.startDate ? formData.startDate.toISOString() : undefined,
-      endDate: formData.endDate ? formData.endDate.toISOString() : undefined
-    };
+    try {
+      if (editingId) {
+        const { error } = await supabase
+          .from('banners')
+          .update({
+            title: formData.title,
+            image_url: formData.imageUrl,
+            link_url: formData.link || null,
+            order_index: formData.order,
+            ativo: formData.active
+          })
+          .eq('id', editingId);
 
-    if (editingId) {
-      updateBanner(editingId, bannerData);
-      toast.success("Banner atualizado!");
-    } else {
-      addBanner(bannerData);
-      toast.success("Banner criado!");
+        if (error) throw error;
+        toast.success("Banner atualizado!");
+      } else {
+        const { error } = await supabase
+          .from('banners')
+          .insert({
+            title: formData.title,
+            image_url: formData.imageUrl,
+            link_url: formData.link || null,
+            order_index: formData.order,
+            ativo: formData.active
+          });
+
+        if (error) throw error;
+        toast.success("Banner criado!");
+      }
+
+      setOpen(false);
+      resetForm();
+      fetchBanners();
+    } catch (error) {
+      console.error('Error saving banner:', error);
+      toast.error('Erro ao salvar banner');
     }
-
-    setOpen(false);
-    resetForm();
   };
 
   const resetForm = () => {
@@ -66,9 +114,7 @@ const Banners = () => {
       imageUrl: "", 
       link: "", 
       order: 1, 
-      active: true,
-      startDate: undefined,
-      endDate: undefined
+      active: true
     });
     setImagePreview("");
     setEditingId(null);
@@ -78,44 +124,89 @@ const Banners = () => {
     const banner = banners.find(b => b.id === id);
     if (banner) {
       setFormData({
-        title: banner.title,
-        imageUrl: banner.imageUrl,
-        link: banner.link,
-        order: banner.order,
-        active: banner.active,
-        startDate: banner.startDate ? new Date(banner.startDate) : undefined,
-        endDate: banner.endDate ? new Date(banner.endDate) : undefined
+        title: banner.title || "",
+        imageUrl: banner.image_url,
+        link: banner.link_url || "",
+        order: banner.order_index || 1,
+        active: banner.ativo ?? true
       });
-      setImagePreview(banner.imageUrl);
+      setImagePreview(banner.image_url);
       setEditingId(id);
       setOpen(true);
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este banner?")) {
-      deleteBanner(id);
-      toast.success("Banner excluído!");
+      try {
+        const { error } = await supabase
+          .from('banners')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        toast.success("Banner excluído!");
+        fetchBanners();
+      } catch (error) {
+        console.error('Error deleting banner:', error);
+        toast.error('Erro ao excluir banner');
+      }
     }
   };
 
-  const handleImageUrlChange = (url: string) => {
-    setFormData({ ...formData, imageUrl: url });
-    setImagePreview(url);
+  const toggleBannerStatus = async (id: string) => {
+    const banner = banners.find(b => b.id === id);
+    if (!banner) return;
+
+    try {
+      const { error } = await supabase
+        .from('banners')
+        .update({ ativo: !banner.ativo })
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchBanners();
+    } catch (error) {
+      console.error('Error toggling banner:', error);
+      toast.error('Erro ao alterar status');
+    }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setFormData({ ...formData, imageUrl: result });
-        setImagePreview(result);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `banner_${Date.now()}.${fileExt}`;
+        const filePath = `banners/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+
+        setFormData({ ...formData, imageUrl: publicUrl });
+        setImagePreview(publicUrl);
+        toast.success('Imagem enviada!');
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast.error('Erro ao enviar imagem');
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -157,6 +248,18 @@ const Banners = () => {
                 </p>
               </div>
 
+              <div>
+                <Label>Ou cole a URL da imagem</Label>
+                <Input
+                  value={formData.imageUrl}
+                  onChange={(e) => {
+                    setFormData({ ...formData, imageUrl: e.target.value });
+                    setImagePreview(e.target.value);
+                  }}
+                  placeholder="https://..."
+                />
+              </div>
+
               {imagePreview && (
                 <div className="border rounded-lg overflow-hidden">
                   <img
@@ -168,87 +271,13 @@ const Banners = () => {
                 </div>
               )}
 
-              {imagePreview && (
-                <div className="space-y-2">
-                  <Label>Preview do Banner (como aparecerá para clientes)</Label>
-                  <div className="border-2 border-primary/20 rounded-lg p-4 bg-muted/30">
-                    <div className="relative overflow-hidden rounded-lg">
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        className="w-full h-48 md:h-64 object-cover"
-                      />
-                      <div className="absolute top-2 right-2">
-                        <Badge variant="secondary" className="bg-primary/80 text-white">
-                          Preview
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Data de Início</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !formData.startDate && "text-muted-foreground"
-                        )}
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        {formData.startDate ? format(formData.startDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={formData.startDate}
-                        onSelect={(date) => setFormData({ ...formData, startDate: date })}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Deixe vazio para início imediato
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Data de Fim</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !formData.endDate && "text-muted-foreground"
-                        )}
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        {formData.endDate ? format(formData.endDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={formData.endDate}
-                        onSelect={(date) => setFormData({ ...formData, endDate: date })}
-                        disabled={(date) => formData.startDate ? date < formData.startDate : false}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Deixe vazio para sem data limite
-                  </p>
-                </div>
+              <div>
+                <Label>Link (opcional)</Label>
+                <Input
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  placeholder="https://..."
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -287,14 +316,14 @@ const Banners = () => {
 
         <div className="grid grid-cols-1 gap-4">
           {banners
-            .sort((a, b) => a.order - b.order)
+            .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
             .map((banner) => (
               <Card key={banner.id} className="p-4 hover:shadow-lg transition-shadow">
                 <div className="flex gap-4">
                   <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                     <img
-                      src={banner.imageUrl}
-                      alt={banner.title}
+                      src={banner.image_url}
+                      alt={banner.title || 'Banner'}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=400&q=80";
@@ -304,34 +333,17 @@ const Banners = () => {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{banner.title}</h3>
-                        {(banner.startDate || banner.endDate) && (
-                          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            <span>
-                              {banner.startDate && format(new Date(banner.startDate), "dd/MM/yyyy", { locale: ptBR })}
-                              {banner.startDate && banner.endDate && " - "}
-                              {banner.endDate && format(new Date(banner.endDate), "dd/MM/yyyy", { locale: ptBR })}
-                            </span>
-                          </div>
-                        )}
-                        {banner.startDate && new Date(banner.startDate) > new Date() && (
-                          <Badge variant="secondary" className="mt-2">
-                            Agendado
-                          </Badge>
-                        )}
-                        {banner.endDate && new Date(banner.endDate) < new Date() && (
-                          <Badge variant="destructive" className="mt-2">
-                            Expirado
-                          </Badge>
+                        <h3 className="font-semibold text-lg">{banner.title || 'Sem título'}</h3>
+                        {banner.subtitle && (
+                          <p className="text-sm text-muted-foreground">{banner.subtitle}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={banner.active ? "default" : "secondary"}>
-                          Ordem: {banner.order}
+                        <Badge variant={banner.ativo ? "default" : "secondary"}>
+                          Ordem: {banner.order_index || 0}
                         </Badge>
                         <Switch
-                          checked={banner.active}
+                          checked={banner.ativo ?? false}
                           onCheckedChange={() => toggleBannerStatus(banner.id)}
                         />
                       </div>
