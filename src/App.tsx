@@ -110,14 +110,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           </Route>
           
           {/* Admin Panel */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requireType="admin">
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
+          <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="usuarios" element={<AdminUsuarios />} />
