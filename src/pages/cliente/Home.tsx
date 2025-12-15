@@ -193,43 +193,43 @@ const ClienteHome = () => {
 
         {/* Categories - Icon style row */}
         {categories.length > 0 && (
-          <section className="mb-8">
-            <div className="bg-background rounded-xl p-4 shadow-sm border">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-muted-foreground">Categorias</h3>
+          <section className="mb-6 lg:mb-8">
+            <div className="bg-background rounded-xl p-3 lg:p-4 shadow-sm border">
+              <div className="flex items-center justify-between mb-2 lg:mb-3">
+                <h3 className="text-xs lg:text-sm font-medium text-muted-foreground">Categorias</h3>
                 {selectedCategory && (
                   <button
                     onClick={() => setSelectedCategory(null)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 lg:px-3 lg:py-1.5 text-xs lg:text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors"
                   >
-                    <X className="w-4 h-4" />
-                    Limpar filtro
+                    <X className="w-3 h-3 lg:w-4 lg:h-4" />
+                    Limpar
                   </button>
                 )}
               </div>
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide justify-start lg:justify-center">
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:flex lg:gap-4 gap-2 lg:overflow-x-auto lg:pb-2 scrollbar-hide lg:justify-center">
                 {categories.map(category => (
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(selectedCategory === category.slug ? null : category.slug)}
-                    className={`flex flex-col items-center gap-2 min-w-[80px] p-3 rounded-xl transition-colors group ${
+                    className={`flex flex-col items-center gap-1 lg:gap-2 lg:min-w-[80px] p-2 lg:p-3 rounded-lg lg:rounded-xl transition-colors group ${
                       selectedCategory === category.slug 
                         ? 'bg-primary/20 ring-2 ring-primary' 
                         : 'hover:bg-muted'
                     }`}
                   >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                    <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center transition-colors ${
                       selectedCategory === category.slug 
                         ? 'bg-primary/30' 
                         : 'bg-primary/10 group-hover:bg-primary/20'
                     }`}>
                       {category.imagem_url ? (
-                        <img src={category.imagem_url} alt={category.nome} className="w-8 h-8 object-contain" />
+                        <img src={category.imagem_url} alt={category.nome} className="w-6 h-6 lg:w-8 lg:h-8 object-contain" />
                       ) : (
-                        <span className="text-2xl">🛍️</span>
+                        <span className="text-lg lg:text-2xl">🛍️</span>
                       )}
                     </div>
-                    <span className={`text-xs text-center font-medium whitespace-nowrap ${
+                    <span className={`text-[10px] lg:text-xs text-center font-medium line-clamp-1 ${
                       selectedCategory === category.slug ? 'text-primary' : 'text-foreground'
                     }`}>
                       {category.nome}
