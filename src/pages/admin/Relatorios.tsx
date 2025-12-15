@@ -6,6 +6,7 @@ import { Download, Loader2 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths } from "date-fns";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 
 const Relatorios = () => {
   const [loading, setLoading] = useState(true);
@@ -25,24 +26,28 @@ const Relatorios = () => {
     try {
       setLoading(true);
       
-      // Buscar dados dos últimos 6 meses
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*');
+      // Buscar dados (SEM limite)
+      const profiles = await fetchAllRows<any>({
+        table: "profiles",
+        select: "*",
+      });
 
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('total, created_at, payment_status, itens, endereco_entrega, supplier_id')
-        .eq('payment_status', 'paid');
+      const ordersList = await fetchAllRows<any>({
+        table: "orders",
+        select: "total, created_at, payment_status, itens, endereco_entrega, supplier_id, order_status",
+        build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled"),
+      });
+
 
       // Buscar produtos com categorias
       const { data: products } = await supabase
         .from('products')
         .select('id, categoria_id, categories(nome)');
 
-      const clientes = profiles?.filter(p => p.tipo === 'cliente') || [];
-      const fornecedores = profiles?.filter(p => p.tipo === 'fornecedor') || [];
-      const ordersList = orders || [];
+      const clientes = profiles?.filter((p: any) => p.tipo === "cliente") || [];
+      const fornecedores = profiles?.filter((p: any) => p.tipo === "fornecedor") || [];
+      const orders = ordersList || [];
+
 
       // Crescimento dos últimos 6 meses
       const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -72,9 +77,10 @@ const Relatorios = () => {
       });
 
       // Calcular receita por categoria baseado nos itens dos pedidos
-      ordersList.forEach(order => {
-        if (order.itens && Array.isArray(order.itens)) {
-          order.itens.forEach((item: any) => {
+      orders.forEach(order => {
+        const itens = (order.itens as any) || [];
+        if (Array.isArray(itens)) {
+          itens.forEach((item: any) => {
             const productId = item.product_id || item.productId;
             const category = productCategoryMap[productId] || 'Outros';
             const itemTotal = (item.quantity || 1) * (item.price || item.preco || 0);
@@ -103,8 +109,9 @@ const Relatorios = () => {
       setCategoryRevenueData(categoryRevenueFormatted);
 
       // Estatísticas
-      setTotalTransactions(ordersList.length);
-      setReceitaTotal(ordersList.reduce((sum, o) => sum + Number(o.total), 0));
+      setTotalTransactions(orders.length);
+      setReceitaTotal(orders.reduce((sum, o) => sum + Number(o.total), 0));
+
 
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
@@ -113,13 +120,14 @@ const Relatorios = () => {
 
       // Calcular pedidos por estado
       const stateCount: Record<string, number> = {};
-      ordersList.forEach(order => {
+      orders.forEach(order => {
         if (order.endereco_entrega && typeof order.endereco_entrega === 'object') {
           const endereco = order.endereco_entrega as any;
           const state = endereco.state || 'Desconhecido';
           stateCount[state] = (stateCount[state] || 0) + 1;
         }
       });
+
 
       const stateDataList = Object.entries(stateCount)
         .map(([state, orders]) => ({ state, orders }))

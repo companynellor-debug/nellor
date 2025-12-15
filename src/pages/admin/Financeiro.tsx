@@ -3,11 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingDown, Percent, TrendingUp, Loader2, Users, HelpCircle } from "lucide-react";
+import { DollarSign, TrendingDown, Percent, Loader2, Users, HelpCircle } from "lucide-react";
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 
 const Financeiro = () => {
   const [loading, setLoading] = useState(true);
@@ -29,31 +29,26 @@ const Financeiro = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      // Buscar transações/pedidos
-      const { data: orders } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          profiles!orders_supplier_id_fkey(nome)
-        `)
-        .eq('payment_status', 'paid')
-        .order('created_at', { ascending: false });
 
-      const ordersList = orders || [];
+      // Buscar TODOS os pedidos pagos (sem limite de 1000)
+      const ordersList = await fetchAllRows<any>({
+        table: "orders",
+        select: `*, profiles!orders_supplier_id_fkey(nome)`,
+        build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled").order("created_at", { ascending: false }),
+      });
+
       setTransactions(ordersList);
-      
+
       const receita = ordersList.reduce((sum, o) => sum + Number(o.total), 0);
       setReceitaTotal(receita);
       setTotalPedidos(ordersList.length);
 
-      // Calcular comissão da plataforma (7.5% para plano grátis)
-      // TODO: Ajustar baseado no plano real de cada fornecedor
-      const comissao = receita * 0.075;
+      // Comissão Nellor: 7,5% SOBRE CADA PEDIDO (soma por transação)
+      const comissao = ordersList.reduce((sum, o) => sum + Number(o.total) * 0.075, 0);
       setComissoes(comissao);
 
       // Pago aos fornecedores (valor bruto - comissão - taxa Stripe estimada)
-      const taxaStripeEstimada = receita * 0.034;
+      const taxaStripeEstimada = ordersList.reduce((sum, o) => sum + Number(o.total) * 0.034, 0);
       const pago = receita - comissao - taxaStripeEstimada;
       setPagoFornecedores(pago);
 
@@ -62,42 +57,41 @@ const Financeiro = () => {
       setTicketMedio(ticket);
 
       // Buscar stats de planos dos fornecedores
-      const { data: fornecedores } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('tipo', 'fornecedor');
-      
-      // TODO: Quando houver campo de plano no profiles, filtrar corretamente
+      // (ainda não existe campo de plano no banco, então contamos fornecedores)
+      const fornecedores = await fetchAllRows<any>({
+        table: "profiles",
+        select: "id, tipo",
+        build: (q) => q.eq("tipo", "fornecedor"),
+      });
+
       setPlanosStats({
         free: fornecedores?.length || 0,
-        premium: 0
+        premium: 0,
       });
 
       // Fluxo de caixa dos últimos 6 meses
       const cashflow = [];
-      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-      
+      const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
       for (let i = 5; i >= 0; i--) {
         const date = subMonths(new Date(), i);
-        const monthOrders = ordersList.filter(o => {
+        const monthOrders = ordersList.filter((o) => {
           const orderDate = new Date(o.created_at);
-          return orderDate.getMonth() === date.getMonth() && 
-                 orderDate.getFullYear() === date.getFullYear();
+          return orderDate.getMonth() === date.getMonth() && orderDate.getFullYear() === date.getFullYear();
         });
-        
+
         const entrada = monthOrders.reduce((sum, o) => sum + Number(o.total), 0);
-        const saida = entrada * 0.891; // Aproximado (100% - 7.5% - 3.4%)
+        const saida = monthOrders.reduce((sum, o) => sum + (Number(o.total) - Number(o.total) * 0.075 - Number(o.total) * 0.034), 0);
 
         cashflow.push({
           month: meses[date.getMonth()],
           entrada: Math.round(entrada),
-          saida: Math.round(saida)
+          saida: Math.round(saida),
         });
       }
       setCashflowData(cashflow);
-
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -168,13 +162,12 @@ const Financeiro = () => {
         </Button>
       </div>
 
-      {/* Aviso sobre Stripe */}
-      <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20">
+      {/* Aviso */}
+      <Card className="border-border bg-muted/30">
         <CardContent className="p-4 text-sm">
-          <p className="text-blue-800 dark:text-blue-200">
-            <strong>ℹ️ Importante:</strong> Os valores exibidos são placeholders. 
-            Após a integração com Stripe Connect, os dados reais de transações, 
-            comissões e repasses serão exibidos automaticamente via webhooks.
+          <p className="text-foreground">
+            <strong>ℹ️ Nota:</strong> Os valores abaixo são calculados a partir dos pedidos com pagamento <strong>"paid"</strong>
+            (excluindo <strong>cancelados</strong>). Comissão Nellor: <strong>7,5% por pedido</strong>.
           </p>
         </CardContent>
       </Card>
@@ -289,31 +282,23 @@ const Financeiro = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredTransactions.slice(0, 10).map((tx, idx) => {
+                {filteredTransactions.map((tx) => {
                   const comissao = Number(tx.total) * 0.075;
                   const taxaStripe = Number(tx.total) * 0.034;
                   const repassado = Number(tx.total) - comissao - taxaStripe;
-                  
+
                   return (
                     <tr key={tx.id} className="border-b hover:bg-muted/20">
                       <td className="py-3 px-2 text-xs text-muted-foreground">
                         {tx.id.slice(0, 8)}...
                       </td>
-                      <td className="py-3 px-2">
-                        {format(new Date(tx.created_at), 'dd/MM/yyyy')}
-                      </td>
+                      <td className="py-3 px-2">{format(new Date(tx.created_at), "dd/MM/yyyy")}</td>
                       <td className="py-3 px-2 font-medium">#{tx.order_number}</td>
-                      <td className="py-3 px-2">{tx.profiles?.nome || '---'}</td>
+                      <td className="py-3 px-2">{tx.profiles?.nome || "---"}</td>
                       <td className="py-3 px-2 text-right">R$ {Number(tx.total).toFixed(2)}</td>
-                      <td className="py-3 px-2 text-right text-purple-600">
-                        R$ {comissao.toFixed(2)}
-                      </td>
-                      <td className="py-3 px-2 text-right text-orange-600">
-                        R$ {taxaStripe.toFixed(2)}
-                      </td>
-                      <td className="py-3 px-2 text-right text-green-600 font-medium">
-                        R$ {repassado.toFixed(2)}
-                      </td>
+                      <td className="py-3 px-2 text-right text-purple-600">R$ {comissao.toFixed(2)}</td>
+                      <td className="py-3 px-2 text-right text-orange-600">R$ {taxaStripe.toFixed(2)}</td>
+                      <td className="py-3 px-2 text-right text-green-600 font-medium">R$ {repassado.toFixed(2)}</td>
                       <td className="py-3 px-2 text-center">
                         <Badge variant="outline" className="text-xs">
                           {tx.order_status}

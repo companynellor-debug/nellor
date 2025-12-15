@@ -7,85 +7,8 @@ import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-const oldStatsCards = [];
-const salesData = [{
-  month: "Jun",
-  pedidos: 420,
-  receita: 45000
-}, {
-  month: "Jul",
-  pedidos: 580,
-  receita: 62000
-}, {
-  month: "Ago",
-  pedidos: 720,
-  receita: 78000
-}, {
-  month: "Set",
-  pedidos: 950,
-  receita: 95000
-}, {
-  month: "Out",
-  pedidos: 1200,
-  receita: 112000
-}, {
-  month: "Nov",
-  pedidos: 1523,
-  receita: 127430
-}];
-const categoryData = [{
-  name: "Streetwear",
-  value: 35,
-  color: "#8B5CF6"
-}, {
-  name: "Techwear",
-  value: 25,
-  color: "#6366F1"
-}, {
-  name: "Acessórios",
-  value: 20,
-  color: "#A855F7"
-}, {
-  name: "Calçados",
-  value: 15,
-  color: "#C084FC"
-}, {
-  name: "Outros",
-  value: 5,
-  color: "#E9D5FF"
-}];
-const topSuppliers = [{
-  name: "UrbanCloth",
-  vendas: 12500
-}, {
-  name: "DriftWear",
-  vendas: 8900
-}, {
-  name: "TechStyle",
-  vendas: 7200
-}, {
-  name: "StreetVibe",
-  vendas: 6800
-}, {
-  name: "NeonWear",
-  vendas: 5400
-}];
-const recentActivities = [{
-  text: "Novo pedido confirmado: #2048 — R$230,00",
-  time: "2 min atrás"
-}, {
-  text: "Fornecedor DriftWear atingiu R$10.000 em vendas",
-  time: "15 min atrás"
-}, {
-  text: "Usuário Lucas S. fez 3 pedidos hoje",
-  time: "1 hora atrás"
-}, {
-  text: "Novo fornecedor TechStyle aprovado",
-  time: "2 horas atrás"
-}, {
-  text: "Cliente Maria F. deixou avaliação 5★",
-  time: "3 horas atrás"
-}];
+import { fetchAllRows } from "@/lib/fetchAllRows";
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
@@ -148,13 +71,14 @@ const Dashboard = () => {
         .eq('tipo', 'fornecedor')
         .eq('ativo', true);
       
-      const { data: recentOrders } = await supabase
-        .from('orders')
-        .select('total, created_at')
-        .eq('payment_status', 'paid')
-        .gte('created_at', startDate.toISOString());
+       const recentOrders = await fetchAllRows<any>({
+         table: "orders",
+         select: "total, created_at, payment_status, order_status",
+         build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled").gte("created_at", startDate.toISOString()),
+       });
 
-      const revenue30Days = recentOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
+       const revenue30Days = recentOrders?.reduce((sum: number, order: any) => sum + Number(order.total), 0) || 0;
+
 
       // Pedidos concluídos
       const { count: completedOrders } = await supabase
@@ -187,13 +111,15 @@ const Dashboard = () => {
       }
 
       // Top 5 fornecedores baseado em pedidos pagos
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('supplier_id, total, profiles!orders_supplier_id_fkey(nome)')
-        .eq('payment_status', 'paid');
+       const allOrders = await fetchAllRows<any>({
+         table: "orders",
+         select: "supplier_id, total, profiles!orders_supplier_id_fkey(nome), payment_status, order_status",
+         build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled"),
+       });
+
 
       const supplierRevenue: Record<string, { name: string; vendas: number }> = {};
-      allOrders?.forEach(order => {
+       allOrders?.forEach((order: any) => {
         const supplierId = order.supplier_id;
         const supplierName = (order.profiles as any)?.nome || 'Fornecedor';
         if (!supplierRevenue[supplierId]) {
