@@ -4,8 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Package, CheckCircle, DollarSign, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 
 const getStatusBadge = (status: string) => {
   const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; }> = {
@@ -37,18 +37,15 @@ const Vendas = () => {
     try {
       setLoading(true);
       
-      // Buscar pedidos com nomes de comprador e fornecedor
-      const { data: orders } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          buyer:profiles!orders_buyer_id_fkey(nome),
-          supplier:profiles!orders_supplier_id_fkey(nome)
-        `)
-        .order('created_at', { ascending: false });
+      // Buscar pedidos (SEM limite de 1000)
+      const pedidosList = await fetchAllRows<any>({
+        table: "orders",
+        select: `*, buyer:profiles!orders_buyer_id_fkey(nome), supplier:profiles!orders_supplier_id_fkey(nome)` ,
+        build: (q) => q.order("created_at", { ascending: false }),
+      });
 
-      const pedidosList = orders || [];
       setTotalPedidos(pedidosList.length);
+
 
       // Contar status
       const pendentes = pedidosList.filter(p => p.order_status === 'pending').length;

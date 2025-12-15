@@ -176,15 +176,15 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', data.user.id)
         .single();
 
-      if (profileData?.tipo === 'fornecedor' && !profileData?.onboarding_completed) {
-        navigate('/fornecedor/onboarding');
-      } else if (profileData?.tipo === 'fornecedor') {
-        navigate('/fornecedor/dashboard');
-      } else if (profileData?.tipo === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/cliente');
-      }
+       if (profileData?.tipo === 'fornecedor' && !profileData?.onboarding_completed) {
+         navigate('/fornecedor/onboarding');
+       } else if (profileData?.tipo === 'fornecedor') {
+         navigate('/fornecedor/dashboard');
+       } else if (profileData?.tipo === 'admin') {
+         navigate('/admin');
+       } else {
+         navigate('/cliente');
+       }
 
       return { error: null };
     } catch (error: any) {
