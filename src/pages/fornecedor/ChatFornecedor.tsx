@@ -9,6 +9,7 @@ import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTypingPresence } from "@/hooks/useTypingPresence";
 
 const ChatFornecedor = () => {
   const { user } = useSupabaseAuth();
@@ -26,6 +27,10 @@ const ChatFornecedor = () => {
     getMessagesByUser,
     getUnreadCount 
   } = useSupabaseMessages(user?.id);
+
+  // Typing presence - only active when a customer is selected
+  const chatId = selectedCustomerId && user?.id ? [user.id, selectedCustomerId].sort().join('_') : '';
+  const { isOtherUserTyping, startTyping, stopTyping } = useTypingPresence(chatId, user?.id);
 
   const conversations = getConversations();
   const messages = selectedCustomerId ? getMessagesByUser(selectedCustomerId) : [];
@@ -123,6 +128,7 @@ const ChatFornecedor = () => {
     if (!message.trim() && attachments.length === 0) return;
     if (!selectedCustomerId) return;
 
+    stopTyping();
     sendSupabaseMessage(selectedCustomerId, message, attachments);
     setMessage("");
     setAttachments([]);
@@ -202,7 +208,11 @@ const ChatFornecedor = () => {
                 </div>
                 <div>
                   <p className="font-semibold">{selectedCustomer.nome}</p>
-                  <p className="text-sm text-muted-foreground">{selectedCustomer.email}</p>
+                  {isOtherUserTyping ? (
+                    <p className="text-sm text-primary animate-pulse">Digitando...</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{selectedCustomer.email}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -321,8 +331,17 @@ const ChatFornecedor = () => {
                 <Input
                   placeholder="Digite sua mensagem..."
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    startTyping();
+                  }}
+                  onBlur={stopTyping}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      stopTyping();
+                      handleSend();
+                    }
+                  }}
                   className="flex-1"
                 />
                 <Button onClick={handleSend} disabled={!message.trim() && attachments.length === 0}>
