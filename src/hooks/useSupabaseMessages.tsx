@@ -30,19 +30,40 @@ export const useSupabaseMessages = (supplierId?: string) => {
 
     fetchMessages();
 
-    // Realtime subscription
+    // Realtime subscription - subscribe to ALL messages changes and filter client-side
     const channel = supabase
-      .channel('messages_changes')
+      .channel(`messages_${user.id}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
-          table: 'messages',
-          filter: `from_user=eq.${user.id},to_user=eq.${user.id}`
+          table: 'messages'
         },
-        () => {
-          fetchMessages();
+        (payload) => {
+          const newMsg = payload.new as ChatMessage;
+          // Only add if message involves current user
+          if (newMsg.from_user === user.id || newMsg.to_user === user.id) {
+            setMessages(prev => {
+              // Avoid duplicates
+              if (prev.some(m => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const updatedMsg = payload.new as ChatMessage;
+          if (updatedMsg.from_user === user.id || updatedMsg.to_user === user.id) {
+            setMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
+          }
         }
       )
       .subscribe();
