@@ -12,6 +12,7 @@ import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "@/hooks/use-toast";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
+import { useTypingPresence } from "@/hooks/useTypingPresence";
 
 const Chat = () => {
   const location = useLocation();
@@ -32,6 +33,10 @@ const Chat = () => {
     markAsRead,
     getUnreadCount 
   } = useSupabaseMessages();
+
+  // Typing presence - only active when a supplier is selected
+  const chatId = selectedUserId && user?.id ? [user.id, selectedUserId].sort().join('_') : '';
+  const { isOtherUserTyping, startTyping, stopTyping } = useTypingPresence(chatId, user?.id);
 
   const handleDownloadImage = () => {
     if (!viewingImage) return;
@@ -163,6 +168,7 @@ const Chat = () => {
       return;
     }
 
+    stopTyping();
     sendSupabaseMessage(selectedUserId, message.trim(), attachments.length > 0 ? attachments : undefined);
     setMessage("");
     setAttachments([]);
@@ -191,7 +197,11 @@ const Chat = () => {
               </div>
               <div>
                 <h2 className="font-bold">{selectedSupplier.nome}</h2>
-                <p className="text-xs text-muted-foreground">Online</p>
+                {isOtherUserTyping ? (
+                  <p className="text-xs text-primary animate-pulse">Digitando...</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Online</p>
+                )}
               </div>
             </div>
           </div>
@@ -316,8 +326,17 @@ const Chat = () => {
               </Button>
               <Input
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  startTyping();
+                }}
+                onBlur={stopTyping}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    stopTyping();
+                    handleSend();
+                  }
+                }}
                 placeholder="Digite sua mensagem..."
                 className="flex-1"
               />
