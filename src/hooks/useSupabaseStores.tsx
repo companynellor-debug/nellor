@@ -7,7 +7,6 @@ export interface SupabaseStore {
   descricao_loja: string | null;
   foto_perfil_url: string | null;
   banner_loja_url: string | null;
-  tipo: string;
 }
 
 export const useSupabaseStores = () => {
@@ -17,11 +16,10 @@ export const useSupabaseStores = () => {
   const fetchStores = async () => {
     try {
       setLoading(true);
+      // Usar VIEW pública que não expõe dados sensíveis (LGPD)
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, nome, descricao_loja, foto_perfil_url, banner_loja_url, tipo')
-        .eq('tipo', 'fornecedor')
-        .eq('ativo', true);
+        .from('public_supplier_profiles')
+        .select('id, nome, descricao_loja, foto_perfil_url, banner_loja_url');
 
       if (error) throw error;
       setStores(data || []);
@@ -35,7 +33,7 @@ export const useSupabaseStores = () => {
   useEffect(() => {
     fetchStores();
 
-    // Subscribe to realtime changes
+    // Subscribe to realtime changes on profiles
     const channel = supabase
       .channel('profiles-stores-changes')
       .on(
