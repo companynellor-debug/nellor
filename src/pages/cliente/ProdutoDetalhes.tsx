@@ -49,19 +49,28 @@ const ProdutoDetalhes = () => {
       }
 
       try {
-        const { data: profile, error } = await supabase
-          .from('public_supplier_profiles')
-          .select('id, nome, foto_perfil_url, banner_loja_url, descricao_loja')
-          .eq('id', product.supplierProfileId)
-          .maybeSingle();
+        // Usar função RPC SECURITY DEFINER para garantir acesso público
+        const { data: profiles, error } = await supabase.rpc('get_public_store_profile', {
+          _id: product.supplierProfileId
+        });
 
         if (error) {
-          console.error('Error fetching supplier profile:', error);
+          console.error('Error fetching supplier profile via RPC:', error);
+          // Fallback to view
+          const { data: viewProfile } = await supabase
+            .from('public_supplier_profiles')
+            .select('id, nome, foto_perfil_url, banner_loja_url, descricao_loja')
+            .eq('id', product.supplierProfileId)
+            .maybeSingle();
+          
+          if (viewProfile) {
+            setSupplierProfile(viewProfile);
+          }
           return;
         }
 
-        if (profile) {
-          setSupplierProfile(profile);
+        if (profiles && profiles.length > 0) {
+          setSupplierProfile(profiles[0]);
         }
 
         // Buscar estoque atual do produto

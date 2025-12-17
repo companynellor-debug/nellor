@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { ReviewsList } from "@/components/cliente/ReviewsList";
@@ -19,18 +20,24 @@ import { toast } from "sonner";
 const PerfilLoja = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { stores, loading } = useSupabaseStores();
+  const { stores, loading, refetch } = useSupabaseStores();
   const { products: supabaseProducts } = useSupabaseProducts();
   const { user } = useSupabaseAuth();
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
   const { reviews: allReviews, loading: reviewsLoading } = useSupabaseReviews();
+  
+  // Refetch stores when component mounts to ensure fresh data
+  useEffect(() => {
+    refetch();
+  }, [id]);
   
   const storeProfile = stores.find(s => s.id === id);
   // Buscar produtos do fornecedor usando supplier_id
   const storeProducts = supabaseProducts.filter(p => p.supplier_id === id);
   
   console.log('Store ID:', id);
-  console.log('All products:', supabaseProducts.length);
+  console.log('All stores:', stores.length);
+  console.log('Store profile found:', !!storeProfile);
   console.log('Store products:', storeProducts.length);
   
   // Filtrar avaliações dos produtos desta loja
