@@ -22,7 +22,21 @@ export const useSupabaseStores = () => {
         .select('id, nome, descricao_loja, foto_perfil_url, banner_loja_url');
 
       if (error) throw error;
-      setStores(data || []);
+      
+      // Filtrar e mapear para garantir tipos corretos (VIEW retorna nullable)
+      const validStores: SupabaseStore[] = (data || [])
+        .filter((s): s is typeof s & { id: string; nome: string } => 
+          s.id !== null && s.nome !== null
+        )
+        .map(s => ({
+          id: s.id,
+          nome: s.nome,
+          descricao_loja: s.descricao_loja,
+          foto_perfil_url: s.foto_perfil_url,
+          banner_loja_url: s.banner_loja_url
+        }));
+      
+      setStores(validStores);
     } catch (error) {
       console.error('Error fetching stores:', error);
     } finally {
