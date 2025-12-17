@@ -189,7 +189,7 @@ const ChatFornecedor = () => {
                   {isOtherUserTyping ? (
                     <p className="text-sm text-primary animate-pulse">Digitando...</p>
                   ) : (
-                    <p className="text-sm text-muted-foreground">{selectedCustomer.email}</p>
+                    <p className="text-sm text-muted-foreground">Online</p>
                   )}
                 </div>
               </div>

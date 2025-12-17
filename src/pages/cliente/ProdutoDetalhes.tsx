@@ -79,21 +79,6 @@ const ProdutoDetalhes = () => {
     fetchSupplierData();
   }, [product, supabaseProducts]);
 
-        // Buscar estoque atual do produto
-        if (product.supplierUuid) {
-          const supabaseProduct = supabaseProducts.find(p => p.id === product.supplierUuid);
-          if (supabaseProduct) {
-            setCurrentStock(supabaseProduct.estoque);
-          }
-        }
-      } catch (error) {
-        console.error('Error in fetchSupplierData:', error);
-      }
-    };
-
-    fetchSupplierData();
-  }, [product, supabaseProducts]);
-
   const handleToggleFavorite = () => {
     if (isProductFavorite) {
       removeFavorite(productId);
