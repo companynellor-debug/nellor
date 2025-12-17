@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Package, CheckCircle, DollarSign, Loader2 } from "lucide-react";
-import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
-import { fetchAllRows } from "@/lib/fetchAllRows";
+import { fetchAdminOrders } from "@/lib/adminRpc";
 
 const getStatusBadge = (status: string) => {
   const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; }> = {
@@ -37,12 +37,8 @@ const Vendas = () => {
     try {
       setLoading(true);
       
-      // Buscar pedidos (SEM limite de 1000)
-      const pedidosList = await fetchAllRows<any>({
-        table: "orders",
-        select: `*, buyer:profiles!orders_buyer_id_fkey(nome), supplier:profiles!orders_supplier_id_fkey(nome)` ,
-        build: (q) => q.order("created_at", { ascending: false }),
-      });
+      // Buscar pedidos via RPC (bypass RLS)
+      const pedidosList = await fetchAdminOrders();
 
       setTotalPedidos(pedidosList.length);
 
@@ -64,13 +60,13 @@ const Vendas = () => {
       setVendasMes(vendasDoMes);
 
       // Pedidos recentes com nomes corretos
-      const pedidosRecentes = pedidosList.slice(0, 10).map(order => ({
+      const pedidosRecentes = pedidosList.slice(0, 10).map((order) => ({
         id: order.order_number,
-        customer: (order.buyer as any)?.nome || 'Cliente',
-        supplier: (order.supplier as any)?.nome || 'Fornecedor',
+        customer: order.buyer_name || "Cliente",
+        supplier: order.supplier_name || "Fornecedor",
         value: `R$ ${Number(order.total).toFixed(2)}`,
         status: order.order_status,
-        date: format(new Date(order.created_at), 'dd/MM')
+        date: format(new Date(order.created_at), "dd/MM"),
       }));
       setPedidos(pedidosRecentes);
 

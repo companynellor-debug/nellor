@@ -4,10 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Store, TrendingUp, DollarSign, Star, Loader2, CreditCard, RefreshCw, UserX } from "lucide-react";
+import { Store, TrendingUp, Loader2, CreditCard, RefreshCw, UserX, Star } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchAdminOrders, fetchAdminProfiles } from "@/lib/adminRpc";
 
 const Fornecedores = () => {
   const [loading, setLoading] = useState(true);
@@ -27,44 +28,35 @@ const Fornecedores = () => {
     try {
       setLoading(true);
       
-      // Buscar fornecedores
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('tipo', 'fornecedor')
-        .order('created_at', { ascending: false });
+      // Buscar fornecedores via RPC (bypass RLS)
+      const profiles = await fetchAdminProfiles();
+      const fornecedoresList = profiles
+        .filter((p) => p.tipo === "fornecedor")
+        .map((p) => ({ ...p, created_at: p.created_at }));
 
-      const fornecedoresList = profiles || [];
       setTotalFornecedores(fornecedoresList.length);
 
       // Fornecedores novos no mês
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
-      
-      const novos = fornecedoresList.filter(f => 
-        new Date(f.created_at) >= startOfMonth
-      ).length;
+
+      const novos = fornecedoresList.filter((f) => new Date(f.created_at) >= startOfMonth).length;
       setNovosNoMes(novos);
 
       // Buscar produtos e pedidos por fornecedor
-      const { data: products } = await supabase
-        .from('products')
-        .select('supplier_id, categoria_id, categories(nome)');
+      const { data: products } = await supabase.from("products").select("supplier_id, categoria_id, categories(nome)");
 
-      // Buscar TODOS os pedidos pagos e não cancelados
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('supplier_id, total, payment_status, order_status')
-        .eq('payment_status', 'paid')
-        .neq('order_status', 'cancelled');
+      const orders = (await fetchAdminOrders()).filter(
+        (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
+      );
 
       // Calcular dados dos fornecedores com faturamento REAL
-      const fornecedoresData = fornecedoresList.map(fornecedor => {
-        const produtosFornecedor = products?.filter(p => p.supplier_id === fornecedor.id) || [];
-        const pedidosFornecedor = orders?.filter(o => o.supplier_id === fornecedor.id) || [];
+      const fornecedoresData = fornecedoresList.map((fornecedor) => {
+        const produtosFornecedor = products?.filter((p) => p.supplier_id === fornecedor.id) || [];
+        const pedidosFornecedor = orders?.filter((o) => o.supplier_id === fornecedor.id) || [];
         const receita = pedidosFornecedor.reduce((sum, o) => sum + Number(o.total), 0);
-        const categoria = produtosFornecedor[0]?.categories?.nome || 'Diversos';
+        const categoria = (produtosFornecedor[0] as any)?.categories?.nome || "Diversos";
 
         return {
           id: fornecedor.id,
@@ -73,13 +65,12 @@ const Fornecedores = () => {
           category: categoria,
           orders: pedidosFornecedor.length,
           revenue: receita,
-          rating: 4.5 + Math.random() * 0.5,
           vendas: receita,
-          plano: 'Grátis',
+          plano: "Grátis",
           stripeConnected: !!fornecedor.stripe_account_id,
           stripeAccountId: fornecedor.stripe_account_id,
           lastPayout: null,
-          ativo: fornecedor.ativo !== false
+          ativo: fornecedor.ativo !== false,
         };
       });
 

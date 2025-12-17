@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, TrendingUp, DollarSign, Users, Building2, Percent, Calculator } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
-import { fetchAllRows } from "@/lib/fetchAllRows";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { fetchAdminOrders } from "@/lib/adminRpc";
 const Indicadores = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
@@ -26,12 +26,9 @@ const Indicadores = () => {
     try {
       setLoading(true);
 
-      // Buscar TODOS os pedidos pagos (sem limite de 1000)
-      const allOrders = await fetchAllRows<any>({
-        table: "orders",
-        select: "id, total, created_at, payment_status, order_status",
-        build: q => q.eq("payment_status", "paid").neq("order_status", "cancelled")
-      });
+      const allOrders = (await fetchAdminOrders()).filter(
+        (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
+      );
 
       // GMV Total (valor total de todas as transações)
       const gmvTotal = allOrders.reduce((sum, o) => sum + Number(o.total), 0);

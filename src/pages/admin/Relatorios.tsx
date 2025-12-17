@@ -5,8 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Download, Loader2 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { format, subMonths } from "date-fns";
-import { fetchAllRows } from "@/lib/fetchAllRows";
+import { subMonths } from "date-fns";
+import { fetchAdminOrders, fetchAdminProfiles } from "@/lib/adminRpc";
 
 const Relatorios = () => {
   const [loading, setLoading] = useState(true);
@@ -26,17 +26,12 @@ const Relatorios = () => {
     try {
       setLoading(true);
       
-      // Buscar dados (SEM limite)
-      const profiles = await fetchAllRows<any>({
-        table: "profiles",
-        select: "*",
-      });
+      // Buscar dados via RPC (bypass RLS)
+      const profiles = await fetchAdminProfiles();
 
-      const ordersList = await fetchAllRows<any>({
-        table: "orders",
-        select: "total, created_at, payment_status, itens, endereco_entrega, supplier_id, order_status",
-        build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled"),
-      });
+      const ordersList = (await fetchAdminOrders()).filter(
+        (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
+      );
 
 
       // Buscar produtos com categorias
