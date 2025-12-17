@@ -165,7 +165,7 @@ const AvaliarPedido = () => {
             <p className="font-semibold truncate text-primary">
               {firstItem?.name || 'Produto'}
             </p>
-            <p className="text-white/80 text-sm truncate">
+            <p className="text-sm truncate text-primary">
               {order.storeName}
             </p>
           </div>
