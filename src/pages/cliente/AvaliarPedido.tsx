@@ -157,7 +157,7 @@ const AvaliarPedido = () => {
         </div>
 
         {/* Product card no header roxo */}
-        <Card className="bg-white/20 backdrop-blur-sm border-0 p-4 flex items-center gap-4">
+        <Card className="backdrop-blur-sm border-0 p-4 flex items-center gap-4 text-[sidebar-accent-foreground] text-primary bg-primary">
           <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shrink-0">
             {firstItem?.image ? <img src={firstItem.image} alt={firstItem.name} className="w-full h-full object-cover rounded-xl" /> : <ImageIcon className="h-8 w-8 text-muted-foreground" />}
           </div>
@@ -187,7 +187,7 @@ const AvaliarPedido = () => {
         </Card>
 
         {/* Comment card */}
-        <Card className="bg-white border-0 shadow-lg rounded-2xl p-6">
+        <Card className="border-0 shadow-lg rounded-2xl p-6 bg-destructive-foreground">
           <h3 className="font-semibold mb-3">Sua avaliação</h3>
           <Textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="Escreva seu comentário aqui..." className="min-h-[100px] border-muted bg-muted/30 rounded-xl resize-none" maxLength={500} />
           <p className="text-xs text-muted-foreground mt-2 text-right">
