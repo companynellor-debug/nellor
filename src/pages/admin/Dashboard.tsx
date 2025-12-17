@@ -59,34 +59,21 @@ const Dashboard = () => {
 
       const startDate = getStartDate();
       
-      // Total de usuários
-      const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Fornecedores ativos
-      const { count: activeSuppliers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('tipo', 'fornecedor')
-        .eq('ativo', true);
+      // Use SECURITY DEFINER functions to bypass RLS
+      const { data: statsData } = await supabase.rpc('get_admin_stats');
+      const { data: allOrders } = await supabase.rpc('get_admin_orders');
+      const { data: allProfiles } = await supabase.rpc('get_admin_profiles');
       
-       const recentOrders = await fetchAllRows<any>({
-         table: "orders",
-         select: "total, created_at, payment_status, order_status",
-         build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled").gte("created_at", startDate.toISOString()),
-       });
-
-       const revenue30Days = recentOrders?.reduce((sum: number, order: any) => sum + Number(order.total), 0) || 0;
-
-
-      // Pedidos concluídos
-      const { count: completedOrders } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('order_status', 'delivered');
-
-      // Comissão Nellor (7.5% de cada pedido pago)
+      const stats_result = statsData?.[0] || { total_users: 0, active_suppliers: 0, paid_orders: 0, delivered_orders: 0, total_revenue: 0 };
+      
+      // Filter orders by date for revenue calculation
+      const filteredOrders = (allOrders || []).filter((o: any) => 
+        o.payment_status === 'paid' && 
+        o.order_status !== 'cancelled' &&
+        new Date(o.created_at) >= startDate
+      );
+      
+      const revenue30Days = filteredOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
       const commission = revenue30Days * 0.075;
 
       // Dados de vendas dos últimos 6 meses
@@ -96,32 +83,29 @@ const Dashboard = () => {
         const monthStart = startOfMonth(monthDate);
         const monthEnd = endOfMonth(monthDate);
 
-        const { data: monthOrders } = await supabase
-          .from('orders')
-          .select('total')
-          .eq('payment_status', 'paid')
-          .gte('created_at', monthStart.toISOString())
-          .lte('created_at', monthEnd.toISOString());
+        const monthOrders = (allOrders || []).filter((o: any) => {
+          const orderDate = new Date(o.created_at);
+          return o.payment_status === 'paid' && 
+                 orderDate >= monthStart && 
+                 orderDate <= monthEnd;
+        });
 
         salesByMonth.push({
           month: format(monthDate, 'MMM', { locale: ptBR }),
-          pedidos: monthOrders?.length || 0,
-          receita: monthOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0
+          pedidos: monthOrders.length,
+          receita: monthOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0)
         });
       }
 
       // Top 5 fornecedores baseado em pedidos pagos
-       const allOrders = await fetchAllRows<any>({
-         table: "orders",
-         select: "supplier_id, total, profiles!orders_supplier_id_fkey(nome), payment_status, order_status",
-         build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled"),
-       });
-
-
+      const paidOrders = (allOrders || []).filter((o: any) => 
+        o.payment_status === 'paid' && o.order_status !== 'cancelled'
+      );
+      
       const supplierRevenue: Record<string, { name: string; vendas: number }> = {};
-       allOrders?.forEach((order: any) => {
+      paidOrders.forEach((order: any) => {
         const supplierId = order.supplier_id;
-        const supplierName = (order.profiles as any)?.nome || 'Fornecedor';
+        const supplierName = order.supplier_name || 'Fornecedor';
         if (!supplierRevenue[supplierId]) {
           supplierRevenue[supplierId] = { name: supplierName, vendas: 0 };
         }
@@ -151,25 +135,21 @@ const Dashboard = () => {
       }));
 
       // Pedidos recentes
-      const { data: latestOrders } = await supabase
-        .from('orders')
-        .select('order_number, total, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5);
+      const latestOrders = (allOrders || []).slice(0, 5);
 
       setStats({
-        totalUsers: totalUsers || 0,
-        activeSuppliers: activeSuppliers || 0,
+        totalUsers: Number(stats_result.total_users) || 0,
+        activeSuppliers: Number(stats_result.active_suppliers) || 0,
         revenue30Days,
-        completedOrders: completedOrders || 0,
-        monthlyGrowth: 0, // Pode calcular comparando com mês anterior
+        completedOrders: Number(stats_result.delivered_orders) || 0,
+        monthlyGrowth: 0,
         commission,
       });
 
       setSalesData(salesByMonth);
       setTopSuppliers(topSuppliersData);
       setCategoryData(categoryDataFormatted);
-      setRecentOrders(latestOrders || []);
+      setRecentOrders(latestOrders);
 
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
