@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, UserPlus, TrendingUp, DollarSign, Loader2, Percent, ShoppingCart } from "lucide-react";
+import { Users, UserPlus, DollarSign, Loader2, Percent } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { format, subDays, subMonths, startOfMonth } from "date-fns";
-import { fetchAllRows } from "@/lib/fetchAllRows";
+import { format, subMonths, startOfMonth } from "date-fns";
+import { fetchAdminOrders, fetchAdminProfiles } from "@/lib/adminRpc";
 
 const Usuarios = () => {
   const [loading, setLoading] = useState(true);
@@ -23,29 +23,22 @@ const Usuarios = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      // Buscar todos os clientes
-      const clientesList = await fetchAllRows<any>({
-        table: "profiles",
-        select: "*",
-        build: (q) => q.eq("tipo", "cliente").order("created_at", { ascending: false }),
-      });
+
+      const profiles = await fetchAdminProfiles();
+      const clientesList = profiles
+        .filter((p) => p.tipo === "cliente")
+        .map((p) => ({ ...p, created_at: p.created_at }));
 
       setTotalClientes(clientesList.length);
 
       // Clientes novos no mês
       const startOfCurrentMonth = startOfMonth(new Date());
-      const novos = clientesList.filter(c => 
-        new Date(c.created_at) >= startOfCurrentMonth
-      ).length;
+      const novos = clientesList.filter((c) => new Date(c.created_at) >= startOfCurrentMonth).length;
       setNovosNoMes(novos);
 
-      // Buscar TODOS os pedidos dos clientes
-      const allOrders = await fetchAllRows<any>({
-        table: "orders",
-        select: "buyer_id, total, created_at, payment_status, order_status",
-        build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled"),
-      });
+      const allOrders = (await fetchAdminOrders()).filter(
+        (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
+      );
 
       // Calcular ticket médio
       if (allOrders.length > 0) {
@@ -92,21 +85,18 @@ const Usuarios = () => {
       for (let i = 5; i >= 0; i--) {
         const date = subMonths(new Date(), i);
         const monthStart = startOfMonth(date);
-        
-        const countUntilMonth = clientesList.filter(c => 
-          new Date(c.created_at) <= monthStart
-        ).length;
-        
-        const novosNoMes = clientesList.filter(c => {
+
+        const countUntilMonth = clientesList.filter((c) => new Date(c.created_at) <= monthStart).length;
+
+        const novosNoMes = clientesList.filter((c) => {
           const createdAt = new Date(c.created_at);
-          return createdAt.getMonth() === date.getMonth() && 
-                 createdAt.getFullYear() === date.getFullYear();
+          return createdAt.getMonth() === date.getMonth() && createdAt.getFullYear() === date.getFullYear();
         }).length;
-        
+
         growth.push({
-          month: format(date, 'MMM'),
+          month: format(date, "MMM"),
           total: countUntilMonth + novosNoMes,
-          novos: novosNoMes
+          novos: novosNoMes,
         });
       }
       setGrowthData(growth);
