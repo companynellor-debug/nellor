@@ -881,6 +881,30 @@ export type Database = {
     }
     Functions: {
       generate_order_number: { Args: never; Returns: string }
+      get_public_store_profile: {
+        Args: { _id: string }
+        Returns: {
+          ativo: boolean
+          banner_loja_url: string
+          created_at: string
+          descricao_loja: string
+          foto_perfil_url: string
+          id: string
+          nome: string
+        }[]
+      }
+      get_public_store_profiles: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          banner_loja_url: string
+          created_at: string
+          descricao_loja: string
+          foto_perfil_url: string
+          id: string
+          nome: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
