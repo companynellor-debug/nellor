@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Star, Upload, X } from "lucide-react";
+import { ArrowLeft, Star, Camera, X, ImageIcon } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -21,7 +20,6 @@ const AvaliarPedido = () => {
   const [loading, setLoading] = useState(true);
   
   const [rating, setRating] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
   const [uploading, setUploading] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
@@ -68,8 +66,8 @@ const AvaliarPedido = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-primary flex items-center justify-center">
+        <div className="text-center text-white">
           <p>Carregando pedido...</p>
         </div>
       </div>
@@ -78,10 +76,10 @@ const AvaliarPedido = () => {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-primary flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Pedido não encontrado</h1>
-          <Button onClick={() => navigate("/cliente/meus-pedidos")}>
+          <h1 className="text-2xl font-bold mb-4 text-white">Pedido não encontrado</h1>
+          <Button onClick={() => navigate("/cliente/meus-pedidos")} variant="secondary">
             Voltar para Pedidos
           </Button>
         </div>
@@ -148,14 +146,6 @@ const AvaliarPedido = () => {
     }
 
     try {
-      // Criar avaliação para cada produto do pedido
-      const items = Array.isArray(order.itens) ? order.itens : [];
-      
-      if (items.length === 0) {
-        toast.error("Pedido sem produtos para avaliar");
-        return;
-      }
-
       for (const item of items) {
         const productId = item.product_id;
         
@@ -181,86 +171,116 @@ const AvaliarPedido = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background pb-20">
-      <ParticlesBackground />
+  const firstItem = Array.isArray(order.itens) && order.itens.length > 0 ? order.itens[0] : null;
 
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+  return (
+    <div className="min-h-screen bg-primary pb-20">
+      {/* Header com gradiente roxo */}
+      <div className="bg-primary pt-4 pb-32 px-4">
+        {/* Top bar */}
+        <div className="flex items-center gap-4 mb-8">
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => navigate("/cliente/meus-pedidos")} 
-            className="rounded-full"
+            className="rounded-full text-white hover:bg-white/10"
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <h1 className="text-lg font-semibold">Avaliar Pedido</h1>
-          <div className="w-10" />
+          <h1 className="text-xl font-semibold text-white">Avalie sua compra</h1>
         </div>
-      </header>
 
-      <main className="relative z-10 container mx-auto px-4 py-6">
-        <Card className="bg-white border shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-bold mb-2">Pedido #{order.order_number}</h2>
-          <p className="text-muted-foreground mb-4">{order.storeName}</p>
-          
-          <div className="space-y-2">
-            {(Array.isArray(order.itens) ? order.itens : []).map((item: any, index: number) => (
-              <div key={index} className="flex justify-between text-sm">
-                <span>{item.quantity}x {item.name}</span>
-                <span className="font-medium">R$ {Number(item.price).toFixed(2)}</span>
-              </div>
-            ))}
+        {/* Product card no header roxo */}
+        <Card className="bg-white/20 backdrop-blur-sm border-0 p-4 flex items-center gap-4">
+          <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shrink-0">
+            {firstItem?.image ? (
+              <img 
+                src={firstItem.image} 
+                alt={firstItem.name} 
+                className="w-full h-full object-cover rounded-xl"
+              />
+            ) : (
+              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-white truncate">
+              {firstItem?.name || 'Produto'}
+            </p>
+            <p className="text-white/80 text-sm truncate">
+              {order.storeName}
+            </p>
           </div>
         </Card>
+      </div>
 
-        <Card className="bg-white border shadow-sm p-6 mb-6">
-          <h3 className="text-lg font-bold mb-4">Como foi sua experiência?</h3>
-          
-          <div className="flex justify-center gap-2 mb-6">
+      {/* Content cards */}
+      <main className="px-4 -mt-20 space-y-4">
+        {/* Rating card */}
+        <Card className="bg-white border-0 shadow-lg rounded-2xl p-6">
+          <div className="flex justify-center gap-3 mb-3">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 onClick={() => setRating(star)}
-                onMouseEnter={() => setHoveredRating(star)}
-                onMouseLeave={() => setHoveredRating(0)}
-                className="transition-transform hover:scale-110"
+                className="transition-transform hover:scale-110 active:scale-95"
               >
                 <Star
                   className={`h-10 w-10 ${
-                    star <= (hoveredRating || rating)
-                      ? "fill-yellow-400 text-yellow-400"
+                    star <= rating
+                      ? "fill-primary text-primary"
                       : "text-gray-300"
                   }`}
                 />
               </button>
             ))}
           </div>
+          <p className="text-center text-muted-foreground text-sm">
+            Toque para avaliar
+          </p>
+        </Card>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">
-              Conte-nos sobre sua experiência
+        {/* Comment card */}
+        <Card className="bg-white border-0 shadow-lg rounded-2xl p-6">
+          <h3 className="font-semibold mb-3">Sua avaliação</h3>
+          <Textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Escreva seu comentário aqui..."
+            className="min-h-[100px] border-muted bg-muted/30 rounded-xl resize-none"
+            maxLength={500}
+          />
+          <p className="text-xs text-muted-foreground mt-2 text-right">
+            {comment.length}/500
+          </p>
+        </Card>
+
+        {/* Photos card */}
+        <Card className="bg-white border-0 shadow-lg rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold">Adicionar fotos</h3>
+              <Camera className="h-5 w-5 text-primary" />
+            </div>
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <Camera className="h-5 w-5 text-primary" />
+              </div>
             </label>
-            <Textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Escreva seu comentário aqui..."
-              className="min-h-[120px]"
-              maxLength={500}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              {comment.length}/500 caracteres
-            </p>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">
-              Fotos e Vídeos (opcional)
-            </label>
-            <div className="flex flex-wrap gap-3 mb-3">
+          {photos.length > 0 && (
+            <div className="flex flex-wrap gap-3">
               {photos.map((photo, index) => (
-                <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border">
+                <div key={index} className="relative w-20 h-20 rounded-xl overflow-hidden border">
                   <img src={photo} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
                   <button
                     onClick={() => removePhoto(index)}
@@ -270,31 +290,24 @@ const AvaliarPedido = () => {
                   </button>
                 </div>
               ))}
-              <label className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer hover:bg-muted/20 transition-colors">
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={uploading}
-                />
-                <Upload className="h-6 w-6 text-muted-foreground" />
-              </label>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Adicione fotos ou vídeos do produto
-            </p>
-          </div>
+          )}
 
-          <Button
-            onClick={handleSubmit}
-            className="w-full bg-primary hover:bg-primary/90 text-white"
-            disabled={uploading}
-          >
-            {uploading ? "Enviando..." : "Enviar Avaliação"}
-          </Button>
+          {photos.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Adicione fotos do produto recebido
+            </p>
+          )}
         </Card>
+
+        {/* Submit button */}
+        <Button
+          onClick={handleSubmit}
+          className="w-full bg-primary hover:bg-primary/90 text-white h-14 rounded-2xl text-base font-semibold shadow-lg"
+          disabled={uploading}
+        >
+          {uploading ? "Enviando..." : "Enviar avaliação"}
+        </Button>
       </main>
 
       <BottomNav />
