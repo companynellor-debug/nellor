@@ -100,6 +100,17 @@ export const useSupabaseReviews = (productId?: string) => {
       return true;
     } catch (error: any) {
       console.error('Error creating review:', error);
+
+      // Erro de duplicidade (ex: já avaliou o mesmo produto no mesmo pedido)
+      if (typeof error?.message === 'string' && error.message.includes('duplicate key value')) {
+        toast({
+          title: 'Você já avaliou este produto',
+          description: 'Este pedido já possui uma avaliação para este produto.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
       toast({
         title: 'Erro ao enviar avaliação',
         description: error.message,
@@ -114,20 +125,20 @@ export const useSupabaseReviews = (productId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      // Verificar se já avaliou este produto
-      const { data, error } = await supabase
+      let query = supabase
         .from('reviews')
-        .select('id')
+        .select('id, order_id')
         .eq('product_id', productId)
         .eq('buyer_id', user.id);
 
-      if (error) throw error;
-
       if (orderId) {
-        return !data?.some(r => r.id === orderId);
+        query = query.eq('order_id', orderId);
       }
 
-      return data?.length === 0;
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return (data?.length || 0) === 0;
     } catch (error) {
       console.error('Error checking review status:', error);
       return false;

@@ -174,29 +174,37 @@ const Banners = () => {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `banner_${Date.now()}.${fileExt}`;
-        const filePath = `banners/${fileName}`;
+    if (!file) return;
 
-        const { error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('products')
-          .getPublicUrl(filePath);
-
-        setFormData({ ...formData, imageUrl: publicUrl });
-        setImagePreview(publicUrl);
-        toast.success('Imagem enviada!');
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        toast.error('Erro ao enviar imagem');
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) {
+        toast.error('Você precisa estar logado para enviar imagens');
+        return;
       }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `banner_${Date.now()}.${fileExt}`;
+      // Respeita políticas típicas de Storage (pasta do usuário)
+      const filePath = `${authData.user.id}/banners/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, imageUrl: publicUrl });
+      setImagePreview(publicUrl);
+      toast.success('Imagem enviada!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Erro ao enviar imagem');
     }
   };
 

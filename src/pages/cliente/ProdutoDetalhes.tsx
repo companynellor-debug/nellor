@@ -40,7 +40,7 @@ const ProdutoDetalhes = () => {
   const store = product ? stores.find(s => s.id === product.storeId) : undefined;
   const isProductFavorite = isFavorite(productId);
 
-  // Buscar perfil do fornecedor e estoque atual
+  // Buscar perfil do fornecedor (via VIEW pública) e estoque atual
   useEffect(() => {
     const fetchSupplierData = async () => {
       if (!product?.supplierProfileId) {
@@ -50,7 +50,7 @@ const ProdutoDetalhes = () => {
 
       try {
         const { data: profile, error } = await supabase
-          .from('profiles')
+          .from('public_supplier_profiles')
           .select('id, nome, foto_perfil_url, banner_loja_url, descricao_loja')
           .eq('id', product.supplierProfileId)
           .maybeSingle();
@@ -63,6 +63,21 @@ const ProdutoDetalhes = () => {
         if (profile) {
           setSupplierProfile(profile);
         }
+
+        // Buscar estoque atual do produto
+        if (product.supplierUuid) {
+          const supabaseProduct = supabaseProducts.find(p => p.id === product.supplierUuid);
+          if (supabaseProduct) {
+            setCurrentStock(supabaseProduct.estoque);
+          }
+        }
+      } catch (error) {
+        console.error('Error in fetchSupplierData:', error);
+      }
+    };
+
+    fetchSupplierData();
+  }, [product, supabaseProducts]);
 
         // Buscar estoque atual do produto
         if (product.supplierUuid) {

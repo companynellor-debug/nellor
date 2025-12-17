@@ -17,7 +17,6 @@ const ChatFornecedor = () => {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
-  const [customerProfiles, setCustomerProfiles] = useState<Map<string, any>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,26 +39,6 @@ const ChatFornecedor = () => {
       setSelectedCustomerId(conversations[0].userId);
     }
   }, [conversations, selectedCustomerId]);
-
-  useEffect(() => {
-    // Fetch customer profiles
-    const fetchProfiles = async () => {
-      const userIds = conversations.map(c => c.userId);
-      if (userIds.length === 0) return;
-
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', userIds);
-
-      if (data) {
-        const profilesMap = new Map(data.map(p => [p.id, p]));
-        setCustomerProfiles(profilesMap);
-      }
-    };
-
-    fetchProfiles();
-  }, [conversations]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -134,7 +113,7 @@ const ChatFornecedor = () => {
     setAttachments([]);
   };
 
-  const selectedCustomer = selectedCustomerId ? customerProfiles.get(selectedCustomerId) : null;
+  const selectedCustomer = selectedCustomerId ? { nome: 'Cliente' } : null;
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-4">
@@ -150,8 +129,7 @@ const ChatFornecedor = () => {
             </div>
           ) : (
             conversations.map((conv) => {
-              const customer = customerProfiles.get(conv.userId);
-              if (!customer) return null;
+              const customerName = `Cliente`;
 
               return (
                 <div
@@ -165,11 +143,11 @@ const ChatFornecedor = () => {
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                      {customer.nome?.charAt(0) || '?'}
+                      {customerName.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold truncate">{customer.nome}</h3>
+                        <h3 className="font-semibold truncate">{customerName}</h3>
                         {conv.unreadCount > 0 && (
                           <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5">
                             {conv.unreadCount}

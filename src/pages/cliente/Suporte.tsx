@@ -3,42 +3,103 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MessageCircle, Image as ImageIcon, Paperclip } from "lucide-react";
+import { ArrowLeft, Send, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useSupportMessages } from "@/hooks/useSupportMessages";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { Label } from "@/components/ui/label";
+
+interface SupportTicket {
+  id: string;
+  assunto: string;
+  mensagem: string;
+  resposta_admin: string | null;
+  status: "open" | "pending" | "closed" | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 const Suporte = () => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState("");
-  const { sendMessage, getMessagesByUser, markAsRead } = useSupportMessages();
+  const [assunto, setAssunto] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  const userId = "user_1"; // Em produção, pegar do contexto de autenticação
-  const userName = "João Silva"; // Em produção, pegar do contexto de autenticação
-  
-  const chatMessages = getMessagesByUser(userId);
+
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        setTickets([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setTickets((data || []) as SupportTicket[]);
+    } catch (error) {
+      console.error("Error fetching support tickets:", error);
+      toast.error("Erro ao carregar suporte");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    markAsRead(userId);
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages.length]);
+    fetchTickets();
+  }, []);
 
-  const handleSendMessage = () => {
-    if (!message.trim()) {
-      toast.error("Digite uma mensagem");
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [tickets.length]);
+
+  const handleSend = async () => {
+    if (!assunto.trim()) {
+      toast.error("Informe o assunto");
       return;
     }
-    
-    sendMessage(userId, userName, 'cliente', message, 'user');
-    setMessage("");
-    
-    // Simular resposta automática do admin após 2 segundos
-    setTimeout(() => {
-      sendMessage(userId, userName, 'cliente', "Obrigado por entrar em contato! Nossa equipe irá analisar sua mensagem e responder em breve.", 'admin');
-    }, 2000);
+    if (!mensagem.trim()) {
+      toast.error("Digite sua mensagem");
+      return;
+    }
+
+    try {
+      setSending(true);
+
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        toast.error("Você precisa estar logado");
+        return;
+      }
+
+      const { error } = await supabase.from("support_tickets").insert({
+        user_id: authData.user.id,
+        assunto: assunto.trim(),
+        mensagem: mensagem.trim(),
+        status: "open",
+      });
+
+      if (error) throw error;
+
+      toast.success("Ticket enviado! Vamos te responder em breve.");
+      setMensagem("");
+      // mantém assunto para facilitar envio de follow-up
+      await fetchTickets();
+    } catch (error) {
+      console.error("Error creating support ticket:", error);
+      toast.error("Erro ao enviar ticket");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -47,7 +108,11 @@ const Suporte = () => {
 
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate("/cliente/perfil")} className="hover:bg-accent p-2 rounded-lg transition-colors">
+          <button
+            onClick={() => navigate("/cliente/perfil")}
+            className="hover:bg-accent p-2 rounded-lg transition-colors"
+            aria-label="Voltar"
+          >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-3">
@@ -56,65 +121,83 @@ const Suporte = () => {
             </div>
             <div>
               <h1 className="text-lg font-bold text-primary">Suporte Nellor</h1>
-              <p className="text-xs text-muted-foreground">Atendimento ao cliente</p>
+              <p className="text-xs text-muted-foreground">Tickets e respostas</p>
             </div>
           </div>
         </div>
       </header>
 
-      <ScrollArea className="flex-1 relative z-10">
-        <div className="container mx-auto px-4 py-4 max-w-2xl space-y-3">
-          {chatMessages.length === 0 ? (
-            <Card className="bg-white border shadow-sm p-6 text-center">
-              <MessageCircle className="h-16 w-16 mx-auto text-primary mb-4" />
-              <h2 className="text-xl font-bold mb-2">Como podemos ajudar?</h2>
-              <p className="text-sm text-muted-foreground">
-                Nossa equipe está pronta para resolver suas dúvidas
-              </p>
-            </Card>
-          ) : (
-            chatMessages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                    msg.sender === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  }`}
-                >
-                  <p className="text-sm whitespace-pre-wrap break-words">{msg.text}</p>
-                  <p className={`text-xs mt-1 ${
-                    msg.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                  }`}>
-                    {msg.timestamp}
-                  </p>
-                </div>
+      <main className="flex-1 relative z-10">
+        <div className="container mx-auto px-4 py-4 max-w-2xl space-y-4">
+          <Card className="bg-white border shadow-sm p-5">
+            <div className="grid gap-3">
+              <div className="grid gap-2">
+                <Label>Assunto</Label>
+                <Input
+                  placeholder="Ex: Problema no pedido"
+                  value={assunto}
+                  onChange={(e) => setAssunto(e.target.value)}
+                />
               </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+              <div className="grid gap-2">
+                <Label>Mensagem</Label>
+                <Input
+                  placeholder="Descreva o que aconteceu..."
+                  value={mensagem}
+                  onChange={(e) => setMensagem(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSend();
+                  }}
+                />
+              </div>
+              <Button onClick={handleSend} disabled={sending} className="gap-2">
+                <Send className="h-4 w-4" />
+                {sending ? "Enviando..." : "Enviar"}
+              </Button>
+            </div>
+          </Card>
 
-      <div className="sticky bottom-0 z-40 bg-white border-t p-4 mb-16">
-        <div className="container mx-auto max-w-2xl">
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Digite sua mensagem..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1"
-            />
-            <Button onClick={handleSendMessage} size="icon">
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
+          <Card className="bg-white border shadow-sm p-5">
+            <h2 className="font-semibold mb-3">Seus tickets</h2>
+            {loading ? (
+              <p className="text-sm text-muted-foreground">Carregando...</p>
+            ) : tickets.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Você ainda não abriu nenhum ticket.
+              </p>
+            ) : (
+              <ScrollArea className="h-[45vh] pr-3">
+                <div className="space-y-3">
+                  {tickets.map((t) => (
+                    <div key={t.id} className="rounded-xl border p-4">
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <p className="font-medium truncate">{t.assunto}</p>
+                        <span className="text-xs text-muted-foreground">
+                          {t.status === "open"
+                            ? "Aberto"
+                            : t.status === "pending"
+                              ? "Aguardando"
+                              : "Fechado"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {t.mensagem}
+                      </p>
+                      {t.resposta_admin && (
+                        <div className="mt-3 rounded-lg bg-primary/10 p-3">
+                          <p className="text-sm font-medium">Resposta do suporte</p>
+                          <p className="text-sm whitespace-pre-wrap">{t.resposta_admin}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+            )}
+          </Card>
         </div>
-      </div>
+      </main>
 
       <BottomNav />
     </div>
