@@ -225,7 +225,7 @@ const AvaliarPedido = () => {
         </Card>
 
         {/* Submit button */}
-        <Button onClick={handleSubmit} disabled={uploading} className="w-full h-14 rounded-2xl text-base font-semibold shadow-lg bg-white text-primary">
+        <Button onClick={handleSubmit} disabled={uploading} className="w-full h-14 rounded-2xl text-base font-semibold shadow-lg bg-white text-primary text-center">
           {uploading ? "Enviando..." : "Enviar avaliação"}
         </Button>
       </main>
