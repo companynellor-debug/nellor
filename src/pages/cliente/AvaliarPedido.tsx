@@ -157,12 +157,12 @@ const AvaliarPedido = () => {
         </div>
 
         {/* Product card no header roxo */}
-        <Card className="backdrop-blur-sm border-0 p-4 flex items-center gap-4 text-[sidebar-accent-foreground] text-primary bg-primary">
+        <Card className="backdrop-blur-sm border-0 p-4 flex items-center gap-4 text-[sidebar-accent-foreground] border-secondary bg-white text-black">
           <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shrink-0">
             {firstItem?.image ? <img src={firstItem.image} alt={firstItem.name} className="w-full h-full object-cover rounded-xl" /> : <ImageIcon className="h-8 w-8 text-muted-foreground" />}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-white truncate">
+            <p className="font-semibold truncate text-primary">
               {firstItem?.name || 'Produto'}
             </p>
             <p className="text-white/80 text-sm truncate">
