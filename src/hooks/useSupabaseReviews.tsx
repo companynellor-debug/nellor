@@ -5,17 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 export interface Review {
   id: string;
   product_id: string;
-  buyer_id: string;
-  order_id: string | null;
   rating: number;
   comment: string | null;
   photos: string[];
   created_at: string;
-  buyer?: {
-    id: string;
-    nome: string;
-    foto_perfil_url: string | null;
-  };
+  buyer_first_name: string | null;
 }
 
 export const useSupabaseReviews = (productId?: string) => {
@@ -26,12 +20,10 @@ export const useSupabaseReviews = (productId?: string) => {
   const fetchReviews = async () => {
     try {
       setLoading(true);
+      // Usar VIEW pública que não expõe buyer_id completo (LGPD)
       let query = supabase
-        .from('reviews')
-        .select(`
-          *,
-          buyer:profiles!reviews_buyer_id_fkey(id, nome, foto_perfil_url)
-        `)
+        .from('public_reviews')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (productId) {
@@ -122,7 +114,7 @@ export const useSupabaseReviews = (productId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      // Verificar se já avaliou este produto neste pedido
+      // Verificar se já avaliou este produto
       const { data, error } = await supabase
         .from('reviews')
         .select('id')

@@ -89,15 +89,14 @@ export const ReviewsList = ({ reviews, loading }: ReviewsListProps) => {
           <div key={review.id} className="border rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src={review.buyer?.foto_perfil_url || ''} alt={review.buyer?.nome} />
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {review.buyer?.nome?.charAt(0).toUpperCase() || 'U'}
+                  {review.buyer_first_name?.charAt(0).toUpperCase() || 'C'}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="font-semibold text-sm">{review.buyer?.nome || 'Usuário'}</p>
+                  <p className="font-semibold text-sm">{review.buyer_first_name || 'Comprador verificado'}</p>
                   <span className="text-xs text-muted-foreground">
                     {new Date(review.created_at).toLocaleDateString('pt-BR', {
                       day: '2-digit',
