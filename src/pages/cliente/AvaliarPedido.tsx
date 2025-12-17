@@ -41,10 +41,13 @@ const AvaliarPedido = () => {
           `).eq('id', orderId).single();
         if (error) throw error;
 
-        // Buscar informações do fornecedor separadamente
-        const {
-          data: supplierData
-        } = await supabase.from('profiles').select('nome').eq('id', data.supplier_id).single();
+        // Buscar informações do fornecedor separadamente (VIEW pública)
+        const { data: supplierData } = await supabase
+          .from('public_supplier_profiles')
+          .select('nome')
+          .eq('id', data.supplier_id)
+          .maybeSingle();
+
         setOrder({
           ...data,
           storeName: supplierData?.nome || 'Loja'

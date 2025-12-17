@@ -99,7 +99,7 @@ const MeusPedidos = () => {
             variant="outline" 
             size="sm" 
             className="flex-1 gap-1"
-            onClick={() => navigate('/cliente/chat', { state: { storeId: order.supplier_id } })}
+            onClick={() => navigate('/cliente/chat', { state: { supplierId: order.supplier_id } })}
           >
             <MessageSquare className="h-4 w-4" />
             Chat
