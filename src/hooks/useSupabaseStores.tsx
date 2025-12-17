@@ -16,19 +16,38 @@ export const useSupabaseStores = () => {
   const fetchStores = async () => {
     try {
       setLoading(true);
-      // Usar VIEW pública que não expõe dados sensíveis (LGPD)
-      const { data, error } = await supabase
-        .from('public_supplier_profiles')
-        .select('id, nome, descricao_loja, foto_perfil_url, banner_loja_url');
+      // Usar função RPC SECURITY DEFINER para garantir acesso público
+      const { data, error } = await supabase.rpc('get_public_store_profiles');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching stores via RPC, falling back to view:', error);
+        // Fallback to view
+        const { data: viewData, error: viewError } = await supabase
+          .from('public_supplier_profiles')
+          .select('id, nome, descricao_loja, foto_perfil_url, banner_loja_url');
+        
+        if (viewError) throw viewError;
+        
+        const validStores: SupabaseStore[] = (viewData || [])
+          .filter((s): s is typeof s & { id: string; nome: string } => 
+            s.id !== null && s.nome !== null
+          )
+          .map(s => ({
+            id: s.id,
+            nome: s.nome,
+            descricao_loja: s.descricao_loja,
+            foto_perfil_url: s.foto_perfil_url,
+            banner_loja_url: s.banner_loja_url
+          }));
+        
+        setStores(validStores);
+        return;
+      }
       
-      // Filtrar e mapear para garantir tipos corretos (VIEW retorna nullable)
+      // Mapear dados da função RPC
       const validStores: SupabaseStore[] = (data || [])
-        .filter((s): s is typeof s & { id: string; nome: string } => 
-          s.id !== null && s.nome !== null
-        )
-        .map(s => ({
+        .filter((s: any) => s.id !== null && s.nome !== null)
+        .map((s: any) => ({
           id: s.id,
           nome: s.nome,
           descricao_loja: s.descricao_loja,

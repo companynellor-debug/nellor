@@ -177,27 +177,18 @@ const Banners = () => {
     if (!file) return;
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      if (!authData.user) {
-        toast.error('Você precisa estar logado para enviar imagens');
-        return;
-      }
-
       const fileExt = file.name.split('.').pop();
       const fileName = `banner_${Date.now()}.${fileExt}`;
-      // Respeita políticas típicas de Storage (pasta do usuário)
-      const filePath = `${authData.user.id}/banners/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, file, { upsert: true });
+        .from('banners')
+        .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath);
+        .from('banners')
+        .getPublicUrl(fileName);
 
       setFormData({ ...formData, imageUrl: publicUrl });
       setImagePreview(publicUrl);
