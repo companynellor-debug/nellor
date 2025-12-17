@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Store, DollarSign, ShoppingCart, Percent, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Users, Store, DollarSign, ShoppingCart, Percent, Loader2, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { fetchAllRows } from "@/lib/fetchAllRows";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -17,13 +17,15 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeSuppliers: 0,
-    revenue30Days: 0,
+    gmvTotal: 0,
+    gmvPeriod: 0,
     completedOrders: 0,
-    monthlyGrowth: 0,
+    pendingOrders: 0,
     commission: 0,
   });
   const [salesData, setSalesData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [distributionData, setDistributionData] = useState<any[]>([]);
   const [topSuppliers, setTopSuppliers] = useState<any[]>([]);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
@@ -35,73 +37,63 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Calcular data de início baseado no filtro
       const getStartDate = () => {
         const now = new Date();
         now.setHours(0, 0, 0, 0);
         
-        if (dateFilter === 'today') {
-          return now;
-        } else if (dateFilter === '7days') {
-          const sevenDaysAgo = new Date(now);
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-          return sevenDaysAgo;
-        } else if (dateFilter === '14days') {
-          const fourteenDaysAgo = new Date(now);
-          fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-          return fourteenDaysAgo;
-        } else {
-          const thirtyDaysAgo = new Date(now);
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-          return thirtyDaysAgo;
-        }
+        if (dateFilter === 'today') return now;
+        else if (dateFilter === '7days') return subDays(now, 7);
+        else if (dateFilter === '14days') return subDays(now, 14);
+        else return subDays(now, 30);
       };
 
       const startDate = getStartDate();
       
-      // Use SECURITY DEFINER functions to bypass RLS
       const { data: statsData } = await supabase.rpc('get_admin_stats');
       const { data: allOrders } = await supabase.rpc('get_admin_orders');
       const { data: allProfiles } = await supabase.rpc('get_admin_profiles');
       
       const stats_result = statsData?.[0] || { total_users: 0, active_suppliers: 0, paid_orders: 0, delivered_orders: 0, total_revenue: 0 };
       
-      // Filter orders by date for revenue calculation
-      const filteredOrders = (allOrders || []).filter((o: any) => 
-        o.payment_status === 'paid' && 
-        o.order_status !== 'cancelled' &&
-        new Date(o.created_at) >= startDate
-      );
-      
-      const revenue30Days = filteredOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
-      const commission = revenue30Days * 0.075;
-
-      // Dados de vendas dos últimos 6 meses
-      const salesByMonth = [];
-      for (let i = 5; i >= 0; i--) {
-        const monthDate = subMonths(new Date(), i);
-        const monthStart = startOfMonth(monthDate);
-        const monthEnd = endOfMonth(monthDate);
-
-        const monthOrders = (allOrders || []).filter((o: any) => {
-          const orderDate = new Date(o.created_at);
-          return o.payment_status === 'paid' && 
-                 orderDate >= monthStart && 
-                 orderDate <= monthEnd;
-        });
-
-        salesByMonth.push({
-          month: format(monthDate, 'MMM', { locale: ptBR }),
-          pedidos: monthOrders.length,
-          receita: monthOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0)
-        });
-      }
-
-      // Top 5 fornecedores baseado em pedidos pagos
+      // Pedidos pagos totais (GMV)
       const paidOrders = (allOrders || []).filter((o: any) => 
         o.payment_status === 'paid' && o.order_status !== 'cancelled'
       );
       
+      // Pedidos no período
+      const filteredOrders = paidOrders.filter((o: any) => 
+        new Date(o.created_at) >= startDate
+      );
+      
+      // Pedidos pendentes
+      const pendingOrders = (allOrders || []).filter((o: any) => 
+        o.order_status === 'pending' && o.payment_status !== 'cancelled'
+      );
+
+      const gmvTotal = paidOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
+      const gmvPeriod = filteredOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
+      const commission = gmvPeriod * 0.075;
+
+      // Dados de evolução dos últimos 30 dias
+      const last30Days = [];
+      for (let i = 29; i >= 0; i--) {
+        const day = subDays(new Date(), i);
+        const dayStart = new Date(day.setHours(0,0,0,0));
+        const dayEnd = new Date(day.setHours(23,59,59,999));
+
+        const dayOrders = paidOrders.filter((o: any) => {
+          const orderDate = new Date(o.created_at);
+          return orderDate >= dayStart && orderDate <= dayEnd;
+        });
+
+        last30Days.push({
+          date: format(day, 'dd/MM'),
+          pedidos: dayOrders.length,
+          receita: dayOrders.reduce((sum: number, o: any) => sum + Number(o.total) * 0.075, 0)
+        });
+      }
+
+      // Top 5 fornecedores
       const supplierRevenue: Record<string, { name: string; vendas: number }> = {};
       paidOrders.forEach((order: any) => {
         const supplierId = order.supplier_id;
@@ -116,39 +108,35 @@ const Dashboard = () => {
         .sort((a, b) => b.vendas - a.vendas)
         .slice(0, 5);
 
-      // Distribuição por categoria
-      const { data: products } = await supabase
-        .from('products')
-        .select('categoria_id, categories(nome)');
+      // Distribuição de receita
+      const fornecedorValue = gmvPeriod - (gmvPeriod * 0.075) - (gmvPeriod * 0.034);
+      const distribution = [
+        { name: "Fornecedores", value: fornecedorValue, color: "#3B82F6" },
+        { name: "Comissão Nellor", value: gmvPeriod * 0.075, color: "#8B5CF6" },
+        { name: "Taxa Stripe (est.)", value: gmvPeriod * 0.034, color: "#F59E0B" },
+      ];
 
-      const categoryCount: Record<string, number> = {};
-      products?.forEach(p => {
-        const catName = (p.categories as any)?.nome || 'Outros';
-        categoryCount[catName] = (categoryCount[catName] || 0) + 1;
-      });
-
-      const colors = ['#8B5CF6', '#6366F1', '#A855F7', '#C084FC', '#E9D5FF', '#DDD6FE'];
-      const categoryDataFormatted = Object.entries(categoryCount).map(([name, value], index) => ({
-        name,
-        value,
-        color: colors[index % colors.length]
+      // Pedidos recentes com mais detalhes
+      const latestOrders = (allOrders || []).slice(0, 10).map((o: any) => ({
+        ...o,
+        clientName: o.buyer_name || 'Cliente',
+        supplierName: o.supplier_name || 'Fornecedor'
       }));
-
-      // Pedidos recentes
-      const latestOrders = (allOrders || []).slice(0, 5);
 
       setStats({
         totalUsers: Number(stats_result.total_users) || 0,
         activeSuppliers: Number(stats_result.active_suppliers) || 0,
-        revenue30Days,
+        gmvTotal,
+        gmvPeriod,
         completedOrders: Number(stats_result.delivered_orders) || 0,
-        monthlyGrowth: 0,
+        pendingOrders: pendingOrders.length,
         commission,
       });
 
-      setSalesData(salesByMonth);
+      setSalesData(last30Days);
+      setRevenueData(last30Days);
+      setDistributionData(distribution);
       setTopSuppliers(topSuppliersData);
-      setCategoryData(categoryDataFormatted);
       setRecentOrders(latestOrders);
 
     } catch (error) {
@@ -160,34 +148,44 @@ const Dashboard = () => {
 
   const statsCards = [
     {
-      title: "Total de Usuários",
-      value: stats.totalUsers.toLocaleString('pt-BR'),
-      icon: Users,
-      color: "from-blue-500 to-blue-600",
+      title: "💰 Receita Nellor (Comissão)",
+      value: `R$ ${stats.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      subtitle: "7,5% do GMV do período",
+      icon: Percent,
+      color: "from-violet-500 to-violet-600",
     },
     {
-      title: "Fornecedores Ativos",
-      value: stats.activeSuppliers.toLocaleString('pt-BR'),
-      icon: Store,
-      color: "from-purple-500 to-purple-600",
-    },
-    {
-      title: `Receita (${dateFilter === 'today' ? 'hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'})`,
-      value: `R$ ${stats.revenue30Days.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      icon: DollarSign,
+      title: "📊 GMV Total (Movimentado)",
+      value: `R$ ${stats.gmvTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      subtitle: "Soma de todos os pedidos",
+      icon: TrendingUp,
       color: "from-green-500 to-green-600",
     },
     {
-      title: "Pedidos Concluídos",
+      title: "✅ Pedidos Concluídos",
       value: stats.completedOrders.toLocaleString('pt-BR'),
-      icon: ShoppingCart,
+      subtitle: "Status: entregue",
+      icon: CheckCircle,
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      title: "⏳ Pedidos Pendentes",
+      value: stats.pendingOrders.toLocaleString('pt-BR'),
+      subtitle: "Aguardando processamento",
+      icon: Clock,
       color: "from-orange-500 to-orange-600",
     },
     {
-      title: "Comissão Nellor (7,5%)",
-      value: `R$ ${stats.commission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      icon: Percent,
-      color: "from-violet-500 to-violet-600",
+      title: "👥 Total de Usuários",
+      value: stats.totalUsers.toLocaleString('pt-BR'),
+      icon: Users,
+      color: "from-indigo-500 to-indigo-600",
+    },
+    {
+      title: "🏪 Fornecedores Ativos",
+      value: stats.activeSuppliers.toLocaleString('pt-BR'),
+      icon: Store,
+      color: "from-purple-500 to-purple-600",
     }
   ];
 
@@ -199,7 +197,8 @@ const Dashboard = () => {
     );
   }
 
-  return <div className="space-y-8">
+  return (
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
@@ -208,39 +207,23 @@ const Dashboard = () => {
           <p className="text-muted-foreground">Visão geral da plataforma Nellor</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant={dateFilter === 'today' ? 'default' : 'outline'}
-            onClick={() => setDateFilter('today')}
-            size="sm"
-          >
-            Hoje
-          </Button>
-          <Button
-            variant={dateFilter === '7days' ? 'default' : 'outline'}
-            onClick={() => setDateFilter('7days')}
-            size="sm"
-          >
-            7 dias
-          </Button>
-          <Button
-            variant={dateFilter === '14days' ? 'default' : 'outline'}
-            onClick={() => setDateFilter('14days')}
-            size="sm"
-          >
-            14 dias
-          </Button>
-          <Button
-            variant={dateFilter === '30days' ? 'default' : 'outline'}
-            onClick={() => setDateFilter('30days')}
-            size="sm"
-          >
-            30 dias
-          </Button>
+          {(['today', '7days', '14days', '30days'] as const).map(filter => (
+            <Button
+              key={filter}
+              variant={dateFilter === filter ? 'default' : 'outline'}
+              onClick={() => setDateFilter(filter)}
+              size="sm"
+            >
+              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : '30 dias'}
+            </Button>
+          ))}
         </div>
       </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {statsCards.map(stat => <Card key={stat.title} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+        {statsCards.map(stat => (
+          <Card key={stat.title} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
             <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -250,16 +233,20 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stat.value}</div>
+              {stat.subtitle && (
+                <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
+              )}
             </CardContent>
-          </Card>)}
+          </Card>
+        ))}
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Sales Evolution */}
+        {/* Evolução de Pedidos */}
         <Card className="border-purple-100 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">📈 Evolução de Pedidos e Receita</CardTitle>
+            <CardTitle className="text-lg">📈 Evolução de Pedidos (30 dias)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -271,29 +258,35 @@ const Dashboard = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" />
+                <XAxis dataKey="date" stroke="#6b7280" fontSize={10} />
                 <YAxis stroke="#6b7280" />
                 <Tooltip />
-                <Area type="monotone" dataKey="pedidos" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorPedidos)" />
+                <Area type="monotone" dataKey="pedidos" name="Pedidos" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorPedidos)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Category Distribution */}
+        {/* Evolução de Receita (Comissão) */}
         <Card className="border-purple-100 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">🍩 Distribuição por Categoria</CardTitle>
+            <CardTitle className="text-lg">💰 Evolução de Receita Nellor (30 dias)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
-                  {categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
+              <AreaChart data={revenueData}>
+                <defs>
+                  <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" stroke="#6b7280" fontSize={10} />
+                <YAxis stroke="#6b7280" />
+                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                <Area type="monotone" dataKey="receita" name="Receita" stroke="#10B981" fillOpacity={1} fill="url(#colorReceita)" />
+              </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -301,51 +294,104 @@ const Dashboard = () => {
         {/* Top Suppliers */}
         <Card className="border-purple-100 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">🏆 Top 5 Fornecedores</CardTitle>
+            <CardTitle className="text-lg">🏆 Top 5 Fornecedores por Volume</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topSuppliers}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip />
-                <Bar dataKey="vendas" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {topSuppliers.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={topSuppliers}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="name" stroke="#6b7280" fontSize={10} />
+                  <YAxis stroke="#6b7280" />
+                  <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+                  <Bar dataKey="vendas" name="Vendas" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">Nenhum dado disponível</p>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Orders */}
+        {/* Distribuição de Receita */}
         <Card className="border-purple-100 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">🔔 Pedidos Recentes</CardTitle>
+            <CardTitle className="text-lg">🍰 Distribuição de Receita</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentOrders.length > 0 ? (
-                recentOrders.map((order) => (
-                  <div key={order.order_number} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="w-2 h-2 rounded-full bg-purple-600 mt-2" />
-                    <div className="flex-1">
-                      <p className="text-sm">
-                        Pedido #{order.order_number} — R$ {Number(order.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Nenhum pedido recente
-                </p>
-              )}
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie 
+                  data={distributionData} 
+                  cx="50%" 
+                  cy="50%" 
+                  labelLine={false}
+                  label={({ name, value }) => value > 0 ? `${name}: R$ ${value.toFixed(0)}` : ''}
+                  outerRadius={100} 
+                  dataKey="value"
+                >
+                  {distributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
-    </div>;
+
+      {/* Pedidos Recentes */}
+      <Card className="border-purple-100">
+        <CardHeader>
+          <CardTitle className="text-lg">🔔 Pedidos Recentes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Pedido</th>
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Cliente</th>
+                  <th className="text-left py-3 px-2 font-medium text-muted-foreground">Fornecedor</th>
+                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor</th>
+                  <th className="text-center py-3 px-2 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.length > 0 ? (
+                  recentOrders.map((order) => (
+                    <tr key={order.id} className="border-b hover:bg-muted/20">
+                      <td className="py-3 px-2 font-medium">#{order.order_number}</td>
+                      <td className="py-3 px-2">{order.clientName}</td>
+                      <td className="py-3 px-2">{order.supplierName}</td>
+                      <td className="py-3 px-2 text-right">R$ {Number(order.total).toFixed(2)}</td>
+                      <td className="py-3 px-2 text-center">
+                        <Badge variant="outline" className="text-xs">
+                          {order.order_status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-2 text-right text-muted-foreground">
+                        {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      Nenhum pedido encontrado
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
+
 export default Dashboard;
