@@ -881,6 +881,70 @@ export type Database = {
     }
     Functions: {
       generate_order_number: { Args: never; Returns: string }
+      get_admin_orders: {
+        Args: never
+        Returns: {
+          buyer_id: string
+          buyer_name: string
+          created_at: string
+          desconto: number
+          endereco_entrega: Json
+          frete: number
+          id: string
+          itens: Json
+          order_number: string
+          order_status: string
+          payment_method: string
+          payment_status: string
+          proof_url: string
+          subtotal: number
+          supplier_id: string
+          supplier_name: string
+          total: number
+          tracking_code: string
+          updated_at: string
+        }[]
+      }
+      get_admin_profiles: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          onboarding_completed: boolean
+          stripe_account_id: string
+          telefone: string
+          tipo: string
+        }[]
+      }
+      get_admin_stats: {
+        Args: never
+        Returns: {
+          active_suppliers: number
+          delivered_orders: number
+          paid_orders: number
+          total_orders: number
+          total_revenue: number
+          total_users: number
+        }[]
+      }
+      get_admin_support_tickets: {
+        Args: never
+        Returns: {
+          assunto: string
+          created_at: string
+          id: string
+          mensagem: string
+          resposta_admin: string
+          status: string
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_name: string
+        }[]
+      }
       get_public_store_profile: {
         Args: { _id: string }
         Returns: {

@@ -7,7 +7,7 @@ import { DollarSign, TrendingDown, Percent, Loader2, Users, HelpCircle } from "l
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format, subMonths } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { fetchAllRows } from "@/lib/fetchAllRows";
+import { supabase } from "@/integrations/supabase/client";
 
 const Financeiro = () => {
   const [loading, setLoading] = useState(true);
@@ -30,25 +30,27 @@ const Financeiro = () => {
     try {
       setLoading(true);
 
-      // Buscar TODOS os pedidos pagos (sem limite de 1000)
-      const ordersList = await fetchAllRows<any>({
-        table: "orders",
-        select: `*, profiles!orders_supplier_id_fkey(nome)`,
-        build: (q) => q.eq("payment_status", "paid").neq("order_status", "cancelled").order("created_at", { ascending: false }),
-      });
+      // Use SECURITY DEFINER function to bypass RLS
+      const { data: allOrders } = await supabase.rpc('get_admin_orders');
+      const { data: allProfiles } = await supabase.rpc('get_admin_profiles');
+      
+      // Filter only paid orders (excluding cancelled)
+      const ordersList = (allOrders || []).filter((o: any) => 
+        o.payment_status === 'paid' && o.order_status !== 'cancelled'
+      );
 
       setTransactions(ordersList);
 
-      const receita = ordersList.reduce((sum, o) => sum + Number(o.total), 0);
+      const receita = ordersList.reduce((sum: number, o: any) => sum + Number(o.total), 0);
       setReceitaTotal(receita);
       setTotalPedidos(ordersList.length);
 
       // Comissão Nellor: 7,5% SOBRE CADA PEDIDO (soma por transação)
-      const comissao = ordersList.reduce((sum, o) => sum + Number(o.total) * 0.075, 0);
+      const comissao = ordersList.reduce((sum: number, o: any) => sum + Number(o.total) * 0.075, 0);
       setComissoes(comissao);
 
       // Pago aos fornecedores (valor bruto - comissão - taxa Stripe estimada)
-      const taxaStripeEstimada = ordersList.reduce((sum, o) => sum + Number(o.total) * 0.034, 0);
+      const taxaStripeEstimada = ordersList.reduce((sum: number, o: any) => sum + Number(o.total) * 0.034, 0);
       const pago = receita - comissao - taxaStripeEstimada;
       setPagoFornecedores(pago);
 
@@ -56,16 +58,10 @@ const Financeiro = () => {
       const ticket = ordersList.length > 0 ? receita / ordersList.length : 0;
       setTicketMedio(ticket);
 
-      // Buscar stats de planos dos fornecedores
-      // (ainda não existe campo de plano no banco, então contamos fornecedores)
-      const fornecedores = await fetchAllRows<any>({
-        table: "profiles",
-        select: "id, tipo",
-        build: (q) => q.eq("tipo", "fornecedor"),
-      });
-
+      // Stats de planos dos fornecedores
+      const fornecedores = (allProfiles || []).filter((p: any) => p.tipo === 'fornecedor');
       setPlanosStats({
-        free: fornecedores?.length || 0,
+        free: fornecedores.length,
         premium: 0,
       });
 
@@ -75,13 +71,13 @@ const Financeiro = () => {
 
       for (let i = 5; i >= 0; i--) {
         const date = subMonths(new Date(), i);
-        const monthOrders = ordersList.filter((o) => {
+        const monthOrders = ordersList.filter((o: any) => {
           const orderDate = new Date(o.created_at);
           return orderDate.getMonth() === date.getMonth() && orderDate.getFullYear() === date.getFullYear();
         });
 
-        const entrada = monthOrders.reduce((sum, o) => sum + Number(o.total), 0);
-        const saida = monthOrders.reduce((sum, o) => sum + (Number(o.total) - Number(o.total) * 0.075 - Number(o.total) * 0.034), 0);
+        const entrada = monthOrders.reduce((sum: number, o: any) => sum + Number(o.total), 0);
+        const saida = monthOrders.reduce((sum: number, o: any) => sum + (Number(o.total) - Number(o.total) * 0.075 - Number(o.total) * 0.034), 0);
 
         cashflow.push({
           month: meses[date.getMonth()],
