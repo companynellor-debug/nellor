@@ -5,13 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus } from "lucide-react";
+import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info, DollarSign } from "lucide-react";
 import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Pedidos = () => {
   const { orders, loading, updateOrderStatus, updateTrackingCode } = useSupabaseOrders();
@@ -62,6 +63,25 @@ const Pedidos = () => {
       cancelled: { label: "Cancelado", color: "bg-red-100 text-red-800" },
     };
     return statusMap[status] || { label: status, color: "bg-gray-100 text-gray-800" };
+  };
+
+  const getPaymentStatusBadge = (status: string | null) => {
+    const map: Record<string, { label: string; color: string }> = {
+      pending: { label: "Aguardando pagamento", color: "bg-yellow-100 text-yellow-800" },
+      paid: { label: "Pago", color: "bg-green-100 text-green-800" },
+      cancelled: { label: "Cancelado", color: "bg-red-100 text-red-800" },
+      refunded: { label: "Reembolsado", color: "bg-gray-100 text-gray-800" }
+    };
+    return map[status || 'pending'] || { label: status, color: "bg-gray-100 text-gray-800" };
+  };
+
+  // Cálculo de valores
+  const calculateOrderBreakdown = (order: Order) => {
+    const total = Number(order.total);
+    const comissaoNellor = total * 0.075;
+    const taxaStripe = total * 0.034;
+    const valorLiquido = total - comissaoNellor - taxaStripe;
+    return { total, comissaoNellor, taxaStripe, valorLiquido };
   };
 
   const handleStatusChange = async (orderId: string, newStatus: Order['order_status']) => {
@@ -212,8 +232,10 @@ const Pedidos = () => {
           ) : (
             filteredOrders.map((order) => {
               const badge = getStatusBadge(order.order_status);
+              const paymentBadge = getPaymentStatusBadge(order.payment_status);
               const orderTags = ((order.itens as any)?.tags || []) as string[];
               const items = Array.isArray(order.itens) ? order.itens : [];
+              const breakdown = calculateOrderBreakdown(order);
               
               return (
                 <div key={order.id} className="p-3 sm:p-4 md:p-6 hover:bg-muted/20 transition-colors">
@@ -239,9 +261,14 @@ const Pedidos = () => {
                         </div>
                       )}
                     </div>
-                    <Badge className={cn(badge.color, "text-xs sm:text-sm whitespace-nowrap")}>
-                      {badge.label}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge className={cn(badge.color, "text-xs sm:text-sm whitespace-nowrap")}>
+                        {badge.label}
+                      </Badge>
+                      <Badge className={cn(paymentBadge.color, "text-[10px] sm:text-xs whitespace-nowrap")}>
+                        {paymentBadge.label}
+                      </Badge>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-2 sm:mb-3 text-xs sm:text-sm">
@@ -250,8 +277,34 @@ const Pedidos = () => {
                       <p className="font-medium text-xs sm:text-sm truncate">{(order.endereco_entrega as any)?.name || 'Cliente'}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-[10px] sm:text-xs">Valor</p>
+                      <p className="text-muted-foreground text-[10px] sm:text-xs">Valor Total</p>
                       <p className="font-semibold text-primary text-sm sm:text-base">R$ {Number(order.total).toFixed(2)}</p>
+                    </div>
+                  </div>
+
+                  {/* Resumo financeiro do pedido */}
+                  <div className="bg-muted/30 rounded-lg p-2 mb-3 text-xs">
+                    <div className="flex items-center gap-1 mb-1">
+                      <DollarSign className="h-3 w-3 text-muted-foreground" />
+                      <span className="font-medium text-muted-foreground">Resumo financeiro:</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 text-[10px] sm:text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Total:</span>
+                        <p className="font-medium">R$ {breakdown.total.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Comissão (7,5%):</span>
+                        <p className="font-medium text-purple-600">-R$ {breakdown.comissaoNellor.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Taxa Stripe:</span>
+                        <p className="font-medium text-orange-600">-R$ {breakdown.taxaStripe.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Líquido:</span>
+                        <p className="font-medium text-green-600">R$ {breakdown.valorLiquido.toFixed(2)}</p>
+                      </div>
                     </div>
                   </div>
                   
@@ -280,6 +333,48 @@ const Pedidos = () => {
 
           {selectedOrder && (
             <div className="space-y-6">
+              {/* Transparência de pagamento */}
+              <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-900/20">
+                <div className="p-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Detalhes do Pagamento
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Valor total do pedido</p>
+                      <p className="text-xl font-bold">R$ {Number(selectedOrder.total).toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status do pagamento</p>
+                      <Badge className={cn(getPaymentStatusBadge(selectedOrder.payment_status).color)}>
+                        {getPaymentStatusBadge(selectedOrder.payment_status).label}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {(() => {
+                    const breakdown = calculateOrderBreakdown(selectedOrder);
+                    return (
+                      <div className="mt-4 pt-4 border-t space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Comissão Nellor (7,5%)</span>
+                          <span className="text-purple-600">- R$ {breakdown.comissaoNellor.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Taxa Stripe (est. ~3,4%)</span>
+                          <span className="text-orange-600">- R$ {breakdown.taxaStripe.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                          <span>Valor líquido estimado</span>
+                          <span className="text-green-600">R$ {breakdown.valorLiquido.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </Card>
+
               {/* Info Cliente */}
               <div>
                 <h3 className="font-semibold mb-3">Informações do Cliente</h3>
@@ -374,12 +469,6 @@ const Pedidos = () => {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 pt-4 border-t">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span>R$ {Number(selectedOrder.total).toFixed(2)}</span>
-                  </div>
-                </div>
               </div>
 
               {/* Atualizar Status */}
@@ -419,6 +508,12 @@ const Pedidos = () => {
                     Cancelar
                   </Button>
                 </div>
+              </div>
+
+              {/* Aviso sem saque manual */}
+              <div className="bg-muted/50 p-3 rounded-lg text-xs text-muted-foreground">
+                <Info className="h-4 w-4 inline mr-1" />
+                Os pagamentos são processados automaticamente via Stripe. Não há opção de saque manual.
               </div>
             </div>
           )}
