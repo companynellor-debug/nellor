@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Menu, Moon, Sun, Lock } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminParticles from "@/components/admin/AdminParticles";
+import AdminNotificationDropdown from "@/components/admin/AdminNotificationDropdown";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -114,6 +115,9 @@ const AdminLayout = () => {
           NELLOR
         </h1>
         <div className="flex items-center gap-2">
+          <div className="text-white">
+            <AdminNotificationDropdown />
+          </div>
           <div className="flex items-center gap-2 mr-2">
             <Sun className="h-4 w-4 text-purple-200" />
             <Switch checked={darkMode} onCheckedChange={setDarkMode} />
@@ -132,12 +136,15 @@ const AdminLayout = () => {
         </div>
       </header>
 
-      {/* Desktop Header with Theme Toggle */}
+      {/* Desktop Header with Theme Toggle and Notifications */}
       <header className="hidden lg:block fixed top-0 right-0 z-50 p-6">
-        <div className="flex items-center gap-3 bg-card/80 backdrop-blur-sm px-4 py-2 rounded-full border border-border shadow-lg">
-          <Sun className="h-4 w-4 text-muted-foreground" />
-          <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-          <Moon className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center gap-4">
+          <AdminNotificationDropdown />
+          <div className="flex items-center gap-3 bg-card/80 backdrop-blur-sm px-4 py-2 rounded-full border border-border shadow-lg">
+            <Sun className="h-4 w-4 text-muted-foreground" />
+            <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+            <Moon className="h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
       </header>
 
