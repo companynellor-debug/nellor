@@ -77,13 +77,14 @@ const NotificationCard = ({
   onMarkAsRead: (id: string) => void;
 }) => {
   const link = getReferenceLink(notification);
-  const commission = notification.value ? notification.value * 0.075 : null;
+  // Use the commission from the notification if available, otherwise calculate
+  const commission = notification.commission ?? (notification.value ? notification.value * 0.075 : null);
 
   return (
     <div 
       className={cn(
         "relative rounded-xl overflow-hidden bg-gradient-to-r from-purple-900 via-purple-700 to-purple-500 text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl cursor-pointer",
-        notification.read && "opacity-60"
+        notification.read && "opacity-70"
       )}
       onClick={() => !notification.read && onMarkAsRead(notification.id)}
     >
@@ -110,13 +111,20 @@ const NotificationCard = ({
           <h3 className="text-sm md:text-base font-bold mb-0.5 truncate">
             {notification.title}
           </h3>
-          <p className="text-xs md:text-sm opacity-90 line-clamp-2">
+          <p className="text-xs md:text-sm opacity-90 line-clamp-1">
             {notification.body}
           </p>
           
+          {/* Supplier Name */}
+          {notification.supplier_name && notification.type === 'sale' && (
+            <p className="text-[11px] text-white/70 mt-0.5">
+              Fornecedor: <span className="font-medium text-white/90">{notification.supplier_name}</span>
+            </p>
+          )}
+          
           {/* Values */}
-          <div className="flex flex-wrap items-center gap-3 mt-2">
-            {notification.value != null && (
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {notification.value != null && notification.type !== 'commission' && (
               <div className="flex items-center gap-1.5 bg-black/30 rounded-lg px-2 py-1">
                 <span className="text-[10px] text-white/70">Valor:</span>
                 <span className="text-xs md:text-sm font-bold text-white">
@@ -124,11 +132,19 @@ const NotificationCard = ({
                 </span>
               </div>
             )}
-            {commission != null && (
+            {notification.type === 'sale' && commission != null && (
               <div className="flex items-center gap-1.5 bg-black/30 rounded-lg px-2 py-1">
                 <span className="text-[10px] text-white/70">Comissão 7,5%:</span>
                 <span className="text-xs md:text-sm font-bold text-green-300">
                   R$ {commission.toFixed(2).replace('.', ',')}
+                </span>
+              </div>
+            )}
+            {notification.type === 'commission' && notification.value != null && (
+              <div className="flex items-center gap-1.5 bg-green-500/30 rounded-lg px-2.5 py-1.5">
+                <DollarSign className="h-4 w-4 text-green-300" />
+                <span className="text-sm font-bold text-green-300">
+                  + R$ {notification.value.toFixed(2).replace('.', ',')}
                 </span>
               </div>
             )}
