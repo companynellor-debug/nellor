@@ -82,10 +82,7 @@ const NotificationCard = ({
 
   return (
     <div 
-      className={cn(
-        "relative rounded-xl overflow-hidden bg-gradient-to-r from-purple-900 via-purple-700 to-purple-500 text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl cursor-pointer",
-        notification.read && "opacity-70"
-      )}
+      className="relative rounded-xl overflow-hidden bg-gradient-to-r from-purple-900 via-purple-700 to-purple-500 text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl cursor-pointer"
       onClick={() => !notification.read && onMarkAsRead(notification.id)}
     >
       <div className="flex items-start gap-3 p-4">
