@@ -112,7 +112,7 @@ const Auth = () => {
               <img src={logo} alt="Nellor" className="w-12 h-12 object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-white">
-              {isLogin ? 'welcome' : 'Sign Up'}
+              {isLogin ? 'Bem-vindo' : 'Criar conta'}
             </h1>
           </div>
         </div>
@@ -124,15 +124,15 @@ const Auth = () => {
                 {/* First Name */}
                 <div className="relative">
                   <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white">
-                    First Name
+                    Nome
                   </span>
                   <Input type="text" value={nome} onChange={e => setNome(e.target.value)} required={!isLogin} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
                 </div>
 
-                {/* Last Name */}
+                {/* Sobrenome */}
                 <div className="relative">
                   <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white">
-                    Last Name
+                    Sobrenome
                   </span>
                   <Input type="text" value={sobrenome} onChange={e => setSobrenome(e.target.value)} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
                 </div>
@@ -146,10 +146,10 @@ const Auth = () => {
               <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
             </div>
 
-            {/* Password */}
+            {/* Senha */}
             <div className="relative">
               <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white z-10">
-                ​senha
+                Senha
               </span>
               <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
             </div>
@@ -164,16 +164,16 @@ const Auth = () => {
                 </button>
               </div>}
 
-            {/* Submit Button */}
+            {/* Botão de envio */}
             <Button type="submit" disabled={submitting} className="w-full h-11 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-semibold rounded-full mt-4 shadow-md">
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'SIGN IN' : 'SIGN UP'}
+              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'ENTRAR' : 'CRIAR CONTA'}
             </Button>
           </form>
 
-          {/* Toggle */}
+          {/* Alternar login/cadastro */}
           <div className="text-center mt-5">
             <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-gray-600 hover:text-purple-600 font-medium uppercase text-sm tracking-wide">
-              {isLogin ? 'SIGN UP' : 'SIGN IN'}
+              {isLogin ? 'CRIAR CONTA' : 'ENTRAR'}
             </button>
           </div>
 
