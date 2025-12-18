@@ -189,13 +189,8 @@ const Dashboard = () => {
     }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // Mostrar skeleton loading em vez de tela de carregamento completa
+  const isInitialLoad = loading && salesData.length === 0;
 
   return (
     <div className="space-y-8">
@@ -206,17 +201,20 @@ const Dashboard = () => {
           </h1>
           <p className="text-muted-foreground">Visão geral da plataforma Nellor</p>
         </div>
-        <div className="flex gap-2">
-          {(['today', '7days', '14days', '30days'] as const).map(filter => (
-            <Button
-              key={filter}
-              variant={dateFilter === filter ? 'default' : 'outline'}
-              onClick={() => setDateFilter(filter)}
-              size="sm"
-            >
-              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : '30 dias'}
-            </Button>
-          ))}
+        <div className="flex items-center gap-3">
+          {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+          <div className="flex gap-2">
+            {(['today', '7days', '14days', '30days'] as const).map(filter => (
+              <Button
+                key={filter}
+                variant={dateFilter === filter ? 'default' : 'outline'}
+                onClick={() => setDateFilter(filter)}
+                size="sm"
+              >
+                {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : '30 dias'}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 

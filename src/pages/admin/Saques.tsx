@@ -55,13 +55,6 @@ const Saques = () => {
     .filter(r => r.status === 'approved' || r.status === 'paid')
     .reduce((sum, r) => sum + Number(r.amount), 0);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
