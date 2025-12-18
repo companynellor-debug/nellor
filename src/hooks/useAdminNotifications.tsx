@@ -10,38 +10,15 @@ export interface AdminNotification {
   title: string;
   body: string;
   value?: number;
+  commission?: number;
   reference_id?: string;
   reference_type?: 'order' | 'supplier' | 'payout';
   read: boolean;
   created_at: string;
+  supplier_name?: string;
+  buyer_name?: string;
+  order_number?: string;
 }
-
-// Transform database notifications to admin format
-const transformNotification = (notif: any): AdminNotification => {
-  const data = notif.data as Record<string, any> || {};
-  
-  // Determine type based on notification type and content
-  let adminType: AdminNotificationType = 'alert';
-  if (notif.type === 'order_update') {
-    adminType = 'sale';
-  } else if (notif.type === 'payout') {
-    adminType = 'commission';
-  } else if (notif.type === 'admin') {
-    adminType = data.admin_type || 'alert';
-  }
-
-  return {
-    id: notif.id,
-    type: adminType,
-    title: notif.title,
-    body: notif.body,
-    value: data.total || data.amount || data.commission,
-    reference_id: data.order_id || data.supplier_id || data.payout_id,
-    reference_type: data.order_id ? 'order' : data.supplier_id ? 'supplier' : data.payout_id ? 'payout' : undefined,
-    read: notif.read,
-    created_at: notif.created_at
-  };
-};
 
 export const useAdminNotifications = () => {
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
@@ -61,35 +38,105 @@ export const useAdminNotifications = () => {
     try {
       setLoading(true);
       
-      // Fetch notifications for admin users (type = 'admin' or targeted to admins)
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('type', 'admin')
-        .order('created_at', { ascending: false })
-        .limit(100);
+      // Fetch all paid orders as sale/commission notifications
+      const { data: ordersData, error: ordersError } = await supabase
+        .rpc('get_admin_orders');
 
-      if (error) {
-        // If RLS blocks, try fetching all order_update and payout notifications
-        console.log('Fetching admin notifications via alternative method');
-        const { data: allNotifs, error: altError } = await supabase
-          .from('notifications')
-          .select('*')
-          .in('type', ['order_update', 'payout', 'admin'])
-          .order('created_at', { ascending: false })
-          .limit(100);
-        
-        if (altError) throw altError;
-        
-        const transformed = (allNotifs || []).map(transformNotification);
-        setNotifications(transformed);
-        setUnreadCount(transformed.filter(n => !n.read).length);
-        return;
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError);
       }
-      
-      const transformed = (data || []).map(transformNotification);
-      setNotifications(transformed);
-      setUnreadCount(transformed.filter(n => !n.read).length);
+
+      const allNotifications: AdminNotification[] = [];
+
+      // Transform paid orders into sale and commission notifications
+      if (ordersData) {
+        ordersData.forEach((order: any) => {
+          if (order.payment_status === 'paid' && order.order_status !== 'cancelled') {
+            const commission = order.total * 0.075;
+            
+            // Sale notification
+            allNotifications.push({
+              id: `sale-${order.id}`,
+              type: 'sale',
+              title: 'Venda Aprovada',
+              body: `Pedido #${order.order_number} - ${order.buyer_name || 'Cliente'}`,
+              value: order.total,
+              commission: commission,
+              reference_id: order.id,
+              reference_type: 'order',
+              read: true, // Historical data is considered read
+              created_at: order.created_at,
+              supplier_name: order.supplier_name,
+              buyer_name: order.buyer_name,
+              order_number: order.order_number
+            });
+
+            // Commission notification
+            allNotifications.push({
+              id: `commission-${order.id}`,
+              type: 'commission',
+              title: 'Comissão Nellor',
+              body: `7,5% do pedido #${order.order_number}`,
+              value: commission,
+              reference_id: order.id,
+              reference_type: 'order',
+              read: true,
+              created_at: order.created_at,
+              supplier_name: order.supplier_name,
+              order_number: order.order_number
+            });
+          }
+
+          // Failed/cancelled payment notifications
+          if (order.payment_status === 'cancelled' || order.order_status === 'cancelled') {
+            allNotifications.push({
+              id: `cancelled-${order.id}`,
+              type: 'alert',
+              title: 'Pedido Cancelado',
+              body: `Pedido #${order.order_number} foi cancelado`,
+              value: order.total,
+              reference_id: order.id,
+              reference_type: 'order',
+              read: true,
+              created_at: order.updated_at || order.created_at,
+              supplier_name: order.supplier_name,
+              order_number: order.order_number
+            });
+          }
+        });
+      }
+
+      // Fetch supplier registrations from profiles
+      const { data: suppliersData } = await supabase
+        .rpc('get_admin_profiles');
+
+      if (suppliersData) {
+        suppliersData.forEach((profile: any) => {
+          if (profile.tipo === 'fornecedor') {
+            allNotifications.push({
+              id: `supplier-${profile.id}`,
+              type: 'supplier',
+              title: profile.stripe_account_id ? 'Stripe Conectado' : 'Novo Fornecedor',
+              body: profile.stripe_account_id 
+                ? `${profile.nome} conectou sua conta Stripe`
+                : `${profile.nome} se cadastrou na plataforma`,
+              reference_id: profile.id,
+              reference_type: 'supplier',
+              read: true,
+              created_at: profile.created_at,
+              supplier_name: profile.nome
+            });
+          }
+        });
+      }
+
+      // Sort all notifications by date (newest first)
+      allNotifications.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setNotifications(allNotifications);
+      setUnreadCount(allNotifications.filter(n => !n.read).length);
     } catch (error: any) {
       console.error('Error fetching admin notifications:', error);
     } finally {
@@ -100,25 +147,24 @@ export const useAdminNotifications = () => {
   useEffect(() => {
     fetchNotifications();
 
-    // Subscribe to realtime changes for admin notifications
+    // Subscribe to realtime changes for new orders
     const channel = supabase
       .channel('admin-notifications-changes')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
-          table: 'notifications'
+          table: 'orders'
         },
         (payload) => {
-          const newNotif = payload.new as any;
+          const order = payload.new as any;
           
-          // Only process admin-relevant notifications
-          if (['order_update', 'payout', 'admin'].includes(newNotif.type)) {
+          if (order?.payment_status === 'paid') {
             playNotificationSound();
             toast({
-              title: newNotif.title,
-              description: newNotif.body,
+              title: 'Nova Venda!',
+              description: `Pedido #${order.order_number} - R$ ${order.total?.toFixed(2)}`,
             });
             fetchNotifications();
           }
@@ -132,49 +178,20 @@ export const useAdminNotifications = () => {
   }, []);
 
   const markAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-      
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error: any) {
-      console.error('Error marking notification as read:', error);
-    }
+    // For historical data, just update local state
+    setNotifications(prev => 
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   const markAllAsRead = async () => {
-    try {
-      const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
-      
-      if (unreadIds.length === 0) return;
-
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .in('id', unreadIds);
-
-      if (error) throw error;
-      
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      setUnreadCount(0);
-      
-      toast({
-        title: 'Notificações marcadas como lidas',
-      });
-    } catch (error: any) {
-      console.error('Error marking all as read:', error);
-      toast({
-        title: 'Erro ao marcar como lidas',
-        variant: 'destructive',
-      });
-    }
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
+    
+    toast({
+      title: 'Notificações marcadas como lidas',
+    });
   };
 
   const getNotificationsByType = (type: AdminNotificationType) => {
