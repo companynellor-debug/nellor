@@ -234,16 +234,6 @@ const NotificacoesAdmin = () => {
     { value: 'payment', label: 'Pagamentos', icon: <CreditCard className="h-4 w-4" />, count: getNotificationsByType('payment').length },
   ];
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 p-4 md:p-6">
-        <h1 className="text-3xl font-bold text-white mb-6">Notificações</h1>
-        <Card className="p-8 text-center bg-zinc-900 border-zinc-800">
-          <p className="text-zinc-400">Carregando...</p>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-zinc-950 p-4 md:p-6">

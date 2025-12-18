@@ -120,13 +120,6 @@ const SuporteAdmin = () => {
   const totalCount = tickets.length;
   const closedCount = tickets.filter(t => t.status === 'closed').length;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   if (selectedTicket) {
     return (

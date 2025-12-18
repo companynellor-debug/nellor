@@ -12,14 +12,6 @@ const Notificacoes = () => {
     markAllAsRead,
     unreadCount
   } = useSupabaseNotifications();
-  if (loading) {
-    return <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Notificações</h1>
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Carregando...</p>
-        </Card>
-      </div>;
-  }
   return <div className="space-y-4 md:space-y-6 w-full overflow-hidden px-2 md:px-0">
       <div className="flex items-center justify-between gap-2 md:gap-3">
         <div className="flex items-center gap-2 md:gap-3">

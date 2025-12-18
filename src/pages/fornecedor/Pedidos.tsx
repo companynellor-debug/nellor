@@ -158,16 +158,6 @@ const Pedidos = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Pedidos</h1>
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Carregando...</p>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
