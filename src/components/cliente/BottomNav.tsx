@@ -31,10 +31,10 @@ export const BottomNav = () => {
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <div className="relative">
-                <Icon className={`h-6 w-6 ${isActive ? "scale-110" : ""}`} />
-                {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              <div className="relative inline-flex">
+                <Icon className={`h-5 w-5 ${isActive ? "scale-110" : ""}`} />
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-medium rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
                 )}
