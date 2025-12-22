@@ -168,12 +168,12 @@ const CuponsFornecedor = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="product_id">Produto Específico (opcional)</Label>
-                <Select value={formData.product_id} onValueChange={(v) => setFormData({ ...formData, product_id: v })}>
+                <Select value={formData.product_id || "all"} onValueChange={(v) => setFormData({ ...formData, product_id: v === "all" ? "" : v })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todos os produtos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os produtos</SelectItem>
+                    <SelectItem value="all">Todos os produtos</SelectItem>
                     {products.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.name}
