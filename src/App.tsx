@@ -60,6 +60,7 @@ import Estatisticas from "./pages/fornecedor/Estatisticas";
 import Recebimentos from "./pages/fornecedor/Recebimentos";
 import PlanosFornecedor from "./pages/fornecedor/Planos";
 import InstalarApp from "./pages/cliente/InstalarApp";
+import ConfiguracoesNotificacoes from "./pages/cliente/ConfiguracoesNotificacoes";
 
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
@@ -98,6 +99,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/cliente/metodos-pagamento" element={<ProtectedRoute requireType="cliente"><MetodosPagamento /></ProtectedRoute>} />
           <Route path="/cliente/suporte" element={<ProtectedRoute requireType="cliente"><Suporte /></ProtectedRoute>} />
           <Route path="/cliente/instalar" element={<ProtectedRoute requireType="cliente"><InstalarApp /></ProtectedRoute>} />
+          <Route path="/cliente/configuracoes-notificacoes" element={<ProtectedRoute requireType="cliente"><ConfiguracoesNotificacoes /></ProtectedRoute>} />
 
           {/* Fornecedor Panel Routes */}
           <Route path="/fornecedor" element={<ProtectedRoute requireType="fornecedor"><FornecedorLayout /></ProtectedRoute>}>
