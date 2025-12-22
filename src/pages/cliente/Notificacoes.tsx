@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, Bell, Tag, Truck, AlertCircle, BellRing, CheckCircle2, X } from "lucide-react";
+import { ArrowLeft, Package, Bell, Tag, Truck, AlertCircle, BellRing, CheckCircle2, X, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 import { formatDistanceToNow } from "date-fns";
@@ -49,12 +49,21 @@ const Notificacoes = () => {
             </button>
             <h1 className="text-2xl font-bold text-primary">Notificações</h1>
           </div>
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-              <CheckCircle2 className="h-4 w-4 mr-1" />
-              Marcar todas
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                Marcar todas
+              </Button>
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate("/cliente/configuracoes-notificacoes")}
+            >
+              <Settings className="h-5 w-5" />
             </Button>
-          )}
+          </div>
         </div>
       </header>
 
