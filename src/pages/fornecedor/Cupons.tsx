@@ -19,8 +19,10 @@ import {
   Copy,
   CheckCircle,
   XCircle,
-  Loader2
+  Loader2,
+  BarChart3
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSupplierCoupons } from "@/hooks/useSupplierCoupons";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { format } from "date-fns";
@@ -92,18 +94,25 @@ const CuponsFornecedor = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Cupons de Desconto</h1>
           <p className="text-muted-foreground">Gerencie seus cupons promocionais</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Cupom
+        <div className="flex items-center gap-2">
+          <Link to="/fornecedor/cupons/relatorio">
+            <Button variant="outline">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Relatório
             </Button>
-          </DialogTrigger>
+          </Link>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Cupom
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Criar Novo Cupom</DialogTitle>
@@ -220,6 +229,7 @@ const CuponsFornecedor = () => {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Stats */}
