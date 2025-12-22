@@ -2,15 +2,18 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Package, Bell, Tag, Truck, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Package, Bell, Tag, Truck, AlertCircle, BellRing, CheckCircle2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState } from "react";
 
 const Notificacoes = () => {
   const navigate = useNavigate();
-  const { notifications, markAsRead } = useSupabaseNotifications();
+  const { notifications, markAsRead, markAllAsRead, unreadCount, pushPermission, requestPushPermission } = useSupabaseNotifications();
+  const [showPermissionBanner, setShowPermissionBanner] = useState(true);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -27,20 +30,69 @@ const Notificacoes = () => {
     }
   };
 
+  const handleEnableNotifications = async () => {
+    const granted = await requestPushPermission();
+    if (granted) {
+      setShowPermissionBanner(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
 
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate("/cliente/perfil")} className="hover:bg-accent p-2 rounded-lg transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-2xl font-bold text-primary">Notificações</h1>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate("/cliente/perfil")} className="hover:bg-accent p-2 rounded-lg transition-colors">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-2xl font-bold text-primary">Notificações</h1>
+          </div>
+          {unreadCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+              <CheckCircle2 className="h-4 w-4 mr-1" />
+              Marcar todas
+            </Button>
+          )}
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
+        {/* Push Notification Permission Banner */}
+        {showPermissionBanner && pushPermission !== 'granted' && pushPermission !== 'denied' && (
+          <Card className="bg-gradient-to-r from-primary/10 to-purple-100 border-primary/20 p-4 mb-6 relative">
+            <button 
+              onClick={() => setShowPermissionBanner(false)}
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <BellRing className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-sm mb-1">Ativar notificações</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Receba alertas instantâneos sobre seus pedidos, mesmo quando não estiver no site.
+                </p>
+                <Button size="sm" onClick={handleEnableNotifications}>
+                  Ativar notificações
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Permission Granted Badge */}
+        {pushPermission === 'granted' && (
+          <div className="flex items-center gap-2 mb-4 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="text-sm">Notificações push ativadas</span>
+          </div>
+        )}
+
         <div className="space-y-3">
           {notifications.map((notification) => {
             const iconInfo = getNotificationIcon(notification.type);
@@ -49,9 +101,15 @@ const Notificacoes = () => {
               <Card
                 key={notification.id}
                 className={`bg-white border shadow-sm p-4 hover:shadow-md transition-all cursor-pointer ${
-                  !notification.read ? 'border-primary/30' : ''
+                  !notification.read ? 'border-primary/30 bg-primary/5' : ''
                 }`}
-                onClick={() => !notification.read && markAsRead(notification.id)}
+                onClick={() => {
+                  if (!notification.read) markAsRead(notification.id);
+                  // Navigate based on notification type
+                  if (notification.type === 'order_update' && notification.data?.order_id) {
+                    navigate('/cliente/meus-pedidos');
+                  }
+                }}
               >
                 <div className="flex gap-4">
                   <div className={`w-12 h-12 rounded-full ${iconInfo.bgColor} flex items-center justify-center flex-shrink-0`}>
@@ -79,7 +137,9 @@ const Notificacoes = () => {
 
         {notifications.length === 0 && (
           <Card className="bg-white border shadow-sm p-8 text-center">
-            <Bell className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <div className="w-20 h-20 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+              <Bell className="h-10 w-10 text-primary" />
+            </div>
             <h3 className="font-bold text-lg mb-2">Nenhuma notificação</h3>
             <p className="text-sm text-muted-foreground">
               Você está em dia! Não há notificações no momento.

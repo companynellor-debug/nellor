@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,17 +18,76 @@ export const useSupabaseNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission>('default');
   const { toast } = useToast();
 
-  const playNotificationSound = () => {
+  // Check and request push notification permission
+  const requestPushPermission = useCallback(async () => {
+    if (!('Notification' in window)) {
+      console.log('This browser does not support notifications');
+      return false;
+    }
+
+    if (Notification.permission === 'granted') {
+      setPushPermission('granted');
+      return true;
+    }
+
+    if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      setPushPermission(permission);
+      return permission === 'granted';
+    }
+
+    setPushPermission('denied');
+    return false;
+  }, []);
+
+  // Initialize permission state
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPushPermission(Notification.permission);
+    }
+  }, []);
+
+  const playNotificationSound = useCallback(() => {
     const audio = new Audio('/notification-sound.mp3');
     audio.volume = 0.5;
     audio.play().catch(error => {
       console.error('Error playing notification sound:', error);
     });
-  };
+  }, []);
 
-  const fetchNotifications = async () => {
+  const showBrowserNotification = useCallback((title: string, body: string, data?: any) => {
+    if (!('Notification' in window)) return;
+    
+    if (Notification.permission === 'granted') {
+      const notification = new Notification(title, {
+        body,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: data?.order_id || 'nellor-notification',
+        requireInteraction: false,
+        silent: false, // We play our own sound
+      });
+
+      // Handle notification click
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+        
+        // Navigate to relevant page based on notification type
+        if (data?.order_id) {
+          window.location.href = '/cliente/meus-pedidos';
+        }
+      };
+
+      // Auto close after 5 seconds
+      setTimeout(() => notification.close(), 5000);
+    }
+  }, []);
+
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -56,42 +115,64 @@ export const useSupabaseNotifications = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    let userId: string | null = null;
 
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('notifications-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications'
-        },
-        (payload) => {
-          const newNotif = payload.new as Notification;
-          
-          // Play sound for new notification
-          if (newNotif.sound) {
-            playNotificationSound();
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id || null;
+      
+      if (!userId) return;
+
+      // Subscribe to realtime changes for this user's notifications
+      const channel = supabase
+        .channel('notifications-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            const newNotif = payload.new as Notification;
+            
+            // Play sound for new notification
+            if (newNotif.sound) {
+              playNotificationSound();
+            }
+
+            // Show browser push notification
+            showBrowserNotification(newNotif.title, newNotif.body, newNotif.data);
+            
+            // Show in-app toast
             toast({
               title: newNotif.title,
               description: newNotif.body,
             });
+            
+            // Update notifications list
+            setNotifications(prev => [newNotif, ...prev]);
+            setUnreadCount(prev => prev + 1);
           }
-          
-          fetchNotifications();
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    fetchNotifications();
+    const cleanup = setupRealtimeSubscription();
 
     return () => {
-      supabase.removeChannel(channel);
+      cleanup.then(fn => fn?.());
     };
-  }, []);
+  }, [fetchNotifications, playNotificationSound, showBrowserNotification, toast]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -102,7 +183,10 @@ export const useSupabaseNotifications = () => {
 
       if (error) throw error;
       
-      fetchNotifications();
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error: any) {
       console.error('Error marking notification as read:', error);
     }
@@ -125,7 +209,8 @@ export const useSupabaseNotifications = () => {
         title: 'Notificações marcadas como lidas',
       });
       
-      fetchNotifications();
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
     } catch (error: any) {
       console.error('Error marking all as read:', error);
       toast({
@@ -140,6 +225,8 @@ export const useSupabaseNotifications = () => {
     notifications,
     loading,
     unreadCount,
+    pushPermission,
+    requestPushPermission,
     markAsRead,
     markAllAsRead,
     refetch: fetchNotifications
