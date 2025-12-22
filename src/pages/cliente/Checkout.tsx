@@ -1,661 +1,146 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, QrCode, Copy, MessageSquare, MapPin, CreditCard } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
+import { StepDadosComprador, BuyerData } from "@/components/checkout/StepDadosComprador";
+import { StepPagamento } from "@/components/checkout/StepPagamento";
+import { StepConcluido } from "@/components/checkout/StepConcluido";
 import { useCart } from "@/hooks/useCart";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
-import { toast } from "sonner";
-import { useSupabaseStores } from "@/hooks/useSupabaseStores";
-import { useSupabaseAddresses } from "@/hooks/useSupabaseAddresses";
-import { useSupabasePaymentMethods } from "@/hooks/useSupabasePaymentMethods";
-import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+
+type PaymentMethod = "cartao" | "pix";
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { cartItems, clearCart, getTotal, getStoreId } = useCart();
+  const { cartItems, getTotal, clearCart } = useCart();
   const { createOrder } = useSupabaseOrders();
-  const { stores } = useSupabaseStores();
-  const { addresses } = useSupabaseAddresses();
-  const { paymentMethods, getDefaultPaymentMethod } = useSupabasePaymentMethods();
-  const { sendMessage: sendSupabaseMessage } = useSupabaseMessages();
-  const { user } = useSupabaseAuth();
   
-  const [step, setStep] = useState<'address' | 'payment'>('address');
-  const [orderId, setOrderId] = useState<string>("");
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState(0);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'pix' | 'card'>('pix');
-  const [installments, setInstallments] = useState(1);
-  
-  const [formData, setFormData] = useState({
-    name: "",
-    document: "",
-    street: "",
-    number: "",
-    complement: "",
-    neighborhood: "",
-    city: "",
-    state: "",
-    zipCode: ""
-  });
+  const [currentStep, setCurrentStep] = useState(1);
+  const [buyerData, setBuyerData] = useState<BuyerData | null>(null);
+  const [orderNumber, setOrderNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cartao");
 
-  // Preencher automaticamente com endereço padrão
-  useEffect(() => {
-    const defaultAddress = addresses.find(addr => addr.is_default);
-    if (defaultAddress) {
-      setFormData({
-        name: defaultAddress.name,
-        document: defaultAddress.document,
-        street: defaultAddress.street,
-        number: defaultAddress.number,
-        complement: defaultAddress.complement || "",
-        neighborhood: defaultAddress.neighborhood,
-        city: defaultAddress.city,
-        state: defaultAddress.state,
-        zipCode: defaultAddress.zip_code
-      });
-    }
-  }, [addresses]);
+  const subtotal = getTotal();
+  const shipping = cartItems.length > 0 ? 15.0 : 0;
 
-  if (cartItems.length === 0) {
+  if (cartItems.length === 0 && currentStep !== 3) {
     return (
       <div className="min-h-screen bg-background pb-20">
         <ParticlesBackground />
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-          <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-            <button onClick={() => navigate("/cliente/carrinho")} className="hover:bg-accent p-2 rounded-lg transition-colors">
+          <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="text-2xl font-bold text-primary">Checkout</h1>
+            </Button>
+            <h1 className="text-xl font-bold text-primary">Checkout</h1>
           </div>
         </header>
-        <main className="container mx-auto px-4 py-6 relative z-10">
-          <Card className="bg-white border shadow-sm p-8 text-center">
-            <p className="text-muted-foreground">Seu carrinho está vazio</p>
-            <Button className="mt-4" onClick={() => navigate("/cliente/produtos")}>
-              Ir para Produtos
-            </Button>
-          </Card>
+        <main className="container mx-auto px-4 py-12 relative z-10 text-center">
+          <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Seu carrinho está vazio</h2>
+          <p className="text-muted-foreground mb-6">Adicione produtos ao carrinho para continuar</p>
+          <Button onClick={() => navigate("/cliente/produtos")}>Ver Produtos</Button>
         </main>
         <BottomNav />
       </div>
     );
   }
 
-  const storeId = getStoreId();
-  const store = stores.find(s => s.id === storeId);
-  const total = getTotal();
-  const shipping = 15.00;
-  const discount = (total * appliedDiscount) / 100;
-  
-  // Cálculo de juros: sem juros até 3x, 2.5% ao mês depois
-  const calculateInstallmentInterest = (parcelas: number) => {
-    if (parcelas <= 3) return 0;
-    return 2.5 * (parcelas - 3); // 2.5% ao mês após a 3ª parcela
-  };
-  
-  const interestRate = selectedPaymentMethod === 'card' ? calculateInstallmentInterest(installments) : 0;
-  const interestAmount = ((total + shipping - discount) * interestRate) / 100;
-  const finalTotal = total + shipping - discount + interestAmount;
-  const installmentValue = finalTotal / installments;
-
-  const applyCoupon = () => {
-    const coupons: { [key: string]: number } = {
-      'NELLOR10': 10,
-      'NELLOR20': 20,
-      'PRIMEIRACOMPRA': 15
-    };
-    
-    if (coupons[couponCode.toUpperCase()]) {
-      setAppliedDiscount(coupons[couponCode.toUpperCase()]);
-      toast.success(`Desconto de ${coupons[couponCode.toUpperCase()]}% aplicado`);
-    } else {
-      toast.error("Este cupom não existe ou expirou");
-    }
+  const handleBuyerDataSubmit = (data: BuyerData) => {
+    setBuyerData(data);
+    setCurrentStep(2);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmitAddress = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.document || !formData.street || 
-        !formData.number || !formData.city || !formData.state || !formData.zipCode) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    // Salvar temporariamente e ir para pagamento
-    setStep('payment');
-  };
-
-  const defaultPayment = getDefaultPaymentMethod();
-  const pixKey = defaultPayment?.type === 'pix' ? defaultPayment.pix_key : "pix@nellor.com.br";
-
-  const copyPixKey = () => {
-    navigator.clipboard.writeText(pixKey || "");
-    toast.success("Chave Pix copiada para a área de transferência");
-  };
-
-  const handleSendProof = async () => {
-    if (!storeId) {
-      toast.error("Erro: Loja não identificada");
-      return;
-    }
-
-    console.log('=== DEBUG CHECKOUT ===');
-    console.log('storeId:', storeId, 'type:', typeof storeId);
-    console.log('cartItems:', cartItems);
-    console.log('First product ID:', cartItems[0]?.productId, 'type:', typeof cartItems[0]?.productId);
-
-    // Validar se os IDs são UUIDs válidos
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    
-    if (!uuidRegex.test(storeId)) {
-      console.error('Invalid storeId format:', storeId);
-      toast.error("Erro: Dados do carrinho inválidos. Por favor, adicione os produtos novamente.");
-      clearCart();
-      navigate('/cliente/produtos');
-      return;
-    }
-
-    // Verificar se todos os produtos têm UUIDs válidos
-    const invalidProducts = cartItems.filter(item => !uuidRegex.test(item.productId));
-    if (invalidProducts.length > 0) {
-      console.error('Invalid product IDs:', invalidProducts);
-      toast.error("Erro: Dados do carrinho inválidos. Por favor, adicione os produtos novamente.");
-      clearCart();
-      navigate('/cliente/produtos');
-      return;
-    }
+  const handlePaymentFinish = async (method: PaymentMethod) => {
+    if (!buyerData || !buyerData.endereco) return;
+    setPaymentMethod(method);
 
     try {
-      const orderData = {
-        supplier_id: storeId,
-        itens: cartItems.map(item => ({
-          product_id: item.productId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image
-        })),
-        subtotal: total,
-        frete: shipping,
-        desconto: discount,
-        total: finalTotal,
-        endereco_entrega: formData,
-        payment_method: selectedPaymentMethod === 'pix' ? 'pix' as const : 'cartao' as const,
-        payment_status: 'paid' as const, // Aprovado automaticamente
-        order_status: 'preparing' as const, // Status inicial como preparando
-        tracking_code: null,
-        proof_url: null,
-        shipping_company: null,
-        estimated_delivery: null
-      };
+      const itemsBySupplier = cartItems.reduce((acc, item) => {
+        const supplierId = item.storeId?.toString() || "";
+        if (!acc[supplierId]) acc[supplierId] = [];
+        acc[supplierId].push(item);
+        return acc;
+      }, {} as Record<string, typeof cartItems>);
 
-      console.log('Creating order with data:', orderData);
-      const order = await createOrder(orderData);
-      
-      if (order && user && storeId) {
-        // Enviar mensagem automática para o fornecedor
-        try {
-          const itemsList = cartItems.map(item => `- ${item.name} (${item.quantity}x)`).join('\n');
-          await sendSupabaseMessage(
-            storeId,
-            `🛍️ Novo pedido realizado!\n\n` +
-            `Número do pedido: #${order.order_number}\n` +
-            `Produtos:\n${itemsList}\n\n` +
-            `Total: R$ ${finalTotal.toFixed(2).replace('.', ',')}\n` +
-            `Forma de pagamento: ${selectedPaymentMethod === 'pix' ? 'PIX' : 'Cartão de Crédito'}\n\n` +
-            `Obrigado!`
-          );
-        } catch (msgError) {
-          console.error('Erro ao enviar mensagem:', msgError);
-        }
-        
-        clearCart();
-        toast.success("Pedido criado com sucesso!");
-        navigate('/cliente/pedido-confirmado', { 
-          state: { 
-            orderId: order.id,
-            orderNumber: order.order_number 
-          } 
+      const orderPromises = Object.entries(itemsBySupplier).map(async ([supplierId, items]) => {
+        const itemsSubtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const itemsShipping = shipping / Object.keys(itemsBySupplier).length;
+
+        return createOrder({
+          supplier_id: supplierId,
+          payment_method: method as "pix" | "boleto" | "cartao",
+          subtotal: itemsSubtotal,
+          frete: itemsShipping,
+          desconto: 0,
+          total: itemsSubtotal + itemsShipping,
+          itens: items.map((item) => ({
+            product_id: item.id.toString(),
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+          endereco_entrega: {
+            name: buyerData.nome,
+            document: buyerData.documento,
+            street: buyerData.endereco.street,
+            number: buyerData.endereco.number,
+            complement: buyerData.endereco.complement || "",
+            neighborhood: buyerData.endereco.neighborhood,
+            city: buyerData.endereco.city,
+            state: buyerData.endereco.state,
+            zip_code: buyerData.endereco.zip_code,
+          },
+          payment_status: "paid" as const,
+          order_status: "pending" as const,
+          tracking_code: null,
+          proof_url: null,
+          shipping_company: null,
+          estimated_delivery: null,
         });
-      }
+      });
+
+      const orders = await Promise.all(orderPromises);
+      const firstOrder = orders[0];
+      setOrderNumber(firstOrder?.order_number || `#${Date.now().toString().slice(-8)}`);
+      clearCart();
+      setCurrentStep(3);
+      toast({ title: "Pedido realizado com sucesso!", description: "Você receberá uma confirmação por e-mail." });
     } catch (error) {
-      console.error('Error creating order:', error);
-      toast.error("Erro ao criar pedido. Tente novamente.");
+      console.error("Error creating order:", error);
+      toast({ title: "Erro ao processar pedido", description: "Por favor, tente novamente.", variant: "destructive" });
     }
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
-
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <button 
-            onClick={() => step === 'payment' ? setStep('address') : navigate("/cliente/carrinho")} 
-            className="hover:bg-accent p-2 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-2xl font-bold text-primary">
-            {step === 'address' ? 'Dados de Entrega' : 'Pagamento'}
-          </h1>
+        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+          {currentStep < 3 && (
+            <Button variant="ghost" size="icon" onClick={() => currentStep === 1 ? navigate("/cliente/carrinho") : setCurrentStep(1)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
+          <h1 className="text-xl font-bold text-primary">Checkout</h1>
         </div>
       </header>
-
-      <main className="container mx-auto px-4 py-6 relative z-10 max-w-2xl">
-        {step === 'address' ? (
-          <form onSubmit={handleSubmitAddress} className="space-y-4">
-            {addresses.find(addr => addr.is_default) && (
-              <Card className="bg-green-50 border-green-200 p-4">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-medium text-green-900 mb-1">Endereço padrão carregado</p>
-                    <p className="text-sm text-green-700">
-                      Os dados do seu endereço padrão foram preenchidos automaticamente. 
-                      Você pode editá-los antes de continuar.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            <Card className="bg-white border shadow-sm p-4">
-              <h3 className="font-bold text-lg mb-4">Informações Pessoais</h3>
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="name">Nome Completo *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Seu nome completo"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="document">CPF/CNPJ *</Label>
-                  <Input
-                    id="document"
-                    name="document"
-                    value={formData.document}
-                    onChange={handleInputChange}
-                    placeholder="000.000.000-00"
-                  />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="bg-white border shadow-sm p-4">
-              <h3 className="font-bold text-lg mb-4">Endereço de Entrega</h3>
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="zipCode">CEP *</Label>
-                  <Input
-                    id="zipCode"
-                    name="zipCode"
-                    value={formData.zipCode}
-                    onChange={handleInputChange}
-                    placeholder="00000-000"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-2">
-                    <Label htmlFor="street">Rua *</Label>
-                    <Input
-                      id="street"
-                      name="street"
-                      value={formData.street}
-                      onChange={handleInputChange}
-                      placeholder="Nome da rua"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="number">Número *</Label>
-                    <Input
-                      id="number"
-                      name="number"
-                      value={formData.number}
-                      onChange={handleInputChange}
-                      placeholder="123"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="complement">Complemento</Label>
-                  <Input
-                    id="complement"
-                    name="complement"
-                    value={formData.complement}
-                    onChange={handleInputChange}
-                    placeholder="Apto, bloco, etc"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="neighborhood">Bairro *</Label>
-                  <Input
-                    id="neighborhood"
-                    name="neighborhood"
-                    value={formData.neighborhood}
-                    onChange={handleInputChange}
-                    placeholder="Nome do bairro"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-2">
-                    <Label htmlFor="city">Cidade *</Label>
-                    <Input
-                      id="city"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      placeholder="Sua cidade"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">UF *</Label>
-                    <Input
-                      id="state"
-                      name="state"
-                      value={formData.state}
-                      onChange={handleInputChange}
-                      placeholder="SP"
-                      maxLength={2}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="bg-white border shadow-sm p-4">
-              <h3 className="font-bold text-lg mb-3">Cupom de Desconto</h3>
-              <div className="flex gap-2 mb-2">
-                <Input
-                  placeholder="Digite o código do cupom"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                />
-                <Button onClick={applyCoupon} variant="outline">
-                  Aplicar
-                </Button>
-              </div>
-              {appliedDiscount > 0 && (
-                <p className="text-sm text-green-600">✓ Desconto de {appliedDiscount}% aplicado!</p>
-              )}
-            </Card>
-
-            <Card className="bg-white border shadow-sm p-4">
-              <h3 className="font-bold text-lg mb-3">Resumo do Pedido</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>R$ {total.toFixed(2).replace('.', ',')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Frete</span>
-                  <span>R$ {shipping.toFixed(2).replace('.', ',')}</span>
-                </div>
-                {appliedDiscount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Desconto ({appliedDiscount}%)</span>
-                    <span>- R$ {discount.toFixed(2).replace('.', ',')}</span>
-                  </div>
-                )}
-                {selectedPaymentMethod === 'card' && interestRate > 0 && (
-                  <div className="flex justify-between text-orange-600">
-                    <span>Juros ({interestRate.toFixed(1)}%)</span>
-                    <span>+ R$ {interestAmount.toFixed(2).replace('.', ',')}</span>
-                  </div>
-                )}
-                <div className="border-t pt-2 flex justify-between font-bold text-base">
-                  <span>Total</span>
-                  <span className="text-primary">R$ {finalTotal.toFixed(2).replace('.', ',')}</span>
-                </div>
-                {selectedPaymentMethod === 'card' && installments > 1 && (
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>{installments}x de</span>
-                    <span>R$ {installmentValue.toFixed(2).replace('.', ',')}</span>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 py-6 text-lg">
-              Continuar para Pagamento
-            </Button>
-          </form>
-        ) : (
-          <div className="space-y-4">
-            <Card className="bg-white border shadow-sm p-6">
-              <div className="text-center mb-6">
-                <h3 className="font-bold text-xl mb-2">Escolha a Forma de Pagamento</h3>
-                <p className="text-2xl font-bold text-primary mt-2">
-                  R$ {finalTotal.toFixed(2).replace('.', ',')}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <button
-                  onClick={() => setSelectedPaymentMethod('pix')}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    selectedPaymentMethod === 'pix'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <QrCode className={`h-8 w-8 mx-auto mb-2 ${
-                    selectedPaymentMethod === 'pix' ? 'text-primary' : 'text-muted-foreground'
-                  }`} />
-                  <p className={`font-medium ${
-                    selectedPaymentMethod === 'pix' ? 'text-primary' : 'text-foreground'
-                  }`}>
-                    Pix
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Aprovação imediata</p>
-                </button>
-
-                <button
-                  onClick={() => setSelectedPaymentMethod('card')}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    selectedPaymentMethod === 'card'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <CreditCard className={`h-8 w-8 mx-auto mb-2 ${
-                    selectedPaymentMethod === 'card' ? 'text-primary' : 'text-muted-foreground'
-                  }`} />
-                  <p className={`font-medium ${
-                    selectedPaymentMethod === 'card' ? 'text-primary' : 'text-foreground'
-                  }`}>
-                    Cartão
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Crédito ou débito</p>
-                </button>
-              </div>
-
-              {selectedPaymentMethod === 'pix' ? (
-                <>
-                  {defaultPayment?.type === 'pix' && (
-                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center gap-2 text-green-800">
-                        <CreditCard className="h-4 w-4" />
-                        <p className="text-sm font-medium">Usando sua chave Pix padrão</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="bg-accent p-4 rounded-lg mb-4 flex items-center justify-center">
-                    <QrCode className="h-48 w-48 text-muted-foreground" />
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="bg-muted p-3 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Chave Pix</p>
-                      <div className="flex items-center justify-between">
-                        <p className="font-mono text-sm">{pixKey}</p>
-                        <Button size="sm" variant="ghost" onClick={copyPixKey}>
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                      <p className="text-sm text-blue-900">
-                        <strong>Instruções:</strong>
-                      </p>
-                      <ol className="text-sm text-blue-800 mt-2 space-y-1 list-decimal list-inside">
-                        <li>Abra o app do seu banco</li>
-                        <li>Escolha pagar via Pix QR Code ou Chave</li>
-                        <li>Escaneie o código ou copie a chave</li>
-                        <li>Confirme o pagamento</li>
-                        <li>Finalize o pedido</li>
-                      </ol>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {defaultPayment?.type === 'card' && (
-                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center gap-2 text-green-800">
-                        <CreditCard className="h-4 w-4" />
-                        <p className="text-sm font-medium">
-                          Usando seu cartão padrão •••• {defaultPayment.card_number_last4}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="cardNumber">Número do Cartão</Label>
-                      <Input
-                        id="cardNumber"
-                        placeholder="0000 0000 0000 0000"
-                        defaultValue={defaultPayment?.type === 'card' ? `**** **** **** ${defaultPayment.card_number_last4}` : ''}
-                        maxLength={19}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cardHolder">Nome no Cartão</Label>
-                      <Input
-                        id="cardHolder"
-                        placeholder="Nome como está no cartão"
-                        defaultValue={defaultPayment?.type === 'card' ? defaultPayment.card_holder : ''}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="cardExpiry">Validade</Label>
-                        <Input
-                          id="cardExpiry"
-                          placeholder="MM/AA"
-                          defaultValue={defaultPayment?.type === 'card' ? defaultPayment.card_expiry : ''}
-                          maxLength={5}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="cardCvv">CVV</Label>
-                        <Input
-                          id="cardCvv"
-                          placeholder="123"
-                          maxLength={4}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="installments">Parcelamento</Label>
-                      <Select
-                        value={installments.toString()}
-                        onValueChange={(value) => setInstallments(Number(value))}
-                      >
-                        <SelectTrigger id="installments">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => {
-                            const interest = calculateInstallmentInterest(num);
-                            const totalWithInterest = (total + shipping - discount) * (1 + interest / 100);
-                            const installmentVal = totalWithInterest / num;
-                            
-                            return (
-                              <SelectItem key={num} value={num.toString()}>
-                                {num}x de R$ {installmentVal.toFixed(2).replace('.', ',')}
-                                {num <= 3 ? ' sem juros' : ` (${interest.toFixed(1)}% juros)`}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      {installments > 3 && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Total com juros: R$ {finalTotal.toFixed(2).replace('.', ',')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mt-4">
-                    <p className="text-sm text-blue-900">
-                      <strong>Pagamento Seguro:</strong>
-                    </p>
-                    <p className="text-sm text-blue-800 mt-1">
-                      Seus dados são protegidos com criptografia de ponta a ponta.
-                    </p>
-                  </div>
-                </>
-              )}
-            </Card>
-
-            <Button 
-              className="w-full bg-primary hover:bg-primary/90 py-6 text-lg"
-              onClick={handleSendProof}
-            >
-              Finalizar Pedido
-            </Button>
-
-            <Button 
-              variant="outline"
-              className="w-full py-6 text-lg gap-2"
-              onClick={() => {
-                navigate('/cliente/chat', { 
-                  state: { 
-                    storeId,
-                    message: `Olá! Tenho uma dúvida sobre este pedido.`
-                  } 
-                });
-              }}
-            >
-              <MessageSquare className="h-5 w-5" />
-              Falar com o Fornecedor
-            </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              {selectedPaymentMethod === 'pix' 
-                ? 'Após o envio do comprovante, o fornecedor confirmará seu pagamento'
-                : 'Seu pagamento será processado de forma segura'
-              }
-            </p>
-          </div>
-        )}
+      <main className="container mx-auto px-4 py-6 relative z-10">
+        <CheckoutSteps currentStep={currentStep} />
+        <div className="mt-6">
+          {currentStep === 1 && <StepDadosComprador onNext={handleBuyerDataSubmit} initialData={buyerData || undefined} />}
+          {currentStep === 2 && buyerData && (
+            <StepPagamento cartItems={cartItems} subtotal={subtotal} shipping={shipping} buyerData={buyerData} onBack={() => setCurrentStep(1)} onFinish={handlePaymentFinish} />
+          )}
+          {currentStep === 3 && <StepConcluido orderNumber={orderNumber} paymentMethod={paymentMethod} />}
+        </div>
       </main>
-
-      <BottomNav />
+      {currentStep < 3 && <BottomNav />}
     </div>
   );
 };
