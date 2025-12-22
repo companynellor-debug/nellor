@@ -61,6 +61,7 @@ import Recebimentos from "./pages/fornecedor/Recebimentos";
 import PlanosFornecedor from "./pages/fornecedor/Planos";
 import InstalarApp from "./pages/cliente/InstalarApp";
 import ConfiguracoesNotificacoes from "./pages/cliente/ConfiguracoesNotificacoes";
+import CuponsFornecedor from "./pages/fornecedor/Cupons";
 
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
@@ -113,6 +114,7 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="editar-loja" element={<EditarLoja />} />
             <Route path="estatisticas" element={<Estatisticas />} />
             <Route path="recebimentos" element={<Recebimentos />} />
+            <Route path="cupons" element={<CuponsFornecedor />} />
             <Route path="planos" element={<PlanosFornecedor />} />
           </Route>
           

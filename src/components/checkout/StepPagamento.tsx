@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, QrCode, ArrowLeft, Lock, ShieldCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard, QrCode, ArrowLeft, Lock, ShieldCheck, Tag, X, Loader2 } from "lucide-react";
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
+import { useCoupons, AppliedCoupon } from "@/hooks/useCoupons";
 
 type PaymentMethod = "cartao" | "pix";
 
@@ -18,7 +20,7 @@ interface StepPagamentoProps {
   shipping: number;
   buyerData: BuyerData;
   onBack: () => void;
-  onFinish: (paymentMethod: PaymentMethod) => void;
+  onFinish: (paymentMethod: PaymentMethod, discount: number, couponId?: string) => void;
 }
 
 export const StepPagamento = ({
@@ -38,8 +40,12 @@ export const StepPagamento = ({
     cvv: "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  
+  const { loading: couponLoading, appliedCoupon, validateCoupon, removeCoupon } = useCoupons();
 
-  const total = subtotal + shipping;
+  const discount = appliedCoupon?.discount || 0;
+  const total = subtotal + shipping - discount;
 
   // Group items by supplier
   const itemsBySupplier = cartItems.reduce((acc, item) => {
@@ -48,11 +54,29 @@ export const StepPagamento = ({
       acc[supplierId] = {
         storeName: item.storeName || "Loja",
         items: [],
+        subtotal: 0,
       };
     }
     acc[supplierId].items.push(item);
+    acc[supplierId].subtotal += item.price * item.quantity;
     return acc;
-  }, {} as Record<string, { storeName: string; items: CartItem[] }>);
+  }, {} as Record<string, { storeName: string; items: CartItem[]; subtotal: number }>);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    // Get first supplier ID from cart
+    const supplierIds = Object.keys(itemsBySupplier);
+    if (supplierIds.length === 0) return;
+    
+    // For now, apply to first supplier - could be improved to select supplier
+    const supplierId = supplierIds[0];
+    const supplierSubtotal = itemsBySupplier[supplierId].subtotal;
+    const productIds = itemsBySupplier[supplierId].items.map(item => item.productId).filter(Boolean) as string[];
+    
+    await validateCoupon(couponCode, supplierId, supplierSubtotal, productIds);
+    setCouponCode("");
+  };
 
   const formatCardNumber = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -90,7 +114,7 @@ export const StepPagamento = ({
     // Simulate processing delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
-    onFinish(paymentMethod);
+    onFinish(paymentMethod, discount, appliedCoupon?.coupon.id);
   };
 
   const isCardValid =
@@ -106,6 +130,58 @@ export const StepPagamento = ({
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Payment Column */}
       <div className="lg:col-span-3 space-y-6">
+        {/* Coupon Section */}
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Tag className="h-5 w-5 text-primary" />
+              Cupom de Desconto
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Tag className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium text-green-800">{appliedCoupon.coupon.codigo}</p>
+                    <p className="text-sm text-green-600">
+                      {appliedCoupon.coupon.tipo === 'percentage' 
+                        ? `${appliedCoupon.coupon.valor}% de desconto`
+                        : `R$ ${appliedCoupon.coupon.valor.toFixed(2).replace('.', ',')} de desconto`
+                      }
+                    </p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={removeCoupon}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="Digite o código do cupom"
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                />
+                <Button 
+                  onClick={handleApplyCoupon} 
+                  disabled={couponLoading || !couponCode.trim()}
+                  variant="outline"
+                >
+                  {couponLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Aplicar"
+                  )}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Payment Methods */}
         <Card className="border shadow-sm">
           <CardHeader className="pb-4">
@@ -334,6 +410,15 @@ export const StepPagamento = ({
                 <span className="text-muted-foreground">Frete</span>
                 <span>R$ {shipping.toFixed(2).replace(".", ",")}</span>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span className="flex items-center gap-1">
+                    <Tag className="h-3 w-3" />
+                    Desconto
+                  </span>
+                  <span>- R$ {discount.toFixed(2).replace(".", ",")}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
