@@ -3,7 +3,8 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Heart, Bell, ShoppingCart, ChevronRight, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -13,6 +14,7 @@ import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { useCart } from "@/hooks/useCart";
+import { usePWA } from "@/hooks/usePWA";
 
 const ClienteHome = () => {
   const navigate = useNavigate();
@@ -21,7 +23,9 @@ const ClienteHome = () => {
   const { banners } = useSupabaseBanners();
   const { categories } = useSupabaseCategories();
   const { cartItems } = useCart();
+  const { canInstall, isInstalled, isIOS, installApp } = usePWA();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
 
   const mainBanners = banners.slice(0, 3);
   const sideBanners = banners.slice(3, 5);
@@ -311,6 +315,48 @@ const ClienteHome = () => {
           </div>
         </section>
       </main>
+
+      {/* Floating Install Banner */}
+      {showInstallBanner && canInstall && !isInstalled && (
+        <div className="fixed bottom-20 left-4 right-4 z-50 lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm animate-in slide-in-from-bottom-4 duration-500">
+          <Card className="bg-gradient-to-r from-primary to-purple-600 text-white p-4 shadow-2xl border-0">
+            <button 
+              onClick={() => setShowInstallBanner(false)}
+              className="absolute top-2 right-2 p-1 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+                <Smartphone className="h-7 w-7" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-sm mb-0.5">Instale o Nellor!</h4>
+                <p className="text-xs text-white/80 mb-2">
+                  {isIOS 
+                    ? "Adicione à tela inicial para acesso rápido" 
+                    : "Acesso rápido e notificações em tempo real"
+                  }
+                </p>
+                <Button 
+                  size="sm" 
+                  className="bg-white text-primary hover:bg-white/90 h-8 text-xs font-semibold"
+                  onClick={() => {
+                    if (isIOS) {
+                      navigate("/cliente/instalar");
+                    } else {
+                      installApp();
+                    }
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5 mr-1.5" />
+                  {isIOS ? "Ver instruções" : "Instalar agora"}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
 
       <BottomNav />
     </div>
