@@ -180,9 +180,13 @@ export type Database = {
           created_at: string | null
           expira_em: string | null
           id: string
+          product_id: string | null
           supplier_id: string
           tipo: Database["public"]["Enums"]["coupon_type"]
+          uso_atual: number | null
+          uso_maximo: number | null
           valor: number
+          valor_minimo: number | null
         }
         Insert: {
           ativo?: boolean | null
@@ -190,9 +194,13 @@ export type Database = {
           created_at?: string | null
           expira_em?: string | null
           id?: string
+          product_id?: string | null
           supplier_id: string
           tipo: Database["public"]["Enums"]["coupon_type"]
+          uso_atual?: number | null
+          uso_maximo?: number | null
           valor: number
+          valor_minimo?: number | null
         }
         Update: {
           ativo?: boolean | null
@@ -200,11 +208,22 @@ export type Database = {
           created_at?: string | null
           expira_em?: string | null
           id?: string
+          product_id?: string | null
           supplier_id?: string
           tipo?: Database["public"]["Enums"]["coupon_type"]
+          uso_atual?: number | null
+          uso_maximo?: number | null
           valor?: number
+          valor_minimo?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "coupons_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "coupons_supplier_id_fkey"
             columns: ["supplier_id"]

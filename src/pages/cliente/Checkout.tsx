@@ -8,6 +8,7 @@ import { StepPagamento } from "@/components/checkout/StepPagamento";
 import { StepConcluido } from "@/components/checkout/StepConcluido";
 import { useCart } from "@/hooks/useCart";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
+import { useCoupons } from "@/hooks/useCoupons";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -18,6 +19,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, getTotal, clearCart } = useCart();
   const { createOrder } = useSupabaseOrders();
+  const { incrementCouponUsage } = useCoupons();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [buyerData, setBuyerData] = useState<BuyerData | null>(null);
@@ -55,7 +57,7 @@ const Checkout = () => {
     setCurrentStep(2);
   };
 
-  const handlePaymentFinish = async (method: PaymentMethod) => {
+  const handlePaymentFinish = async (method: PaymentMethod, discount: number = 0, couponId?: string) => {
     if (!buyerData || !buyerData.endereco) return;
     setPaymentMethod(method);
 
@@ -70,14 +72,16 @@ const Checkout = () => {
       const orderPromises = Object.entries(itemsBySupplier).map(async ([supplierId, items]) => {
         const itemsSubtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         const itemsShipping = shipping / Object.keys(itemsBySupplier).length;
+        // Distribute discount proportionally among suppliers
+        const supplierDiscount = (itemsSubtotal / subtotal) * discount;
 
         return createOrder({
           supplier_id: supplierId,
           payment_method: method as "pix" | "boleto" | "cartao",
           subtotal: itemsSubtotal,
           frete: itemsShipping,
-          desconto: 0,
-          total: itemsSubtotal + itemsShipping,
+          desconto: supplierDiscount,
+          total: itemsSubtotal + itemsShipping - supplierDiscount,
           itens: items.map((item) => ({
             product_id: item.id.toString(),
             name: item.name,
@@ -108,6 +112,12 @@ const Checkout = () => {
       const orders = await Promise.all(orderPromises);
       const firstOrder = orders[0];
       setOrderNumber(firstOrder?.order_number || `#${Date.now().toString().slice(-8)}`);
+      
+      // Increment coupon usage if one was applied
+      if (couponId) {
+        await incrementCouponUsage(couponId);
+      }
+      
       clearCart();
       setCurrentStep(3);
       toast({ title: "Pedido realizado com sucesso!", description: "Você receberá uma confirmação por e-mail." });
