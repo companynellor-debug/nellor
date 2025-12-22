@@ -59,6 +59,8 @@ import Onboarding from "./pages/fornecedor/Onboarding";
 import Estatisticas from "./pages/fornecedor/Estatisticas";
 import Recebimentos from "./pages/fornecedor/Recebimentos";
 import PlanosFornecedor from "./pages/fornecedor/Planos";
+import InstalarApp from "./pages/cliente/InstalarApp";
+
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -95,6 +97,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/cliente/favoritos" element={<ProtectedRoute requireType="cliente"><Favoritos /></ProtectedRoute>} />
           <Route path="/cliente/metodos-pagamento" element={<ProtectedRoute requireType="cliente"><MetodosPagamento /></ProtectedRoute>} />
           <Route path="/cliente/suporte" element={<ProtectedRoute requireType="cliente"><Suporte /></ProtectedRoute>} />
+          <Route path="/cliente/instalar" element={<ProtectedRoute requireType="cliente"><InstalarApp /></ProtectedRoute>} />
 
           {/* Fornecedor Panel Routes */}
           <Route path="/fornecedor" element={<ProtectedRoute requireType="fornecedor"><FornecedorLayout /></ProtectedRoute>}>

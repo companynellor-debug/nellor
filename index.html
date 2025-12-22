@@ -1,30 +1,72 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>nellor - Marketplace que conecta lojistas e fornecedores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Nellor - Marketplace que conecta lojistas e fornecedores</title>
     <meta name="description" content="O marketplace que conecta lojistas e fornecedores em segundos. Compre, revenda e cresça - tudo em um só app.">
-    <meta name="author" content="nellor" />
+    <meta name="author" content="Nellor" />
     
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#7C3AED" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Nellor" />
+    <meta name="application-name" content="Nellor" />
+    <meta name="msapplication-TileColor" content="#7C3AED" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon.png" />
+    
+    <!-- Splash Screens for iOS -->
+    <link rel="apple-touch-startup-image" href="/apple-splash.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 
-    
-    
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:title" content="Nellor - Marketplace que conecta lojistas e fornecedores">
+    <meta property="og:description" content="O marketplace que conecta lojistas e fornecedores em segundos. Compre, revenda e cresça - tudo em um só app.">
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://nellor.app" />
+    <meta property="og:site_name" content="Nellor" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@nellor" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <meta property="og:title" content="nellor - Marketplace que conecta lojistas e fornecedores">
-  <meta name="twitter:title" content="nellor - Marketplace que conecta lojistas e fornecedores">
-  <meta property="og:description" content="O marketplace que conecta lojistas e fornecedores em segundos. Compre, revenda e cresça - tudo em um só app.">
-  <meta name="twitter:description" content="O marketplace que conecta lojistas e fornecedores em segundos. Compre, revenda e cresça - tudo em um só app.">
-  <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/9ijk6EAXzdXPxqd3cSNxlwSnJLA2/uploads/1762193557798-1000236566.jpg">
-</head>
+    <meta name="twitter:title" content="Nellor - Marketplace que conecta lojistas e fornecedores">
+    <meta name="twitter:description" content="O marketplace que conecta lojistas e fornecedores em segundos. Compre, revenda e cresça - tudo em um só app.">
+    <meta name="twitter:image" content="/og-image.png" />
+    
+    <style>
+      /* Prevent pull-to-refresh on mobile */
+      html, body {
+        overscroll-behavior-y: contain;
+      }
+      
+      /* Safe area insets for notched devices */
+      body {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+    </style>
+  </head>
 
   <body>
     <div id="root"></div>

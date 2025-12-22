@@ -2,18 +2,20 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, MessageCircle } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, MessageCircle, Download, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProfile } from "@/hooks/useProfile";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
+import { usePWA } from "@/hooks/usePWA";
 
 const Perfil = () => {
   const navigate = useNavigate();
   const { favorites } = useFavorites();
   const { profile, signOut } = useSupabaseAuth();
   const { orders } = useSupabaseOrders();
+  const { canInstall, isInstalled } = usePWA();
 
   const handleLogout = async () => {
     await signOut();
@@ -25,6 +27,7 @@ const Perfil = () => {
     { icon: MapPin, label: "Endereços", action: () => navigate("/cliente/enderecos") },
     { icon: CreditCard, label: "Métodos de Pagamento", action: () => navigate("/cliente/metodos-pagamento") },
     { icon: Bell, label: "Notificações", action: () => navigate("/cliente/notificacoes") },
+    ...(canInstall && !isInstalled ? [{ icon: Smartphone, label: "Instalar App", action: () => navigate("/cliente/instalar"), highlight: true }] : []),
     { icon: MessageCircle, label: "Suporte", action: () => navigate("/cliente/suporte") },
     { icon: LogOut, label: "Sair", action: handleLogout },
   ];
@@ -76,26 +79,31 @@ const Perfil = () => {
 
         {/* Menu */}
         <div className="space-y-3">
-          {menuItems.map((item) => {
+          {menuItems.map((item: any) => {
             const Icon = item.icon;
+            const isLogout = item.label === "Sair";
+            const isHighlight = item.highlight;
             return (
               <Card
                 key={item.label}
                 onClick={item.action}
                 className={`bg-white border shadow-sm p-4 cursor-pointer hover:shadow-md transition-all ${
-                  item.label === "Sair" ? "border-red-500/30" : ""
-                }`}
+                  isLogout ? "border-red-500/30" : ""
+                } ${isHighlight ? "border-primary bg-primary/5" : ""}`}
               >
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    item.label === "Sair" ? "bg-red-500/20" : "bg-primary/20"
+                    isLogout ? "bg-red-500/20" : isHighlight ? "bg-primary" : "bg-primary/20"
                   }`}>
-                    <Icon className={`h-6 w-6 ${item.label === "Sair" ? "text-red-500" : "text-primary"}`} />
+                    <Icon className={`h-6 w-6 ${isLogout ? "text-red-500" : isHighlight ? "text-white" : "text-primary"}`} />
                   </div>
                   <div className="flex-1">
-                    <h3 className={`font-medium ${item.label === "Sair" ? "text-red-500" : ""}`}>
+                    <h3 className={`font-medium ${isLogout ? "text-red-500" : ""}`}>
                       {item.label}
                     </h3>
+                    {isHighlight && (
+                      <p className="text-xs text-muted-foreground">Acesso rápido na tela inicial</p>
+                    )}
                   </div>
                 </div>
               </Card>
