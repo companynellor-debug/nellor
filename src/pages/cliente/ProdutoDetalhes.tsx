@@ -96,6 +96,35 @@ const ProdutoDetalhes = () => {
     }
   };
 
+  const handleShare = async () => {
+    const productUrl = `${window.location.origin}/cliente/produto/${id}`;
+    const shareData = {
+      title: product?.name || 'Produto',
+      text: `Confira este produto: ${product?.name}`,
+      url: productUrl,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(productUrl);
+        toast({
+          title: 'Link copiado!',
+          description: 'O link do produto foi copiado para a área de transferência.',
+        });
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        await navigator.clipboard.writeText(productUrl);
+        toast({
+          title: 'Link copiado!',
+          description: 'O link do produto foi copiado para a área de transferência.',
+        });
+      }
+    }
+  };
+
   if (!product) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -122,7 +151,9 @@ const ProdutoDetalhes = () => {
             <ArrowLeft className="h-6 w-6" />
           </button>
           <div className="flex items-center gap-4">
-            <Share2 className="h-6 w-6 cursor-pointer hover:text-primary transition-colors" />
+            <button onClick={handleShare} className="p-2 hover:bg-muted rounded-full transition-colors">
+              <Share2 className="h-6 w-6 hover:text-primary transition-colors" />
+            </button>
             <button onClick={handleToggleFavorite} className="p-2 hover:bg-muted rounded-full transition-colors">
               <Heart className={`h-6 w-6 transition-colors ${isProductFavorite ? "fill-red-500 text-red-500" : "hover:text-primary"}`} />
             </button>
