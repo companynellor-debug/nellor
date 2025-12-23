@@ -56,6 +56,55 @@ serve(async (req) => {
 
     console.log("Received Stripe webhook event:", event.type);
 
+    // Handle account.updated - Update stripe_ready status
+    if (event.type === "account.updated") {
+      const account = event.data.object as Stripe.Account;
+      const supabaseUserId = account.metadata?.supabase_user_id;
+
+      console.log(`Account updated: ${account.id}, charges_enabled: ${account.charges_enabled}, payouts_enabled: ${account.payouts_enabled}`);
+
+      if (supabaseUserId) {
+        const isReady = account.charges_enabled && account.payouts_enabled && account.details_submitted;
+        
+        const { error: updateError } = await supabaseAdmin
+          .from("profiles")
+          .update({ 
+            stripe_ready: isReady,
+            stripe_account_id: account.id 
+          })
+          .eq("id", supabaseUserId);
+
+        if (updateError) {
+          console.error("Error updating profile stripe_ready:", updateError);
+        } else {
+          console.log(`Updated stripe_ready=${isReady} for user ${supabaseUserId}`);
+        }
+      } else {
+        // Try to find profile by stripe_account_id
+        const { data: profile, error: findError } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("stripe_account_id", account.id)
+          .single();
+
+        if (profile) {
+          const isReady = account.charges_enabled && account.payouts_enabled && account.details_submitted;
+          
+          await supabaseAdmin
+            .from("profiles")
+            .update({ stripe_ready: isReady })
+            .eq("id", profile.id);
+
+          console.log(`Updated stripe_ready=${isReady} for profile ${profile.id} (found by account_id)`);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ received: true, type: event.type }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Handle successful payment
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -80,22 +129,56 @@ serve(async (req) => {
         );
       }
 
-      // Calculate amounts
+      // Get payment intent to get the metadata with split info
+      let platformFee = 0;
+      let supplierAmount = 0;
+      let stripeConnectedAccountId = "";
+
+      if (session.payment_intent) {
+        try {
+          const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent as string);
+          platformFee = parseInt(paymentIntent.metadata?.platform_fee_amount || "0") / 100;
+          supplierAmount = parseInt(paymentIntent.metadata?.supplier_amount || "0") / 100;
+          stripeConnectedAccountId = paymentIntent.metadata?.stripe_connected_account_id || "";
+          
+          console.log(`Payment Intent metadata: platformFee=${platformFee}, supplierAmount=${supplierAmount}`);
+        } catch (e) {
+          console.error("Error fetching payment intent:", e);
+          // Calculate from total if not available
+          const totalAmount = (session.amount_total || 0) / 100;
+          platformFee = totalAmount * (PLATFORM_FEE_PERCENTAGE / 100);
+          supplierAmount = totalAmount - platformFee;
+        }
+      } else {
+        // Calculate amounts
+        const totalAmount = (session.amount_total || 0) / 100;
+        platformFee = totalAmount * (PLATFORM_FEE_PERCENTAGE / 100);
+        supplierAmount = totalAmount - platformFee;
+      }
+
       const totalAmount = (session.amount_total || 0) / 100;
-      const platformFee = totalAmount * (PLATFORM_FEE_PERCENTAGE / 100);
-      const supplierAmount = totalAmount - platformFee;
 
       console.log(`Payment successful for order ${orderId}:`);
       console.log(`  Total: R$${totalAmount}`);
       console.log(`  Platform fee (${PLATFORM_FEE_PERCENTAGE}%): R$${platformFee}`);
       console.log(`  Supplier amount: R$${supplierAmount}`);
 
+      // Get supplier's stripe_account_id if not in metadata
+      if (!stripeConnectedAccountId && supplierId) {
+        const { data: supplier } = await supabaseAdmin
+          .from("profiles")
+          .select("stripe_account_id")
+          .eq("id", supplierId)
+          .single();
+        stripeConnectedAccountId = supplier?.stripe_account_id || "";
+      }
+
       // Update order with payment info
       const { error: updateError } = await supabaseAdmin
         .from("orders")
         .update({
           payment_status: "paid",
-          order_status: "pending",
+          order_status: "preparing",
           stripe_session_id: session.id,
           stripe_payment_intent_id: session.payment_intent as string,
           stripe_payment_amount: totalAmount,
@@ -113,9 +196,9 @@ serve(async (req) => {
         );
       }
 
-      console.log(`Order ${orderId} marked as paid`);
+      console.log(`Order ${orderId} marked as paid via Stripe`);
 
-      // Create transaction record
+      // Create transaction record for the sale
       const { error: transactionError } = await supabaseAdmin
         .from("transactions")
         .insert({
@@ -128,8 +211,7 @@ serve(async (req) => {
         });
 
       if (transactionError) {
-        console.error("Error creating transaction:", transactionError);
-        // Don't fail the webhook, just log the error
+        console.error("Error creating sale transaction:", transactionError);
       }
 
       // Create platform fee transaction
@@ -155,6 +237,7 @@ serve(async (req) => {
           totalAmount,
           platformFee,
           supplierAmount,
+          stripeConnectedAccountId,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

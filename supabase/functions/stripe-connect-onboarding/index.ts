@@ -54,7 +54,7 @@ serve(async (req) => {
     // Get supplier profile using service role to bypass RLS
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("stripe_account_id, email, nome")
+      .select("stripe_account_id, stripe_ready, email, nome")
       .eq("id", user.id)
       .single();
 
@@ -72,7 +72,7 @@ serve(async (req) => {
 
     // If supplier doesn't have a Stripe account yet, create one
     if (!accountId) {
-      console.log("Creating new Stripe Connect account for:", user.id);
+      console.log("Creating new Stripe Connect Express account for:", user.id);
       
       const account = await stripe.accounts.create({
         type: "express",
@@ -83,8 +83,16 @@ serve(async (req) => {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
+        settings: {
+          payouts: {
+            schedule: {
+              interval: "manual",
+            },
+          },
+        },
         metadata: {
           supabase_user_id: user.id,
+          platform: "nellor",
         },
       });
 
@@ -93,7 +101,10 @@ serve(async (req) => {
       // Save stripe_account_id to profile
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
-        .update({ stripe_account_id: accountId })
+        .update({ 
+          stripe_account_id: accountId,
+          stripe_ready: false // Will be updated to true after onboarding completion
+        })
         .eq("id", user.id);
 
       if (updateError) {

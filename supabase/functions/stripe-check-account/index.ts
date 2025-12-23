@@ -64,7 +64,7 @@ serve(async (req) => {
     // Get supplier profile using service role
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("stripe_account_id")
+      .select("stripe_account_id, stripe_ready")
       .eq("id", supplierIdToCheck)
       .single();
 
@@ -76,6 +76,7 @@ serve(async (req) => {
           chargesEnabled: false,
           payoutsEnabled: false,
           detailsSubmitted: false,
+          stripeReady: false,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -90,6 +91,35 @@ serve(async (req) => {
       detailsSubmitted: account.details_submitted,
     });
 
+    // Determine if the account is fully ready
+    const isFullyReady = account.charges_enabled && account.payouts_enabled && account.details_submitted;
+
+    // Update stripe_ready in database if status changed
+    if (isFullyReady && !profile.stripe_ready) {
+      const { error: updateError } = await supabaseAdmin
+        .from("profiles")
+        .update({ stripe_ready: true })
+        .eq("id", supplierIdToCheck);
+
+      if (updateError) {
+        console.error("Error updating stripe_ready:", updateError);
+      } else {
+        console.log("Updated stripe_ready to true for:", supplierIdToCheck);
+      }
+    } else if (!isFullyReady && profile.stripe_ready) {
+      // Account was disabled or incomplete
+      const { error: updateError } = await supabaseAdmin
+        .from("profiles")
+        .update({ stripe_ready: false })
+        .eq("id", supplierIdToCheck);
+
+      if (updateError) {
+        console.error("Error updating stripe_ready:", updateError);
+      } else {
+        console.log("Updated stripe_ready to false for:", supplierIdToCheck);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         connected: true,
@@ -97,6 +127,7 @@ serve(async (req) => {
         chargesEnabled: account.charges_enabled,
         payoutsEnabled: account.payouts_enabled,
         detailsSubmitted: account.details_submitted,
+        stripeReady: isFullyReady,
         businessType: account.business_type,
         country: account.country,
       }),

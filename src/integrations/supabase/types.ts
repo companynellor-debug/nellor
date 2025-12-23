@@ -698,6 +698,7 @@ export type Database = {
           onboarding_completed: boolean | null
           pix_key: string | null
           stripe_account_id: string | null
+          stripe_ready: boolean | null
           telefone: string | null
           tipo: Database["public"]["Enums"]["user_type"]
           updated_at: string | null
@@ -716,6 +717,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           pix_key?: string | null
           stripe_account_id?: string | null
+          stripe_ready?: boolean | null
           telefone?: string | null
           tipo: Database["public"]["Enums"]["user_type"]
           updated_at?: string | null
@@ -734,6 +736,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           pix_key?: string | null
           stripe_account_id?: string | null
+          stripe_ready?: boolean | null
           telefone?: string | null
           tipo?: Database["public"]["Enums"]["user_type"]
           updated_at?: string | null
