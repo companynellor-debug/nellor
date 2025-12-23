@@ -19,6 +19,12 @@ const Checkout = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [buyerData, setBuyerData] = useState<BuyerData | null>(null);
   const [discount, setDiscount] = useState(0);
+  const [couponId, setCouponId] = useState<string | undefined>(undefined);
+
+  const handleDiscountChange = (newDiscount: number, newCouponId?: string) => {
+    setDiscount(newDiscount);
+    setCouponId(newCouponId);
+  };
 
   const subtotal = getTotal();
   const shipping = cartItems.length > 0 ? 15.0 : 0;
@@ -139,9 +145,11 @@ const Checkout = () => {
               subtotal={subtotal}
               shipping={shipping}
               discount={discount}
+              couponId={couponId}
               buyerData={buyerData}
               onBack={() => setCurrentStep(2)}
               onSuccess={handlePaymentSuccess}
+              onDiscountChange={handleDiscountChange}
             />
           )}
         </div>
