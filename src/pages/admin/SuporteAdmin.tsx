@@ -173,31 +173,27 @@ const SuporteAdmin = () => {
         </div>
 
         <Card className="p-6">
-          <div className="space-y-6">
-            {/* Mensagem do usuário */}
-            <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <User className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium mb-1">{selectedTicket.profiles?.nome || 'Usuário'}</p>
-                <div className="bg-muted p-4 rounded-lg">
-                  <p className="whitespace-pre-wrap">{selectedTicket.mensagem}</p>
-                </div>
+          <div className="space-y-4">
+            {/* Mensagem do usuário - alinhada à esquerda */}
+            <div className="flex justify-start">
+              <div className="max-w-[75%] bg-white border shadow-sm rounded-2xl px-4 py-3">
+                <p className="text-xs font-medium text-muted-foreground mb-1">{selectedTicket.profiles?.nome || 'Usuário'}</p>
+                <p className="text-sm break-words whitespace-pre-wrap">{selectedTicket.mensagem}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {selectedTicket.created_at && format(new Date(selectedTicket.created_at), "HH:mm", { locale: ptBR })}
+                </p>
               </div>
             </div>
 
-            {/* Resposta do admin */}
+            {/* Resposta do admin - alinhada à direita */}
             {selectedTicket.resposta_admin && (
-              <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                  <MessageCircle className="h-5 w-5 text-purple-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium mb-1">Suporte Nellor</p>
-                  <div className="bg-primary/10 p-4 rounded-lg">
-                    <p className="whitespace-pre-wrap">{selectedTicket.resposta_admin}</p>
-                  </div>
+              <div className="flex justify-end">
+                <div className="max-w-[75%] bg-primary text-white rounded-2xl px-4 py-3">
+                  <p className="text-xs font-medium opacity-80 mb-1">Suporte Nellor</p>
+                  <p className="text-sm break-words whitespace-pre-wrap">{selectedTicket.resposta_admin}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {selectedTicket.updated_at && format(new Date(selectedTicket.updated_at), "HH:mm", { locale: ptBR })}
+                  </p>
                 </div>
               </div>
             )}
