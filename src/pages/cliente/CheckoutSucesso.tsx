@@ -44,9 +44,13 @@ const CheckoutSucesso = () => {
 
       try {
         const pendingOrder = JSON.parse(pendingOrderStr);
-        const { buyerData, cartItems, subtotal, shipping, discount, total, supplierId } = pendingOrder;
+        const { buyerData, cartItems, subtotal, shipping, discount, total, supplierId, stripeSessionId } = pendingOrder;
 
-        // Create the order in Supabase
+        // Calculate platform fee (7.5%)
+        const platformFee = total * 0.075;
+        const supplierAmount = total - platformFee;
+
+        // Create the order in Supabase with Stripe payment data
         const order = await createOrder({
           supplier_id: supplierId,
           payment_method: "cartao" as const,
@@ -55,7 +59,7 @@ const CheckoutSucesso = () => {
           desconto: discount,
           total,
           itens: cartItems.map((item: any) => ({
-            product_id: item.id.toString(),
+            product_id: item.productId || item.id.toString(),
             name: item.name,
             price: item.price,
             quantity: item.quantity,
@@ -78,6 +82,11 @@ const CheckoutSucesso = () => {
           proof_url: null,
           shipping_company: null,
           estimated_delivery: null,
+          // Stripe payment data
+          stripe_session_id: stripeSessionId,
+          stripe_payment_amount: total,
+          platform_fee: platformFee,
+          supplier_amount: supplierAmount,
         });
 
         setOrderNumber(order?.order_number || `#${Date.now().toString().slice(-8)}`);

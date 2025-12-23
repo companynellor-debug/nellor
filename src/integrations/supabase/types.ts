@@ -415,9 +415,14 @@ export type Database = {
           order_status: Database["public"]["Enums"]["order_status"] | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          platform_fee: number | null
           proof_url: string | null
           shipping_company: string | null
+          stripe_payment_amount: number | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           subtotal: number
+          supplier_amount: number | null
           supplier_id: string
           total: number
           tracking_code: string | null
@@ -436,9 +441,14 @@ export type Database = {
           order_status?: Database["public"]["Enums"]["order_status"] | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          platform_fee?: number | null
           proof_url?: string | null
           shipping_company?: string | null
+          stripe_payment_amount?: number | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           subtotal: number
+          supplier_amount?: number | null
           supplier_id: string
           total: number
           tracking_code?: string | null
@@ -457,9 +467,14 @@ export type Database = {
           order_status?: Database["public"]["Enums"]["order_status"] | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          platform_fee?: number | null
           proof_url?: string | null
           shipping_company?: string | null
+          stripe_payment_amount?: number | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           subtotal?: number
+          supplier_amount?: number | null
           supplier_id?: string
           total?: number
           tracking_code?: string | null

@@ -20,6 +20,11 @@ export interface Order {
   proof_url: string | null;
   shipping_company: string | null;
   estimated_delivery: string | null;
+  stripe_session_id?: string | null;
+  stripe_payment_intent_id?: string | null;
+  stripe_payment_amount?: number | null;
+  platform_fee?: number | null;
+  supplier_amount?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -84,17 +89,29 @@ export const useSupabaseOrders = () => {
     };
   }, []);
 
-  const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at' | 'buyer_id'>) => {
+  const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at' | 'buyer_id'> & {
+    stripe_session_id?: string;
+    stripe_payment_amount?: number;
+    platform_fee?: number;
+    supplier_amount?: number;
+  }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
+
+      // Calculate platform fee if not provided (7.5%)
+      const platformFee = orderData.platform_fee ?? orderData.total * 0.075;
+      const supplierAmount = orderData.supplier_amount ?? orderData.total - platformFee;
 
       const { data, error } = await supabase
         .from('orders')
         .insert([{ 
           ...orderData, 
           buyer_id: user.id,
-          order_number: `PED${Date.now()}` // Temporary until trigger generates it
+          order_number: `PED${Date.now()}`,
+          platform_fee: platformFee,
+          supplier_amount: supplierAmount,
+          stripe_payment_amount: orderData.stripe_payment_amount ?? orderData.total,
         }])
         .select()
         .single();
