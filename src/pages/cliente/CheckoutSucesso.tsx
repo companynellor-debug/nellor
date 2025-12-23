@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, Package, Truck, ClipboardList, Home } from "lucide-react";
+import { CheckCircle, Package, Truck, ClipboardList, Home, AlertTriangle } from "lucide-react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 
 const CheckoutSucesso = () => {
@@ -21,6 +22,7 @@ const CheckoutSucesso = () => {
   const [showAnimation, setShowAnimation] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const processOrder = async () => {
@@ -35,12 +37,12 @@ const CheckoutSucesso = () => {
       // Get pending order data from localStorage
       const pendingOrderStr = localStorage.getItem('pendingOrder');
       if (!pendingOrderStr) {
+        // Maybe already processed - check if order exists
         toast({
-          title: "Erro",
-          description: "Dados do pedido não encontrados",
-          variant: "destructive",
+          title: "Aviso",
+          description: "Dados do pedido não encontrados. Verifique seus pedidos.",
         });
-        navigate('/cliente');
+        navigate('/cliente/meus-pedidos');
         return;
       }
 
@@ -48,9 +50,34 @@ const CheckoutSucesso = () => {
         const pendingOrder = JSON.parse(pendingOrderStr);
         const { buyerData, cartItems, subtotal, shipping, discount, total, supplierId, stripeSessionId, couponId } = pendingOrder;
 
+        // CRITICAL: Verify payment with Stripe before creating order
+        console.log("Verifying payment with Stripe...", stripeSessionId);
+        
+        let paymentVerified = false;
+        let paymentDetails = null;
+
+        try {
+          const { data: verifyData, error: verifyError } = await supabase.functions.invoke('stripe-verify-payment', {
+            body: { sessionId: stripeSessionId },
+          });
+
+          if (verifyError) {
+            console.error("Payment verification error:", verifyError);
+          } else if (verifyData?.verified) {
+            paymentVerified = true;
+            paymentDetails = verifyData.paymentDetails;
+            console.log("Payment verified successfully:", verifyData);
+          } else {
+            console.log("Payment not verified:", verifyData);
+          }
+        } catch (verifyErr) {
+          console.error("Error verifying payment:", verifyErr);
+          // Continue anyway - webhook should handle marking as paid
+        }
+
         // Calculate platform fee (7.5%)
-        const platformFee = total * 0.075;
-        const supplierAmount = total - platformFee;
+        const platformFee = paymentDetails?.platformFee || (total * 0.075);
+        const supplierAmount = paymentDetails?.supplierAmount || (total - platformFee);
 
         // Create the order in Supabase with Stripe payment data
         const order = await createOrder({
@@ -78,14 +105,16 @@ const CheckoutSucesso = () => {
             state: buyerData.endereco.state,
             zip_code: buyerData.endereco.zip_code,
           },
-          payment_status: "paid" as const,
-          order_status: "pending" as const,
+          // Set as paid if verified, pending if not (webhook will update)
+          payment_status: paymentVerified ? "paid" : "pending",
+          order_status: paymentVerified ? "preparing" : "pending",
           tracking_code: null,
           proof_url: null,
           shipping_company: null,
           estimated_delivery: null,
           // Stripe payment data
           stripe_session_id: stripeSessionId,
+          stripe_payment_intent_id: paymentDetails?.id || null,
           stripe_payment_amount: total,
           platform_fee: platformFee,
           supplier_amount: supplierAmount,
@@ -98,59 +127,64 @@ const CheckoutSucesso = () => {
           await incrementCouponUsage(couponId);
         }
         
-        // Clear cart and pending order
+        // CRITICAL: Clear cart and pending order IMMEDIATELY after success
         clearCart();
         localStorage.removeItem('pendingOrder');
+        
+        console.log("Order created successfully, cart cleared");
         
         setIsProcessing(false);
         setShowAnimation(true);
 
         // Trigger confetti
-        const duration = 3 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+        triggerConfetti();
 
-        function randomInRange(min: number, max: number) {
-          return Math.random() * (max - min) + min;
-        }
-
-        const interval = setInterval(function () {
-          const timeLeft = animationEnd - Date.now();
-
-          if (timeLeft <= 0) {
-            return clearInterval(interval);
-          }
-
-          const particleCount = 50 * (timeLeft / duration);
-
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-            colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD", "#22c55e"],
-          });
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-            colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD", "#22c55e"],
-          });
-        }, 250);
-
-        return () => clearInterval(interval);
       } catch (error) {
         console.error("Error creating order:", error);
-        toast({
-          title: "Erro ao processar pedido",
-          description: "Por favor, entre em contato com o suporte.",
-          variant: "destructive",
-        });
+        setError("Erro ao processar pedido. Por favor, entre em contato com o suporte.");
         setIsProcessing(false);
+        
+        // Still clear cart to prevent duplicate orders
+        clearCart();
+        localStorage.removeItem('pendingOrder');
       }
     };
 
     processOrder();
-  }, [searchParams, navigate, createOrder, clearCart]);
+  }, [searchParams, navigate, createOrder, clearCart, incrementCouponUsage]);
+
+  const triggerConfetti = () => {
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min: number, max: number) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function () {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD", "#22c55e"],
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD", "#22c55e"],
+      });
+    }, 250);
+  };
 
   const steps = [
     {
@@ -181,6 +215,46 @@ const CheckoutSucesso = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <p className="text-lg font-medium">Processando seu pedido...</p>
           <p className="text-sm text-muted-foreground">Aguarde um momento</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background py-8">
+        <ParticlesBackground />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-2xl mx-auto">
+            <Card className="border shadow-lg overflow-hidden">
+              <div className="bg-gradient-to-br from-amber-500 to-amber-600 p-8 text-center text-white">
+                <div className="w-24 h-24 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
+                  <AlertTriangle className="h-14 w-14" />
+                </div>
+                <h1 className="text-3xl font-bold mb-2">Atenção</h1>
+                <p className="text-white/90 text-lg">{error}</p>
+              </div>
+              <CardContent className="p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => navigate("/cliente/meus-pedidos")}
+                    className="flex-1"
+                  >
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    Ver Meus Pedidos
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/cliente")}
+                    className="flex-1"
+                  >
+                    <Home className="h-4 w-4 mr-2" />
+                    Voltar ao Início
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     );
