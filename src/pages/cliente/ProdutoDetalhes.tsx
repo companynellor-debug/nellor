@@ -130,148 +130,179 @@ const ProdutoDetalhes = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 relative z-10 max-w-6xl">
-        {/* Layout Desktop: Grid 2 colunas */}
-        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
+      <main className="container mx-auto px-4 py-6 relative z-10 max-w-7xl">
+        {/* Layout Desktop: Grid com imagens lado esquerdo e info lado direito */}
+        <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
           
-          {/* Coluna Esquerda: Imagens */}
-          <div className="mb-6 lg:mb-0 lg:sticky lg:top-24">
-            <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-muted max-w-sm mx-auto lg:max-w-md">
-              <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
-            </div>
-            <div className="flex gap-2 justify-center">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`w-14 h-14 lg:w-16 lg:h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === index ? "border-primary scale-105" : "border-border"
-                  }`}
-                >
-                  <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
+          {/* Coluna Esquerda: Thumbnails verticais + Imagem Principal */}
+          <div className="lg:col-span-7 mb-6 lg:mb-0">
+            <div className="lg:flex lg:gap-4">
+              {/* Thumbnails - Vertical em Desktop */}
+              <div className="hidden lg:flex lg:flex-col gap-2 order-1">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                      selectedImage === index ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Imagem Principal */}
+              <div className="flex-1 order-2">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-muted max-w-lg mx-auto lg:max-w-none">
+                  <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+                </div>
+                
+                {/* Thumbnails - Horizontal em Mobile */}
+                <div className="flex gap-2 justify-center mt-4 lg:hidden">
+                  {product.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === index ? "border-primary scale-105" : "border-border"
+                      }`}
+                    >
+                      <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Coluna Direita: Informações */}
-          <div className="space-y-4">
-            {/* Store Info */}
+          {/* Coluna Direita: Informações do Produto */}
+          <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-5">
+            {/* Loja */}
             {supplierProfile && product.supplierProfileId && (
-              <Card
+              <div
                 onClick={() => navigate(`/cliente/loja/${product.supplierProfileId}`)}
-                className="bg-white border shadow-sm p-3 cursor-pointer hover:shadow-md transition-all"
+                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
               >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={supplierProfile.foto_perfil_url} alt={supplierProfile.nome} />
-                    <AvatarFallback>{supplierProfile.nome.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">{supplierProfile.nome}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span>{product.rating.toFixed(1)}</span>
-                      </div>
-                      <span>•</span>
-                      <span>{product.reviews} avaliações</span>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-primary">
-                    <Store className="h-5 w-5" />
-                  </Button>
+                <Avatar className="h-10 w-10 border-2 border-primary/20">
+                  <AvatarImage src={supplierProfile.foto_perfil_url} alt={supplierProfile.nome} />
+                  <AvatarFallback className="bg-primary/10 text-primary">{supplierProfile.nome.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-sm hover:text-primary transition-colors">{supplierProfile.nome}</p>
+                  <p className="text-xs text-muted-foreground">Ver loja</p>
                 </div>
-              </Card>
+              </div>
             )}
 
-            {/* Informações do Produto */}
-            <Card className="bg-white border shadow-sm p-5">
-              <h1 className="text-lg lg:text-xl font-bold mb-2">{product.name}</h1>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex items-center gap-0.5">
+            {/* Nome e Avaliações */}
+            <div>
+              <h1 className="text-xl lg:text-2xl font-bold mb-3">{product.name}</h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
                   ))}
+                  <span className="text-sm font-medium ml-1">{product.rating.toFixed(1)}</span>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {product.rating.toFixed(1)} ({product.reviews} avaliações)
-                </span>
-              </div>
-              <div className="flex items-center gap-3 mb-3">
-                <p className="text-2xl font-bold text-primary">{product.price}</p>
-                <Badge variant={currentStock > 0 ? "default" : "destructive"} className="flex items-center gap-1 text-xs">
+                <span className="text-sm text-muted-foreground">({product.reviews} avaliações)</span>
+                <Badge variant={currentStock > 0 ? "outline" : "destructive"} className="flex items-center gap-1 text-xs">
                   <Package className="h-3 w-3" />
                   {currentStock > 0 ? `${currentStock} em estoque` : 'Sem estoque'}
                 </Badge>
               </div>
+            </div>
+
+            {/* Preço */}
+            <div className="py-4 border-y border-border">
+              <p className="text-3xl font-bold text-primary">{product.price}</p>
+              <p className="text-xs text-muted-foreground mt-1">à vista no PIX</p>
+            </div>
+
+            {/* Descrição */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2">Descrição</h3>
               <p className="text-muted-foreground leading-relaxed text-sm">{product.description}</p>
+            </div>
 
-              {/* Botões de Ação - Desktop */}
-              <div className="hidden lg:flex gap-3 mt-5 pt-5 border-t">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2"
-                  disabled={currentStock === 0}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (currentStock === 0 || !product.supplierProfileId) return;
-                    addToCart({
-                      productId: product.supplierUuid || '',
-                      name: product.name,
-                      price: product.priceNumber,
-                      image: product.images[0],
-                      storeId: product.supplierProfileId || '',
-                      storeName: supplierProfile?.nome || 'Loja'
-                    }, 1);
-                    navigate('/cliente/carrinho');
-                  }}
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Adicionar ao Carrinho
-                </Button>
-                <Button 
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white"
-                  disabled={currentStock === 0}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentStock === 0 || !product.supplierProfileId) return;
-                    setQuantity(1);
-                    setShowQuantityDialog(true);
-                  }}
-                >
-                  Comprar Agora
-                </Button>
-              </div>
-            </Card>
-
-            {/* Especificações */}
-            <Card className="bg-white border shadow-sm p-5">
-              <h2 className="text-base font-bold text-primary mb-3">Especificações</h2>
-              <div className="space-y-2">
-                {product.specs.map((spec) => (
-                  <div key={spec.label} className="flex justify-between items-center border-b border-border/50 pb-2 text-sm">
-                    <span className="text-muted-foreground">{spec.label}</span>
+            {/* Especificações Resumidas */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h3 className="text-sm font-semibold mb-3">Especificações</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {product.specs.slice(0, 4).map((spec) => (
+                  <div key={spec.label} className="text-sm">
+                    <span className="text-muted-foreground">{spec.label}: </span>
                     <span className="font-medium">{spec.value}</span>
                   </div>
                 ))}
               </div>
-            </Card>
+              {product.specs.length > 4 && (
+                <p className="text-xs text-primary mt-2 cursor-pointer hover:underline">Ver todas as especificações</p>
+              )}
+            </div>
+
+            {/* Botões de Ação - Desktop */}
+            <div className="hidden lg:flex gap-3 pt-2">
+              <Button 
+                variant="outline" 
+                className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12"
+                disabled={currentStock === 0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (currentStock === 0 || !product.supplierProfileId) return;
+                  addToCart({
+                    productId: product.supplierUuid || '',
+                    name: product.name,
+                    price: product.priceNumber,
+                    image: product.images[0],
+                    storeId: product.supplierProfileId || '',
+                    storeName: supplierProfile?.nome || 'Loja'
+                  }, 1);
+                  navigate('/cliente/carrinho');
+                }}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Adicionar ao Carrinho
+              </Button>
+              <Button 
+                className="flex-1 bg-primary hover:bg-primary/90 text-white h-12"
+                disabled={currentStock === 0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentStock === 0 || !product.supplierProfileId) return;
+                  setQuantity(1);
+                  setShowQuantityDialog(true);
+                }}
+              >
+                Comprar Agora
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Avaliações - Full Width */}
-        <Card className="bg-white border shadow-sm p-5 mt-6">
-          <h2 className="text-base font-bold text-primary mb-4">Avaliações dos Clientes</h2>
-          <ReviewsList reviews={reviews} loading={reviewsLoading} />
-        </Card>
+        {/* Seção de Avaliações - Layout estilo e-commerce */}
+        <div className="mt-10 lg:mt-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg lg:text-xl font-bold">Avaliações dos Clientes</h2>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-1">
+                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                <span className="font-bold text-lg">{product.rating.toFixed(1)}</span>
+              </div>
+              <span className="text-muted-foreground">({product.reviews} avaliações)</span>
+            </div>
+          </div>
+          <Card className="bg-white border shadow-sm p-5">
+            <ReviewsList reviews={reviews} loading={reviewsLoading} />
+          </Card>
+        </div>
 
-        {/* Produtos Relacionados - Full Width */}
+        {/* Produtos Relacionados */}
         {relatedProducts.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-base font-bold text-primary mb-4">Você também pode gostar</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="mt-10 lg:mt-16">
+            <h2 className="text-lg lg:text-xl font-bold mb-6">Você também pode gostar</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {relatedProducts.map((relatedProduct) => (
                 <Card
                   key={relatedProduct.id}
@@ -279,14 +310,18 @@ const ProdutoDetalhes = () => {
                     setSelectedImage(0);
                     navigate(`/cliente/produto/${relatedProduct.id}`);
                   }}
-                  className="bg-white border shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                  className="bg-white border shadow-sm overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
                 >
                   <div className="aspect-square overflow-hidden">
-                    <img src={relatedProduct.images[0]} alt={relatedProduct.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={relatedProduct.images[0]} 
+                      alt={relatedProduct.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                    />
                   </div>
                   <div className="p-3">
-                    <p className="text-sm mb-1 line-clamp-2">{relatedProduct.name}</p>
-                    <p className="text-primary font-bold text-sm">{relatedProduct.price}</p>
+                    <p className="text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">{relatedProduct.name}</p>
+                    <p className="text-primary font-bold">{relatedProduct.price}</p>
                   </div>
                 </Card>
               ))}
