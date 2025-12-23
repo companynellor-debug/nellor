@@ -171,38 +171,38 @@ const ChatFornecedor = () => {
   if (selectedCustomerId) {
     return (
       <>
-        {/* Mobile Chat View */}
-        <div className="md:hidden flex flex-col h-[calc(100vh-4rem)] bg-[#ece5dd]">
-          {/* Header */}
-          <div className="bg-[#075e54] text-white p-3 flex items-center gap-3 shadow-md">
-            <button 
-              onClick={() => setSelectedCustomerId(null)} 
-              className="p-1 hover:bg-white/10 rounded-full transition-colors"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-            <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
-              {getCustomerAvatar(selectedCustomerId) ? (
-                <img 
-                  src={getCustomerAvatar(selectedCustomerId)!} 
-                  alt="" 
-                  className="w-full h-full object-cover" 
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-400 to-gray-500 text-white font-bold text-lg">
-                  {getCustomerName(selectedCustomerId).charAt(0)}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold truncate">{getCustomerName(selectedCustomerId)}</p>
-              {isOtherUserTyping ? (
-                <p className="text-xs text-green-200 animate-pulse">digitando...</p>
-              ) : (
-                <p className="text-xs text-green-100">online</p>
-              )}
-            </div>
+      {/* Mobile Chat View */}
+      <div className="md:hidden flex flex-col h-[calc(100vh-4rem)] bg-muted/30">
+        {/* Header */}
+        <div className="bg-primary text-primary-foreground p-3 flex items-center gap-3 shadow-md">
+          <button 
+            onClick={() => setSelectedCustomerId(null)} 
+            className="p-1 hover:bg-white/10 rounded-full transition-colors"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+            {getCustomerAvatar(selectedCustomerId) ? (
+              <img 
+                src={getCustomerAvatar(selectedCustomerId)!} 
+                alt="" 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-accent text-white font-bold text-lg">
+                {getCustomerName(selectedCustomerId).charAt(0)}
+              </div>
+            )}
           </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold truncate">{getCustomerName(selectedCustomerId)}</p>
+            {isOtherUserTyping ? (
+              <p className="text-xs text-primary-foreground/80 animate-pulse">digitando...</p>
+            ) : (
+              <p className="text-xs text-primary-foreground/70">online</p>
+            )}
+          </div>
+        </div>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -216,7 +216,7 @@ const ChatFornecedor = () => {
                   <div 
                     className={`max-w-[80%] rounded-lg px-3 py-2 shadow-sm relative ${
                       isFromMe
-                        ? 'bg-[#dcf8c6] rounded-tr-none'
+                        ? 'bg-primary/10 rounded-tr-none'
                         : 'bg-white rounded-tl-none'
                     }`}
                   >
@@ -249,7 +249,7 @@ const ChatFornecedor = () => {
                               download={`arquivo-${attIdx}`}
                               className="flex items-center gap-2 p-2 bg-black/5 rounded-lg"
                             >
-                              <FileText className="h-5 w-5 text-[#075e54]" />
+                              <FileText className="h-5 w-5 text-primary" />
                               <span className="text-sm">Arquivo anexo</span>
                             </a>
                           )}
@@ -261,10 +261,10 @@ const ChatFornecedor = () => {
                       <span className="text-[10px] text-gray-500">
                         {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      {isFromMe && (
-                        msg.read ? (
-                          <CheckCheck className="h-3 w-3 text-[#53bdeb]" />
-                        ) : (
+                        {isFromMe && (
+                          msg.read ? (
+                            <CheckCheck className="h-3 w-3 text-primary" />
+                          ) : (
                           <Check className="h-3 w-3 text-gray-400" />
                         )
                       )}
@@ -302,7 +302,7 @@ const ChatFornecedor = () => {
           )}
 
           {/* Input */}
-          <div className="bg-[#f0f0f0] p-2 flex items-center gap-2">
+          <div className="bg-muted p-2 flex items-center gap-2">
             <input
               type="file"
               ref={fileInputRef}
@@ -336,7 +336,7 @@ const ChatFornecedor = () => {
             <button 
               onClick={handleSend}
               disabled={!message.trim() && attachments.length === 0}
-              className="p-2 bg-[#075e54] text-white rounded-full disabled:opacity-50"
+              className="p-2 bg-primary text-primary-foreground rounded-full disabled:opacity-50"
             >
               <Send className="h-5 w-5" />
             </button>
@@ -347,7 +347,7 @@ const ChatFornecedor = () => {
         <div className="hidden md:flex h-[calc(100vh-8rem)] gap-4">
           {/* Conversations List */}
           <Card className="w-80 flex-shrink-0 flex flex-col overflow-hidden">
-            <div className="p-4 border-b bg-[#075e54] text-white">
+            <div className="p-4 border-b bg-primary text-primary-foreground">
               <h2 className="font-semibold text-lg">Conversas</h2>
             </div>
             <div className="p-2 border-b">
@@ -384,7 +384,7 @@ const ChatFornecedor = () => {
                             className="w-full h-full object-cover" 
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#075e54] to-[#128c7e] text-white font-bold text-lg">
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold text-lg">
                             {getCustomerName(conv.userId).charAt(0)}
                           </div>
                         )}
@@ -399,7 +399,7 @@ const ChatFornecedor = () => {
                         <div className="flex items-center justify-between mt-0.5">
                           <p className="text-sm text-muted-foreground truncate">{conv.lastMessage.text}</p>
                           {conv.unreadCount > 0 && (
-                            <span className="bg-[#25d366] text-white text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5">
+                            <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5">
                               {conv.unreadCount}
                             </span>
                           )}
@@ -415,7 +415,7 @@ const ChatFornecedor = () => {
           {/* Chat Area */}
           <Card className="flex-1 flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="bg-[#075e54] text-white p-4 flex items-center gap-3">
+            <div className="bg-primary text-primary-foreground p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                 {getCustomerAvatar(selectedCustomerId) ? (
                   <img 
@@ -424,7 +424,7 @@ const ChatFornecedor = () => {
                     className="w-full h-full object-cover" 
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-400 to-gray-500 text-white font-bold">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-accent text-primary-foreground font-bold">
                     {getCustomerName(selectedCustomerId).charAt(0)}
                   </div>
                 )}
@@ -432,15 +432,15 @@ const ChatFornecedor = () => {
               <div>
                 <p className="font-semibold">{getCustomerName(selectedCustomerId)}</p>
                 {isOtherUserTyping ? (
-                  <p className="text-xs text-green-200 animate-pulse">digitando...</p>
+                  <p className="text-xs text-primary-foreground/80 animate-pulse">digitando...</p>
                 ) : (
-                  <p className="text-xs text-green-100">online</p>
+                  <p className="text-xs text-primary-foreground/70">online</p>
                 )}
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#ece5dd]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-muted/30">
               {messages.map((msg, idx) => {
                 const isFromMe = msg.from_user === user?.id;
                 return (
@@ -451,7 +451,7 @@ const ChatFornecedor = () => {
                     <div 
                       className={`max-w-[65%] rounded-lg px-3 py-2 shadow-sm ${
                         isFromMe
-                          ? 'bg-[#dcf8c6] rounded-tr-none'
+                          ? 'bg-primary/10 rounded-tr-none'
                           : 'bg-white rounded-tl-none'
                       }`}
                     >
@@ -482,10 +482,10 @@ const ChatFornecedor = () => {
                               <a
                                 href={attachmentUrl}
                                 download={`arquivo-${attIdx}`}
-                                className="flex items-center gap-2 p-2 bg-black/5 rounded-lg hover:bg-black/10"
-                              >
-                                <FileText className="h-5 w-5 text-[#075e54]" />
-                                <span className="text-sm">Arquivo anexo</span>
+                              className="flex items-center gap-2 p-2 bg-black/5 rounded-lg hover:bg-black/10"
+                            >
+                              <FileText className="h-5 w-5 text-primary" />
+                              <span className="text-sm">Arquivo anexo</span>
                               </a>
                             )}
                           </div>
@@ -498,7 +498,7 @@ const ChatFornecedor = () => {
                         </span>
                         {isFromMe && (
                           msg.read ? (
-                            <CheckCheck className="h-3 w-3 text-[#53bdeb]" />
+                            <CheckCheck className="h-3 w-3 text-primary" />
                           ) : (
                             <Check className="h-3 w-3 text-gray-400" />
                           )
@@ -537,7 +537,7 @@ const ChatFornecedor = () => {
             )}
 
             {/* Input */}
-            <div className="bg-[#f0f0f0] p-3 flex items-center gap-3">
+            <div className="bg-muted p-3 flex items-center gap-3">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -571,7 +571,7 @@ const ChatFornecedor = () => {
               <button 
                 onClick={handleSend}
                 disabled={!message.trim() && attachments.length === 0}
-                className="p-3 bg-[#075e54] text-white rounded-full disabled:opacity-50 hover:bg-[#064e46]"
+                className="p-3 bg-primary text-primary-foreground rounded-full disabled:opacity-50 hover:bg-primary/90"
               >
                 <Send className="h-5 w-5" />
               </button>
@@ -591,7 +591,7 @@ const ChatFornecedor = () => {
                     className="max-w-full max-h-full object-contain"
                   />
                   <div className="absolute top-4 right-4 flex gap-2">
-                    <Button onClick={handleDownloadImage} className="bg-[#075e54] hover:bg-[#064e46] gap-2">
+                    <Button onClick={handleDownloadImage} className="bg-primary hover:bg-primary/90 gap-2">
                       <Download className="h-4 w-4" />
                       Baixar
                     </Button>
@@ -618,9 +618,9 @@ const ChatFornecedor = () => {
       {/* Mobile Conversations List */}
       <div className="md:hidden min-h-screen bg-white">
         {/* Header */}
-        <div className="bg-[#075e54] text-white p-4 sticky top-0 z-10">
+        <div className="bg-primary text-primary-foreground p-4 sticky top-0 z-10">
           <h1 className="text-xl font-bold">Conversas</h1>
-          <p className="text-sm text-green-100">{conversations.length} conversas</p>
+          <p className="text-sm text-primary-foreground/70">{conversations.length} conversas</p>
         </div>
 
         {/* Search */}
@@ -659,7 +659,7 @@ const ChatFornecedor = () => {
                         className="w-full h-full object-cover" 
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#075e54] to-[#128c7e] text-white font-bold text-xl">
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold text-xl">
                         {getCustomerName(conv.userId).charAt(0)}
                       </div>
                     )}
@@ -676,7 +676,7 @@ const ChatFornecedor = () => {
                         {conv.lastMessage.from_user === user?.id && (
                           <span className="inline-flex mr-1">
                             {conv.lastMessage.read ? (
-                              <CheckCheck className="h-4 w-4 text-[#53bdeb]" />
+                              <CheckCheck className="h-4 w-4 text-primary" />
                             ) : (
                               <Check className="h-4 w-4 text-gray-400" />
                             )}
@@ -685,7 +685,7 @@ const ChatFornecedor = () => {
                         {conv.lastMessage.text || 'Anexo'}
                       </p>
                       {conv.unreadCount > 0 && (
-                        <span className="bg-[#25d366] text-white text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 flex-shrink-0">
+                        <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 flex-shrink-0">
                           {conv.unreadCount}
                         </span>
                       )}
@@ -701,7 +701,7 @@ const ChatFornecedor = () => {
       {/* Desktop View - Conversations List Only */}
       <div className="hidden md:flex h-[calc(100vh-8rem)] gap-4">
         <Card className="w-80 flex-shrink-0 flex flex-col overflow-hidden">
-          <div className="p-4 border-b bg-[#075e54] text-white">
+          <div className="p-4 border-b bg-primary text-primary-foreground">
             <h2 className="font-semibold text-lg">Conversas</h2>
           </div>
           <div className="p-2 border-b">
@@ -736,7 +736,7 @@ const ChatFornecedor = () => {
                           className="w-full h-full object-cover" 
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#075e54] to-[#128c7e] text-white font-bold text-lg">
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold text-lg">
                           {getCustomerName(conv.userId).charAt(0)}
                         </div>
                       )}
@@ -751,7 +751,7 @@ const ChatFornecedor = () => {
                       <div className="flex items-center justify-between mt-0.5">
                         <p className="text-sm text-muted-foreground truncate">{conv.lastMessage.text}</p>
                         {conv.unreadCount > 0 && (
-                          <span className="bg-[#25d366] text-white text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5">
+                          <span className="bg-primary text-primary-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5">
                             {conv.unreadCount}
                           </span>
                         )}
