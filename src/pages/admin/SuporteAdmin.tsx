@@ -59,6 +59,7 @@ const SuporteAdmin = () => {
   const fetchTickets = async () => {
     try {
       setLoading(true);
+      console.log('Fetching admin support tickets via RPC...');
       // Use the admin RPC function that bypasses RLS for profiles
       const { data, error } = await supabase.rpc('get_admin_support_tickets');
 
