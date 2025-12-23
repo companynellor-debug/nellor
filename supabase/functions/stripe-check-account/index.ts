@@ -18,6 +18,12 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
+    // Use service role to bypass RLS
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
@@ -42,8 +48,8 @@ serve(async (req) => {
       );
     }
 
-    // Get supplier profile
-    const { data: profile, error: profileError } = await supabaseClient
+    // Get supplier profile using service role
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("stripe_account_id")
       .eq("id", user.id)
