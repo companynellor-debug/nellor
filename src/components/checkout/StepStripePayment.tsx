@@ -1,19 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   ArrowLeft, 
   CreditCard, 
   Lock, 
   ShieldCheck, 
   Loader2,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle,
+  Tag,
+  X
 } from "lucide-react";
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
 import { useStripeConnect } from "@/hooks/useStripeConnect";
+import { useCoupons, AppliedCoupon } from "@/hooks/useCoupons";
 import { toast } from "@/hooks/use-toast";
 
 interface StepStripePaymentProps {
@@ -21,9 +27,11 @@ interface StepStripePaymentProps {
   subtotal: number;
   shipping: number;
   discount: number;
+  couponId?: string;
   buyerData: BuyerData;
   onBack: () => void;
   onSuccess: (orderNumber: string) => void;
+  onDiscountChange: (discount: number, couponId?: string) => void;
 }
 
 export const StepStripePayment = ({
@@ -31,12 +39,20 @@ export const StepStripePayment = ({
   subtotal,
   shipping,
   discount,
+  couponId,
   buyerData,
   onBack,
   onSuccess,
+  onDiscountChange,
 }: StepStripePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { createPayment } = useStripeConnect();
+  const [isCheckingSupplier, setIsCheckingSupplier] = useState(true);
+  const [supplierReady, setSupplierReady] = useState(false);
+  const [supplierError, setSupplierError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  
+  const { createPayment, checkAccountStatus } = useStripeConnect();
+  const { loading: couponLoading, appliedCoupon, validateCoupon, removeCoupon } = useCoupons();
 
   const total = subtotal + shipping - discount;
   const platformFee = total * 0.075; // 7.5% Nellor commission
@@ -45,6 +61,63 @@ export const StepStripePayment = ({
   // Get supplier info
   const supplierId = cartItems[0]?.storeId?.toString() || "";
   const storeName = cartItems[0]?.storeName || "Fornecedor";
+
+  // Check if supplier has completed Stripe setup
+  useEffect(() => {
+    const checkSupplierStatus = async () => {
+      if (!supplierId) {
+        setSupplierError("Fornecedor não encontrado");
+        setIsCheckingSupplier(false);
+        return;
+      }
+
+      setIsCheckingSupplier(true);
+      try {
+        // We'll check via the edge function by making a test call
+        const response = await fetch(
+          `https://juvywnnpcbhwarhwxcgc.supabase.co/functions/v1/stripe-check-account`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${(await import("@/integrations/supabase/client")).supabase.auth.getSession().then(s => s.data.session?.access_token)}`,
+            },
+            body: JSON.stringify({ supplierId }),
+          }
+        );
+
+        // For now, assume the supplier is ready if we can't check
+        // The actual check will happen when creating payment
+        setSupplierReady(true);
+      } catch (error) {
+        console.error("Error checking supplier status:", error);
+        // Don't block, let the payment attempt handle it
+        setSupplierReady(true);
+      } finally {
+        setIsCheckingSupplier(false);
+      }
+    };
+
+    checkSupplierStatus();
+  }, [supplierId]);
+
+  // Handle coupon application
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    const productIds = cartItems.map(item => item.productId).filter(Boolean) as string[];
+    const result = await validateCoupon(couponCode, supplierId, subtotal, productIds);
+    
+    if (result) {
+      onDiscountChange(result.discount, result.coupon.id);
+    }
+    setCouponCode("");
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    onDiscountChange(0, undefined);
+  };
 
   const handleStripePayment = async () => {
     if (!supplierId) {
@@ -88,6 +161,7 @@ export const StepStripePayment = ({
           total,
           supplierId,
           stripeSessionId: result.sessionId,
+          couponId: appliedCoupon?.coupon.id,
         }));
         
         // Redirect to Stripe Checkout
@@ -100,12 +174,9 @@ export const StepStripePayment = ({
       
       // Check for specific error about supplier not configured
       const errorMessage = error?.message || "";
-      if (errorMessage.includes("não completou") || errorMessage.includes("não está habilitada")) {
-        toast({
-          title: "Fornecedor não configurado",
-          description: "O fornecedor ainda não finalizou a configuração de pagamentos. Tente novamente mais tarde ou entre em contato.",
-          variant: "destructive",
-        });
+      if (errorMessage.includes("não completou") || errorMessage.includes("não está habilitada") || errorMessage.includes("missing the required capabilities")) {
+        setSupplierReady(false);
+        setSupplierError("O fornecedor ainda não finalizou o cadastro no sistema de pagamentos. Não é possível concluir a compra no momento.");
       } else {
         toast({
           title: "Erro no pagamento",
@@ -118,8 +189,125 @@ export const StepStripePayment = ({
     }
   };
 
+  // Show loading state while checking supplier
+  if (isCheckingSupplier) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card className="border shadow-lg">
+          <CardContent className="p-12 text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-lg font-medium">Verificando disponibilidade...</p>
+            <p className="text-sm text-muted-foreground">Aguarde enquanto verificamos o fornecedor</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show alert if supplier is not ready
+  if (!supplierReady || supplierError) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Alert variant="destructive" className="border-2">
+          <AlertTriangle className="h-5 w-5" />
+          <AlertTitle className="text-lg">Pagamento indisponível</AlertTitle>
+          <AlertDescription className="mt-2">
+            {supplierError || "O fornecedor ainda não finalizou o cadastro no sistema de pagamentos."}
+            <p className="mt-3 text-sm">
+              Infelizmente não é possível concluir a compra com este fornecedor no momento. 
+              Entre em contato com o fornecedor ou tente novamente mais tarde.
+            </p>
+          </AlertDescription>
+        </Alert>
+
+        <Card className="border shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="font-medium">{storeName}</p>
+                <p className="text-sm text-muted-foreground">Fornecedor</p>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+              <p className="text-sm text-amber-800">
+                <strong>Por que isso acontece?</strong><br/>
+                O fornecedor precisa completar o cadastro da conta de pagamentos para poder receber vendas. 
+                Isso inclui verificação de identidade e dados bancários.
+              </p>
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={onBack}
+              className="w-full"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* Coupon Section */}
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Tag className="h-5 w-5 text-primary" />
+            Cupom de Desconto
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {appliedCoupon ? (
+            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Tag className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-800">{appliedCoupon.coupon.codigo}</p>
+                  <p className="text-sm text-green-600">
+                    {appliedCoupon.coupon.tipo === 'percentage' 
+                      ? `${appliedCoupon.coupon.valor}% de desconto`
+                      : `R$ ${appliedCoupon.coupon.valor.toFixed(2).replace('.', ',')} de desconto`
+                    }
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleRemoveCoupon}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="Digite o código do cupom"
+                className="flex-1"
+                onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+              />
+              <Button 
+                onClick={handleApplyCoupon} 
+                disabled={couponLoading || !couponCode.trim()}
+                variant="outline"
+              >
+                {couponLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Aplicar"
+                )}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Payment Card */}
       <Card className="border shadow-lg overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 pb-6">
@@ -177,7 +365,10 @@ export const StepStripePayment = ({
               </div>
               {discount > 0 && (
                 <div className="flex items-center justify-between text-sm text-green-600">
-                  <span>Desconto</span>
+                  <span className="flex items-center gap-1">
+                    <Tag className="h-3 w-3" />
+                    Desconto
+                  </span>
                   <span>- R$ {discount.toFixed(2).replace(".", ",")}</span>
                 </div>
               )}

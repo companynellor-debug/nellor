@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { CheckCircle, Package, Truck, ClipboardList, Home } from "lucide-react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
+import { useCoupons } from "@/hooks/useCoupons";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
@@ -14,6 +15,7 @@ const CheckoutSucesso = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { createOrder } = useSupabaseOrders();
+  const { incrementCouponUsage } = useCoupons();
   const { clearCart } = useCart();
   
   const [showAnimation, setShowAnimation] = useState(false);
@@ -44,7 +46,7 @@ const CheckoutSucesso = () => {
 
       try {
         const pendingOrder = JSON.parse(pendingOrderStr);
-        const { buyerData, cartItems, subtotal, shipping, discount, total, supplierId, stripeSessionId } = pendingOrder;
+        const { buyerData, cartItems, subtotal, shipping, discount, total, supplierId, stripeSessionId, couponId } = pendingOrder;
 
         // Calculate platform fee (7.5%)
         const platformFee = total * 0.075;
@@ -90,6 +92,11 @@ const CheckoutSucesso = () => {
         });
 
         setOrderNumber(order?.order_number || `#${Date.now().toString().slice(-8)}`);
+        
+        // Increment coupon usage if one was applied
+        if (couponId) {
+          await incrementCouponUsage(couponId);
+        }
         
         // Clear cart and pending order
         clearCart();
