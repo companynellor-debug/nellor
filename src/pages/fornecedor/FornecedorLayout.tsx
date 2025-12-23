@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
+import { StripeStatusBanner } from "@/components/fornecedor/StripeStatusBanner";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+
 const FornecedorLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -73,6 +75,9 @@ const FornecedorLayout = () => {
               </Button>
             </div>
           </header>
+
+          {/* Stripe Status Banner */}
+          <StripeStatusBanner />
 
           {/* Main Content */}
           <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
