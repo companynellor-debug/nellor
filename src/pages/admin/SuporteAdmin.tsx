@@ -95,13 +95,12 @@ const SuporteAdmin = () => {
 
     try {
       setSending(true);
-      const { error } = await supabase
-        .from('support_tickets')
-        .update({
-          resposta_admin: response,
-          status: 'pending'
-        })
-        .eq('id', selectedTicket.id);
+      // Use RPC function to bypass RLS
+      const { data, error } = await supabase.rpc('admin_update_support_ticket', {
+        _ticket_id: selectedTicket.id,
+        _resposta_admin: response,
+        _status: 'pending'
+      });
 
       if (error) throw error;
       
@@ -119,10 +118,11 @@ const SuporteAdmin = () => {
 
   const handleCloseTicket = async (ticketId: string) => {
     try {
-      const { error } = await supabase
-        .from('support_tickets')
-        .update({ status: 'closed' })
-        .eq('id', ticketId);
+      // Use RPC function to bypass RLS
+      const { data, error } = await supabase.rpc('admin_update_support_ticket', {
+        _ticket_id: ticketId,
+        _status: 'closed'
+      });
 
       if (error) throw error;
       toast.success('Ticket fechado!');
