@@ -1,1 +1,13 @@
 project_id = "juvywnnpcbhwarhwxcgc"
+
+[functions.check-coupon-alerts]
+verify_jwt = false
+
+[functions.stripe-connect-onboarding]
+verify_jwt = false
+
+[functions.stripe-create-payment]
+verify_jwt = false
+
+[functions.stripe-check-account]
+verify_jwt = false
