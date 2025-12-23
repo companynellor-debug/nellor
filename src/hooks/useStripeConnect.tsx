@@ -8,6 +8,7 @@ interface StripeAccountStatus {
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
   detailsSubmitted: boolean;
+  stripeReady: boolean;
   businessType?: string;
   country?: string;
 }
@@ -16,7 +17,9 @@ interface PaymentResult {
   sessionId: string;
   url: string;
   platformFee: number;
+  platformFeePercentage: number;
   supplierAmount: number;
+  stripeConnectedAccountId: string;
 }
 
 export const useStripeConnect = () => {
@@ -58,7 +61,7 @@ export const useStripeConnect = () => {
   };
 
   // Check supplier's Stripe account status
-  const checkAccountStatus = async (): Promise<StripeAccountStatus | null> => {
+  const checkAccountStatus = async (supplierId?: string): Promise<StripeAccountStatus | null> => {
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -67,7 +70,9 @@ export const useStripeConnect = () => {
         return null;
       }
 
-      const response = await supabase.functions.invoke('stripe-check-account');
+      const response = await supabase.functions.invoke('stripe-check-account', {
+        body: supplierId ? { supplierId } : undefined,
+      });
 
       if (response.error) {
         console.error('Check account error:', response.error);
@@ -82,6 +87,30 @@ export const useStripeConnect = () => {
       return null;
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Check if a supplier is ready to receive payments
+  const isSupplierReady = async (supplierId: string): Promise<boolean> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        return false;
+      }
+
+      const response = await supabase.functions.invoke('stripe-check-account', {
+        body: { supplierId },
+      });
+
+      if (response.error) {
+        return false;
+      }
+
+      return response.data?.stripeReady === true;
+    } catch (error) {
+      console.error('Error checking supplier ready status:', error);
+      return false;
     }
   };
 
@@ -116,7 +145,15 @@ export const useStripeConnect = () => {
 
       if (response.error) {
         console.error('Create payment error:', response.error);
-        toast.error('Erro ao criar pagamento');
+        
+        // Check for specific error codes
+        const errorData = response.error as any;
+        if (errorData?.message?.includes('SUPPLIER_NOT_READY') || 
+            errorData?.message?.includes('não completou')) {
+          toast.error('O fornecedor ainda não completou a configuração do Stripe');
+        } else {
+          toast.error('Erro ao criar pagamento');
+        }
         return null;
       }
 
@@ -152,6 +189,7 @@ export const useStripeConnect = () => {
     accountStatus,
     startOnboarding,
     checkAccountStatus,
+    isSupplierReady,
     createPayment,
     redirectToCheckout,
   };
