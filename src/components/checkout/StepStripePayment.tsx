@@ -95,13 +95,24 @@ export const StepStripePayment = ({
       } else {
         throw new Error("URL de pagamento não gerada");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment error:", error);
-      toast({
-        title: "Erro no pagamento",
-        description: "Não foi possível iniciar o pagamento. Tente novamente.",
-        variant: "destructive",
-      });
+      
+      // Check for specific error about supplier not configured
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("não completou") || errorMessage.includes("não está habilitada")) {
+        toast({
+          title: "Fornecedor não configurado",
+          description: "O fornecedor ainda não finalizou a configuração de pagamentos. Tente novamente mais tarde ou entre em contato.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro no pagamento",
+          description: "Não foi possível iniciar o pagamento. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsProcessing(false);
     }

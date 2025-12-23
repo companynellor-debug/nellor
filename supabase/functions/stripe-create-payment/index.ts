@@ -89,6 +89,29 @@ serve(async (req) => {
       );
     }
 
+    // Verify supplier's Stripe account has required capabilities
+    try {
+      const account = await stripe.accounts.retrieve(supplier.stripe_account_id);
+      
+      console.log(`Supplier Stripe account status: charges_enabled=${account.charges_enabled}, payouts_enabled=${account.payouts_enabled}, details_submitted=${account.details_submitted}`);
+      
+      if (!account.charges_enabled) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Fornecedor ainda não completou a configuração do Stripe. Entre em contato com o fornecedor.",
+            details: "A conta Stripe do fornecedor não está habilitada para receber pagamentos."
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } catch (accountError) {
+      console.error("Error checking supplier account:", accountError);
+      return new Response(
+        JSON.stringify({ error: "Erro ao verificar conta do fornecedor no Stripe" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Convert amount to cents (Stripe uses smallest currency unit)
     const amountInCents = Math.round(amount * 100);
     
