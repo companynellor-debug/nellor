@@ -64,36 +64,44 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 0 0% 5%;
+    --background: 270 20% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 8%;
+    --card: 270 15% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 8%;
+    --popover: 270 15% 12%;
     --popover-foreground: 0 0% 98%;
 
     /* Mantém roxo no dark mode */
-    --primary: 280 100% 25%;
+    --primary: 280 100% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 280 88% 36%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 280 50% 25%;
+    --secondary-foreground: 0 0% 98%;
 
-    --accent: 280 100% 40%;
+    --accent: 280 80% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 270 15% 18%;
+    --muted-foreground: 270 10% 70%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 280 100% 25%;
+    --border: 270 20% 25%;
+    --input: 270 20% 20%;
+    --ring: 280 100% 60%;
+
+    /* Gradientes para dark mode */
+    --gradient-hero: linear-gradient(135deg, hsl(280 60% 35%), hsl(280 50% 25%));
+    --gradient-card: linear-gradient(145deg, hsl(280 30% 15% / 0.5), hsl(280 20% 12% / 0.8));
     
-    /* Cliente Panel Theme - Roxo escuro #3B006A */
+    /* Sombras para dark mode */
+    --shadow-card: 0 8px 32px hsla(280 100% 10% / 0.4);
+    --shadow-hover: 0 16px 48px hsla(280 100% 60% / 0.2);
+    
+    /* Cliente Panel Theme - Roxo escuro */
     --cliente-bg: 276 100% 21%;
     --cliente-surface: 276 60% 25%;
     --cliente-accent: 280 100% 75%;

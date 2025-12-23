@@ -176,9 +176,9 @@ const SuporteAdmin = () => {
           <div className="space-y-4">
             {/* Mensagem do usuário - alinhada à esquerda */}
             <div className="flex justify-start">
-              <div className="max-w-[75%] bg-white border shadow-sm rounded-2xl px-4 py-3">
+              <div className="max-w-[75%] bg-muted border border-border shadow-sm rounded-2xl px-4 py-3">
                 <p className="text-xs font-medium text-muted-foreground mb-1">{selectedTicket.profiles?.nome || 'Usuário'}</p>
-                <p className="text-sm break-words whitespace-pre-wrap">{selectedTicket.mensagem}</p>
+                <p className="text-sm break-words whitespace-pre-wrap text-foreground">{selectedTicket.mensagem}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {selectedTicket.created_at && format(new Date(selectedTicket.created_at), "HH:mm", { locale: ptBR })}
                 </p>
@@ -188,7 +188,7 @@ const SuporteAdmin = () => {
             {/* Resposta do admin - alinhada à direita */}
             {selectedTicket.resposta_admin && (
               <div className="flex justify-end">
-                <div className="max-w-[75%] bg-primary text-white rounded-2xl px-4 py-3">
+                <div className="max-w-[75%] bg-primary text-primary-foreground rounded-2xl px-4 py-3">
                   <p className="text-xs font-medium opacity-80 mb-1">Suporte Nellor</p>
                   <p className="text-sm break-words whitespace-pre-wrap">{selectedTicket.resposta_admin}</p>
                   <p className="text-xs opacity-70 mt-1">
@@ -232,7 +232,7 @@ const SuporteAdmin = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2 dark:text-white">Suporte</h1>
+        <h1 className="text-3xl font-bold mb-2 text-foreground">Suporte</h1>
         <p className="text-muted-foreground">Tickets de suporte de clientes e fornecedores</p>
       </div>
 
