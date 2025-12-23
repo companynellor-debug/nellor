@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  showOrderNotification, 
+  showPaymentNotification,
+  showSupplierNotification,
+  requestNotificationPermission,
+  getNotificationPermission
+} from '@/utils/pushNotifications';
 
 export type AdminNotificationType = 'sale' | 'commission' | 'alert' | 'supplier' | 'payment';
 
@@ -24,15 +31,22 @@ export const useAdminNotifications = () => {
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const { toast } = useToast();
 
-  const playNotificationSound = () => {
+  const playNotificationSound = useCallback(() => {
     const audio = new Audio('/notification-sound.mp3');
     audio.volume = 0.5;
     audio.play().catch(error => {
       console.error('Error playing notification sound:', error);
     });
-  };
+  }, []);
+
+  const requestPermission = useCallback(async () => {
+    const granted = await requestNotificationPermission();
+    setNotificationPermission(getNotificationPermission());
+    return granted;
+  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -145,27 +159,116 @@ export const useAdminNotifications = () => {
   };
 
   useEffect(() => {
+    // Check notification permission on mount
+    setNotificationPermission(getNotificationPermission());
     fetchNotifications();
 
     // Subscribe to realtime changes for new orders
-    const channel = supabase
-      .channel('admin-notifications-changes')
+    const ordersChannel = supabase
+      .channel('admin-orders-realtime')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'orders'
         },
-        (payload) => {
+        async (payload) => {
           const order = payload.new as any;
+          console.log('New order received:', order);
           
-          if (order?.payment_status === 'paid') {
+          playNotificationSound();
+          toast({
+            title: '🛒 Novo Pedido!',
+            description: `Pedido #${order.order_number} - R$ ${Number(order.total)?.toFixed(2)}`,
+          });
+          
+          // Show push notification
+          await showOrderNotification(
+            order.order_number,
+            Number(order.total),
+            order.buyer_name
+          );
+          
+          fetchNotifications();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders'
+        },
+        async (payload) => {
+          const order = payload.new as any;
+          const oldOrder = payload.old as any;
+          
+          // Payment status changed to paid
+          if (order?.payment_status === 'paid' && oldOrder?.payment_status !== 'paid') {
             playNotificationSound();
             toast({
-              title: 'Nova Venda!',
-              description: `Pedido #${order.order_number} - R$ ${order.total?.toFixed(2)}`,
+              title: '✅ Pagamento Confirmado!',
+              description: `Pedido #${order.order_number} - R$ ${Number(order.total)?.toFixed(2)}`,
             });
+            
+            await showPaymentNotification(
+              order.order_number,
+              Number(order.total),
+              'paid'
+            );
+            
+            fetchNotifications();
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to new suppliers
+    const profilesChannel = supabase
+      .channel('admin-profiles-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'profiles'
+        },
+        async (payload) => {
+          const profile = payload.new as any;
+          
+          if (profile?.tipo === 'fornecedor') {
+            playNotificationSound();
+            toast({
+              title: '🏪 Novo Fornecedor!',
+              description: `${profile.nome} se cadastrou na plataforma`,
+            });
+            
+            await showSupplierNotification(profile.nome, 'registered');
+            fetchNotifications();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles'
+        },
+        async (payload) => {
+          const profile = payload.new as any;
+          const oldProfile = payload.old as any;
+          
+          // Stripe connected
+          if (profile?.stripe_account_id && !oldProfile?.stripe_account_id) {
+            playNotificationSound();
+            toast({
+              title: '💳 Stripe Conectado!',
+              description: `${profile.nome} conectou sua conta Stripe`,
+            });
+            
+            await showSupplierNotification(profile.nome, 'stripe_connected');
             fetchNotifications();
           }
         }
@@ -173,9 +276,10 @@ export const useAdminNotifications = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(profilesChannel);
     };
-  }, []);
+  }, [playNotificationSound, toast]);
 
   const markAsRead = async (notificationId: string) => {
     // For historical data, just update local state
@@ -202,6 +306,8 @@ export const useAdminNotifications = () => {
     notifications,
     loading,
     unreadCount,
+    notificationPermission,
+    requestPermission,
     markAsRead,
     markAllAsRead,
     getNotificationsByType,
