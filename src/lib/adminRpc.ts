@@ -36,12 +36,30 @@ export type AdminProfile = {
 
 export async function fetchAdminOrders(): Promise<AdminOrder[]> {
   const { data, error } = await supabase.rpc("get_admin_orders");
-  if (error) throw error;
+  if (error) {
+    console.error("Error fetching admin orders:", error);
+    throw error;
+  }
+  console.log("Fetched admin orders:", data?.length || 0, "records");
   return (data ?? []) as any;
 }
 
 export async function fetchAdminProfiles(): Promise<AdminProfile[]> {
   const { data, error } = await supabase.rpc("get_admin_profiles");
-  if (error) throw error;
+  if (error) {
+    console.error("Error fetching admin profiles:", error);
+    throw error;
+  }
+  console.log("Fetched admin profiles:", data?.length || 0, "records");
   return (data ?? []) as any;
+}
+
+export async function fetchAdminStats() {
+  const { data, error } = await supabase.rpc("get_admin_stats");
+  if (error) {
+    console.error("Error fetching admin stats:", error);
+    throw error;
+  }
+  console.log("Fetched admin stats:", data);
+  return data?.[0] || null;
 }

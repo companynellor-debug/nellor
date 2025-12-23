@@ -14,6 +14,7 @@ const Dashboard = () => {
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
   
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeSuppliers: 0,
@@ -36,6 +37,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       const getStartDate = () => {
         const now = new Date();
@@ -49,9 +51,26 @@ const Dashboard = () => {
 
       const startDate = getStartDate();
       
-      const { data: statsData } = await supabase.rpc('get_admin_stats');
-      const { data: allOrders } = await supabase.rpc('get_admin_orders');
-      const { data: allProfiles } = await supabase.rpc('get_admin_profiles');
+      // Fetch data using direct RPC calls
+      const [statsResult, ordersResult, profilesResult] = await Promise.all([
+        supabase.rpc('get_admin_stats'),
+        supabase.rpc('get_admin_orders'),
+        supabase.rpc('get_admin_profiles')
+      ]);
+      
+      if (statsResult.error) console.error("Stats error:", statsResult.error);
+      if (ordersResult.error) console.error("Orders error:", ordersResult.error);
+      if (profilesResult.error) console.error("Profiles error:", profilesResult.error);
+      
+      const statsData = statsResult.data;
+      const allOrders = ordersResult.data || [];
+      const allProfiles = profilesResult.data || [];
+      
+      console.log("Dashboard data loaded:", { 
+        stats: statsData, 
+        orders: allOrders?.length, 
+        profiles: allProfiles?.length 
+      });
       
       const stats_result = statsData?.[0] || { total_users: 0, active_suppliers: 0, paid_orders: 0, delivered_orders: 0, total_revenue: 0 };
       
@@ -141,6 +160,7 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
+      setError('Erro ao carregar dados. Verifique sua conexão e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -201,6 +221,28 @@ const Dashboard = () => {
 
   // Mostrar skeleton loading em vez de tela de carregamento completa
   const isInitialLoad = loading && salesData.length === 0;
+
+  if (isInitialLoad) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando dados do dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={fetchDashboardData}>Tentar Novamente</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
