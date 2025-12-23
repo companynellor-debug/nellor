@@ -9,7 +9,6 @@ import { format, subMonths, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { fetchAdminOrders, fetchAdminProfiles } from "@/lib/adminRpc";
-
 const Financeiro = () => {
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<'7days' | '30days' | '90days' | 'all'>('30days');
@@ -21,21 +20,25 @@ const Financeiro = () => {
   const [totalPedidos, setTotalPedidos] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [planosStats, setPlanosStats] = useState({ free: 0, premium: 0, stripeConnected: 0 });
+  const [planosStats, setPlanosStats] = useState({
+    free: 0,
+    premium: 0,
+    stripeConnected: 0
+  });
   const [showHelpModal, setShowHelpModal] = useState(false);
-  const [periodSummary, setPeriodSummary] = useState({ daily: 0, monthly: 0 });
-
+  const [periodSummary, setPeriodSummary] = useState({
+    daily: 0,
+    monthly: 0
+  });
   useEffect(() => {
     fetchData();
   }, [dateFilter]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
-
       const allOrders = await fetchAdminOrders();
       const allProfiles = await fetchAdminProfiles();
-      
+
       // Filtrar por período
       const getStartDate = () => {
         const now = new Date();
@@ -44,21 +47,14 @@ const Financeiro = () => {
         if (dateFilter === '90days') return subDays(now, 90);
         return null;
       };
-      
       const startDate = getStartDate();
-      
+
       // Pedidos pagos (não cancelados)
-      const paidOrders = (allOrders || []).filter((o: any) => 
-        o.payment_status === 'paid' && o.order_status !== 'cancelled'
-      );
-      
+      const paidOrders = (allOrders || []).filter((o: any) => o.payment_status === 'paid' && o.order_status !== 'cancelled');
+
       // Filtrar por período se necessário
-      const ordersList = startDate 
-        ? paidOrders.filter((o: any) => new Date(o.created_at) >= startDate)
-        : paidOrders;
-
+      const ordersList = startDate ? paidOrders.filter((o: any) => new Date(o.created_at) >= startDate) : paidOrders;
       setTransactions(ordersList);
-
       const receita = ordersList.reduce((sum: number, o: any) => sum + Number(o.total), 0);
       setReceitaTotal(receita);
       setTotalPedidos(ordersList.length);
@@ -79,10 +75,10 @@ const Financeiro = () => {
       // Stats de planos dos fornecedores
       const fornecedores = (allProfiles || []).filter((p: any) => p.tipo === 'fornecedor');
       const stripeConnected = fornecedores.filter((f: any) => f.stripe_account_id).length;
-      
       setPlanosStats({
         free: fornecedores.length,
-        premium: 0, // TODO: implementar plano premium
+        premium: 0,
+        // TODO: implementar plano premium
         stripeConnected
       });
 
@@ -96,7 +92,6 @@ const Financeiro = () => {
         const d = new Date(o.created_at);
         return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
       });
-      
       setPeriodSummary({
         daily: todayOrders.reduce((sum: number, o: any) => sum + Number(o.total) * 0.075, 0),
         monthly: thisMonthOrders.reduce((sum: number, o: any) => sum + Number(o.total) * 0.075, 0)
@@ -105,21 +100,18 @@ const Financeiro = () => {
       // Fluxo de caixa dos últimos 6 meses
       const cashflow = [];
       const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
       for (let i = 5; i >= 0; i--) {
         const date = subMonths(new Date(), i);
         const monthOrders = paidOrders.filter((o: any) => {
           const orderDate = new Date(o.created_at);
           return orderDate.getMonth() === date.getMonth() && orderDate.getFullYear() === date.getFullYear();
         });
-
         const entrada = monthOrders.reduce((sum: number, o: any) => sum + Number(o.total), 0);
         const saida = monthOrders.reduce((sum: number, o: any) => sum + (Number(o.total) - Number(o.total) * 0.075 - Number(o.total) * 0.034), 0);
-
         cashflow.push({
           month: meses[date.getMonth()],
           entrada: Math.round(entrada),
-          saida: Math.round(saida),
+          saida: Math.round(saida)
         });
       }
       setCashflowData(cashflow);
@@ -129,52 +121,55 @@ const Financeiro = () => {
       setLoading(false);
     }
   };
-
   const filteredTransactions = transactions.filter(tx => {
     if (statusFilter === "all") return true;
     return tx.order_status === statusFilter;
   });
-
-
-  const statsCards = [
-    {
-      title: "💰 Total Arrecadado (GMV)",
-      value: `R$ ${receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      subtitle: "Total movimentado via Stripe",
-      icon: DollarSign,
-      color: "from-green-500 to-green-600"
-    },
-    {
-      title: "💸 Total Repassado",
-      value: `R$ ${pagoFornecedores.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      subtitle: "Valor líquido aos fornecedores",
-      icon: TrendingDown,
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      title: "📉 Comissão Nellor (7,5%)",
-      value: `R$ ${comissoes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      subtitle: "Receita da plataforma",
-      icon: Percent,
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      title: "👥 Fornecedores com Stripe",
-      value: `${planosStats.stripeConnected} / ${planosStats.free}`,
-      subtitle: `${planosStats.free > 0 ? ((planosStats.stripeConnected / planosStats.free) * 100).toFixed(0) : 0}% conectados`,
-      icon: Users,
-      color: "from-orange-500 to-orange-600"
-    }
-  ];
-
-  const distributionData = [
-    { name: "Fornecedores", value: pagoFornecedores, color: "#3B82F6" },
-    { name: "Comissão Nellor", value: comissoes, color: "#8B5CF6" },
-    { name: "Taxa Stripe (est.)", value: receitaTotal * 0.034, color: "#F59E0B" },
-  ];
-
-  return (
-    <div className="space-y-8">
+  const statsCards = [{
+    title: "💰 Total Arrecadado (GMV)",
+    value: `R$ ${receitaTotal.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2
+    })}`,
+    subtitle: "Total movimentado via Stripe",
+    icon: DollarSign,
+    color: "from-green-500 to-green-600"
+  }, {
+    title: "💸 Total Repassado",
+    value: `R$ ${pagoFornecedores.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2
+    })}`,
+    subtitle: "Valor líquido aos fornecedores",
+    icon: TrendingDown,
+    color: "from-blue-500 to-blue-600"
+  }, {
+    title: "📉 Comissão Nellor (7,5%)",
+    value: `R$ ${comissoes.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2
+    })}`,
+    subtitle: "Receita da plataforma",
+    icon: Percent,
+    color: "from-purple-500 to-purple-600"
+  }, {
+    title: "👥 Fornecedores com Stripe",
+    value: `${planosStats.stripeConnected} / ${planosStats.free}`,
+    subtitle: `${planosStats.free > 0 ? (planosStats.stripeConnected / planosStats.free * 100).toFixed(0) : 0}% conectados`,
+    icon: Users,
+    color: "from-orange-500 to-orange-600"
+  }];
+  const distributionData = [{
+    name: "Fornecedores",
+    value: pagoFornecedores,
+    color: "#3B82F6"
+  }, {
+    name: "Comissão Nellor",
+    value: comissoes,
+    color: "#8B5CF6"
+  }, {
+    name: "Taxa Stripe (est.)",
+    value: receitaTotal * 0.034,
+    color: "#F59E0B"
+  }];
+  return <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
@@ -195,16 +190,15 @@ const Financeiro = () => {
               <SelectItem value="all">Todo período</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={() => setShowHelpModal(true)}>
+          <Button variant="outline" size="sm" onClick={() => setShowHelpModal(true)} className="mx-0 px-0 pb-[6px] pr-0">
             <HelpCircle className="h-4 w-4 mr-2" />
-            Como funciona
+            ​ 
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsCards.map(stat => (
-          <Card key={stat.title} className="border-purple-100 hover:shadow-lg transition-all">
+        {statsCards.map(stat => <Card key={stat.title} className="border-purple-100 hover:shadow-lg transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
@@ -213,12 +207,9 @@ const Financeiro = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              {stat.subtitle && (
-                <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
-              )}
+              {stat.subtitle && <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>}
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -258,18 +249,11 @@ const Financeiro = () => {
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
-                <Pie 
-                  data={distributionData} 
-                  cx="50%" 
-                  cy="50%" 
-                  labelLine={false} 
-                  label={({ name, value }) => value > 0 ? `${name}: R$ ${value.toFixed(0)}` : ''} 
-                  outerRadius={120} 
-                  dataKey="value"
-                >
-                  {distributionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                <Pie data={distributionData} cx="50%" cy="50%" labelLine={false} label={({
+                name,
+                value
+              }) => value > 0 ? `${name}: R$ ${value.toFixed(0)}` : ''} outerRadius={120} dataKey="value">
+                  {distributionData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                 </Pie>
                 <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
               </PieChart>
@@ -311,14 +295,11 @@ const Financeiro = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((tx) => {
-                    const comissao = Number(tx.total) * 0.075;
-                    const taxaStripe = Number(tx.total) * 0.034;
-                    const repassado = Number(tx.total) - comissao - taxaStripe;
-
-                    return (
-                      <tr key={tx.id} className="border-b hover:bg-muted/20">
+                {filteredTransactions.length > 0 ? filteredTransactions.map(tx => {
+                const comissao = Number(tx.total) * 0.075;
+                const taxaStripe = Number(tx.total) * 0.034;
+                const repassado = Number(tx.total) - comissao - taxaStripe;
+                return <tr key={tx.id} className="border-b hover:bg-muted/20">
                         <td className="py-3 px-2">{format(new Date(tx.created_at), "dd/MM/yyyy")}</td>
                         <td className="py-3 px-2 font-medium">#{tx.order_number}</td>
                         <td className="py-3 px-2">{tx.supplier_name || "---"}</td>
@@ -331,16 +312,12 @@ const Financeiro = () => {
                             {tx.order_status}
                           </Badge>
                         </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
+                      </tr>;
+              }) : <tr>
                     <td colSpan={8} className="py-8 text-center text-muted-foreground">
                       Nenhuma transação encontrada
                     </td>
-                  </tr>
-                )}
+                  </tr>}
               </tbody>
             </table>
           </div>
@@ -432,8 +409,6 @@ const Financeiro = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default Financeiro;
