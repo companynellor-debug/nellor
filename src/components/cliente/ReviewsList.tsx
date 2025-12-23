@@ -37,20 +37,23 @@ export const ReviewsList = ({ reviews, loading }: ReviewsListProps) => {
     percentage: (reviews.filter(r => r.rating === rating).length / reviews.length) * 100
   }));
 
+  const maxCount = Math.max(...ratingDistribution.map(r => r.count));
+
   return (
     <div className="space-y-6">
-      {/* Rating Summary */}
-      <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="text-center">
-            <div className="text-5xl font-bold text-primary mb-2">
+      {/* Rating Summary - Layout melhorado */}
+      <div className="rounded-xl border bg-gradient-to-br from-background to-muted/30 p-6">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Nota média */}
+          <div className="flex flex-col items-center justify-center lg:border-r lg:pr-8">
+            <div className="text-6xl font-bold text-foreground mb-2">
               {averageRating.toFixed(1)}
             </div>
-            <div className="flex items-center justify-center gap-1 mb-2">
+            <div className="flex items-center gap-1 mb-3">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-5 w-5 ${
+                  className={`h-6 w-6 transition-all ${
                     i < Math.round(averageRating)
                       ? "fill-yellow-400 text-yellow-400"
                       : "text-gray-300"
@@ -58,27 +61,66 @@ export const ReviewsList = ({ reviews, loading }: ReviewsListProps) => {
                 />
               ))}
             </div>
-            <p className="text-sm text-muted-foreground">
-              {reviews.length} {reviews.length === 1 ? 'avaliação' : 'avaliações'}
+            <p className="text-sm text-muted-foreground font-medium">
+              Baseado em {reviews.length} {reviews.length === 1 ? 'avaliação' : 'avaliações'}
             </p>
           </div>
 
-          <div className="space-y-2">
+          {/* Gráfico de distribuição */}
+          <div className="flex-1 space-y-3">
+            <h4 className="text-sm font-semibold text-muted-foreground mb-4">Distribuição das notas</h4>
             {ratingDistribution.map(({ rating, count, percentage }) => (
-              <div key={rating} className="flex items-center gap-2">
-                <div className="flex items-center gap-1 w-16">
-                  <span className="text-sm font-medium">{rating}</span>
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                </div>
-                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div key={rating} className="flex items-center gap-3 group">
+                {/* Label da nota */}
+                <button className="flex items-center gap-1.5 min-w-[60px] hover:text-primary transition-colors">
+                  <span className="text-sm font-semibold">{rating}</span>
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                </button>
+                
+                {/* Barra de progresso */}
+                <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden relative">
                   <div
-                    className="h-full bg-yellow-400 transition-all"
-                    style={{ width: `${percentage}%` }}
+                    className="h-full rounded-full transition-all duration-500 ease-out"
+                    style={{ 
+                      width: `${percentage}%`,
+                      background: rating >= 4 
+                        ? 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary)/0.8))'
+                        : rating === 3 
+                        ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' 
+                        : 'linear-gradient(90deg, #ef4444, #f87171)'
+                    }}
                   />
                 </div>
-                <span className="text-sm text-muted-foreground w-8">{count}</span>
+                
+                {/* Contagem e porcentagem */}
+                <div className="min-w-[70px] text-right">
+                  <span className="text-sm font-semibold">{count}</span>
+                  <span className="text-xs text-muted-foreground ml-1">({percentage.toFixed(0)}%)</span>
+                </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Estatísticas rápidas */}
+        <div className="mt-6 pt-6 border-t grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-2xl font-bold text-primary">
+              {ratingDistribution.find(r => r.rating === 5)?.percentage.toFixed(0) || 0}%
+            </p>
+            <p className="text-xs text-muted-foreground">5 estrelas</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">
+              {((ratingDistribution.find(r => r.rating >= 4)?.count || 0) + (ratingDistribution.find(r => r.rating === 5)?.count || 0)) > 0 
+                ? (((ratingDistribution.find(r => r.rating === 4)?.count || 0) + (ratingDistribution.find(r => r.rating === 5)?.count || 0)) / reviews.length * 100).toFixed(0) 
+                : 0}%
+            </p>
+            <p className="text-xs text-muted-foreground">Recomendam</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{reviews.length}</p>
+            <p className="text-xs text-muted-foreground">Total</p>
           </div>
         </div>
       </div>
