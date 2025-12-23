@@ -97,49 +97,43 @@ const ProdutoDetalhes = () => {
   };
 
   const handleShare = async () => {
-    const productUrl = `${window.location.origin}/cliente/produto/${id}`;
-    
+    const envUrl = (import.meta as any).env?.VITE_PUBLIC_SITE_URL as string | undefined;
+    const baseUrl = envUrl ? envUrl.replace(/\/$/, "") : window.location.origin;
+    const productUrl = `${baseUrl}/p/${product?.supplierUuid || ""}`;
+
     const copyToClipboard = async () => {
       try {
         await navigator.clipboard.writeText(productUrl);
-        toast({
-          title: 'Link copiado!',
-          description: 'O link do produto foi copiado para a área de transferência.',
-        });
       } catch {
-        // Fallback para navegadores que não suportam clipboard API
-        const textArea = document.createElement('textarea');
+        const textArea = document.createElement("textarea");
         textArea.value = productUrl;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
         document.body.appendChild(textArea);
         textArea.select();
-        document.execCommand('copy');
+        document.execCommand("copy");
         document.body.removeChild(textArea);
-        toast({
-          title: 'Link copiado!',
-          description: 'O link do produto foi copiado para a área de transferência.',
-        });
       }
+
+      toast({
+        title: "Link copiado!",
+        description: "O link do produto foi copiado para a área de transferência.",
+      });
     };
 
-    // Tentar usar Web Share API primeiro (mobile)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: product?.name || 'Produto',
+          title: product?.name || "Produto",
           text: `Confira este produto: ${product?.name}`,
           url: productUrl,
         });
         return;
       } catch (error) {
-        // Se o usuário cancelou, não faz nada
-        if ((error as Error).name === 'AbortError') return;
-        // Caso contrário, usa fallback de cópia
+        if ((error as Error).name === "AbortError") return;
       }
     }
-    
-    // Fallback: copiar para área de transferência
+
     await copyToClipboard();
   };
 
@@ -171,14 +165,16 @@ const ProdutoDetalhes = () => {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => {
-                const productUrl = `${window.location.origin}/cliente/produto/${id}`;
+                const envUrl = (import.meta as any).env?.VITE_PUBLIC_SITE_URL as string | undefined;
+                const baseUrl = (envUrl ? envUrl.replace(/\/$/, "") : window.location.origin);
+                const productUrl = `${baseUrl}/p/${product?.supplierUuid || ""}`;
                 const text = `Confira este produto: ${product?.name} - ${productUrl}`;
                 window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
               }} 
-              className="p-2 hover:bg-green-100 rounded-full transition-colors"
+              className="p-2 hover:bg-muted rounded-full transition-colors"
               title="Compartilhar no WhatsApp"
             >
-              <MessageCircle className="h-6 w-6 text-green-600 hover:text-green-700 transition-colors" />
+              <MessageCircle className="h-6 w-6 hover:text-primary transition-colors" />
             </button>
             <button onClick={handleShare} className="p-2 hover:bg-muted rounded-full transition-colors" title="Copiar link">
               <Share2 className="h-6 w-6 hover:text-primary transition-colors" />

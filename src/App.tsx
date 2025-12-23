@@ -33,6 +33,7 @@ import ClienteHome from "./pages/cliente/Home";
 import ProdutoDetalhes from "./pages/cliente/ProdutoDetalhes";
 import Carrinho from "./pages/cliente/Carrinho";
 import Chat from "./pages/cliente/Chat";
+import PublicProduto from "./pages/PublicProduto";
 import Perfil from "./pages/cliente/Perfil";
 import Avaliacoes from "./pages/cliente/Avaliacoes";
 import AvaliarPedido from "./pages/cliente/AvaliarPedido";
@@ -79,13 +80,15 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="/recursos" element={<Recursos />} />
             <Route path="/faq" element={<FAQ />} />
           
+          {/* Public Product Share Route */}
+          <Route path="/p/:id" element={<PublicProduto />} />
+
           {/* Cliente Panel Routes */}
           <Route path="/cliente" element={<ProtectedRoute requireType="cliente"><ClienteHome /></ProtectedRoute>} />
           <Route path="/cliente/produtos" element={<ProtectedRoute requireType="cliente"><Produtos /></ProtectedRoute>} />
           <Route path="/cliente/produto/:id" element={<ProtectedRoute requireType="cliente"><ProdutoDetalhes /></ProtectedRoute>} />
           <Route path="/loja/:id" element={<PerfilLoja />} />
           <Route path="/cliente/loja/:id" element={<ProtectedRoute requireType="cliente"><PerfilLoja /></ProtectedRoute>} />
-          <Route path="/cliente/carrinho" element={<ProtectedRoute requireType="cliente"><Carrinho /></ProtectedRoute>} />
           <Route path="/cliente/checkout" element={<ProtectedRoute requireType="cliente"><Checkout /></ProtectedRoute>} />
           <Route path="/cliente/pedido-confirmado" element={<ProtectedRoute requireType="cliente"><PedidoConfirmado /></ProtectedRoute>} />
           <Route path="/cliente/chat" element={<ProtectedRoute requireType="cliente"><Chat /></ProtectedRoute>} />
