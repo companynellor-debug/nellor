@@ -45,6 +45,7 @@ import Notificacoes from "./pages/cliente/Notificacoes";
 import Produtos from "./pages/cliente/Produtos";
 import PerfilLoja from "./pages/cliente/PerfilLoja";
 import Checkout from "./pages/cliente/Checkout";
+import CheckoutSucesso from "./pages/cliente/CheckoutSucesso";
 import MetodosPagamento from "./pages/cliente/MetodosPagamento";
 import Suporte from "./pages/cliente/Suporte";
 import PedidoConfirmado from "./pages/cliente/PedidoConfirmado";
@@ -90,6 +91,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/loja/:id" element={<PerfilLoja />} />
           <Route path="/cliente/loja/:id" element={<ProtectedRoute requireType="cliente"><PerfilLoja /></ProtectedRoute>} />
           <Route path="/cliente/checkout" element={<ProtectedRoute requireType="cliente"><Checkout /></ProtectedRoute>} />
+          <Route path="/cliente/checkout/sucesso" element={<ProtectedRoute requireType="cliente"><CheckoutSucesso /></ProtectedRoute>} />
           <Route path="/cliente/pedido-confirmado" element={<ProtectedRoute requireType="cliente"><PedidoConfirmado /></ProtectedRoute>} />
           <Route path="/cliente/chat" element={<ProtectedRoute requireType="cliente"><Chat /></ProtectedRoute>} />
           <Route path="/cliente/perfil" element={<ProtectedRoute requireType="cliente"><Perfil /></ProtectedRoute>} />
