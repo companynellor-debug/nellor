@@ -73,22 +73,32 @@ export const StepStripePayment = ({
 
       setIsCheckingSupplier(true);
       try {
-        // We'll check via the edge function by making a test call
-        const response = await fetch(
-          `https://juvywnnpcbhwarhwxcgc.supabase.co/functions/v1/stripe-check-account`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${(await import("@/integrations/supabase/client")).supabase.auth.getSession().then(s => s.data.session?.access_token)}`,
-            },
-            body: JSON.stringify({ supplierId }),
-          }
-        );
+        // Import supabase client and get session properly
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.access_token) {
+          setSupplierReady(true);
+          setIsCheckingSupplier(false);
+          return;
+        }
 
-        // For now, assume the supplier is ready if we can't check
-        // The actual check will happen when creating payment
-        setSupplierReady(true);
+        const response = await supabase.functions.invoke('stripe-check-account', {
+          body: { supplierId },
+        });
+
+        if (response.error) {
+          console.log("Supplier check response:", response.error);
+          // Don't block, let the payment attempt handle it
+          setSupplierReady(true);
+        } else if (response.data) {
+          setSupplierReady(response.data.chargesEnabled === true);
+          if (!response.data.chargesEnabled) {
+            setSupplierError("O fornecedor ainda não finalizou o cadastro no sistema de pagamentos.");
+          }
+        } else {
+          setSupplierReady(true);
+        }
       } catch (error) {
         console.error("Error checking supplier status:", error);
         // Don't block, let the payment attempt handle it

@@ -48,11 +48,24 @@ serve(async (req) => {
       );
     }
 
+    // Check if we're checking a specific supplier or the current user
+    let supplierIdToCheck = user.id;
+    
+    // Try to get supplierId from body if provided
+    try {
+      const body = await req.json();
+      if (body?.supplierId) {
+        supplierIdToCheck = body.supplierId;
+      }
+    } catch {
+      // No body or invalid JSON, use current user
+    }
+
     // Get supplier profile using service role
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("stripe_account_id")
-      .eq("id", user.id)
+      .eq("id", supplierIdToCheck)
       .single();
 
     if (profileError || !profile?.stripe_account_id) {
