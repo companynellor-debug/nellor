@@ -106,6 +106,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/cliente/suporte" element={<ProtectedRoute requireType="cliente"><Suporte /></ProtectedRoute>} />
           <Route path="/cliente/instalar" element={<ProtectedRoute requireType="cliente"><InstalarApp /></ProtectedRoute>} />
           <Route path="/cliente/configuracoes-notificacoes" element={<ProtectedRoute requireType="cliente"><ConfiguracoesNotificacoes /></ProtectedRoute>} />
+          <Route path="/cliente/carrinho" element={<ProtectedRoute requireType="cliente"><Carrinho /></ProtectedRoute>} />
 
           {/* Fornecedor Panel Routes */}
           <Route path="/fornecedor" element={<ProtectedRoute requireType="fornecedor"><FornecedorLayout /></ProtectedRoute>}>
