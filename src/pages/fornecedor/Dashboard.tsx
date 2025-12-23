@@ -1,23 +1,31 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, DollarSign, ShoppingCart } from "lucide-react";
+import { Package, TrendingUp, DollarSign, ShoppingCart, CreditCard, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
+import { useStripeConnect } from "@/hooks/useStripeConnect";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { StripeConnectModal } from "@/components/fornecedor/StripeConnectModal";
+
 const Dashboard = () => {
   const navigate = useNavigate();
-  const {
-    profile
-  } = useSupabaseAuth();
-  const {
-    products
-  } = useSupplierProducts();
+  const { profile } = useSupabaseAuth();
+  const { products } = useSupplierProducts();
+  const { accountStatus, checkAccountStatus, startOnboarding, loading: stripeLoading } = useStripeConnect();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('today');
   const [orders, setOrders] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  const [checkingStripe, setCheckingStripe] = useState(true);
+
+  // Check Stripe status on mount
+  useEffect(() => {
+    setCheckingStripe(true);
+    checkAccountStatus().finally(() => setCheckingStripe(false));
+  }, []);
 
   // Buscar pedidos e analytics do fornecedor
   useEffect(() => {
@@ -124,6 +132,53 @@ const Dashboard = () => {
           </Button>
         </div>
       </div>
+
+      {/* Stripe Status Card */}
+      <Card className={`relative overflow-hidden border-2 ${
+        checkingStripe 
+          ? 'border-muted' 
+          : accountStatus?.connected && accountStatus?.chargesEnabled && accountStatus?.payoutsEnabled
+            ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10'
+            : 'border-red-500 bg-red-50/50 dark:bg-red-900/10'
+      }`}>
+        <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Status do Stripe
+          </CardTitle>
+          {checkingStripe ? (
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          ) : accountStatus?.connected && accountStatus?.chargesEnabled && accountStatus?.payoutsEnabled ? (
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          ) : (
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+          )}
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          {checkingStripe ? (
+            <p className="text-sm text-muted-foreground">Verificando...</p>
+          ) : accountStatus?.connected && accountStatus?.chargesEnabled && accountStatus?.payoutsEnabled ? (
+            <div>
+              <p className="text-lg font-semibold text-green-700 dark:text-green-400">Conectado</p>
+              <p className="text-xs text-muted-foreground mt-1">Você pode receber pagamentos</p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-lg font-semibold text-red-700 dark:text-red-400">Não conectado</p>
+              <p className="text-xs text-muted-foreground mt-1 mb-3">Conecte para receber pedidos</p>
+              <Button 
+                size="sm" 
+                className="w-full"
+                onClick={() => setShowStripeModal(true)}
+                disabled={stripeLoading}
+              >
+                {stripeLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
+                Conectar Stripe
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -290,6 +345,9 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Stripe Connect Modal */}
+      <StripeConnectModal open={showStripeModal} onOpenChange={setShowStripeModal} />
     </div>;
 };
 export default Dashboard;
