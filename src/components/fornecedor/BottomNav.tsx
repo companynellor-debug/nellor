@@ -9,10 +9,18 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { DollarSign, Bell, Store, BarChart3, Ticket } from "lucide-react";
+import { useSupplierCoupons } from "@/hooks/useSupplierCoupons";
 
 export const BottomNavFornecedor = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const { coupons } = useSupplierCoupons();
+  
+  const activeCouponsCount = coupons.filter(c => 
+    c.ativo && 
+    (!c.expira_em || new Date(c.expira_em) > new Date()) &&
+    (!c.uso_maximo || c.uso_atual < c.uso_maximo)
+  ).length;
 
   const mainNavItems = [
     { icon: Home, label: "Dashboard", path: "/fornecedor/dashboard" },
@@ -22,7 +30,7 @@ export const BottomNavFornecedor = () => {
   ];
 
   const moreNavItems = [
-    { icon: Ticket, label: "Cupons", path: "/fornecedor/cupons" },
+    { icon: Ticket, label: "Cupons", path: "/fornecedor/cupons", badge: activeCouponsCount },
     { icon: BarChart3, label: "Estatísticas", path: "/fornecedor/estatisticas" },
     { icon: DollarSign, label: "Financeiro", path: "/fornecedor/financeiro" },
     { icon: Bell, label: "Notificações", path: "/fornecedor/notificacoes" },
@@ -84,7 +92,14 @@ export const BottomNavFornecedor = () => {
                           : "hover:bg-muted/50"
                       }`}
                     >
-                      <Icon className="h-6 w-6" />
+                      <div className="relative">
+                        <Icon className="h-6 w-6" />
+                        {item.badge && item.badge > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 min-w-5 flex items-center justify-center px-1">
+                            {item.badge > 99 ? '99+' : item.badge}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-base">{item.label}</span>
                     </Link>
                   );
