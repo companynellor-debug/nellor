@@ -56,6 +56,31 @@ const Suporte = () => {
 
   useEffect(() => {
     fetchTickets();
+    
+    // Subscribe to real-time updates for responses
+    const channel = supabase
+      .channel('my-support-tickets')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'support_tickets'
+        },
+        (payload) => {
+          // Update the ticket in state when admin responds
+          setTickets(prev => prev.map(t => 
+            t.id === payload.new.id 
+              ? { ...t, ...payload.new } as SupportTicket
+              : t
+          ));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {

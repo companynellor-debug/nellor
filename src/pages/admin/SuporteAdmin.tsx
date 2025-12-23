@@ -34,21 +34,53 @@ const SuporteAdmin = () => {
 
   useEffect(() => {
     fetchTickets();
+    
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('support-tickets-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'support_tickets'
+        },
+        () => {
+          fetchTickets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select(`
-          *,
-          profiles:user_id(nome, tipo)
-        `)
-        .order('created_at', { ascending: false });
+      // Use the admin RPC function that bypasses RLS for profiles
+      const { data, error } = await supabase.rpc('get_admin_support_tickets');
 
       if (error) throw error;
-      setTickets(data || []);
+      
+      // Map the RPC result to match our interface
+      const mappedTickets = (data || []).map((ticket: any) => ({
+        id: ticket.id,
+        user_id: ticket.user_id,
+        assunto: ticket.assunto,
+        mensagem: ticket.mensagem,
+        resposta_admin: ticket.resposta_admin,
+        status: ticket.status as 'open' | 'pending' | 'closed',
+        created_at: ticket.created_at,
+        updated_at: ticket.updated_at,
+        profiles: {
+          nome: ticket.user_name || 'Usuário',
+          tipo: 'cliente' // Default, we can get this from email pattern or add to RPC
+        }
+      }));
+      
+      setTickets(mappedTickets);
     } catch (error) {
       console.error('Error fetching tickets:', error);
       toast.error('Erro ao carregar tickets');
