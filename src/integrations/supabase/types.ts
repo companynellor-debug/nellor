@@ -947,6 +947,14 @@ export type Database = {
       }
     }
     Functions: {
+      admin_update_support_ticket: {
+        Args: {
+          _resposta_admin?: string
+          _status?: Database["public"]["Enums"]["support_status"]
+          _ticket_id: string
+        }
+        Returns: boolean
+      }
       generate_order_number: { Args: never; Returns: string }
       get_admin_orders: {
         Args: never
