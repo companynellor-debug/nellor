@@ -146,6 +146,9 @@ const Dashboard = () => {
     }
   };
 
+  // Pedidos pagos filtrados por período
+  const paidOrdersCount = recentOrders.filter((o: any) => o.payment_status === 'paid' && o.order_status !== 'cancelled').length;
+
   const statsCards = [
     {
       title: "💰 Receita Nellor (Comissão)",
@@ -157,9 +160,16 @@ const Dashboard = () => {
     {
       title: "📊 GMV Total (Movimentado)",
       value: `R$ ${stats.gmvTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      subtitle: "Soma de todos os pedidos",
+      subtitle: "Soma de todos os pedidos pagos",
       icon: TrendingUp,
       color: "from-green-500 to-green-600",
+    },
+    {
+      title: "💳 Pedidos Pagos",
+      value: paidOrdersCount.toLocaleString('pt-BR'),
+      subtitle: "Pagamentos confirmados",
+      icon: DollarSign,
+      color: "from-emerald-500 to-emerald-600",
     },
     {
       title: "✅ Pedidos Concluídos",
