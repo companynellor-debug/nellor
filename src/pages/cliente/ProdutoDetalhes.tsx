@@ -98,31 +98,49 @@ const ProdutoDetalhes = () => {
 
   const handleShare = async () => {
     const productUrl = `${window.location.origin}/cliente/produto/${id}`;
-    const shareData = {
-      title: product?.name || 'Produto',
-      text: `Confira este produto: ${product?.name}`,
-      url: productUrl,
+    
+    const copyToClipboard = async () => {
+      try {
+        await navigator.clipboard.writeText(productUrl);
+        toast({
+          title: 'Link copiado!',
+          description: 'O link do produto foi copiado para a área de transferência.',
+        });
+      } catch {
+        // Fallback para navegadores que não suportam clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = productUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast({
+          title: 'Link copiado!',
+          description: 'O link do produto foi copiado para a área de transferência.',
+        });
+      }
     };
 
-    try {
-      if (navigator.share && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(productUrl);
-        toast({
-          title: 'Link copiado!',
-          description: 'O link do produto foi copiado para a área de transferência.',
+    // Tentar usar Web Share API primeiro (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product?.name || 'Produto',
+          text: `Confira este produto: ${product?.name}`,
+          url: productUrl,
         });
-      }
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        await navigator.clipboard.writeText(productUrl);
-        toast({
-          title: 'Link copiado!',
-          description: 'O link do produto foi copiado para a área de transferência.',
-        });
+        return;
+      } catch (error) {
+        // Se o usuário cancelou, não faz nada
+        if ((error as Error).name === 'AbortError') return;
+        // Caso contrário, usa fallback de cópia
       }
     }
+    
+    // Fallback: copiar para área de transferência
+    await copyToClipboard();
   };
 
   if (!product) {
