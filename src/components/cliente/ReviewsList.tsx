@@ -11,6 +11,7 @@ interface ReviewsListProps {
 
 export const ReviewsList = ({ reviews, loading }: ReviewsListProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
 
   if (loading) {
     return (
@@ -70,12 +71,22 @@ export const ReviewsList = ({ reviews, loading }: ReviewsListProps) => {
           <div className="flex-1 space-y-3">
             <h4 className="text-sm font-semibold text-muted-foreground mb-4">Distribuição das notas</h4>
             {ratingDistribution.map(({ rating, count, percentage }) => (
-              <div key={rating} className="flex items-center gap-3 group">
+              <button 
+                key={rating} 
+                onClick={() => setRatingFilter(ratingFilter === rating ? null : rating)}
+                className={`flex items-center gap-3 group w-full rounded-lg p-1.5 -ml-1.5 transition-all ${
+                  ratingFilter === rating 
+                    ? 'bg-primary/10 ring-1 ring-primary/30' 
+                    : 'hover:bg-muted/50'
+                }`}
+              >
                 {/* Label da nota */}
-                <button className="flex items-center gap-1.5 min-w-[60px] hover:text-primary transition-colors">
+                <div className={`flex items-center gap-1.5 min-w-[60px] transition-colors ${
+                  ratingFilter === rating ? 'text-primary' : ''
+                }`}>
                   <span className="text-sm font-semibold">{rating}</span>
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                </button>
+                </div>
                 
                 {/* Barra de progresso */}
                 <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden relative">
@@ -97,7 +108,7 @@ export const ReviewsList = ({ reviews, loading }: ReviewsListProps) => {
                   <span className="text-sm font-semibold">{count}</span>
                   <span className="text-xs text-muted-foreground ml-1">({percentage.toFixed(0)}%)</span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -125,9 +136,32 @@ export const ReviewsList = ({ reviews, loading }: ReviewsListProps) => {
         </div>
       </div>
 
-      {/* Reviews List */}
+      {/* Filter indicator and Reviews List */}
       <div className="space-y-4">
-        {reviews.map((review) => (
+        {/* Filter indicator */}
+        {ratingFilter !== null && (
+          <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Filtrando por:</span>
+              <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full">
+                <span className="text-sm font-medium">{ratingFilter}</span>
+                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+              </div>
+              <span className="text-sm text-muted-foreground">
+                ({reviews.filter(r => r.rating === ratingFilter).length} {reviews.filter(r => r.rating === ratingFilter).length === 1 ? 'avaliação' : 'avaliações'})
+              </span>
+            </div>
+            <button 
+              onClick={() => setRatingFilter(null)}
+              className="text-sm text-primary hover:underline"
+            >
+              Limpar filtro
+            </button>
+          </div>
+        )}
+
+        {/* Filtered reviews */}
+        {(ratingFilter !== null ? reviews.filter(r => r.rating === ratingFilter) : reviews).map((review) => (
           <div key={review.id} className="border rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
