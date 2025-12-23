@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, CheckCheck, ShoppingCart, DollarSign, AlertTriangle, Store, CreditCard, ChevronRight } from 'lucide-react';
+import { Bell, CheckCheck, ShoppingCart, DollarSign, AlertTriangle, Store, CreditCard, ChevronRight, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import { useAdminNotifications, AdminNotification, AdminNotificationType } from 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const getNotificationIcon = (type: AdminNotificationType) => {
   switch (type) {
@@ -119,10 +120,22 @@ const NotificationItem = ({
 };
 
 const AdminNotificationDropdown = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useAdminNotifications();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    loading,
+    notificationPermission,
+    requestPermission
+  } = useAdminNotifications();
   const [open, setOpen] = useState(false);
 
   const recentNotifications = notifications.slice(0, 5);
+
+  const handleEnableNotifications = async () => {
+    await requestPermission();
+  };
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -157,6 +170,25 @@ const AdminNotificationDropdown = () => {
           )}
         </div>
         
+        {/* Banner para ativar notificações */}
+        {notificationPermission !== 'granted' && notificationPermission !== 'unsupported' && (
+          <div className="p-3 border-b border-border bg-primary/5">
+            <div className="flex items-center gap-2 text-xs">
+              <BellRing className="h-4 w-4 text-primary flex-shrink-0" />
+              <p className="flex-1 text-muted-foreground">
+                Ative as notificações push para não perder nenhum pedido!
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="w-full mt-2 h-7 text-xs"
+              onClick={handleEnableNotifications}
+            >
+              Ativar Notificações
+            </Button>
+          </div>
+        )}
+
         <ScrollArea className="max-h-[300px]">
           {loading ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
