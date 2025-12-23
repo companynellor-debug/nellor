@@ -400,9 +400,12 @@ export const StepStripePayment = ({
             <div className="flex items-start gap-2">
               <CheckCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-yellow-800">Modo de Teste</p>
+                <p className="text-sm font-medium text-yellow-800">Modo de Teste Ativo</p>
                 <p className="text-xs text-yellow-700">
-                  Use o cartão 4242 4242 4242 4242 com qualquer data futura e CVC para testar.
+                  Ao clicar em "Pagar", você será redirecionado ao checkout seguro do Stripe onde poderá inserir os dados do cartão.
+                </p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  <strong>Para testar:</strong> Use 4242 4242 4242 4242, qualquer data futura (ex: 12/28) e CVC 123.
                 </p>
               </div>
             </div>
