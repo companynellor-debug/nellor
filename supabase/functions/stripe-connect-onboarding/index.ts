@@ -18,6 +18,12 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
+    // Use service role to bypass RLS
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
@@ -36,14 +42,17 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
 
     if (userError || !user) {
+      console.error("User error:", userError);
       return new Response(
         JSON.stringify({ error: "Usuário não encontrado" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get supplier profile
-    const { data: profile, error: profileError } = await supabaseClient
+    console.log("User found:", user.id);
+
+    // Get supplier profile using service role to bypass RLS
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("stripe_account_id, email, nome")
       .eq("id", user.id)
@@ -56,6 +65,8 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("Profile found:", profile.email);
 
     let accountId = profile.stripe_account_id;
 
@@ -79,12 +90,7 @@ serve(async (req) => {
 
       accountId = account.id;
 
-      // Save stripe_account_id to profile using service role
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
-
+      // Save stripe_account_id to profile
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
         .update({ stripe_account_id: accountId })
