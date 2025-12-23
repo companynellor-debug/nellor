@@ -49,6 +49,17 @@ export const useSupabaseMessages = (supplierId?: string) => {
               if (prev.some(m => m.id === newMsg.id)) return prev;
               return [...prev, newMsg];
             });
+            
+            // Play notification sound when receiving a message from someone else
+            if (newMsg.to_user === user.id && newMsg.from_user !== user.id) {
+              try {
+                const audio = new Audio('/notification-sound.mp3');
+                audio.volume = 0.5;
+                audio.play().catch(err => console.log('Could not play notification sound:', err));
+              } catch (err) {
+                console.log('Error creating audio:', err);
+              }
+            }
           }
         }
       )
