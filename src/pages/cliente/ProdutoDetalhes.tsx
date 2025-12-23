@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart, Package } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart, Package, MessageCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useStores } from "@/hooks/useStores";
@@ -168,8 +168,19 @@ const ProdutoDetalhes = () => {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <div className="flex items-center gap-4">
-            <button onClick={handleShare} className="p-2 hover:bg-muted rounded-full transition-colors">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => {
+                const productUrl = `${window.location.origin}/cliente/produto/${id}`;
+                const text = `Confira este produto: ${product?.name} - ${productUrl}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+              }} 
+              className="p-2 hover:bg-green-100 rounded-full transition-colors"
+              title="Compartilhar no WhatsApp"
+            >
+              <MessageCircle className="h-6 w-6 text-green-600 hover:text-green-700 transition-colors" />
+            </button>
+            <button onClick={handleShare} className="p-2 hover:bg-muted rounded-full transition-colors" title="Copiar link">
               <Share2 className="h-6 w-6 hover:text-primary transition-colors" />
             </button>
             <button onClick={handleToggleFavorite} className="p-2 hover:bg-muted rounded-full transition-colors">
