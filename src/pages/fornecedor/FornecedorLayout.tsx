@@ -43,7 +43,7 @@ const FornecedorLayout = () => {
       <div className="flex-1 md:ml-64">
         <div className="flex flex-col min-h-screen">
           {/* Header */}
-          <header className="h-14 border-b bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 flex items-center justify-between px-2 sm:px-4 md:px-6 sticky top-0 z-40 shadow-sm bg-slate-100">
+          <header className="h-14 border-b bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 flex items-center justify-between sm:px-4 md:px-6 sticky top-0 z-40 shadow-sm bg-slate-100 px-[29px]">
             {/* Left side - Logo for mobile */}
             <div className="flex items-center md:hidden">
               <img src={logo} alt="Logo" className="h-8" />
