@@ -1,18 +1,41 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, CheckCheck } from "lucide-react";
-import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Bell, CheckCheck, BellRing } from "lucide-react";
+import { useSupplierNotifications } from "@/hooks/useSupplierNotifications";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import logo from "@/assets/logo.png";
+
 const Notificacoes = () => {
   const {
     notifications,
     loading,
     markAllAsRead,
-    unreadCount
-  } = useSupabaseNotifications();
+    unreadCount,
+    pushPermission,
+    requestPermission
+  } = useSupplierNotifications();
   return <div className="space-y-4 md:space-y-6 w-full overflow-hidden px-2 md:px-0">
+      {/* Push notification permission alert */}
+      {pushPermission !== 'granted' && pushPermission !== 'unsupported' && (
+        <Alert className="bg-amber-50 border-amber-200">
+          <BellRing className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">Ative as notificações push</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            Receba alertas de novos pedidos mesmo quando não estiver no app.
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-2 border-amber-400 text-amber-700 hover:bg-amber-100"
+              onClick={requestPermission}
+            >
+              Ativar Notificações
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex items-center justify-between gap-2 md:gap-3">
         <div className="flex items-center gap-2 md:gap-3">
           <Bell className="h-6 w-6 md:h-8 md:w-8 text-primary" />
