@@ -104,7 +104,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Dashboard
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Visão geral do seu desempenho</p>
@@ -127,7 +127,7 @@ const Dashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -140,7 +140,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
@@ -153,7 +153,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
@@ -166,7 +166,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity mx-0" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
@@ -179,7 +179,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
@@ -192,7 +192,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-violet-600 opacity-0 group-hover:opacity-5 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
@@ -205,7 +205,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-cyan-600 opacity-0 group-hover:opacity-5 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
@@ -223,7 +223,7 @@ const Dashboard = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6">
         {/* Evolução de Vendas */}
-        <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+        <Card className="border-border hover:shadow-lg transition-shadow">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-sm sm:text-base md:text-lg">📈 Evolução de Vendas</CardTitle>
           </CardHeader>
@@ -250,7 +250,7 @@ const Dashboard = () => {
       </div>
 
       {/* Recent Orders */}
-      <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+      <Card className="border-border hover:shadow-lg transition-shadow">
         <CardHeader className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm sm:text-base md:text-lg">📦 Pedidos Recentes</CardTitle>

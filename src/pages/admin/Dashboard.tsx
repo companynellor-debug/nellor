@@ -196,7 +196,7 @@ const Dashboard = () => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text text-transparent dark:text-white dark:bg-none mb-2">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
             Dashboard
           </h1>
           <p className="text-muted-foreground">Visão geral da plataforma Nellor</p>
@@ -221,7 +221,7 @@ const Dashboard = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statsCards.map(stat => (
-          <Card key={stat.title} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-purple-100">
+          <Card key={stat.title} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
             <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -230,7 +230,7 @@ const Dashboard = () => {
               <stat.icon className={`w-5 h-5 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stat.value}</div>
+              <div className="text-3xl font-bold text-foreground">{stat.value}</div>
               {stat.subtitle && (
                 <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
               )}
@@ -242,9 +242,9 @@ const Dashboard = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Evolução de Pedidos */}
-        <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+        <Card className="border-border hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">📈 Evolução de Pedidos (30 dias)</CardTitle>
+            <CardTitle className="text-lg text-foreground">📈 Evolução de Pedidos (30 dias)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -255,10 +255,10 @@ const Dashboard = () => {
                     <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" stroke="#6b7280" fontSize={10} />
-                <YAxis stroke="#6b7280" />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="date" className="fill-muted-foreground" fontSize={10} />
+                <YAxis className="fill-muted-foreground" />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
                 <Area type="monotone" dataKey="pedidos" name="Pedidos" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorPedidos)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -266,9 +266,9 @@ const Dashboard = () => {
         </Card>
 
         {/* Evolução de Receita (Comissão) */}
-        <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+        <Card className="border-border hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">💰 Evolução de Receita Nellor (30 dias)</CardTitle>
+            <CardTitle className="text-lg text-foreground">💰 Evolução de Receita Nellor (30 dias)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -279,10 +279,10 @@ const Dashboard = () => {
                     <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" stroke="#6b7280" fontSize={10} />
-                <YAxis stroke="#6b7280" />
-                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="date" className="fill-muted-foreground" fontSize={10} />
+                <YAxis className="fill-muted-foreground" />
+                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
                 <Area type="monotone" dataKey="receita" name="Receita" stroke="#10B981" fillOpacity={1} fill="url(#colorReceita)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -290,18 +290,18 @@ const Dashboard = () => {
         </Card>
 
         {/* Top Suppliers */}
-        <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+        <Card className="border-border hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">🏆 Top 5 Fornecedores por Volume</CardTitle>
+            <CardTitle className="text-lg text-foreground">🏆 Top 5 Fornecedores por Volume</CardTitle>
           </CardHeader>
           <CardContent>
             {topSuppliers.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={topSuppliers}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="name" stroke="#6b7280" fontSize={10} />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="name" className="fill-muted-foreground" fontSize={10} />
+                  <YAxis className="fill-muted-foreground" />
+                  <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
                   <Bar dataKey="vendas" name="Vendas" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -312,9 +312,9 @@ const Dashboard = () => {
         </Card>
 
         {/* Distribuição de Receita */}
-        <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+        <Card className="border-border hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">🍰 Distribuição de Receita</CardTitle>
+            <CardTitle className="text-lg text-foreground">🍰 Distribuição de Receita</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -332,7 +332,7 @@ const Dashboard = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -341,9 +341,9 @@ const Dashboard = () => {
       </div>
 
       {/* Pedidos Recentes */}
-      <Card className="border-purple-100">
+      <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-lg">🔔 Pedidos Recentes</CardTitle>
+          <CardTitle className="text-lg text-foreground">🔔 Pedidos Recentes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

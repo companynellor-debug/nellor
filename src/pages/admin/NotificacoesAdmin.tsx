@@ -191,8 +191,8 @@ const FilterButton = ({
     className={cn(
       "flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all text-sm font-medium",
       active 
-        ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30" 
-        : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+        ? "bg-primary text-primary-foreground shadow-lg" 
+        : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
     )}
   >
     {icon}
@@ -201,7 +201,7 @@ const FilterButton = ({
       variant="secondary" 
       className={cn(
         "ml-1 text-[10px] px-1.5",
-        active ? "bg-white/20 text-white" : "bg-zinc-700 text-zinc-300"
+        active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-background text-foreground"
       )}
     >
       {count}
@@ -236,16 +236,16 @@ const NotificacoesAdmin = () => {
 
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-4 md:p-6">
+    <div className="min-h-screen p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-400 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <Bell className="h-6 w-6 text-white" />
+          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+            <Bell className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white">Notificações</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Notificações</h1>
+            <p className="text-sm text-muted-foreground">
               {unreadCount > 0 ? `${unreadCount} não lida${unreadCount > 1 ? 's' : ''}` : 'Todas lidas'}
             </p>
           </div>
@@ -254,7 +254,7 @@ const NotificacoesAdmin = () => {
         {unreadCount > 0 && (
           <Button
             onClick={markAllAsRead}
-            className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2"
           >
             <CheckCheck className="h-4 w-4" />
             Marcar todas como lidas
@@ -263,7 +263,7 @@ const NotificacoesAdmin = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-zinc-800">
+      <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-border">
         {filters.map(filter => (
           <FilterButton
             key={filter.value}
@@ -278,9 +278,9 @@ const NotificacoesAdmin = () => {
 
       {/* Notifications List */}
       {filteredNotifications.length === 0 ? (
-        <Card className="p-8 text-center bg-zinc-900 border-zinc-800">
-          <Bell className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
-          <p className="text-zinc-400">
+        <Card className="p-8 text-center bg-card border-border">
+          <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">
             {activeTab === 'all' 
               ? 'Nenhuma notificação no momento' 
               : `Nenhuma notificação de ${filters.find(f => f.value === activeTab)?.label.toLowerCase()}`
