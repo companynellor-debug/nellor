@@ -40,9 +40,9 @@ serve(async (req) => {
           signature,
           Deno.env.get("STRIPE_WEBHOOK_SECRET") || ""
         );
-        console.log("Webhook signature verified successfully");
+        console.log("✅ Webhook signature verified successfully");
       } catch (err) {
-        console.error("Webhook signature verification failed:", err);
+        console.error("❌ Webhook signature verification failed:", err);
         return new Response(
           JSON.stringify({ error: "Invalid signature" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -51,19 +51,23 @@ serve(async (req) => {
     } else {
       // Parse event without signature verification (test mode only)
       event = JSON.parse(body);
-      console.log("WARNING: Processing webhook without signature verification (test mode)");
+      console.log("⚠️ WARNING: Processing webhook without signature verification (test mode)");
     }
 
-    console.log("=== Received Stripe webhook event ===");
+    console.log("=================================================");
+    console.log("📥 Received Stripe webhook event");
     console.log("Event type:", event.type);
     console.log("Event ID:", event.id);
+    console.log("=================================================");
 
+    // ================================================================
     // Handle account.updated - Update stripe_ready status
+    // ================================================================
     if (event.type === "account.updated") {
       const account = event.data.object as Stripe.Account;
       const supabaseUserId = account.metadata?.supabase_user_id;
 
-      console.log(`Account updated: ${account.id}`);
+      console.log(`📋 Account updated: ${account.id}`);
       console.log(`  charges_enabled: ${account.charges_enabled}`);
       console.log(`  payouts_enabled: ${account.payouts_enabled}`);
       console.log(`  details_submitted: ${account.details_submitted}`);
@@ -80,9 +84,9 @@ serve(async (req) => {
           .eq("id", supabaseUserId);
 
         if (updateError) {
-          console.error("Error updating profile stripe_ready:", updateError);
+          console.error("❌ Error updating profile stripe_ready:", updateError);
         } else {
-          console.log(`Updated stripe_ready=${isReady} for user ${supabaseUserId}`);
+          console.log(`✅ Updated stripe_ready=${isReady} for user ${supabaseUserId}`);
         }
       } else {
         // Try to find profile by stripe_account_id
@@ -100,7 +104,7 @@ serve(async (req) => {
             .update({ stripe_ready: isReady })
             .eq("id", profile.id);
 
-          console.log(`Updated stripe_ready=${isReady} for profile ${profile.id} (found by account_id)`);
+          console.log(`✅ Updated stripe_ready=${isReady} for profile ${profile.id}`);
         }
       }
 
@@ -110,192 +114,99 @@ serve(async (req) => {
       );
     }
 
-    // CRITICAL: Handle payment_intent.succeeded - This is where the actual payment is confirmed
-    if (event.type === "payment_intent.succeeded") {
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    // ================================================================
+    // CRITICAL: Handle checkout.session.completed
+    // This is THE PRIMARY event for confirming payment
+    // ================================================================
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
       
-      console.log("=== Payment Intent Succeeded ===");
-      console.log("Payment Intent ID:", paymentIntent.id);
-      console.log("Amount:", paymentIntent.amount / 100);
-      console.log("Currency:", paymentIntent.currency);
-      console.log("Metadata:", JSON.stringify(paymentIntent.metadata));
+      console.log("=================================================");
+      console.log("💳 CHECKOUT SESSION COMPLETED");
+      console.log("Session ID:", session.id);
+      console.log("Payment Status:", session.payment_status);
+      console.log("Session metadata:", JSON.stringify(session.metadata));
+      console.log("Payment Intent:", session.payment_intent);
+      console.log("=================================================");
 
-      const orderId = paymentIntent.metadata?.order_id;
-      const supplierId = paymentIntent.metadata?.supplier_id;
-      const buyerId = paymentIntent.metadata?.buyer_id;
-      const platformFeeAmount = parseInt(paymentIntent.metadata?.platform_fee_amount || "0");
-      const supplierAmount = parseInt(paymentIntent.metadata?.supplier_amount || "0");
-      const stripeConnectedAccountId = paymentIntent.metadata?.stripe_connected_account_id;
-
-      // Se não tiver orderId, só registrar
-      if (!orderId) {
-        console.log("No order_id in metadata - nothing to update");
+      // Only process if payment is actually completed
+      if (session.payment_status !== "paid") {
+        console.log("⏳ Session payment_status is not 'paid', skipping:", session.payment_status);
         return new Response(
-          JSON.stringify({ 
-            received: true, 
-            message: "No order_id in metadata",
-            paymentIntentId: paymentIntent.id
-          }),
+          JSON.stringify({ received: true, message: "Payment not completed yet" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const totalAmount = paymentIntent.amount / 100;
-      const platformFee = platformFeeAmount / 100;
-      const supplierAmountFinal = supplierAmount / 100;
+      const orderId = session.metadata?.order_id;
+      const supplierId = session.metadata?.supplier_id;
+      const buyerId = session.metadata?.buyer_id;
 
-      console.log("=== Payment Split Details ===");
-      console.log(`  Total: R$${totalAmount}`);
-      console.log(`  Platform fee: R$${platformFee}`);
-      console.log(`  Supplier amount: R$${supplierAmountFinal}`);
-      console.log(`  Connected account: ${stripeConnectedAccountId}`);
+      if (!orderId) {
+        console.log("⚠️ No order_id in session metadata");
+        return new Response(
+          JSON.stringify({ received: true, message: "No order_id in metadata" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
-      // Check if order already exists and has been paid (prevent duplicates)
-      const { data: existingOrder } = await supabaseAdmin
+      // Check if order already processed
+      const { data: existingOrder, error: fetchError } = await supabaseAdmin
         .from("orders")
-        .select("id, payment_status")
+        .select("id, payment_status, order_number, supplier_id")
         .eq("id", orderId)
         .single();
 
+      if (fetchError) {
+        console.error("❌ Error fetching order:", fetchError);
+        return new Response(
+          JSON.stringify({ error: "Order not found", orderId }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       if (existingOrder?.payment_status === "paid") {
-        console.log(`Order ${orderId} already marked as paid - skipping duplicate processing`);
+        console.log(`✅ Order ${orderId} already marked as paid - skipping duplicate`);
         return new Response(
           JSON.stringify({ received: true, message: "Order already processed" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Update order with payment info
-      const { error: updateError } = await supabaseAdmin
-        .from("orders")
-        .update({
-          payment_status: "paid",
-          order_status: "preparing",
-          stripe_payment_intent_id: paymentIntent.id,
-          stripe_payment_amount: totalAmount,
-          platform_fee: platformFee,
-          supplier_amount: supplierAmountFinal,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", orderId);
-
-      if (updateError) {
-        console.error("Error updating order:", updateError);
-      } else {
-        console.log(`Order ${orderId} marked as PAID via payment_intent.succeeded`);
-      }
-
-      // Create transaction records
-      if (supplierId) {
-        // Sale transaction
-        await supabaseAdmin
-          .from("transactions")
-          .insert({
-            order_id: orderId,
-            supplier_id: supplierId,
-            amount: totalAmount,
-            type: "sale",
-            method: "cartao",
-            status: "paid",
-          });
-
-        // Platform fee transaction
-        await supabaseAdmin
-          .from("transactions")
-          .insert({
-            order_id: orderId,
-            supplier_id: supplierId,
-            amount: platformFee,
-            type: "platform_fee",
-            method: "cartao",
-            status: "paid",
-          });
-
-        console.log("Transaction records created");
-      }
-
-      return new Response(
-        JSON.stringify({ 
-          received: true,
-          orderId,
-          totalAmount,
-          platformFee,
-          supplierAmount: supplierAmountFinal,
-          stripeConnectedAccountId,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Handle checkout.session.completed
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      
-      console.log("=== Checkout Session Completed ===");
-      console.log("Session ID:", session.id);
-      console.log("Payment Status:", session.payment_status);
-      console.log("Session metadata:", JSON.stringify(session.metadata));
-
-      const orderId = session.metadata?.order_id;
-      const supplierId = session.metadata?.supplier_id;
-
-      // Se não tiver orderId, só registrar
-      if (!orderId) {
-        console.log("No order_id in metadata - nothing to update");
-        return new Response(
-          JSON.stringify({ 
-            received: true, 
-            message: "No order_id in metadata",
-            sessionId: session.id
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Get payment intent to get the metadata with split info
+      // Get payment intent details for split info
       let platformFee = 0;
       let supplierAmount = 0;
-      let stripeConnectedAccountId = "";
+      const totalAmount = (session.amount_total || 0) / 100;
 
       if (session.payment_intent) {
         try {
           const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent as string);
           platformFee = parseInt(paymentIntent.metadata?.platform_fee_amount || "0") / 100;
           supplierAmount = parseInt(paymentIntent.metadata?.supplier_amount || "0") / 100;
-          stripeConnectedAccountId = paymentIntent.metadata?.stripe_connected_account_id || "";
           
-          console.log(`Payment Intent retrieved: platformFee=${platformFee}, supplierAmount=${supplierAmount}`);
+          console.log("💰 Payment Intent details:");
+          console.log(`  Platform fee: R$${platformFee}`);
+          console.log(`  Supplier amount: R$${supplierAmount}`);
         } catch (e) {
-          console.error("Error fetching payment intent:", e);
-          const totalAmount = (session.amount_total || 0) / 100;
+          console.error("⚠️ Error fetching payment intent, calculating fees:", e);
           platformFee = totalAmount * (PLATFORM_FEE_PERCENTAGE / 100);
           supplierAmount = totalAmount - platformFee;
         }
+      } else {
+        platformFee = totalAmount * (PLATFORM_FEE_PERCENTAGE / 100);
+        supplierAmount = totalAmount - platformFee;
       }
 
-      const totalAmount = (session.amount_total || 0) / 100;
-
-      console.log("=== Checkout Payment Details ===");
+      console.log("=================================================");
+      console.log("💵 UPDATING ORDER TO PAID");
+      console.log(`  Order ID: ${orderId}`);
+      console.log(`  Order Number: ${existingOrder.order_number}`);
       console.log(`  Total: R$${totalAmount}`);
       console.log(`  Platform fee: R$${platformFee}`);
       console.log(`  Supplier amount: R$${supplierAmount}`);
+      console.log("=================================================");
 
-      // Check if order already processed
-      const { data: existingOrder } = await supabaseAdmin
-        .from("orders")
-        .select("id, payment_status")
-        .eq("id", orderId)
-        .single();
-
-      if (existingOrder?.payment_status === "paid") {
-        console.log(`Order ${orderId} already paid - skipping`);
-        return new Response(
-          JSON.stringify({ received: true, message: "Order already processed" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Update order with payment info
+      // CRITICAL: Update order status to PAID and PREPARING
       const { error: updateError } = await supabaseAdmin
         .from("orders")
         .update({
@@ -311,13 +222,19 @@ serve(async (req) => {
         .eq("id", orderId);
 
       if (updateError) {
-        console.error("Error updating order:", updateError);
-      } else {
-        console.log(`Order ${orderId} marked as paid via checkout.session.completed`);
+        console.error("❌ Error updating order:", updateError);
+        return new Response(
+          JSON.stringify({ error: "Failed to update order", details: updateError }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
-      // Create transaction records if not already created by payment_intent.succeeded
-      if (supplierId) {
+      console.log(`✅ Order ${orderId} marked as PAID!`);
+
+      // Create transaction records
+      const actualSupplierId = supplierId || existingOrder.supplier_id;
+      
+      if (actualSupplierId) {
         // Check if transactions already exist
         const { data: existingTx } = await supabaseAdmin
           .from("transactions")
@@ -327,34 +244,56 @@ serve(async (req) => {
           .single();
 
         if (!existingTx) {
-          await supabaseAdmin
+          // Sale transaction
+          const { error: saleError } = await supabaseAdmin
             .from("transactions")
             .insert({
               order_id: orderId,
-              supplier_id: supplierId,
+              supplier_id: actualSupplierId,
               amount: totalAmount,
               type: "sale",
               method: "cartao",
               status: "paid",
             });
 
-          await supabaseAdmin
+          if (saleError) {
+            console.error("⚠️ Error creating sale transaction:", saleError);
+          }
+
+          // Platform fee transaction
+          const { error: feeError } = await supabaseAdmin
             .from("transactions")
             .insert({
               order_id: orderId,
-              supplier_id: supplierId,
+              supplier_id: actualSupplierId,
               amount: platformFee,
               type: "platform_fee",
               method: "cartao",
               status: "paid",
             });
+
+          if (feeError) {
+            console.error("⚠️ Error creating platform_fee transaction:", feeError);
+          }
+
+          console.log("✅ Transaction records created");
+        } else {
+          console.log("ℹ️ Transactions already exist for this order");
         }
       }
+
+      console.log("=================================================");
+      console.log("🎉 PAYMENT PROCESSING COMPLETE");
+      console.log(`  Order: ${existingOrder.order_number}`);
+      console.log(`  Status: PAID / PREPARING`);
+      console.log("=================================================");
 
       return new Response(
         JSON.stringify({ 
           received: true,
+          success: true,
           orderId,
+          orderNumber: existingOrder.order_number,
           totalAmount,
           platformFee,
           supplierAmount,
@@ -363,24 +302,130 @@ serve(async (req) => {
       );
     }
 
-    // Handle payment failure
+    // ================================================================
+    // Handle payment_intent.succeeded (backup/alternative)
+    // ================================================================
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      
+      console.log("=================================================");
+      console.log("💳 PAYMENT INTENT SUCCEEDED");
+      console.log("Payment Intent ID:", paymentIntent.id);
+      console.log("Amount:", paymentIntent.amount / 100);
+      console.log("Metadata:", JSON.stringify(paymentIntent.metadata));
+      console.log("=================================================");
+
+      const orderId = paymentIntent.metadata?.order_id;
+      const supplierId = paymentIntent.metadata?.supplier_id;
+      const platformFeeAmount = parseInt(paymentIntent.metadata?.platform_fee_amount || "0");
+      const supplierAmountCents = parseInt(paymentIntent.metadata?.supplier_amount || "0");
+
+      if (!orderId) {
+        console.log("⚠️ No order_id in payment_intent metadata");
+        return new Response(
+          JSON.stringify({ received: true, message: "No order_id in metadata" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const totalAmount = paymentIntent.amount / 100;
+      const platformFee = platformFeeAmount / 100;
+      const supplierAmount = supplierAmountCents / 100;
+
+      // Check if already paid
+      const { data: existingOrder } = await supabaseAdmin
+        .from("orders")
+        .select("id, payment_status, order_number, supplier_id")
+        .eq("id", orderId)
+        .single();
+
+      if (existingOrder?.payment_status === "paid") {
+        console.log(`✅ Order ${orderId} already paid via checkout.session.completed`);
+        return new Response(
+          JSON.stringify({ received: true, message: "Order already processed" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Update order (fallback if checkout.session.completed didn't fire)
+      const { error: updateError } = await supabaseAdmin
+        .from("orders")
+        .update({
+          payment_status: "paid",
+          order_status: "preparing",
+          stripe_payment_intent_id: paymentIntent.id,
+          stripe_payment_amount: totalAmount,
+          platform_fee: platformFee,
+          supplier_amount: supplierAmount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+      if (updateError) {
+        console.error("❌ Error updating order:", updateError);
+      } else {
+        console.log(`✅ Order ${orderId} marked as PAID via payment_intent.succeeded`);
+
+        // Create transactions if not exists
+        const actualSupplierId = supplierId || existingOrder?.supplier_id;
+        if (actualSupplierId) {
+          const { data: existingTx } = await supabaseAdmin
+            .from("transactions")
+            .select("id")
+            .eq("order_id", orderId)
+            .eq("type", "sale")
+            .single();
+
+          if (!existingTx) {
+            await supabaseAdmin.from("transactions").insert({
+              order_id: orderId,
+              supplier_id: actualSupplierId,
+              amount: totalAmount,
+              type: "sale",
+              method: "cartao",
+              status: "paid",
+            });
+
+            await supabaseAdmin.from("transactions").insert({
+              order_id: orderId,
+              supplier_id: actualSupplierId,
+              amount: platformFee,
+              type: "platform_fee",
+              method: "cartao",
+              status: "paid",
+            });
+          }
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ received: true, orderId, totalAmount, platformFee, supplierAmount }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ================================================================
+    // Handle payment failure / session expiration
+    // ================================================================
     if (event.type === "checkout.session.expired" || event.type === "payment_intent.payment_failed") {
       const obj = event.data.object as any;
       const orderId = obj.metadata?.order_id;
 
-      console.log(`Payment failed/expired for order: ${orderId}`);
+      console.log(`❌ Payment failed/expired for order: ${orderId}`);
 
-      if (orderId && !orderId.startsWith("temp_")) {
+      if (orderId) {
         const { error: updateError } = await supabaseAdmin
           .from("orders")
           .update({
             payment_status: "cancelled",
+            order_status: "cancelled",
             updated_at: new Date().toISOString(),
           })
-          .eq("id", orderId);
+          .eq("id", orderId)
+          .eq("payment_status", "pending"); // Only cancel if still pending
 
-        if (updateError) {
-          console.error("Error updating failed order:", updateError);
+        if (!updateError) {
+          console.log(`✅ Order ${orderId} marked as cancelled`);
         }
       }
 
@@ -390,14 +435,15 @@ serve(async (req) => {
       );
     }
 
+    // ================================================================
     // Handle refunds
+    // ================================================================
     if (event.type === "charge.refunded") {
       const charge = event.data.object as Stripe.Charge;
       const paymentIntentId = charge.payment_intent as string;
 
-      console.log(`Refund received for payment intent: ${paymentIntentId}`);
+      console.log(`💸 Refund received for payment intent: ${paymentIntentId}`);
 
-      // Find order by payment intent
       const { data: order } = await supabaseAdmin
         .from("orders")
         .select("id, supplier_id, total")
@@ -424,7 +470,7 @@ serve(async (req) => {
             status: "paid",
           });
 
-        console.log(`Order ${order.id} marked as refunded`);
+        console.log(`✅ Order ${order.id} marked as refunded`);
       }
 
       return new Response(
@@ -434,14 +480,14 @@ serve(async (req) => {
     }
 
     // Default response for unhandled events
-    console.log(`Unhandled event type: ${event.type}`);
+    console.log(`ℹ️ Unhandled event type: ${event.type}`);
     return new Response(
       JSON.stringify({ received: true, type: event.type }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error: unknown) {
-    console.error("Webhook error:", error);
+    console.error("❌ Webhook error:", error);
     const message = error instanceof Error ? error.message : "Erro desconhecido";
     return new Response(
       JSON.stringify({ error: message }),
