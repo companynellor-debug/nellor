@@ -57,7 +57,8 @@ self.addEventListener('push', (event: PushEvent) => {
     body: 'Nova notificação',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    url: '/fornecedor/pedidos'
+    url: '/fornecedor/pedidos',
+    sound: true
   };
 
   if (event.data) {
@@ -76,7 +77,8 @@ self.addEventListener('push', (event: PushEvent) => {
     tag: 'nellor-' + Date.now(),
     requireInteraction: true,
     vibrate: [200, 100, 200],
-    data: { url: data.url }
+    silent: false, // Permite som do sistema
+    data: { url: data.url, sound: data.sound }
   };
 
   event.waitUntil(
@@ -123,6 +125,7 @@ self.addEventListener('message', (event) => {
       tag: options.tag || 'nellor-' + Date.now(),
       requireInteraction: true,
       vibrate: [200, 100, 200],
+      silent: false, // Permite som do sistema
       data: { url: options.data?.url || '/fornecedor/pedidos' }
     };
     
@@ -130,4 +133,14 @@ self.addEventListener('message', (event) => {
       self.registration.showNotification(title, notifOptions)
     );
   }
+});
+
+// Broadcast som para a página quando notificação é mostrada
+self.addEventListener('notificationshow', () => {
+  console.log('🔊 SW Notification shown, broadcasting sound event');
+  self.clients.matchAll({ type: 'window' }).then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({ type: 'PLAY_NOTIFICATION_SOUND' });
+    });
+  });
 });
