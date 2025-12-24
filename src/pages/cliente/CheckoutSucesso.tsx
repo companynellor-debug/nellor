@@ -117,7 +117,7 @@ const CheckoutSucesso = () => {
 
         setOrderNumber(orderNumberDb || `#${Date.now().toString().slice(-8)}`);
 
-        // 2) Confirmar pagamento e refletir no pedido (independente de webhook)
+        // 2) Confirmar pagamento via edge function (ela mesma atualiza o pedido usando service role)
         const stripeSessionId = stripeSessionIdResolved ?? pending?.stripeSessionId ?? null;
         if (stripeSessionId) {
           try {
@@ -127,22 +127,6 @@ const CheckoutSucesso = () => {
 
             if (verifyRes.error) {
               console.warn("stripe-verify-payment error:", verifyRes.error);
-            }
-
-            if (verifyRes.data?.verified) {
-              const paymentDetails = verifyRes.data?.paymentDetails;
-              await supabase
-                .from("orders")
-                .update({
-                  payment_status: "paid",
-                  order_status: "preparing",
-                  stripe_session_id: stripeSessionId,
-                  stripe_payment_intent_id: paymentDetails?.id ?? null,
-                  stripe_payment_amount: paymentDetails?.amount ?? null,
-                  platform_fee: paymentDetails?.platformFee ?? pending?.platformFee ?? null,
-                  supplier_amount: paymentDetails?.supplierAmount ?? pending?.supplierAmount ?? null,
-                })
-                .eq("id", orderId);
             }
           } catch (e) {
             console.warn("stripe-verify-payment failed:", e);
