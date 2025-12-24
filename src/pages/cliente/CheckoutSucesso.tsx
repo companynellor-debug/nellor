@@ -28,122 +28,94 @@ const CheckoutSucesso = () => {
         return;
       }
 
-      // Sempre tenta limpar o estado local do carrinho para evitar "itens presos"
+      // Limpar carrinho imediatamente
       clearCart();
 
-      const pendingOrderStr = localStorage.getItem("pendingOrder");
-      const pending = pendingOrderStr ? JSON.parse(pendingOrderStr) : null;
+      // Limpar pendingOrder do localStorage
+      localStorage.removeItem("pendingOrder");
 
       try {
-        // 1) Garantir que existe um pedido no banco
-        let orderId = orderIdFromQuery;
-        let orderNumberDb: string | null = null;
+        // Aguarda um pouco para dar tempo do webhook processar
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-        const { data: existingOrder, error: existingOrderError } = await supabase
+        // Buscar pedido para verificar status
+        const { data: order, error: orderError } = await supabase
           .from("orders")
-          .select("id, order_number, stripe_session_id, payment_status")
+          .select("id, order_number, payment_status")
           .eq("id", orderIdFromQuery)
-          .maybeSingle();
+          .single();
 
-        if (existingOrderError) throw existingOrderError;
+        if (orderError) {
+          console.error("Error fetching order:", orderError);
+          throw orderError;
+        }
 
-        let stripeSessionIdResolved: string | null = null;
+        setOrderNumber(order.order_number);
 
-        if (existingOrder) {
-          orderNumberDb = existingOrder.order_number;
-          stripeSessionIdResolved = existingOrder.stripe_session_id ?? null;
+        // Se já está pago, mostra sucesso imediatamente
+        if (order.payment_status === "paid") {
+          setIsProcessing(false);
+          setShowAnimation(true);
+          triggerConfetti();
+          return;
+        }
 
-          // Se já está pago, não precisa fazer verify
-          if (existingOrder.payment_status === "paid") {
-            setOrderNumber(orderNumberDb);
-            if (pendingOrderStr) localStorage.removeItem("pendingOrder");
-            setIsProcessing(false);
-            setShowAnimation(true);
-            triggerConfetti();
-            return;
-          }
-        } else if (pending?.supplierId && pending?.cartItems && pending?.buyerData) {
-          const { data: userData } = await supabase.auth.getUser();
-          if (!userData?.user) throw new Error("Usuário não autenticado");
+        // Se ainda está pendente, aguarda um pouco mais e verifica novamente
+        // O webhook pode ainda não ter processado
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
-          const { data: created, error: createErr } = await supabase
+        const { data: orderRetry } = await supabase
+          .from("orders")
+          .select("payment_status")
+          .eq("id", orderIdFromQuery)
+          .single();
+
+        if (orderRetry?.payment_status === "paid") {
+          setIsProcessing(false);
+          setShowAnimation(true);
+          triggerConfetti();
+          return;
+        }
+
+        // Tentar chamar verify como fallback
+        try {
+          const { data: orderWithSession } = await supabase
             .from("orders")
-            .insert([
-              {
-                id: pending.orderId || undefined,
-                buyer_id: userData.user.id,
-                supplier_id: pending.supplierId,
-                order_number: `PED${Date.now()}`,
-                payment_method: "cartao",
-                payment_status: "pending",
-                order_status: "pending",
-                subtotal: pending.subtotal ?? 0,
-                frete: pending.shipping ?? 0,
-                desconto: pending.discount ?? 0,
-                total: pending.total ?? 0,
-                itens: (pending.cartItems || []).map((item: any) => ({
-                  product_id: item.productId || item.id?.toString(),
-                  name: item.name,
-                  price: item.price,
-                  quantity: item.quantity,
-                  image: item.image,
-                })),
-                endereco_entrega: {
-                  name: pending.buyerData?.nome,
-                  document: pending.buyerData?.documento,
-                  street: pending.buyerData?.endereco?.street,
-                  number: pending.buyerData?.endereco?.number,
-                  complement: pending.buyerData?.endereco?.complement || "",
-                  neighborhood: pending.buyerData?.endereco?.neighborhood,
-                  city: pending.buyerData?.endereco?.city,
-                  state: pending.buyerData?.endereco?.state,
-                  zip_code: pending.buyerData?.endereco?.zip_code,
-                },
-                stripe_session_id: pending.stripeSessionId ?? null,
-                stripe_payment_amount: pending.total ?? null,
-                platform_fee: pending.platformFee ?? null,
-                supplier_amount: pending.supplierAmount ?? null,
-              },
-            ])
-            .select("id, order_number, stripe_session_id")
+            .select("stripe_session_id")
+            .eq("id", orderIdFromQuery)
             .single();
 
-          if (createErr) throw createErr;
-
-          orderId = created.id;
-          orderNumberDb = created.order_number;
-          stripeSessionIdResolved = created.stripe_session_id ?? pending?.stripeSessionId ?? null;
-        }
-
-        setOrderNumber(orderNumberDb || `#${Date.now().toString().slice(-8)}`);
-
-        // 2) Confirmar pagamento via edge function (ela mesma atualiza o pedido usando service role)
-        const stripeSessionId = stripeSessionIdResolved ?? pending?.stripeSessionId ?? null;
-        if (stripeSessionId) {
-          try {
-            const verifyRes = await supabase.functions.invoke("stripe-verify-payment", {
-              body: { sessionId: stripeSessionId },
+          if (orderWithSession?.stripe_session_id) {
+            await supabase.functions.invoke("stripe-verify-payment", {
+              body: { sessionId: orderWithSession.stripe_session_id },
             });
-
-            if (verifyRes.error) {
-              console.warn("stripe-verify-payment error:", verifyRes.error);
-            }
-          } catch (e) {
-            console.warn("stripe-verify-payment failed:", e);
           }
+        } catch (e) {
+          console.warn("stripe-verify-payment fallback failed:", e);
         }
 
-        // Limpa o storage do pedido pendente somente após processar
-        if (pendingOrderStr) {
-          localStorage.removeItem("pendingOrder");
-        }
+        // Aguardar mais um pouco após o verify
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Verificar uma última vez
+        const { data: finalOrder } = await supabase
+          .from("orders")
+          .select("payment_status")
+          .eq("id", orderIdFromQuery)
+          .single();
 
         setIsProcessing(false);
         setShowAnimation(true);
         triggerConfetti();
+
+        // Se ainda não está pago, mostra aviso mas não erro
+        if (finalOrder?.payment_status !== "paid") {
+          console.log("Payment still pending - webhook may be delayed");
+        }
+
       } catch (err) {
         console.error("Error processing success page:", err);
-        setError("Pedido pago, mas não conseguimos carregar os dados. Verifique em 'Meus Pedidos'.");
+        setError("Não foi possível verificar o status do pedido. Verifique em 'Meus Pedidos'.");
         setIsProcessing(false);
       }
     };

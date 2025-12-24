@@ -45,11 +45,29 @@ export const useSupabaseOrders = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .or(`buyer_id.eq.${user.id},supplier_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+      // Busca o perfil do usuário para saber o tipo
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tipo')
+        .eq('id', user.id)
+        .single();
+
+      let query = supabase.from('orders').select('*');
+
+      if (profile?.tipo === 'fornecedor') {
+        // Fornecedor: só vê pedidos PAGOS (payment_status = 'paid')
+        query = query
+          .eq('supplier_id', user.id)
+          .neq('payment_status', 'pending');
+      } else if (profile?.tipo === 'cliente') {
+        // Cliente: vê todos os seus pedidos (incluindo pendentes)
+        query = query.eq('buyer_id', user.id);
+      } else {
+        // Admin ou outros: vê tudo
+        query = query.or(`buyer_id.eq.${user.id},supplier_id.eq.${user.id}`);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setOrders(data || []);
