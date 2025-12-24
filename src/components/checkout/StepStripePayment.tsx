@@ -19,7 +19,8 @@ import {
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
 import { useStripeConnect } from "@/hooks/useStripeConnect";
-import { useCoupons, AppliedCoupon } from "@/hooks/useCoupons";
+import { useCoupons } from "@/hooks/useCoupons";
+import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { toast } from "@/hooks/use-toast";
 
 interface StepStripePaymentProps {
@@ -51,7 +52,8 @@ export const StepStripePayment = ({
   const [supplierError, setSupplierError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   
-  const { createPayment, checkAccountStatus } = useStripeConnect();
+  const { createPayment } = useStripeConnect();
+  const { createOrder } = useSupabaseOrders();
   const { loading: couponLoading, appliedCoupon, validateCoupon, removeCoupon } = useCoupons();
 
   const total = subtotal + shipping - discount;
@@ -142,17 +144,52 @@ export const StepStripePayment = ({
     setIsProcessing(true);
 
     try {
-      // Generate temporary order ID for Stripe
-      const tempOrderId = `temp_${Date.now()}`;
+      // CRÍTICO: cria o pedido PENDENTE antes do Stripe.
+      // Assim, mesmo se o usuário perder sessão no retorno, o pedido aparece para fornecedor/admin e o webhook consegue atualizar.
+      const pendingOrder = await createOrder({
+        supplier_id: supplierId,
+        payment_method: "cartao" as const,
+        payment_status: "pending",
+        order_status: "pending",
+        subtotal,
+        frete: shipping,
+        desconto: discount,
+        total,
+        itens: cartItems.map((item: any) => ({
+          product_id: item.productId || item.id.toString(),
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        endereco_entrega: {
+          name: buyerData.nome,
+          document: buyerData.documento,
+          street: buyerData.endereco.street,
+          number: buyerData.endereco.number,
+          complement: buyerData.endereco.complement || "",
+          neighborhood: buyerData.endereco.neighborhood,
+          city: buyerData.endereco.city,
+          state: buyerData.endereco.state,
+          zip_code: buyerData.endereco.zip_code,
+        },
+        tracking_code: null,
+        proof_url: null,
+        shipping_company: null,
+        estimated_delivery: null,
+        stripe_payment_amount: total,
+        platform_fee: platformFee,
+        supplier_amount: supplierAmount,
+      });
+
       const description = `Pedido Nellor - ${cartItems.length} item(s)`;
-      
-      // Current URL for redirect
+
       const baseUrl = window.location.origin;
-      const successUrl = `${baseUrl}/cliente/checkout/sucesso?order_id=${tempOrderId}`;
+      const successUrl = `${baseUrl}/cliente/checkout/sucesso?order_id=${pendingOrder.id}`;
       const cancelUrl = `${baseUrl}/cliente/checkout?cancelled=true`;
 
       const result = await createPayment(
-        tempOrderId,
+        pendingOrder.id,
         supplierId,
         total,
         description,
@@ -160,33 +197,44 @@ export const StepStripePayment = ({
         cancelUrl
       );
 
-      if (result?.url) {
-        // Store checkout data in localStorage for success page
-        localStorage.setItem('pendingOrder', JSON.stringify({
-          buyerData,
-          cartItems,
-          subtotal,
-          shipping,
-          discount,
-          total,
-          supplierId,
-          stripeSessionId: result.sessionId,
-          couponId: appliedCoupon?.coupon.id,
-        }));
-        
-        // Redirect to Stripe Checkout
-        window.location.href = result.url;
-      } else {
+      if (!result?.url) {
         throw new Error("URL de pagamento não gerada");
       }
+
+      // Salva contexto local para UX na página de sucesso
+      localStorage.setItem(
+        "pendingOrder",
+        JSON.stringify({
+          orderId: pendingOrder.id,
+          orderNumber: pendingOrder.order_number,
+          stripeSessionId: result.sessionId,
+          couponId: appliedCoupon?.coupon.id,
+        })
+      );
+
+      // Vincula session_id no pedido (webhook usa payment_intent/metadata, mas isso ajuda rastrear)
+      const { supabase } = await import("@/integrations/supabase/client");
+      await supabase
+        .from("orders")
+        .update({
+          stripe_session_id: result.sessionId,
+        })
+        .eq("id", pendingOrder.id);
+
+      window.location.href = result.url;
     } catch (error: any) {
       console.error("Payment error:", error);
-      
-      // Check for specific error about supplier not configured
+
       const errorMessage = error?.message || "";
-      if (errorMessage.includes("não completou") || errorMessage.includes("não está habilitada") || errorMessage.includes("missing the required capabilities")) {
+      if (
+        errorMessage.includes("não completou") ||
+        errorMessage.includes("não está habilitada") ||
+        errorMessage.includes("missing the required capabilities")
+      ) {
         setSupplierReady(false);
-        setSupplierError("O fornecedor ainda não finalizou o cadastro no sistema de pagamentos. Não é possível concluir a compra no momento.");
+        setSupplierError(
+          "O fornecedor ainda não finalizou o cadastro no sistema de pagamentos. Não é possível concluir a compra no momento."
+        );
       } else {
         toast({
           title: "Erro no pagamento",
