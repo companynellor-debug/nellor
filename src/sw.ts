@@ -70,14 +70,14 @@ self.addEventListener('push', (event: PushEvent) => {
     }
   }
 
-  const options = {
+  const options: NotificationOptions & { vibrate?: number[] } = {
     body: data.body,
     icon: data.icon,
     badge: data.badge,
-    tag: 'nellor-' + Date.now(),
+    tag: 'nellor-push-' + Date.now(),
     requireInteraction: true,
     vibrate: [200, 100, 200],
-    silent: false, // Permite som do sistema
+    silent: false,
     data: { url: data.url, sound: data.sound }
   };
 
@@ -88,62 +88,72 @@ self.addEventListener('push', (event: PushEvent) => {
 
 // Handle notification click - open app and navigate
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
-  console.log('🔔 SW Notification clicked');
+  console.log('🔔 SW Notification clicked:', event.notification.tag);
   event.notification.close();
 
   const urlToOpen = (event.notification.data?.url as string) || '/fornecedor/pedidos';
+  console.log('🔔 Opening URL:', urlToOpen);
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Try to focus existing window
+      console.log('🔔 Found clients:', clientList.length);
+      
+      // Try to focus existing window and navigate
       for (const client of clientList) {
         if ('focus' in client && 'navigate' in client) {
+          console.log('🔔 Navigating existing client to:', urlToOpen);
           return (client as WindowClient).navigate(urlToOpen).then(() => (client as WindowClient).focus());
         }
       }
-      // Open new window
+      
+      // Open new window if no existing client
+      console.log('🔔 Opening new window:', urlToOpen);
       return self.clients.openWindow(urlToOpen);
     })
   );
 });
 
 // Handle notification close
-self.addEventListener('notificationclose', () => {
-  console.log('🔔 SW Notification closed');
+self.addEventListener('notificationclose', (event: NotificationEvent) => {
+  console.log('🔔 SW Notification closed:', event.notification.tag);
 });
 
 // Handle messages from main thread (for showing notifications from app)
 self.addEventListener('message', (event) => {
+  console.log('🔔 SW received message:', event.data?.type);
+  
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
     const { title, options } = event.data;
-    console.log('🔔 SW received SHOW_NOTIFICATION message:', title);
+    console.log('🔔 SW SHOW_NOTIFICATION:', title, options);
     
     event.waitUntil(
       self.registration.showNotification(title, {
-        body: options.body || '',
-        icon: options.icon || '/pwa-192x192.png',
-        badge: options.badge || '/pwa-192x192.png',
-        tag: options.tag || 'nellor-' + Date.now(),
+        body: options?.body || '',
+        icon: options?.icon || '/pwa-192x192.png',
+        badge: options?.badge || '/pwa-192x192.png',
+        tag: options?.tag || 'nellor-msg-' + Date.now(),
         requireInteraction: true,
         silent: false,
-        data: { url: options.data?.url || '/fornecedor/pedidos' }
+        vibrate: [200, 100, 200],
+        data: { url: options?.data?.url || '/fornecedor/pedidos' }
       } as NotificationOptions & { vibrate?: number[] })
     );
   }
   
   // Skip waiting quando solicitado
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('🔔 SW skipping waiting');
     self.skipWaiting();
   }
 });
 
 // Garantir que o SW seja ativado imediatamente
 self.addEventListener('install', () => {
-  console.log('🔧 SW installed');
+  console.log('🔧 SW installed - skipping waiting');
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('🔧 SW activated');
+  console.log('🔧 SW activated - claiming clients');
   event.waitUntil(self.clients.claim());
 });
