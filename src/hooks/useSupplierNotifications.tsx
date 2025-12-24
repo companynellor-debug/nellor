@@ -118,86 +118,100 @@ export const useSupplierNotifications = () => {
   useEffect(() => {
     let ordersChannel: any = null;
     let notificationsChannel: any = null;
+    let isMounted = true;
 
     const setupRealtimeSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id;
       
       if (!userId) {
-        console.log('No user for realtime subscription');
+        console.log('❌ No user for realtime subscription');
         return;
       }
 
       console.log('🔌 Setting up realtime subscription for supplier:', userId);
 
-      // Subscribe to order updates for this supplier
+      // Subscribe to ALL order changes for this supplier (sem filtro para maior confiabilidade)
       ordersChannel = supabase
-        .channel(`supplier-paid-orders-${userId}`)
+        .channel(`supplier-orders-realtime-${userId}-${Date.now()}`)
         .on(
           'postgres_changes',
           {
-            event: 'UPDATE',
+            event: '*', // Escuta todos os eventos
             schema: 'public',
             table: 'orders',
-            filter: `supplier_id=eq.${userId}`
           },
           async (payload) => {
-            console.log('📦 Order UPDATE received:', payload);
+            if (!isMounted) return;
             
             const newOrder = payload.new as any;
             const oldOrder = payload.old as any;
             
-            // Só notifica quando payment_status muda para 'paid'
-            if (oldOrder?.payment_status !== 'paid' && newOrder?.payment_status === 'paid') {
-              console.log('✅ Order payment confirmed:', newOrder.order_number);
-              await showPaidOrderNotification(newOrder);
-              fetchNotifications();
+            // Filtra apenas pedidos deste fornecedor
+            if (newOrder?.supplier_id !== userId && oldOrder?.supplier_id !== userId) {
+              return;
             }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'orders',
-            filter: `supplier_id=eq.${userId}`
-          },
-          async (payload) => {
-            console.log('📦 Order INSERT received:', payload);
             
-            const newOrder = payload.new as any;
+            console.log('📦 Order event received:', payload.eventType, newOrder?.order_number);
             
-            // Se o pedido já vem como pago (raro, mas possível)
-            if (newOrder?.payment_status === 'paid') {
+            // INSERT: Novo pedido que já veio pago
+            if (payload.eventType === 'INSERT' && newOrder?.payment_status === 'paid') {
               console.log('✅ New order already paid:', newOrder.order_number);
               await showPaidOrderNotification(newOrder);
               fetchNotifications();
+              return;
+            }
+            
+            // UPDATE: Pedido foi pago agora
+            if (payload.eventType === 'UPDATE') {
+              const wasPaid = oldOrder?.payment_status === 'paid';
+              const isPaid = newOrder?.payment_status === 'paid';
+              
+              if (!wasPaid && isPaid) {
+                console.log('✅ Order payment confirmed:', newOrder.order_number);
+                await showPaidOrderNotification(newOrder);
+                fetchNotifications();
+              }
             }
           }
         )
         .subscribe((status) => {
           console.log('📡 Orders channel status:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Realtime orders subscription active for:', userId);
+          }
         });
 
       // Subscribe to notifications table changes
       notificationsChannel = supabase
-        .channel(`supplier-notifications-${userId}`)
+        .channel(`supplier-notifications-realtime-${userId}-${Date.now()}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
             table: 'notifications',
-            filter: `user_id=eq.${userId}`
           },
           (payload) => {
-            console.log('🔔 Notification INSERT received:', payload);
+            if (!isMounted) return;
+            
             const newNotif = payload.new as SupplierNotification;
+            
+            // Filtra apenas notificações deste usuário
+            if (newNotif.user_id !== userId) return;
+            
+            console.log('🔔 Notification INSERT received:', payload);
             
             if (newNotif.sound) {
               playNotificationSound();
             }
+            
+            // Push notification para notificações da tabela
+            showPushNotification(newNotif.title, {
+              body: newNotif.body,
+              tag: `notif-${newNotif.id}`,
+              data: { url: '/fornecedor/notificacoes' },
+            });
             
             toast({
               title: newNotif.title,
@@ -210,6 +224,9 @@ export const useSupplierNotifications = () => {
         )
         .subscribe((status) => {
           console.log('📡 Notifications channel status:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Realtime notifications subscription active for:', userId);
+          }
         });
     };
 
@@ -218,6 +235,7 @@ export const useSupplierNotifications = () => {
 
     return () => {
       console.log('🔌 Cleaning up realtime subscriptions');
+      isMounted = false;
       if (ordersChannel) {
         supabase.removeChannel(ordersChannel);
       }
