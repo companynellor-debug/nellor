@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { showOrderNotification, requestNotificationPermission, getNotificationPermission, showPaymentNotification } from '@/utils/pushNotifications';
+import { showPushNotification, requestNotificationPermission, getNotificationPermission } from '@/utils/pushNotifications';
 
 export interface SupplierNotification {
   id: string;
@@ -21,6 +21,7 @@ export const useSupplierNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const { toast } = useToast();
+  const processedOrdersRef = useRef<Set<string>>(new Set());
 
   const requestPermission = useCallback(async () => {
     const granted = await requestNotificationPermission();
@@ -33,12 +34,50 @@ export const useSupplierNotifications = () => {
   }, []);
 
   const playNotificationSound = useCallback(() => {
-    const audio = new Audio('/notification-sound.mp3');
-    audio.volume = 0.5;
-    audio.play().catch(error => {
-      console.error('Error playing notification sound:', error);
-    });
+    try {
+      const audio = new Audio('/notification-sound.mp3');
+      audio.volume = 0.7;
+      audio.play().catch(error => {
+        console.error('Error playing notification sound:', error);
+      });
+    } catch (error) {
+      console.error('Error creating audio:', error);
+    }
   }, []);
+
+  const showPaidOrderNotification = useCallback(async (order: any) => {
+    const orderId = order.id;
+    
+    // Evita notificações duplicadas
+    if (processedOrdersRef.current.has(orderId)) {
+      console.log('Order already processed:', orderId);
+      return;
+    }
+    processedOrdersRef.current.add(orderId);
+
+    console.log('🔔 Disparando notificação para pedido PAGO:', order.order_number);
+
+    // Som
+    playNotificationSound();
+
+    // Push notification nativa
+    await showPushNotification('💰 Novo Pedido PAGO!', {
+      body: `Pedido #${order.order_number} - R$ ${order.total?.toFixed(2)} foi pago!`,
+      tag: `paid-order-${order.order_number}`,
+      requireInteraction: true,
+      data: { 
+        type: 'paid_order', 
+        orderId: order.id,
+        orderNumber: order.order_number 
+      },
+    });
+
+    // Toast in-app
+    toast({
+      title: '💰 Novo Pedido PAGO!',
+      description: `Pedido #${order.order_number} - R$ ${order.total?.toFixed(2)} foi pago!`,
+    });
+  }, [playNotificationSound, toast]);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -71,48 +110,23 @@ export const useSupplierNotifications = () => {
   }, []);
 
   useEffect(() => {
-    let userId: string | null = null;
+    let ordersChannel: any = null;
+    let notificationsChannel: any = null;
 
     const setupRealtimeSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      userId = user?.id || null;
+      const userId = user?.id;
       
-      if (!userId) return;
+      if (!userId) {
+        console.log('No user for realtime subscription');
+        return;
+      }
 
-      // Subscribe to new orders for this supplier
-      const ordersChannel = supabase
-        .channel('supplier-orders-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'orders',
-            filter: `supplier_id=eq.${userId}`
-          },
-          async (payload) => {
-            const newOrder = payload.new as any;
-            
-            // Play sound
-            playNotificationSound();
-            
-            // Show push notification
-            await showOrderNotification(
-              newOrder.order_number,
-              newOrder.total,
-              undefined
-            );
-            
-            // Show in-app toast
-            toast({
-              title: '🛒 Novo Pedido Recebido!',
-              description: `Pedido #${newOrder.order_number} - R$ ${newOrder.total?.toFixed(2)}`,
-            });
+      console.log('🔌 Setting up realtime subscription for supplier:', userId);
 
-            // Refetch notifications
-            fetchNotifications();
-          }
-        )
+      // Subscribe to order updates for this supplier
+      ordersChannel = supabase
+        .channel(`supplier-paid-orders-${userId}`)
         .on(
           'postgres_changes',
           {
@@ -122,31 +136,47 @@ export const useSupplierNotifications = () => {
             filter: `supplier_id=eq.${userId}`
           },
           async (payload) => {
-            const updatedOrder = payload.new as any;
+            console.log('📦 Order UPDATE received:', payload);
+            
+            const newOrder = payload.new as any;
             const oldOrder = payload.old as any;
             
-            // Check if payment status changed to paid
-            if (oldOrder.payment_status !== 'paid' && updatedOrder.payment_status === 'paid') {
-              playNotificationSound();
-              
-              await showPaymentNotification(
-                updatedOrder.order_number,
-                updatedOrder.total,
-                'paid'
-              );
-              
-              toast({
-                title: '✅ Pagamento Confirmado!',
-                description: `Pedido #${updatedOrder.order_number} foi pago`,
-              });
+            // Só notifica quando payment_status muda para 'paid'
+            if (oldOrder?.payment_status !== 'paid' && newOrder?.payment_status === 'paid') {
+              console.log('✅ Order payment confirmed:', newOrder.order_number);
+              await showPaidOrderNotification(newOrder);
+              fetchNotifications();
             }
           }
         )
-        .subscribe();
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'orders',
+            filter: `supplier_id=eq.${userId}`
+          },
+          async (payload) => {
+            console.log('📦 Order INSERT received:', payload);
+            
+            const newOrder = payload.new as any;
+            
+            // Se o pedido já vem como pago (raro, mas possível)
+            if (newOrder?.payment_status === 'paid') {
+              console.log('✅ New order already paid:', newOrder.order_number);
+              await showPaidOrderNotification(newOrder);
+              fetchNotifications();
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log('📡 Orders channel status:', status);
+        });
 
       // Subscribe to notifications table changes
-      const notificationsChannel = supabase
-        .channel('supplier-notifications-realtime')
+      notificationsChannel = supabase
+        .channel(`supplier-notifications-${userId}`)
         .on(
           'postgres_changes',
           {
@@ -156,6 +186,7 @@ export const useSupplierNotifications = () => {
             filter: `user_id=eq.${userId}`
           },
           (payload) => {
+            console.log('🔔 Notification INSERT received:', payload);
             const newNotif = payload.new as SupplierNotification;
             
             if (newNotif.sound) {
@@ -171,21 +202,24 @@ export const useSupplierNotifications = () => {
             setUnreadCount(prev => prev + 1);
           }
         )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(ordersChannel);
-        supabase.removeChannel(notificationsChannel);
-      };
+        .subscribe((status) => {
+          console.log('📡 Notifications channel status:', status);
+        });
     };
 
     fetchNotifications();
-    const cleanup = setupRealtimeSubscription();
+    setupRealtimeSubscription();
 
     return () => {
-      cleanup.then(fn => fn?.());
+      console.log('🔌 Cleaning up realtime subscriptions');
+      if (ordersChannel) {
+        supabase.removeChannel(ordersChannel);
+      }
+      if (notificationsChannel) {
+        supabase.removeChannel(notificationsChannel);
+      }
     };
-  }, [fetchNotifications, playNotificationSound, toast]);
+  }, [fetchNotifications, playNotificationSound, toast, showPaidOrderNotification]);
 
   const markAsRead = async (notificationId: string) => {
     try {
