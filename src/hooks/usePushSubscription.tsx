@@ -38,7 +38,7 @@ export const usePushSubscription = () => {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if already subscribed
+  // Check if already subscribed (and keep DB in sync)
   const checkSubscription = useCallback(async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       console.log('❌ Push notifications not supported');
@@ -48,13 +48,48 @@ export const usePushSubscription = () => {
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
-      
+
       if (subscription) {
         console.log('✅ Already subscribed to push');
         setIsSubscribed(true);
+
+        // Ensure the subscription exists in DB (server push depends on this)
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const json = subscription.toJSON();
+            const endpoint = subscription.endpoint;
+            const p256dh = json.keys?.p256dh || '';
+            const auth = json.keys?.auth || '';
+
+            if (p256dh && auth) {
+              const { error: syncError } = await supabase
+                .from('push_subscriptions')
+                .upsert({
+                  user_id: user.id,
+                  endpoint,
+                  p256dh,
+                  auth,
+                  user_agent: navigator.userAgent,
+                  updated_at: new Date().toISOString(),
+                }, {
+                  onConflict: 'user_id,endpoint',
+                });
+
+              if (syncError) {
+                console.warn('⚠️ Could not sync push subscription to DB:', syncError);
+              } else {
+                console.log('✅ Push subscription synced to DB');
+              }
+            }
+          }
+        } catch (syncErr) {
+          console.warn('⚠️ Push subscription DB sync failed:', syncErr);
+        }
+
         return true;
       }
-      
+
       console.log('📱 Not subscribed to push yet');
       setIsSubscribed(false);
       return false;
