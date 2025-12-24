@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, DollarSign, ShoppingCart, CreditCard, CheckCircle2, AlertTriangle, Loader2, Wallet, Percent } from "lucide-react";
+import { Package, TrendingUp, DollarSign, ShoppingCart, CreditCard, CheckCircle2, AlertTriangle, Loader2, Wallet, Percent, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -10,6 +10,8 @@ import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StripeConnectModal } from "@/components/fornecedor/StripeConnectModal";
+import { showPushNotification, getNotificationPermission, requestNotificationPermission } from "@/utils/pushNotifications";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -18,9 +20,54 @@ const Dashboard = () => {
   const { accountStatus, checkAccountStatus, startOnboarding, loading: stripeLoading } = useStripeConnect();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('today');
   const { orders } = useSupabaseOrders();
-  const [analytics, setAnalytics] = useState<any>(null);
+const [analytics, setAnalytics] = useState<any>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [checkingStripe, setCheckingStripe] = useState(true);
+  const [testingNotification, setTestingNotification] = useState(false);
+  const { toast } = useToast();
+
+  // Test notification function
+  const handleTestNotification = async () => {
+    setTestingNotification(true);
+    try {
+      const permission = getNotificationPermission();
+      if (permission !== 'granted') {
+        const granted = await requestNotificationPermission();
+        if (!granted) {
+          toast({
+            title: '❌ Permissão negada',
+            description: 'Ative as notificações nas configurações do navegador/app',
+            variant: 'destructive',
+          });
+          setTestingNotification(false);
+          return;
+        }
+      }
+
+      const testOrderNumber = `TEST-${Date.now().toString().slice(-4)}`;
+      const testTotal = (Math.random() * 300 + 50).toFixed(2);
+
+      await showPushNotification('💰 Teste de Notificação!', {
+        body: `Pedido #${testOrderNumber} - R$ ${testTotal}`,
+        tag: `test-${Date.now()}`,
+        data: { url: '/fornecedor/pedidos' },
+      });
+
+      toast({
+        title: '✅ Notificação enviada!',
+        description: 'Verifique se apareceu na barra de notificações do celular.',
+      });
+    } catch (error) {
+      console.error('Error testing notification:', error);
+      toast({
+        title: '❌ Erro',
+        description: 'Não foi possível enviar a notificação de teste.',
+        variant: 'destructive',
+      });
+    } finally {
+      setTestingNotification(false);
+    }
+  };
 
   // Check Stripe status on mount
   useEffect(() => {
@@ -129,7 +176,17 @@ const Dashboard = () => {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Visão geral do seu desempenho</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+<div className="flex gap-2 flex-wrap">
+          <Button 
+            variant="outline" 
+            onClick={handleTestNotification}
+            disabled={testingNotification}
+            size="sm" 
+            className="text-xs sm:text-sm h-8 border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+          >
+            {testingNotification ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Bell className="h-3 w-3 mr-1" />}
+            Testar Push
+          </Button>
           <Button variant={dateFilter === 'today' ? 'default' : 'outline'} onClick={() => setDateFilter('today')} size="sm" className="text-xs sm:text-sm h-8">
             Hoje
           </Button>
