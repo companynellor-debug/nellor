@@ -6,6 +6,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContai
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { useStripeConnect } from "@/hooks/useStripeConnect";
+import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StripeConnectModal } from "@/components/fornecedor/StripeConnectModal";
@@ -16,7 +17,7 @@ const Dashboard = () => {
   const { products } = useSupplierProducts();
   const { accountStatus, checkAccountStatus, startOnboarding, loading: stripeLoading } = useStripeConnect();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('today');
-  const [orders, setOrders] = useState<any[]>([]);
+  const { orders } = useSupabaseOrders();
   const [analytics, setAnalytics] = useState<any>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [checkingStripe, setCheckingStripe] = useState(true);
@@ -27,28 +28,24 @@ const Dashboard = () => {
     checkAccountStatus().finally(() => setCheckingStripe(false));
   }, []);
 
-  // Buscar pedidos e analytics do fornecedor
+  // Buscar analytics do mês atual (pedidos já vêm do hook com realtime)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAnalytics = async () => {
       if (!profile?.id) return;
 
-      // Buscar pedidos
-      const {
-        data: ordersData
-      } = await supabase.from('orders').select('*').eq('supplier_id', profile.id).order('created_at', {
-        ascending: false
-      });
-      setOrders(ordersData || []);
-
-      // Buscar analytics do mês atual
       const currentMonth = new Date().toISOString().slice(0, 7) + '-01';
-      const {
-        data: analyticsData
-      } = await supabase.from('analytics').select('*').eq('supplier_id', profile.id).eq('mes_referencia', currentMonth).single();
+      const { data: analyticsData } = await supabase
+        .from('analytics')
+        .select('*')
+        .eq('supplier_id', profile.id)
+        .eq('mes_referencia', currentMonth)
+        .single();
+
       setAnalytics(analyticsData);
     };
-    fetchData();
-  }, [profile?.id, dateFilter]);
+
+    fetchAnalytics();
+  }, [profile?.id]);
 
   // Calcular data de início baseado no filtro
   const getStartDate = () => {
@@ -77,18 +74,20 @@ const Dashboard = () => {
   const newOrders = filteredOrders.filter(o => o.order_status === 'preparing').length;
   const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
   const totalOrders = filteredOrders.length;
-  const totalRevenue = filteredOrders.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+  const totalRevenue = filteredOrders
+    .filter(o => o.payment_status === 'paid')
+    .reduce((sum, o) => sum + Number(o.total || 0), 0);
 
   // Cálculo de comissões e valor líquido
   const paidFilteredOrders = filteredOrders.filter(o => o.payment_status === 'paid');
   const totalPlatformFee = paidFilteredOrders.reduce((sum, o) => {
     // Usar valor real se disponível, senão calcular 7.5%
-    const fee = o.platform_fee ? parseFloat(o.platform_fee) : parseFloat(o.total || 0) * 0.075;
+    const fee = o.platform_fee ? Number(o.platform_fee) : Number(o.total || 0) * 0.075;
     return sum + fee;
   }, 0);
   const totalSupplierAmount = paidFilteredOrders.reduce((sum, o) => {
     // Usar valor real se disponível, senão calcular
-    const amount = o.supplier_amount ? parseFloat(o.supplier_amount) : parseFloat(o.total || 0) * 0.925;
+    const amount = o.supplier_amount ? Number(o.supplier_amount) : Number(o.total || 0) * 0.925;
     return sum + amount;
   }, 0);
   const paidOrders = paidFilteredOrders;
@@ -113,7 +112,7 @@ const Dashboard = () => {
         month: 'short'
       });
       if (monthsData.hasOwnProperty(monthKey)) {
-        monthsData[monthKey] += parseFloat(order.total || 0);
+        monthsData[monthKey] += Number(order.total || 0);
       }
     });
     return Object.entries(monthsData).map(([month, value]) => ({

@@ -61,14 +61,15 @@ export const useSupplierNotifications = () => {
     playNotificationSound();
 
     // Push notification nativa
-    await showPushNotification('💰 Novo Pedido PAGO!', {
+    await showPushNotification('Novo Pedido PAGO!', {
       body: `Pedido #${order.order_number} - R$ ${order.total?.toFixed(2)} foi pago!`,
       tag: `paid-order-${order.order_number}`,
       requireInteraction: true,
-      data: { 
-        type: 'paid_order', 
+      data: {
+        type: 'paid_order',
         orderId: order.id,
-        orderNumber: order.order_number 
+        orderNumber: order.order_number,
+        url: `/fornecedor/pedidos`,
       },
     });
 
