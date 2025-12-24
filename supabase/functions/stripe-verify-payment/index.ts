@@ -23,6 +23,12 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
+    // Service role client (bypass RLS) for server-side order updates
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     // Get user from auth header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -103,9 +109,90 @@ serve(async (req) => {
       console.log("Payment details extracted:", paymentDetails);
     }
 
+    // If paid, update the order server-side (client usually cannot update payment_status due to RLS)
+    let orderUpdated = false;
+    if (isPaid) {
+      const orderIdFromMetadata = (session.metadata as Record<string, string> | null)?.order_id || null;
+
+      if (orderIdFromMetadata) {
+        // Ensure the authenticated user owns the order (or is admin via RLS elsewhere)
+        const { data: orderRow, error: orderErr } = await supabaseAdmin
+          .from("orders")
+          .select("id, buyer_id, supplier_id, payment_status")
+          .eq("id", orderIdFromMetadata)
+          .maybeSingle();
+
+        if (orderErr) {
+          console.error("Error fetching order to update:", orderErr);
+        } else if (!orderRow) {
+          console.warn("Order not found for metadata order_id:", orderIdFromMetadata);
+        } else if (orderRow.buyer_id && orderRow.buyer_id !== user.id) {
+          return new Response(
+            JSON.stringify({ error: "Acesso negado", verified: false }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        } else if (orderRow.payment_status !== "paid") {
+          const { error: updateErr } = await supabaseAdmin
+            .from("orders")
+            .update({
+              payment_status: "paid",
+              order_status: "preparing",
+              stripe_session_id: session.id,
+              stripe_payment_intent_id: paymentDetails?.id ?? null,
+              stripe_payment_amount: (session.amount_total || 0) / 100,
+              platform_fee: paymentDetails?.platformFee ?? null,
+              supplier_amount: paymentDetails?.supplierAmount ?? null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", orderRow.id);
+
+          if (updateErr) {
+            console.error("Error updating order after verification:", updateErr);
+          } else {
+            orderUpdated = true;
+
+            // Create transactions if missing
+            const supplierId = orderRow.supplier_id;
+            if (supplierId) {
+              const totalAmount = (session.amount_total || 0) / 100;
+              const platformFee = paymentDetails?.platformFee ?? totalAmount * 0.075;
+
+              const { data: existingSaleTx } = await supabaseAdmin
+                .from("transactions")
+                .select("id")
+                .eq("order_id", orderRow.id)
+                .eq("type", "sale")
+                .maybeSingle();
+
+              if (!existingSaleTx) {
+                await supabaseAdmin.from("transactions").insert({
+                  order_id: orderRow.id,
+                  supplier_id: supplierId,
+                  amount: totalAmount,
+                  type: "sale",
+                  method: "cartao",
+                  status: "paid",
+                });
+
+                await supabaseAdmin.from("transactions").insert({
+                  order_id: orderRow.id,
+                  supplier_id: supplierId,
+                  amount: platformFee,
+                  type: "platform_fee",
+                  method: "cartao",
+                  status: "paid",
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         verified: isPaid,
+        updated: orderUpdated,
         sessionId: session.id,
         paymentStatus: session.payment_status,
         amountTotal: (session.amount_total || 0) / 100,
