@@ -22,6 +22,7 @@ export const useSupplierNotifications = () => {
   const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const { toast } = useToast();
   const processedOrdersRef = useRef<Set<string>>(new Set());
+  const processedNotificationsRef = useRef<Set<string>>(new Set());
 
   const requestPermission = useCallback(async () => {
     const granted = await requestNotificationPermission();
@@ -38,10 +39,10 @@ export const useSupplierNotifications = () => {
       const audio = new Audio('/notification-sound.mp3');
       audio.volume = 0.7;
       audio.play().catch(error => {
-        console.error('Error playing notification sound:', error);
+        console.log('🔇 Could not play notification sound:', error);
       });
     } catch (error) {
-      console.error('Error creating audio:', error);
+      console.log('🔇 Error creating audio:', error);
     }
   }, []);
 
@@ -50,7 +51,7 @@ export const useSupplierNotifications = () => {
     
     // Evita notificações duplicadas
     if (processedOrdersRef.current.has(orderId)) {
-      console.log('Order already processed:', orderId);
+      console.log('⏭️ Order already processed, skipping:', orderId);
       return;
     }
     processedOrdersRef.current.add(orderId);
@@ -63,20 +64,25 @@ export const useSupplierNotifications = () => {
     // Som
     playNotificationSound();
 
-    // Push notification nativa - título e corpo bem formatados
+    // Push notification nativa
     const notifTitle = '💰 Novo Pedido Recebido!';
     const notifBody = `Você recebeu um novo pedido #${orderNumber}\nR$ ${orderTotal}`;
 
-    await showPushNotification(notifTitle, {
-      body: notifBody,
-      tag: `paid-order-${orderNumber}-${Date.now()}`, // Tag única para não agrupar
-      data: {
-        type: 'paid_order',
-        orderId: order.id,
-        orderNumber: orderNumber,
-        url: '/fornecedor/pedidos',
-      },
-    });
+    try {
+      await showPushNotification(notifTitle, {
+        body: notifBody,
+        tag: `paid-order-${orderNumber}-${Date.now()}`,
+        data: {
+          type: 'paid_order',
+          orderId: order.id,
+          orderNumber: orderNumber,
+          url: '/fornecedor/pedidos',
+        },
+      });
+      console.log('✅ Push notification sent for order:', orderNumber);
+    } catch (error) {
+      console.error('❌ Error sending push notification:', error);
+    }
 
     // Toast in-app
     toast({
@@ -116,8 +122,8 @@ export const useSupplierNotifications = () => {
   }, []);
 
   useEffect(() => {
-    let ordersChannel: any = null;
-    let notificationsChannel: any = null;
+    let ordersChannel: ReturnType<typeof supabase.channel> | null = null;
+    let notificationsChannel: ReturnType<typeof supabase.channel> | null = null;
     let isMounted = true;
 
     const setupRealtimeSubscription = async () => {
@@ -131,13 +137,14 @@ export const useSupplierNotifications = () => {
 
       console.log('🔌 Setting up realtime subscription for supplier:', userId);
 
-      // Subscribe to ALL order changes for this supplier (sem filtro para maior confiabilidade)
+      // Subscribe to ALL order changes (unfiltered for reliability)
+      const ordersChannelName = `orders-supplier-${userId}`;
       ordersChannel = supabase
-        .channel(`supplier-orders-realtime-${userId}-${Date.now()}`)
+        .channel(ordersChannelName)
         .on(
           'postgres_changes',
           {
-            event: '*', // Escuta todos os eventos
+            event: '*',
             schema: 'public',
             table: 'orders',
           },
@@ -147,14 +154,14 @@ export const useSupplierNotifications = () => {
             const newOrder = payload.new as any;
             const oldOrder = payload.old as any;
             
-            // Filtra apenas pedidos deste fornecedor
+            // Filter for this supplier only
             if (newOrder?.supplier_id !== userId && oldOrder?.supplier_id !== userId) {
               return;
             }
             
-            console.log('📦 Order event received:', payload.eventType, newOrder?.order_number);
+            console.log('📦 Order event:', payload.eventType, 'Order:', newOrder?.order_number, 'Status:', newOrder?.payment_status);
             
-            // INSERT: Novo pedido que já veio pago
+            // INSERT: New order already paid
             if (payload.eventType === 'INSERT' && newOrder?.payment_status === 'paid') {
               console.log('✅ New order already paid:', newOrder.order_number);
               await showPaidOrderNotification(newOrder);
@@ -162,7 +169,7 @@ export const useSupplierNotifications = () => {
               return;
             }
             
-            // UPDATE: Pedido foi pago agora
+            // UPDATE: Order just got paid
             if (payload.eventType === 'UPDATE') {
               const wasPaid = oldOrder?.payment_status === 'paid';
               const isPaid = newOrder?.payment_status === 'paid';
@@ -175,16 +182,19 @@ export const useSupplierNotifications = () => {
             }
           }
         )
-        .subscribe((status) => {
-          console.log('📡 Orders channel status:', status);
+        .subscribe((status, err) => {
+          console.log('📡 Orders channel status:', status, err ? `Error: ${err}` : '');
           if (status === 'SUBSCRIBED') {
-            console.log('✅ Realtime orders subscription active for:', userId);
+            console.log('✅ Realtime orders subscription ACTIVE for:', userId);
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ Orders channel error:', err);
           }
         });
 
       // Subscribe to notifications table changes
+      const notificationsChannelName = `notifications-supplier-${userId}`;
       notificationsChannel = supabase
-        .channel(`supplier-notifications-realtime-${userId}-${Date.now()}`)
+        .channel(notificationsChannelName)
         .on(
           'postgres_changes',
           {
@@ -192,27 +202,40 @@ export const useSupplierNotifications = () => {
             schema: 'public',
             table: 'notifications',
           },
-          (payload) => {
+          async (payload) => {
             if (!isMounted) return;
             
             const newNotif = payload.new as SupplierNotification;
             
-            // Filtra apenas notificações deste usuário
+            // Filter for this user only
             if (newNotif.user_id !== userId) return;
             
-            console.log('🔔 Notification INSERT received:', payload);
+            // Avoid duplicates
+            if (processedNotificationsRef.current.has(newNotif.id)) {
+              console.log('⏭️ Notification already processed:', newNotif.id);
+              return;
+            }
+            processedNotificationsRef.current.add(newNotif.id);
+            
+            console.log('🔔 New notification received:', newNotif.title);
             
             if (newNotif.sound) {
               playNotificationSound();
             }
             
-            // Push notification para notificações da tabela
-            showPushNotification(newNotif.title, {
-              body: newNotif.body,
-              tag: `notif-${newNotif.id}`,
-              data: { url: '/fornecedor/notificacoes' },
-            });
+            // Push notification
+            try {
+              await showPushNotification(newNotif.title, {
+                body: newNotif.body,
+                tag: `notif-${newNotif.id}`,
+                data: { url: '/fornecedor/notificacoes' },
+              });
+              console.log('✅ Push notification sent for notification:', newNotif.id);
+            } catch (error) {
+              console.error('❌ Error sending push notification:', error);
+            }
             
+            // Toast in-app
             toast({
               title: newNotif.title,
               description: newNotif.body,
@@ -222,10 +245,12 @@ export const useSupplierNotifications = () => {
             setUnreadCount(prev => prev + 1);
           }
         )
-        .subscribe((status) => {
-          console.log('📡 Notifications channel status:', status);
+        .subscribe((status, err) => {
+          console.log('📡 Notifications channel status:', status, err ? `Error: ${err}` : '');
           if (status === 'SUBSCRIBED') {
-            console.log('✅ Realtime notifications subscription active for:', userId);
+            console.log('✅ Realtime notifications subscription ACTIVE for:', userId);
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ Notifications channel error:', err);
           }
         });
     };

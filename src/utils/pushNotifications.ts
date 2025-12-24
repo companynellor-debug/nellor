@@ -74,7 +74,7 @@ export const showPushNotification = async (
   title: string,
   options?: NotificationOptions
 ): Promise<void> => {
-  console.log('🔔 showPushNotification called:', title);
+  console.log('🔔 showPushNotification called:', title, options);
 
   // Check permission first
   if (!('Notification' in window)) {
@@ -82,7 +82,11 @@ export const showPushNotification = async (
     return;
   }
 
-  if (Notification.permission !== 'granted') {
+  // Check current permission
+  const currentPermission = Notification.permission;
+  console.log('📱 Current notification permission:', currentPermission);
+
+  if (currentPermission !== 'granted') {
     console.log('❌ No notification permission, requesting...');
     const granted = await requestNotificationPermission();
     if (!granted) {
@@ -96,52 +100,46 @@ export const showPushNotification = async (
     ...(options?.data as Record<string, unknown> || {}),
   };
 
-  const notifOptions: NotificationOptions = {
-    body: options?.body || '',
-    icon: '/pwa-192x192.png',
-    badge: '/pwa-192x192.png',
-    tag: options?.tag || `nellor-${Date.now()}`,
-    requireInteraction: true,
-    silent: false,
-    data: notifData,
-  };
-
-  // Toca som no app
+  // Toca som no app primeiro
   playNotificationSoundInApp();
 
-  try {
-    // Para mobile PWA: usa Service Worker registration.showNotification
-    // Esta é a forma mais confiável para Android e iOS
-    if ('serviceWorker' in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.ready;
+  // Try Service Worker approach first (best for PWA/mobile)
+  if ('serviceWorker' in navigator) {
+    try {
+      // Wait for service worker to be ready
+      const registration = await navigator.serviceWorker.ready;
+      console.log('📱 SW registration ready:', !!registration);
+      
+      if (registration && registration.showNotification) {
+        console.log('📱 Sending notification via SW registration.showNotification');
         
-        if (registration) {
-          console.log('📱 Using SW registration.showNotification (mobile compatible)');
-          await registration.showNotification(title, {
-            body: notifOptions.body,
-            icon: notifOptions.icon,
-            badge: notifOptions.badge,
-            tag: notifOptions.tag,
-            requireInteraction: true,
-            silent: false,
-            data: notifData,
-          } as NotificationOptions);
-          console.log('✅ Notification sent via SW registration');
-          return;
-        }
-      } catch (swError) {
-        console.log('⚠️ SW registration.showNotification failed:', swError);
+        await registration.showNotification(title, {
+          body: options?.body || '',
+          icon: '/pwa-192x192.png',
+          badge: '/pwa-192x192.png',
+          tag: options?.tag || `nellor-${Date.now()}`,
+          requireInteraction: true,
+          silent: false,
+          vibrate: [200, 100, 200], // Vibration pattern for Android
+          data: notifData,
+        } as NotificationOptions);
+        
+        console.log('✅ Notification sent successfully via Service Worker');
+        return;
       }
+    } catch (swError) {
+      console.warn('⚠️ SW registration.showNotification failed:', swError);
     }
+  }
 
-    // Fallback: API direta (funciona apenas em foreground/desktop)
-    console.log('📱 Using Notification API fallback');
+  // Fallback: Direct Notification API (works in foreground only)
+  try {
+    console.log('📱 Falling back to direct Notification API');
     const notification = new Notification(title, {
-      body: notifOptions.body || '',
+      body: options?.body || '',
       icon: '/pwa-192x192.png',
       badge: '/pwa-192x192.png',
-      tag: notifOptions.tag,
+      tag: options?.tag || `nellor-${Date.now()}`,
       requireInteraction: true,
       silent: false,
     });
@@ -149,12 +147,12 @@ export const showPushNotification = async (
     notification.onclick = () => {
       window.focus();
       if (notifData.url) {
-        window.location.href = notifData.url;
+        window.location.href = notifData.url as string;
       }
       notification.close();
     };
     
-    console.log('✅ Notification sent via Notification API');
+    console.log('✅ Notification sent via direct Notification API');
   } catch (error) {
     console.error('❌ Error showing notification:', error);
   }
