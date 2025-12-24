@@ -52,50 +52,8 @@ export const useSupplierNotifications = () => {
     }
   }, []);
 
-  const showNewOrderNotification = useCallback(async (order: any) => {
-    const key = orderKey(order, 'created');
-
-    // Evita duplicadas (por status)
-    if (processedOrdersRef.current.has(key)) {
-      console.log('⏭️ Order already processed (created), skipping:', key);
-      return;
-    }
-    processedOrdersRef.current.add(key);
-
-    const orderNumber = order.order_number || 'N/A';
-    const orderTotal = Number(order.total || 0).toFixed(2);
-    const paymentStatus = order.payment_status || 'pending';
-
-    console.log('🔔 Disparando notificação para NOVO pedido:', orderNumber, 'payment_status:', paymentStatus);
-
-    playNotificationSound();
-
-    const notifTitle = '🛒 Novo Pedido Gerado!';
-    const notifBody = paymentStatus === 'paid'
-      ? `Pedido #${orderNumber} já está pago. R$ ${orderTotal}`
-      : `Pedido #${orderNumber} criado (aguardando pagamento). R$ ${orderTotal}`;
-
-    try {
-      await showPushNotification(notifTitle, {
-        body: notifBody,
-        tag: `new-order-${orderNumber}-${Date.now()}`,
-        data: {
-          type: 'new_order',
-          orderId: order.id,
-          orderNumber,
-          url: '/fornecedor/pedidos',
-        },
-      });
-      console.log('✅ Push notification sent for new order:', orderNumber);
-    } catch (error) {
-      console.error('❌ Error sending push notification (new order):', error);
-    }
-
-    toast({
-      title: '🛒 Novo Pedido!',
-      description: `Pedido #${orderNumber} - R$ ${orderTotal}`,
-    });
-  }, [playNotificationSound, toast]);
+  // REMOVIDO: showNewOrderNotification - não notificar pedidos pendentes
+  // Fornecedor só deve ser notificado quando pagamento for CONFIRMADO
 
   const showPaidOrderNotification = useCallback(async (order: any) => {
     const key = orderKey(order, 'paid');
@@ -212,16 +170,17 @@ export const useSupplierNotifications = () => {
             
             console.log('📦 Order event:', payload.eventType, 'Order:', newOrder?.order_number, 'Status:', newOrder?.payment_status);
             
-            // INSERT: New order created for this supplier (any payment status)
+            // INSERT: Só notificar se o pedido já vier PAGO (pagamento instantâneo)
             if (payload.eventType === 'INSERT') {
-              await showNewOrderNotification(newOrder);
-
-              // If it already comes paid, also show the paid notification
+              // APENAS notificar se o pedido JÁ vier com payment_status === 'paid'
+              // Pedidos pendentes NÃO geram notificação (evita notificar no checkout)
               if (newOrder?.payment_status === 'paid') {
+                console.log('✅ Novo pedido JÁ PAGO detectado:', newOrder.order_number);
                 await showPaidOrderNotification(newOrder);
+                fetchNotifications();
+              } else {
+                console.log('⏳ Pedido criado mas ainda pendente, aguardando pagamento:', newOrder?.order_number);
               }
-
-              fetchNotifications();
               return;
             }
             
@@ -324,7 +283,7 @@ export const useSupplierNotifications = () => {
         supabase.removeChannel(notificationsChannel);
       }
     };
-  }, [fetchNotifications, playNotificationSound, toast, showPaidOrderNotification, showNewOrderNotification]);
+  }, [fetchNotifications, playNotificationSound, toast, showPaidOrderNotification]);
 
   const markAsRead = async (notificationId: string) => {
     try {
