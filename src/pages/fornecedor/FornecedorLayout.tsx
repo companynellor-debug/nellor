@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierNotifications } from "@/hooks/useSupplierNotifications";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -20,10 +21,28 @@ const FornecedorLayout = () => {
     profile
   } = useSupabaseAuth();
   const { unreadCount } = useSupplierNotifications();
+  const { subscribe, isSubscribed } = usePushSubscription();
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("fornecedor-dark-mode");
     return saved ? JSON.parse(saved) : false;
   });
+
+  // Auto-subscribe to push notifications when permission is granted
+  useEffect(() => {
+    const autoSubscribe = async () => {
+      if ('Notification' in window && Notification.permission === 'granted' && !isSubscribed) {
+        console.log('📱 Auto-subscribing to push notifications...');
+        const success = await subscribe();
+        if (success) {
+          console.log('✅ Auto-subscribed to push notifications');
+        }
+      }
+    };
+    
+    // Small delay to ensure everything is loaded
+    const timeout = setTimeout(autoSubscribe, 2000);
+    return () => clearTimeout(timeout);
+  }, [subscribe, isSubscribed]);
 
   // Redirecionar para onboarding se não completou
   useEffect(() => {

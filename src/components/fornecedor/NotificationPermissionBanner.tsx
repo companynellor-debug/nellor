@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getNotificationPermission, requestNotificationPermission } from '@/utils/pushNotifications';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
 
 export const NotificationPermissionBanner = () => {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [dismissed, setDismissed] = useState(false);
+  const { subscribe, isSubscribing } = usePushSubscription();
 
   useEffect(() => {
     setPermission(getNotificationPermission());
@@ -18,7 +20,15 @@ export const NotificationPermissionBanner = () => {
   const handleRequestPermission = async () => {
     const granted = await requestNotificationPermission();
     setPermission(getNotificationPermission());
+    
     if (granted) {
+      // Subscribe to Web Push after permission granted
+      console.log('📱 Permission granted, subscribing to Web Push...');
+      const subscribed = await subscribe();
+      if (subscribed) {
+        console.log('✅ Web Push subscription successful');
+      }
+      
       setDismissed(true);
       localStorage.setItem('notification-banner-dismissed', 'true');
     }
@@ -55,8 +65,9 @@ export const NotificationPermissionBanner = () => {
             size="sm" 
             onClick={handleRequestPermission}
             className="bg-primary hover:bg-primary/90"
+            disabled={isSubscribing}
           >
-            Ativar Notificações
+            {isSubscribing ? 'Ativando...' : 'Ativar Notificações'}
           </Button>
           <Button 
             size="icon" 
