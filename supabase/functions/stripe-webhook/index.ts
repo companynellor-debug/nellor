@@ -282,6 +282,39 @@ serve(async (req) => {
         }
       }
 
+      // ================================================================
+      // SEND PUSH NOTIFICATION TO SUPPLIER
+      // ================================================================
+      console.log("📱 Sending push notification to supplier:", actualSupplierId || existingOrder.supplier_id);
+      
+      try {
+        const pushResponse = await fetch(
+          `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({
+              user_id: actualSupplierId || existingOrder.supplier_id,
+              title: "💰 Novo Pedido Pago!",
+              body: `Pedido #${existingOrder.order_number} - R$ ${totalAmount.toFixed(2)}`,
+              url: "/fornecedor/pedidos",
+              tag: `order-paid-${existingOrder.order_number}`,
+              order_number: existingOrder.order_number,
+              total: totalAmount,
+            }),
+          }
+        );
+        
+        const pushResult = await pushResponse.json();
+        console.log("📱 Push notification result:", pushResult);
+      } catch (pushError) {
+        console.error("⚠️ Error sending push notification:", pushError);
+        // Don't fail the webhook because of push notification error
+      }
+
       console.log("=================================================");
       console.log("🎉 PAYMENT PROCESSING COMPLETE");
       console.log(`  Order: ${existingOrder.order_number}`);
