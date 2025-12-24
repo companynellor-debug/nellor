@@ -5,18 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, Package, Truck, ClipboardList, Home, AlertTriangle } from "lucide-react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
-import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
-import { useCoupons } from "@/hooks/useCoupons";
 import { useCart } from "@/hooks/useCart";
-import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 
 const CheckoutSucesso = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { createOrder } = useSupabaseOrders();
-  const { incrementCouponUsage } = useCoupons();
   const { clearCart } = useCart();
   
   const [showAnimation, setShowAnimation] = useState(false);
@@ -26,132 +21,61 @@ const CheckoutSucesso = () => {
 
   useEffect(() => {
     const processOrder = async () => {
-      // Check if coming from Stripe success
-      const orderId = searchParams.get('order_id');
-      
+      const orderId = searchParams.get("order_id");
+
       if (!orderId) {
-        navigate('/cliente');
+        navigate("/cliente");
         return;
       }
 
-      // Get pending order data from localStorage
-      const pendingOrderStr = localStorage.getItem('pendingOrder');
-      if (!pendingOrderStr) {
-        // Maybe already processed - check if order exists
-        toast({
-          title: "Aviso",
-          description: "Dados do pedido não encontrados. Verifique seus pedidos.",
-        });
-        navigate('/cliente/meus-pedidos');
-        return;
+      // Sempre tenta limpar o estado local do carrinho para evitar "itens presos"
+      clearCart();
+
+      const pendingOrderStr = localStorage.getItem("pendingOrder");
+      if (pendingOrderStr) {
+        localStorage.removeItem("pendingOrder");
       }
 
       try {
-        const pendingOrder = JSON.parse(pendingOrderStr);
-        const { buyerData, cartItems, subtotal, shipping, discount, total, supplierId, stripeSessionId, couponId } = pendingOrder;
+        // Busca o pedido real (já deve existir, pois agora criamos ANTES do Stripe)
+        const { data: order, error: orderError } = await supabase
+          .from("orders")
+          .select("order_number")
+          .eq("id", orderId)
+          .single();
 
-        // CRITICAL: Verify payment with Stripe before creating order
-        console.log("Verifying payment with Stripe...", stripeSessionId);
-        
-        let paymentVerified = false;
-        let paymentDetails = null;
-
-        try {
-          const { data: verifyData, error: verifyError } = await supabase.functions.invoke('stripe-verify-payment', {
-            body: { sessionId: stripeSessionId },
-          });
-
-          if (verifyError) {
-            console.error("Payment verification error:", verifyError);
-          } else if (verifyData?.verified) {
-            paymentVerified = true;
-            paymentDetails = verifyData.paymentDetails;
-            console.log("Payment verified successfully:", verifyData);
-          } else {
-            console.log("Payment not verified:", verifyData);
-          }
-        } catch (verifyErr) {
-          console.error("Error verifying payment:", verifyErr);
-          // Continue anyway - webhook should handle marking as paid
+        if (orderError) {
+          throw orderError;
         }
-
-        // Calculate platform fee (7.5%)
-        const platformFee = paymentDetails?.platformFee || (total * 0.075);
-        const supplierAmount = paymentDetails?.supplierAmount || (total - platformFee);
-
-        // Create the order in Supabase with Stripe payment data
-        const order = await createOrder({
-          supplier_id: supplierId,
-          payment_method: "cartao" as const,
-          subtotal,
-          frete: shipping,
-          desconto: discount,
-          total,
-          itens: cartItems.map((item: any) => ({
-            product_id: item.productId || item.id.toString(),
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-          })),
-          endereco_entrega: {
-            name: buyerData.nome,
-            document: buyerData.documento,
-            street: buyerData.endereco.street,
-            number: buyerData.endereco.number,
-            complement: buyerData.endereco.complement || "",
-            neighborhood: buyerData.endereco.neighborhood,
-            city: buyerData.endereco.city,
-            state: buyerData.endereco.state,
-            zip_code: buyerData.endereco.zip_code,
-          },
-          // Set as paid if verified, pending if not (webhook will update)
-          payment_status: paymentVerified ? "paid" : "pending",
-          order_status: paymentVerified ? "preparing" : "pending",
-          tracking_code: null,
-          proof_url: null,
-          shipping_company: null,
-          estimated_delivery: null,
-          // Stripe payment data
-          stripe_session_id: stripeSessionId,
-          stripe_payment_intent_id: paymentDetails?.id || null,
-          stripe_payment_amount: total,
-          platform_fee: platformFee,
-          supplier_amount: supplierAmount,
-        });
 
         setOrderNumber(order?.order_number || `#${Date.now().toString().slice(-8)}`);
-        
-        // Increment coupon usage if one was applied
-        if (couponId) {
-          await incrementCouponUsage(couponId);
+
+        // Opcional: verifica pagamento para UX (webhook faz o update oficial)
+        const stored = pendingOrderStr ? JSON.parse(pendingOrderStr) : null;
+        const stripeSessionId = stored?.stripeSessionId;
+
+        if (stripeSessionId) {
+          try {
+            await supabase.functions.invoke("stripe-verify-payment", {
+              body: { sessionId: stripeSessionId },
+            });
+          } catch {
+            // Silencioso: webhook é a fonte de verdade
+          }
         }
-        
-        // CRITICAL: Clear cart and pending order IMMEDIATELY after success
-        clearCart();
-        localStorage.removeItem('pendingOrder');
-        
-        console.log("Order created successfully, cart cleared");
-        
+
         setIsProcessing(false);
         setShowAnimation(true);
-
-        // Trigger confetti
         triggerConfetti();
-
-      } catch (error) {
-        console.error("Error creating order:", error);
-        setError("Erro ao processar pedido. Por favor, entre em contato com o suporte.");
+      } catch (err) {
+        console.error("Error processing success page:", err);
+        setError("Pedido pago, mas não conseguimos carregar os dados. Verifique em 'Meus Pedidos'.");
         setIsProcessing(false);
-        
-        // Still clear cart to prevent duplicate orders
-        clearCart();
-        localStorage.removeItem('pendingOrder');
       }
     };
 
     processOrder();
-  }, [searchParams, navigate, createOrder, clearCart, incrementCouponUsage]);
+  }, [searchParams, navigate, clearCart]);
 
   const triggerConfetti = () => {
     const duration = 3 * 1000;
