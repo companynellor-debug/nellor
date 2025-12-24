@@ -380,7 +380,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-semibold text-sm sm:text-base whitespace-nowrap">R$ {parseFloat(order.total || 0).toFixed(2)}</p>
+                      <p className="font-semibold text-sm sm:text-base whitespace-nowrap">R$ {Number(order.total || 0).toFixed(2)}</p>
                     </div>
                   </div>
                 </div>)}
