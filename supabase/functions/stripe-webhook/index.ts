@@ -283,9 +283,10 @@ serve(async (req) => {
       }
 
       // ================================================================
-      // SEND PUSH NOTIFICATION TO SUPPLIER
+      // SEND PUSH NOTIFICATION TO SUPPLIER: "VENDA APROVADA"
       // ================================================================
-      console.log("📱 Sending push notification to supplier:", actualSupplierId || existingOrder.supplier_id);
+      const targetSupplierId = actualSupplierId || existingOrder.supplier_id;
+      console.log("📱 Sending VENDA APROVADA push notification to supplier:", targetSupplierId);
       
       try {
         const pushResponse = await fetch(
@@ -297,9 +298,9 @@ serve(async (req) => {
               "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
             },
             body: JSON.stringify({
-              user_id: actualSupplierId || existingOrder.supplier_id,
-              title: "💰 Novo Pedido Pago!",
-              body: `Pedido #${existingOrder.order_number} - R$ ${totalAmount.toFixed(2)}`,
+              user_id: targetSupplierId,
+              title: "✅ Venda Aprovada!",
+              body: `Pagamento confirmado! Pedido #${existingOrder.order_number} liberado para processamento. R$ ${supplierAmount.toFixed(2)} líquido.`,
               url: "/fornecedor/pedidos",
               tag: `order-paid-${existingOrder.order_number}`,
               order_number: existingOrder.order_number,
@@ -309,9 +310,9 @@ serve(async (req) => {
         );
         
         const pushResult = await pushResponse.json();
-        console.log("📱 Push notification result:", pushResult);
+        console.log("📱 Push notification VENDA APROVADA result:", pushResult);
       } catch (pushError) {
-        console.error("⚠️ Error sending push notification:", pushError);
+        console.error("⚠️ Error sending VENDA APROVADA push notification:", pushError);
         // Don't fail the webhook because of push notification error
       }
 

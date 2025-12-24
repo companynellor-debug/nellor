@@ -55,10 +55,9 @@ export const useSupabaseOrders = () => {
       let query = supabase.from('orders').select('*');
 
       if (profile?.tipo === 'fornecedor') {
-        // Fornecedor: só vê pedidos PAGOS (payment_status = 'paid')
-        query = query
-          .eq('supplier_id', user.id)
-          .neq('payment_status', 'pending');
+        // Fornecedor: vê TODOS os pedidos dele (incluindo pendentes para notificação)
+        // Mostra todos para que o fornecedor veja pedidos aguardando pagamento
+        query = query.eq('supplier_id', user.id);
       } else if (profile?.tipo === 'cliente') {
         // Cliente: vê todos os seus pedidos (incluindo pendentes)
         query = query.eq('buyer_id', user.id);

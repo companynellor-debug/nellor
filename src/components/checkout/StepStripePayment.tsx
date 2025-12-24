@@ -144,8 +144,7 @@ export const StepStripePayment = ({
     setIsProcessing(true);
 
     try {
-      // CRÍTICO: cria o pedido PENDENTE antes do Stripe.
-      // Assim, mesmo se o usuário perder sessão no retorno, o pedido aparece para fornecedor/admin e o webhook consegue atualizar.
+      // CRÍTICO: cria o pedido PENDENTE antes do Stripe
       const pendingOrder = await createOrder({
         supplier_id: supplierId,
         payment_method: "cartao" as const,
@@ -182,6 +181,28 @@ export const StepStripePayment = ({
         supplier_amount: supplierAmount,
       });
 
+      // ✅ DISPARA NOTIFICAÇÃO PUSH "PEDIDO PENDENTE" PARA O FORNECEDOR
+      console.log("📨 Disparando notificação de pedido pendente para fornecedor:", supplierId);
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      try {
+        await supabase.functions.invoke("send-push-notification", {
+          body: {
+            user_id: supplierId,
+            title: "🛒 Pedido Pendente",
+            body: `Um cliente iniciou o pedido #${pendingOrder.order_number}. Aguardando pagamento.`,
+            url: "/fornecedor/pedidos",
+            tag: `order-pending-${pendingOrder.order_number}`,
+            order_number: pendingOrder.order_number,
+            total,
+          },
+        });
+        console.log("✅ Notificação de pedido pendente enviada");
+      } catch (pushError) {
+        console.error("⚠️ Erro ao enviar push pendente:", pushError);
+        // Não bloqueia o fluxo
+      }
+
       const description = `Pedido Nellor - ${cartItems.length} item(s)`;
 
       const baseUrl = window.location.origin;
@@ -201,7 +222,7 @@ export const StepStripePayment = ({
         throw new Error("URL de pagamento não gerada");
       }
 
-      // Salva contexto local para a página de sucesso (fallback caso o pedido não apareça por algum motivo)
+      // Salva contexto local para a página de sucesso (fallback)
       localStorage.setItem(
         "pendingOrder",
         JSON.stringify({
@@ -221,8 +242,7 @@ export const StepStripePayment = ({
         })
       );
 
-      // Vincula session_id no pedido (webhook usa payment_intent/metadata, mas isso ajuda rastrear)
-      const { supabase } = await import("@/integrations/supabase/client");
+      // Vincula session_id no pedido
       await supabase
         .from("orders")
         .update({
