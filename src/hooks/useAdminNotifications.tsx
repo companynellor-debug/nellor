@@ -206,11 +206,23 @@ export const useAdminNotifications = () => {
           
           // Payment status changed to paid
           if (order?.payment_status === 'paid' && oldOrder?.payment_status !== 'paid') {
+            const commission = Number(order.platform_fee) || Number(order.total) * 0.075;
+            
             playNotificationSound();
+            
+            // Toast for sale
             toast({
               title: '✅ Pagamento Confirmado!',
               description: `Pedido #${order.order_number} - R$ ${Number(order.total)?.toFixed(2)}`,
             });
+            
+            // Toast for commission
+            setTimeout(() => {
+              toast({
+                title: '💰 Comissão Recebida!',
+                description: `R$ ${commission.toFixed(2).replace('.', ',')} (7,5% do pedido #${order.order_number})`,
+              });
+            }, 1500);
             
             await showPaymentNotification(
               order.order_number,
@@ -218,7 +230,36 @@ export const useAdminNotifications = () => {
               'paid'
             );
             
-            fetchNotifications();
+            // Add new unread notifications immediately
+            const saleNotification: AdminNotification = {
+              id: `sale-${order.id}-${Date.now()}`,
+              type: 'sale',
+              title: 'Venda Aprovada',
+              body: `Pedido #${order.order_number} pago com sucesso`,
+              value: Number(order.total),
+              commission: commission,
+              reference_id: order.id,
+              reference_type: 'order',
+              read: false,
+              created_at: new Date().toISOString(),
+              order_number: order.order_number
+            };
+            
+            const commissionNotification: AdminNotification = {
+              id: `commission-${order.id}-${Date.now()}`,
+              type: 'commission',
+              title: 'Comissão Nellor',
+              body: `7,5% do pedido #${order.order_number}`,
+              value: commission,
+              reference_id: order.id,
+              reference_type: 'order',
+              read: false,
+              created_at: new Date().toISOString(),
+              order_number: order.order_number
+            };
+            
+            setNotifications(prev => [saleNotification, commissionNotification, ...prev]);
+            setUnreadCount(prev => prev + 2);
           }
         }
       )
