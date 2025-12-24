@@ -12,7 +12,8 @@ import {
   MessageCircle,
   Package,
   Image,
-  PieChart
+  PieChart,
+  RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ const menuItems = [
   { icon: ShoppingCart, label: "Vendas & Pedidos", path: "/admin/vendas" },
   { icon: DollarSign, label: "Financeiro", path: "/admin/financeiro" },
   { icon: Wallet, label: "Saques", path: "/admin/saques" },
+  { icon: RefreshCw, label: "Reconciliação", path: "/admin/reconciliacao" },
   { icon: BarChart3, label: "Relatórios", path: "/admin/relatorios" },
   { icon: Bell, label: "Notificações", path: "/admin/notificacoes" },
   { icon: MessageCircle, label: "Suporte", path: "/admin/suporte" },

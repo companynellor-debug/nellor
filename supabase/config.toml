@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.stripe-verify-payment]
 verify_jwt = false
+
+[functions.stripe-reconcile-orders]
+verify_jwt = false

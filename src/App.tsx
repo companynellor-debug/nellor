@@ -19,6 +19,7 @@ import AdminSuporteAdmin from "./pages/admin/SuporteAdmin";
 import AdminCategorias from "./pages/admin/Categorias";
 import AdminBanners from "./pages/admin/Banners";
 import AdminNotificacoes from "./pages/admin/NotificacoesAdmin";
+import AdminReconciliacao from "./pages/admin/Reconciliacao";
 import Home from "./pages/Home";
 import Fornecedor from "./pages/Fornecedor";
 import Sobre from "./pages/Sobre";
@@ -142,6 +143,7 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="categorias" element={<AdminCategorias />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="notificacoes" element={<AdminNotificacoes />} />
+            <Route path="reconciliacao" element={<AdminReconciliacao />} />
           </Route>
           
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
