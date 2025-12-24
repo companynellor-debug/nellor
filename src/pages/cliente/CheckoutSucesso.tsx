@@ -21,9 +21,9 @@ const CheckoutSucesso = () => {
 
   useEffect(() => {
     const processOrder = async () => {
-      const orderId = searchParams.get("order_id");
+      const orderIdFromQuery = searchParams.get("order_id");
 
-      if (!orderId) {
+      if (!orderIdFromQuery) {
         navigate("/cliente");
         return;
       }
@@ -32,36 +32,108 @@ const CheckoutSucesso = () => {
       clearCart();
 
       const pendingOrderStr = localStorage.getItem("pendingOrder");
-      if (pendingOrderStr) {
-        localStorage.removeItem("pendingOrder");
-      }
+      const pending = pendingOrderStr ? JSON.parse(pendingOrderStr) : null;
 
       try {
-        // Busca o pedido real (já deve existir, pois agora criamos ANTES do Stripe)
-        const { data: order, error: orderError } = await supabase
-          .from("orders")
-          .select("order_number")
-          .eq("id", orderId)
-          .single();
+        // 1) Garantir que existe um pedido no banco
+        let orderId = orderIdFromQuery;
+        let orderNumberDb: string | null = null;
 
-        if (orderError) {
-          throw orderError;
+        const { data: existingOrder, error: existingOrderError } = await supabase
+          .from("orders")
+          .select("id, order_number")
+          .eq("id", orderIdFromQuery)
+          .maybeSingle();
+
+        if (existingOrderError) throw existingOrderError;
+
+        if (existingOrder) {
+          orderNumberDb = existingOrder.order_number;
+        } else if (pending?.supplierId && pending?.cartItems && pending?.buyerData) {
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData?.user) throw new Error("Usuário não autenticado");
+
+          const { data: created, error: createErr } = await supabase
+            .from("orders")
+            .insert([
+              {
+                id: pending.orderId || undefined,
+                buyer_id: userData.user.id,
+                supplier_id: pending.supplierId,
+                order_number: `PED${Date.now()}`,
+                payment_method: "cartao",
+                payment_status: "pending",
+                order_status: "pending",
+                subtotal: pending.subtotal ?? 0,
+                frete: pending.shipping ?? 0,
+                desconto: pending.discount ?? 0,
+                total: pending.total ?? 0,
+                itens: (pending.cartItems || []).map((item: any) => ({
+                  product_id: item.productId || item.id?.toString(),
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                  image: item.image,
+                })),
+                endereco_entrega: {
+                  name: pending.buyerData?.nome,
+                  document: pending.buyerData?.documento,
+                  street: pending.buyerData?.endereco?.street,
+                  number: pending.buyerData?.endereco?.number,
+                  complement: pending.buyerData?.endereco?.complement || "",
+                  neighborhood: pending.buyerData?.endereco?.neighborhood,
+                  city: pending.buyerData?.endereco?.city,
+                  state: pending.buyerData?.endereco?.state,
+                  zip_code: pending.buyerData?.endereco?.zip_code,
+                },
+                stripe_session_id: pending.stripeSessionId ?? null,
+                stripe_payment_amount: pending.total ?? null,
+                platform_fee: pending.platformFee ?? null,
+                supplier_amount: pending.supplierAmount ?? null,
+              },
+            ])
+            .select("id, order_number")
+            .single();
+
+          if (createErr) throw createErr;
+
+          orderId = created.id;
+          orderNumberDb = created.order_number;
         }
 
-        setOrderNumber(order?.order_number || `#${Date.now().toString().slice(-8)}`);
+        setOrderNumber(orderNumberDb || `#${Date.now().toString().slice(-8)}`);
 
-        // Opcional: verifica pagamento para UX (webhook faz o update oficial)
-        const stored = pendingOrderStr ? JSON.parse(pendingOrderStr) : null;
-        const stripeSessionId = stored?.stripeSessionId;
-
+        // 2) Confirmar pagamento e refletir no pedido (independente de webhook)
+        const stripeSessionId = pending?.stripeSessionId;
         if (stripeSessionId) {
           try {
-            await supabase.functions.invoke("stripe-verify-payment", {
+            const verifyRes = await supabase.functions.invoke("stripe-verify-payment", {
               body: { sessionId: stripeSessionId },
             });
-          } catch {
-            // Silencioso: webhook é a fonte de verdade
+
+            if (verifyRes.data?.verified) {
+              const paymentDetails = verifyRes.data?.paymentDetails;
+              await supabase
+                .from("orders")
+                .update({
+                  payment_status: "paid",
+                  order_status: "preparing",
+                  stripe_session_id: stripeSessionId,
+                  stripe_payment_intent_id: paymentDetails?.id ?? null,
+                  stripe_payment_amount: paymentDetails?.amount ?? null,
+                  platform_fee: paymentDetails?.platformFee ?? pending?.platformFee ?? null,
+                  supplier_amount: paymentDetails?.supplierAmount ?? pending?.supplierAmount ?? null,
+                })
+                .eq("id", orderId);
+            }
+          } catch (e) {
+            console.warn("stripe-verify-payment failed:", e);
           }
+        }
+
+        // Limpa o storage do pedido pendente somente após processar
+        if (pendingOrderStr) {
+          localStorage.removeItem("pendingOrder");
         }
 
         setIsProcessing(false);
