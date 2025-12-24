@@ -17,16 +17,33 @@ export interface CartItem {
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  useEffect(() => {
+  const syncFromStorage = () => {
     const stored = localStorage.getItem('cart');
-    if (stored) {
-      setCartItems(JSON.parse(stored));
-    }
+    setCartItems(stored ? JSON.parse(stored) : []);
+  };
+
+  useEffect(() => {
+    syncFromStorage();
+
+    // Mantém o carrinho sincronizado entre telas/abas
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'cart') syncFromStorage();
+    };
+    const handleCustom = () => syncFromStorage();
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('cart:updated', handleCustom as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('cart:updated', handleCustom as EventListener);
+    };
   }, []);
 
   const saveCart = (items: CartItem[]) => {
     setCartItems(items);
     localStorage.setItem('cart', JSON.stringify(items));
+    window.dispatchEvent(new Event('cart:updated'));
   };
 
   const addToCart = (item: Omit<CartItem, 'id' | 'quantity'>, requestedQuantity: number = 1) => {

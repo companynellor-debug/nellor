@@ -201,13 +201,22 @@ export const StepStripePayment = ({
         throw new Error("URL de pagamento não gerada");
       }
 
-      // Salva contexto local para UX na página de sucesso
+      // Salva contexto local para a página de sucesso (fallback caso o pedido não apareça por algum motivo)
       localStorage.setItem(
         "pendingOrder",
         JSON.stringify({
           orderId: pendingOrder.id,
           orderNumber: pendingOrder.order_number,
           stripeSessionId: result.sessionId,
+          supplierId,
+          subtotal,
+          shipping,
+          discount,
+          total,
+          platformFee,
+          supplierAmount,
+          cartItems,
+          buyerData,
           couponId: appliedCoupon?.coupon.id,
         })
       );
