@@ -127,13 +127,13 @@ serve(async (req) => {
       const supplierAmount = parseInt(paymentIntent.metadata?.supplier_amount || "0");
       const stripeConnectedAccountId = paymentIntent.metadata?.stripe_connected_account_id;
 
-      // Skip if temporary order ID - the order will be created by the success page
-      if (!orderId || orderId.startsWith("temp_")) {
-        console.log("Temporary order ID - skipping database update, order will be created by frontend");
+      // Se não tiver orderId, só registrar
+      if (!orderId) {
+        console.log("No order_id in metadata - nothing to update");
         return new Response(
           JSON.stringify({ 
             received: true, 
-            message: "Temporary order - will be created by frontend",
+            message: "No order_id in metadata",
             paymentIntentId: paymentIntent.id
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -239,13 +239,13 @@ serve(async (req) => {
       const orderId = session.metadata?.order_id;
       const supplierId = session.metadata?.supplier_id;
 
-      // Skip if temporary order ID
-      if (!orderId || orderId.startsWith("temp_")) {
-        console.log("Temporary order ID - checkout completed, order creation handled by frontend");
+      // Se não tiver orderId, só registrar
+      if (!orderId) {
+        console.log("No order_id in metadata - nothing to update");
         return new Response(
           JSON.stringify({ 
             received: true, 
-            message: "Order will be created by frontend redirect",
+            message: "No order_id in metadata",
             sessionId: session.id
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
