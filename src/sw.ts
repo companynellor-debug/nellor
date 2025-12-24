@@ -48,18 +48,55 @@ registerRoute(
   })
 );
 
+// Handle push events from server (future use)
+self.addEventListener('push', (event: PushEvent) => {
+  console.log('🔔 Push event received:', event);
+  
+  let data = {
+    title: 'NELLOR',
+    body: 'Nova notificação',
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
+    url: '/'
+  };
+
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      data = { ...data, ...payload };
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/pwa-192x192.png',
+    badge: data.badge || '/pwa-192x192.png',
+    tag: 'nellor-notification-' + Date.now(),
+    requireInteraction: true,
+    silent: false,
+    data: { url: data.url || '/' }
+  } as NotificationOptions;
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
 // Make notification taps open the right page (instead of copying a link / doing nothing)
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
+  console.log('🔔 Notification clicked:', event.notification);
   event.notification.close();
 
   const data = (event.notification.data || {}) as { url?: string };
-  const urlToOpen = data.url || '/';
+  const urlToOpen = data.url || '/fornecedor/pedidos';
 
   event.waitUntil(
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Focus existing window
+        // Focus existing window and navigate
         for (const client of clientList) {
           if ('focus' in client) {
             client.navigate(urlToOpen);
@@ -70,4 +107,9 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
         return self.clients.openWindow(urlToOpen);
       })
   );
+});
+
+// Close notification when action button is clicked
+self.addEventListener('notificationclose', (event: NotificationEvent) => {
+  console.log('🔔 Notification closed:', event.notification);
 });
