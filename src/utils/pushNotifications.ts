@@ -29,33 +29,44 @@ export const showPushNotification = async (
   title: string,
   options?: NotificationOptions
 ): Promise<Notification | null> => {
+  console.log('🔔 showPushNotification called:', title, options);
+  
   const hasPermission = await requestNotificationPermission();
   
   if (!hasPermission) {
-    console.log('Notification permission not granted');
+    console.log('❌ Notification permission not granted');
     return null;
   }
 
   const defaultOptions: NotificationOptions = {
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    requireInteraction: false,
+    requireInteraction: true,
+    silent: false,
     ...options,
   };
 
   try {
     // Try to use Service Worker notifications first (works in background)
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.ready;
+      console.log('📱 Using Service Worker for notification');
       await registration.showNotification(title, defaultOptions);
       return null;
     } else {
       // Fallback to regular Notification API
+      console.log('📱 Using Notification API fallback');
       return new Notification(title, defaultOptions);
     }
   } catch (error) {
-    console.error('Error showing notification:', error);
-    return null;
+    console.error('❌ Error showing notification:', error);
+    // Last resort fallback
+    try {
+      return new Notification(title, defaultOptions);
+    } catch (e) {
+      console.error('❌ Fallback notification also failed:', e);
+      return null;
+    }
   }
 };
 
