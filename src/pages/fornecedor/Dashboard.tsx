@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, DollarSign, ShoppingCart, CreditCard, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { Package, TrendingUp, DollarSign, ShoppingCart, CreditCard, CheckCircle2, AlertTriangle, Loader2, Wallet, Percent } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -78,7 +78,20 @@ const Dashboard = () => {
   const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
   const totalOrders = filteredOrders.length;
   const totalRevenue = filteredOrders.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
-  const paidOrders = filteredOrders.filter(o => o.payment_status === 'paid');
+
+  // Cálculo de comissões e valor líquido
+  const paidFilteredOrders = filteredOrders.filter(o => o.payment_status === 'paid');
+  const totalPlatformFee = paidFilteredOrders.reduce((sum, o) => {
+    // Usar valor real se disponível, senão calcular 7.5%
+    const fee = o.platform_fee ? parseFloat(o.platform_fee) : parseFloat(o.total || 0) * 0.075;
+    return sum + fee;
+  }, 0);
+  const totalSupplierAmount = paidFilteredOrders.reduce((sum, o) => {
+    // Usar valor real se disponível, senão calcular
+    const amount = o.supplier_amount ? parseFloat(o.supplier_amount) : parseFloat(o.total || 0) * 0.925;
+    return sum + amount;
+  }, 0);
+  const paidOrders = paidFilteredOrders;
   const ticketMedio = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
 
   // Dados de vendas ao longo do tempo (últimos 6 meses)
@@ -192,6 +205,36 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+
+        {/* Valor Líquido Card */}
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-emerald-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Valor Líquido
+            </CardTitle>
+            <Wallet className="w-5 h-5 text-emerald-600" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold text-emerald-600">R$ {totalSupplierAmount.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Após taxa da plataforma</p>
+          </CardContent>
+        </Card>
+
+        {/* Comissão Plataforma Card */}
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Taxa Plataforma
+            </CardTitle>
+            <Percent className="w-5 h-5 text-purple-600" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold text-purple-600">R$ {totalPlatformFee.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground mt-1">7,5% por venda</p>
           </CardContent>
         </Card>
 
