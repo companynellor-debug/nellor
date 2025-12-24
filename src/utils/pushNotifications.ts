@@ -1,20 +1,31 @@
 // Utility functions for PWA push notifications
 
 export const requestNotificationPermission = async (): Promise<boolean> => {
+  // Check if notifications are supported
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
+    console.log('❌ Notifications not supported in this browser');
     return false;
   }
 
+  // Already granted
   if (Notification.permission === 'granted') {
+    console.log('✅ Notification permission already granted');
     return true;
   }
 
+  // Request permission if not denied
   if (Notification.permission !== 'denied') {
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
+    try {
+      const permission = await Notification.requestPermission();
+      console.log('📱 Permission result:', permission);
+      return permission === 'granted';
+    } catch (error) {
+      console.error('❌ Error requesting permission:', error);
+      return false;
+    }
   }
 
+  console.log('❌ Notification permission was denied');
   return false;
 };
 
@@ -25,71 +36,94 @@ export const getNotificationPermission = (): NotificationPermission | 'unsupport
   return Notification.permission;
 };
 
+// Check if we're on iOS
+const isIOS = (): boolean => {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+};
+
+// Check if running as PWA
+const isPWA = (): boolean => {
+  return window.matchMedia('(display-mode: standalone)').matches 
+    || (window.navigator as any).standalone === true;
+};
+
 export const showPushNotification = async (
   title: string,
   options?: NotificationOptions
-): Promise<Notification | null> => {
-  console.log('🔔 showPushNotification called:', title, options);
+): Promise<void> => {
+  console.log('🔔 showPushNotification called:', title);
 
   const hasPermission = await requestNotificationPermission();
-
   if (!hasPermission) {
-    console.log('❌ Notification permission not granted');
-    return null;
+    console.log('❌ No notification permission');
+    return;
   }
 
-  // Ensure we always have a URL to open on click (handled in Service Worker)
-  const mergedData = {
+  const notifData = {
     url: '/fornecedor/pedidos',
-    ...(options?.data as any),
+    ...(options?.data as Record<string, unknown> || {}),
   };
 
-  // Create unique tag to prevent notification grouping
-  const uniqueTag = options?.tag || `nellor-${Date.now()}`;
-
-  const finalOptions = {
+  const notifOptions = {
     body: options?.body || '',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    tag: uniqueTag,
-    requireInteraction: true, // Keep notification until user interacts
-    silent: false, // Play sound
-    data: mergedData,
-  } as NotificationOptions;
+    tag: options?.tag || `nellor-${Date.now()}`,
+    requireInteraction: true,
+    silent: false,
+    data: notifData,
+  };
+
+  // Add vibration for mobile
+  if ('vibrate' in navigator) {
+    (notifOptions as any).vibrate = [200, 100, 200];
+  }
 
   try {
-    // Prefer Service Worker (background-capable, works when app is closed)
-    if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.ready;
-      console.log('📱 Using Service Worker for notification, title:', title, 'body:', finalOptions.body);
-      await registration.showNotification(title, finalOptions);
-      return null;
+    // Method 1: Use Service Worker postMessage (most reliable for mobile PWA)
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      console.log('📱 Using SW postMessage for notification');
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIFICATION',
+        title,
+        options: notifOptions
+      });
+      return;
     }
 
-    // Fallback to Notification API (only works when app is open)
+    // Method 2: Use Service Worker registration.showNotification
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      console.log('📱 Using SW registration.showNotification');
+      await registration.showNotification(title, notifOptions);
+      return;
+    }
+
+    // Method 3: Fallback to Notification API (desktop/foreground only)
     console.log('📱 Using Notification API fallback');
-    const notification = new Notification(title, finalOptions);
-    
+    const notification = new Notification(title, notifOptions);
     notification.onclick = () => {
       window.focus();
-      window.location.href = mergedData.url;
+      if (notifData.url) {
+        window.location.href = notifData.url;
+      }
       notification.close();
     };
-    
-    return notification;
   } catch (error) {
     console.error('❌ Error showing notification:', error);
+    
+    // Last resort fallback
     try {
-      const notification = new Notification(title, finalOptions);
+      const notification = new Notification(title, {
+        body: options?.body || '',
+        icon: '/pwa-192x192.png'
+      });
       notification.onclick = () => {
         window.focus();
-        window.location.href = mergedData.url;
         notification.close();
       };
-      return notification;
     } catch (e) {
-      console.error('❌ Fallback notification also failed:', e);
-      return null;
+      console.error('❌ All notification methods failed:', e);
     }
   }
 };
