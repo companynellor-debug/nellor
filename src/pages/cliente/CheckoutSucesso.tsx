@@ -41,14 +41,27 @@ const CheckoutSucesso = () => {
 
         const { data: existingOrder, error: existingOrderError } = await supabase
           .from("orders")
-          .select("id, order_number")
+          .select("id, order_number, stripe_session_id, payment_status")
           .eq("id", orderIdFromQuery)
           .maybeSingle();
 
         if (existingOrderError) throw existingOrderError;
 
+        let stripeSessionIdResolved: string | null = null;
+
         if (existingOrder) {
           orderNumberDb = existingOrder.order_number;
+          stripeSessionIdResolved = existingOrder.stripe_session_id ?? null;
+
+          // Se já está pago, não precisa fazer verify
+          if (existingOrder.payment_status === "paid") {
+            setOrderNumber(orderNumberDb);
+            if (pendingOrderStr) localStorage.removeItem("pendingOrder");
+            setIsProcessing(false);
+            setShowAnimation(true);
+            triggerConfetti();
+            return;
+          }
         } else if (pending?.supplierId && pending?.cartItems && pending?.buyerData) {
           const { data: userData } = await supabase.auth.getUser();
           if (!userData?.user) throw new Error("Usuário não autenticado");
@@ -92,24 +105,29 @@ const CheckoutSucesso = () => {
                 supplier_amount: pending.supplierAmount ?? null,
               },
             ])
-            .select("id, order_number")
+            .select("id, order_number, stripe_session_id")
             .single();
 
           if (createErr) throw createErr;
 
           orderId = created.id;
           orderNumberDb = created.order_number;
+          stripeSessionIdResolved = created.stripe_session_id ?? pending?.stripeSessionId ?? null;
         }
 
         setOrderNumber(orderNumberDb || `#${Date.now().toString().slice(-8)}`);
 
         // 2) Confirmar pagamento e refletir no pedido (independente de webhook)
-        const stripeSessionId = pending?.stripeSessionId;
+        const stripeSessionId = stripeSessionIdResolved ?? pending?.stripeSessionId ?? null;
         if (stripeSessionId) {
           try {
             const verifyRes = await supabase.functions.invoke("stripe-verify-payment", {
               body: { sessionId: stripeSessionId },
             });
+
+            if (verifyRes.error) {
+              console.warn("stripe-verify-payment error:", verifyRes.error);
+            }
 
             if (verifyRes.data?.verified) {
               const paymentDetails = verifyRes.data?.paymentDetails;
