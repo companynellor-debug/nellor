@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -67,12 +68,34 @@ import ConfiguracoesNotificacoes from "./pages/cliente/ConfiguracoesNotificacoes
 import CuponsFornecedor from "./pages/fornecedor/Cupons";
 import RelatorioCupons from "./pages/fornecedor/RelatorioCupons";
 import TesteNotificacoes from "./pages/fornecedor/TesteNotificacoes";
+
 const queryClient = new QueryClient();
-const App = () => <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
+
+const App = () => {
+  // Register Service Worker for Web Push notifications
+  useEffect(() => {
+    const registerServiceWorker = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/',
+          });
+          console.log('✅ Service Worker registered:', registration.scope);
+        } catch (error) {
+          console.error('❌ Service Worker registration failed:', error);
+        }
+      }
+    };
+    
+    registerServiceWorker();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/sobre" element={<Sobre />} />
             <Route path="/contato" element={<Contato />} />
@@ -152,5 +175,8 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>
-  </QueryClientProvider>;
+  </QueryClientProvider>
+  );
+};
+
 export default App;
