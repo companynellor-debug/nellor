@@ -47,6 +47,29 @@ const isPWA = (): boolean => {
     || (window.navigator as any).standalone === true;
 };
 
+// Função para tocar som de notificação
+const playNotificationSoundInApp = () => {
+  try {
+    const audio = new Audio('/notification-sound.mp3');
+    audio.volume = 0.8;
+    audio.play().catch(error => {
+      console.log('🔇 Could not play notification sound:', error);
+    });
+  } catch (error) {
+    console.log('🔇 Error creating audio:', error);
+  }
+};
+
+// Listener para mensagens do Service Worker pedindo para tocar som
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'PLAY_NOTIFICATION_SOUND') {
+      console.log('🔊 Received PLAY_NOTIFICATION_SOUND from SW');
+      playNotificationSoundInApp();
+    }
+  });
+}
+
 export const showPushNotification = async (
   title: string,
   options?: NotificationOptions
@@ -61,6 +84,7 @@ export const showPushNotification = async (
 
   const notifData = {
     url: '/fornecedor/pedidos',
+    sound: true,
     ...(options?.data as Record<string, unknown> || {}),
   };
 
@@ -70,7 +94,7 @@ export const showPushNotification = async (
     badge: '/pwa-192x192.png',
     tag: options?.tag || `nellor-${Date.now()}`,
     requireInteraction: true,
-    silent: false,
+    silent: false, // Permite som do sistema no celular
     data: notifData,
   };
 
@@ -78,6 +102,9 @@ export const showPushNotification = async (
   if ('vibrate' in navigator) {
     (notifOptions as any).vibrate = [200, 100, 200];
   }
+
+  // Toca som no app também (para garantir no mobile)
+  playNotificationSoundInApp();
 
   try {
     // Method 1: Use Service Worker postMessage (most reliable for mobile PWA)
