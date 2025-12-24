@@ -55,28 +55,33 @@ export const useSupplierNotifications = () => {
     }
     processedOrdersRef.current.add(orderId);
 
-    console.log('🔔 Disparando notificação para pedido PAGO:', order.order_number);
+    const orderNumber = order.order_number || 'N/A';
+    const orderTotal = Number(order.total || 0).toFixed(2);
+
+    console.log('🔔 Disparando notificação para pedido PAGO:', orderNumber);
 
     // Som
     playNotificationSound();
 
-    // Push notification nativa
-    await showPushNotification('Novo Pedido PAGO!', {
-      body: `Pedido #${order.order_number} - R$ ${order.total?.toFixed(2)} foi pago!`,
-      tag: `paid-order-${order.order_number}`,
-      requireInteraction: true,
+    // Push notification nativa - título e corpo bem formatados
+    const notifTitle = '💰 Novo Pedido Recebido!';
+    const notifBody = `Você recebeu um novo pedido #${orderNumber}\nR$ ${orderTotal}`;
+
+    await showPushNotification(notifTitle, {
+      body: notifBody,
+      tag: `paid-order-${orderNumber}-${Date.now()}`, // Tag única para não agrupar
       data: {
         type: 'paid_order',
         orderId: order.id,
-        orderNumber: order.order_number,
-        url: `/fornecedor/pedidos`,
+        orderNumber: orderNumber,
+        url: '/fornecedor/pedidos',
       },
     });
 
     // Toast in-app
     toast({
       title: '💰 Novo Pedido PAGO!',
-      description: `Pedido #${order.order_number} - R$ ${order.total?.toFixed(2)} foi pago!`,
+      description: `Pedido #${orderNumber} - R$ ${orderTotal} foi pago!`,
     });
   }, [playNotificationSound, toast]);
 

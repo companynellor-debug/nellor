@@ -40,39 +40,53 @@ export const showPushNotification = async (
 
   // Ensure we always have a URL to open on click (handled in Service Worker)
   const mergedData = {
-    url: '/',
+    url: '/fornecedor/pedidos',
     ...(options?.data as any),
   };
 
-  const defaultOptions: NotificationOptions = {
+  // Create unique tag to prevent notification grouping
+  const uniqueTag = options?.tag || `nellor-${Date.now()}`;
+
+  const finalOptions = {
+    body: options?.body || '',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    requireInteraction: true,
-    silent: false,
+    tag: uniqueTag,
+    requireInteraction: true, // Keep notification until user interacts
+    silent: false, // Play sound
     data: mergedData,
-  };
-
-  const finalOptions: NotificationOptions = {
-    ...defaultOptions,
-    ...options,
-    data: mergedData,
-  };
+  } as NotificationOptions;
 
   try {
-    // Prefer Service Worker (background-capable)
+    // Prefer Service Worker (background-capable, works when app is closed)
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.ready;
-      console.log('📱 Using Service Worker for notification');
+      console.log('📱 Using Service Worker for notification, title:', title, 'body:', finalOptions.body);
       await registration.showNotification(title, finalOptions);
       return null;
     }
 
+    // Fallback to Notification API (only works when app is open)
     console.log('📱 Using Notification API fallback');
-    return new Notification(title, finalOptions);
+    const notification = new Notification(title, finalOptions);
+    
+    notification.onclick = () => {
+      window.focus();
+      window.location.href = mergedData.url;
+      notification.close();
+    };
+    
+    return notification;
   } catch (error) {
     console.error('❌ Error showing notification:', error);
     try {
-      return new Notification(title, finalOptions);
+      const notification = new Notification(title, finalOptions);
+      notification.onclick = () => {
+        window.focus();
+        window.location.href = mergedData.url;
+        notification.close();
+      };
+      return notification;
     } catch (e) {
       console.error('❌ Fallback notification also failed:', e);
       return null;
