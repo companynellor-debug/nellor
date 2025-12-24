@@ -66,6 +66,7 @@ import InstalarApp from "./pages/cliente/InstalarApp";
 import ConfiguracoesNotificacoes from "./pages/cliente/ConfiguracoesNotificacoes";
 import CuponsFornecedor from "./pages/fornecedor/Cupons";
 import RelatorioCupons from "./pages/fornecedor/RelatorioCupons";
+import TesteNotificacoes from "./pages/fornecedor/TesteNotificacoes";
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -124,6 +125,7 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="cupons" element={<CuponsFornecedor />} />
             <Route path="cupons/relatorio" element={<RelatorioCupons />} />
             <Route path="planos" element={<PlanosFornecedor />} />
+            <Route path="teste-notificacoes" element={<TesteNotificacoes />} />
           </Route>
           
           {/* Admin Panel */}
