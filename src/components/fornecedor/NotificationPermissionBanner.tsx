@@ -20,17 +20,19 @@ export const NotificationPermissionBanner = () => {
   const handleRequestPermission = async () => {
     const granted = await requestNotificationPermission();
     setPermission(getNotificationPermission());
-    
+
     if (granted) {
       // Subscribe to Web Push after permission granted
       console.log('📱 Permission granted, subscribing to Web Push...');
       const subscribed = await subscribe();
+
       if (subscribed) {
         console.log('✅ Web Push subscription successful');
+        setDismissed(true);
+        localStorage.setItem('notification-banner-dismissed', 'true');
+      } else {
+        console.warn('❌ Web Push subscription failed (banner will remain visible)');
       }
-      
-      setDismissed(true);
-      localStorage.setItem('notification-banner-dismissed', 'true');
     }
   };
 
