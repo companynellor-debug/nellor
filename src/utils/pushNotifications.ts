@@ -76,59 +76,76 @@ export const showPushNotification = async (
 ): Promise<void> => {
   console.log('🔔 showPushNotification called:', title);
 
-  const hasPermission = await requestNotificationPermission();
-  if (!hasPermission) {
-    console.log('❌ No notification permission');
+  // Check permission first
+  if (!('Notification' in window)) {
+    console.log('❌ Notifications not supported');
     return;
+  }
+
+  if (Notification.permission !== 'granted') {
+    console.log('❌ No notification permission, requesting...');
+    const granted = await requestNotificationPermission();
+    if (!granted) {
+      console.log('❌ Permission denied');
+      return;
+    }
   }
 
   const notifData = {
     url: '/fornecedor/pedidos',
-    sound: true,
     ...(options?.data as Record<string, unknown> || {}),
   };
 
-  const notifOptions = {
+  const notifOptions: NotificationOptions = {
     body: options?.body || '',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
     tag: options?.tag || `nellor-${Date.now()}`,
     requireInteraction: true,
-    silent: false, // Permite som do sistema no celular
+    silent: false,
     data: notifData,
   };
 
-  // Add vibration for mobile
-  if ('vibrate' in navigator) {
-    (notifOptions as any).vibrate = [200, 100, 200];
-  }
-
-  // Toca som no app também (para garantir no mobile)
+  // Toca som no app
   playNotificationSoundInApp();
 
   try {
-    // Method 1: Use Service Worker postMessage (most reliable for mobile PWA)
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      console.log('📱 Using SW postMessage for notification');
-      navigator.serviceWorker.controller.postMessage({
-        type: 'SHOW_NOTIFICATION',
-        title,
-        options: notifOptions
-      });
-      return;
-    }
-
-    // Method 2: Use Service Worker registration.showNotification
+    // Para mobile PWA: usa Service Worker registration.showNotification
+    // Esta é a forma mais confiável para Android e iOS
     if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.ready;
-      console.log('📱 Using SW registration.showNotification');
-      await registration.showNotification(title, notifOptions);
-      return;
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        
+        if (registration) {
+          console.log('📱 Using SW registration.showNotification (mobile compatible)');
+          await registration.showNotification(title, {
+            body: notifOptions.body,
+            icon: notifOptions.icon,
+            badge: notifOptions.badge,
+            tag: notifOptions.tag,
+            requireInteraction: true,
+            silent: false,
+            data: notifData,
+          } as NotificationOptions);
+          console.log('✅ Notification sent via SW registration');
+          return;
+        }
+      } catch (swError) {
+        console.log('⚠️ SW registration.showNotification failed:', swError);
+      }
     }
 
-    // Method 3: Fallback to Notification API (desktop/foreground only)
+    // Fallback: API direta (funciona apenas em foreground/desktop)
     console.log('📱 Using Notification API fallback');
-    const notification = new Notification(title, notifOptions);
+    const notification = new Notification(title, {
+      body: notifOptions.body || '',
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+      tag: notifOptions.tag,
+      requireInteraction: true,
+      silent: false,
+    });
+    
     notification.onclick = () => {
       window.focus();
       if (notifData.url) {
@@ -136,22 +153,10 @@ export const showPushNotification = async (
       }
       notification.close();
     };
+    
+    console.log('✅ Notification sent via Notification API');
   } catch (error) {
     console.error('❌ Error showing notification:', error);
-    
-    // Last resort fallback
-    try {
-      const notification = new Notification(title, {
-        body: options?.body || '',
-        icon: '/pwa-192x192.png'
-      });
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      };
-    } catch (e) {
-      console.error('❌ All notification methods failed:', e);
-    }
   }
 };
 

@@ -268,14 +268,24 @@ const TesteNotificacoes = () => {
       {/* Dicas */}
       <Card>
         <CardHeader>
-          <CardTitle>💡 Dicas</CardTitle>
+          <CardTitle>💡 Dicas para Celular</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>• <strong>iOS:</strong> Notificações push só funcionam se o app estiver instalado como PWA (Adicionar à Tela de Início).</p>
-          <p>• <strong>Android:</strong> Funciona tanto no navegador quanto como PWA instalado.</p>
+        <CardContent className="space-y-3 text-sm text-muted-foreground">
+          <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+            <p className="font-medium text-foreground mb-2">📱 Para funcionar no celular:</p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Instale o app (Adicionar à Tela de Início)</li>
+              <li>Abra o app instalado (não pelo navegador)</li>
+              <li>Clique em "Solicitar Permissão" e permita</li>
+              <li>Teste enviando uma notificação</li>
+            </ol>
+          </div>
+          <p>• <strong>iOS (iPhone/iPad):</strong> Notificações push SÓ funcionam se o app estiver instalado como PWA. Abra no Safari → Compartilhar → Adicionar à Tela de Início.</p>
+          <p>• <strong>Android:</strong> Funciona tanto no navegador quanto como PWA. Recomendado instalar para melhor experiência.</p>
           <p>• <strong>Desktop:</strong> Funciona normalmente em Chrome, Firefox e Edge.</p>
-          <p>• <strong>Som:</strong> Alguns dispositivos podem silenciar o som se estiverem no modo silencioso.</p>
-          <p>• <strong>Modo Não Perturbe:</strong> Verifique se o modo "Não Perturbe" está desativado no dispositivo.</p>
+          <p>• <strong>Som:</strong> Verifique se o celular não está no modo silencioso.</p>
+          <p>• <strong>Modo Não Perturbe:</strong> Desative nas configurações do celular.</p>
+          <p>• <strong>Configurações do App:</strong> Verifique se as notificações do app estão habilitadas nas configurações do celular.</p>
         </CardContent>
       </Card>
     </div>
