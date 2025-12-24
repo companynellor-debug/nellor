@@ -118,29 +118,32 @@ self.addEventListener('message', (event) => {
     const { title, options } = event.data;
     console.log('🔔 SW received SHOW_NOTIFICATION message:', title);
     
-    const notifOptions = {
-      body: options.body || '',
-      icon: options.icon || '/pwa-192x192.png',
-      badge: options.badge || '/pwa-192x192.png',
-      tag: options.tag || 'nellor-' + Date.now(),
-      requireInteraction: true,
-      vibrate: [200, 100, 200],
-      silent: false, // Permite som do sistema
-      data: { url: options.data?.url || '/fornecedor/pedidos' }
-    };
-    
     event.waitUntil(
-      self.registration.showNotification(title, notifOptions)
+      self.registration.showNotification(title, {
+        body: options.body || '',
+        icon: options.icon || '/pwa-192x192.png',
+        badge: options.badge || '/pwa-192x192.png',
+        tag: options.tag || 'nellor-' + Date.now(),
+        requireInteraction: true,
+        silent: false,
+        data: { url: options.data?.url || '/fornecedor/pedidos' }
+      } as NotificationOptions & { vibrate?: number[] })
     );
+  }
+  
+  // Skip waiting quando solicitado
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
 
-// Broadcast som para a página quando notificação é mostrada
-self.addEventListener('notificationshow', () => {
-  console.log('🔊 SW Notification shown, broadcasting sound event');
-  self.clients.matchAll({ type: 'window' }).then((clients) => {
-    clients.forEach((client) => {
-      client.postMessage({ type: 'PLAY_NOTIFICATION_SOUND' });
-    });
-  });
+// Garantir que o SW seja ativado imediatamente
+self.addEventListener('install', () => {
+  console.log('🔧 SW installed');
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  console.log('🔧 SW activated');
+  event.waitUntil(self.clients.claim());
 });
