@@ -13,7 +13,7 @@ declare let self: ServiceWorkerGlobalScope & {
 // Precache assets
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Runtime caching (keeps previous behavior)
+// Runtime caching
 registerRoute(
   ({ url }) => url.origin === 'https://fonts.googleapis.com',
   new CacheFirst({
@@ -48,16 +48,16 @@ registerRoute(
   })
 );
 
-// Handle push events from server (future use)
+// Handle push events (for future server push)
 self.addEventListener('push', (event: PushEvent) => {
-  console.log('🔔 Push event received:', event);
+  console.log('🔔 SW Push event received');
   
   let data = {
     title: 'NELLOR',
     body: 'Nova notificação',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    url: '/'
+    url: '/fornecedor/pedidos'
   };
 
   if (event.data) {
@@ -71,45 +71,63 @@ self.addEventListener('push', (event: PushEvent) => {
 
   const options = {
     body: data.body,
-    icon: data.icon || '/pwa-192x192.png',
-    badge: data.badge || '/pwa-192x192.png',
-    tag: 'nellor-notification-' + Date.now(),
+    icon: data.icon,
+    badge: data.badge,
+    tag: 'nellor-' + Date.now(),
     requireInteraction: true,
-    silent: false,
-    data: { url: data.url || '/' }
-  } as NotificationOptions;
+    vibrate: [200, 100, 200],
+    data: { url: data.url }
+  };
 
   event.waitUntil(
     self.registration.showNotification(data.title, options)
   );
 });
 
-// Make notification taps open the right page (instead of copying a link / doing nothing)
+// Handle notification click - open app and navigate
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
-  console.log('🔔 Notification clicked:', event.notification);
+  console.log('🔔 SW Notification clicked');
   event.notification.close();
 
-  const data = (event.notification.data || {}) as { url?: string };
-  const urlToOpen = data.url || '/fornecedor/pedidos';
+  const urlToOpen = (event.notification.data?.url as string) || '/fornecedor/pedidos';
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Focus existing window and navigate
-        for (const client of clientList) {
-          if ('focus' in client) {
-            client.navigate(urlToOpen);
-            return client.focus();
-          }
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Try to focus existing window
+      for (const client of clientList) {
+        if ('focus' in client && 'navigate' in client) {
+          return (client as WindowClient).navigate(urlToOpen).then(() => (client as WindowClient).focus());
         }
-        // Or open a new one
-        return self.clients.openWindow(urlToOpen);
-      })
+      }
+      // Open new window
+      return self.clients.openWindow(urlToOpen);
+    })
   );
 });
 
-// Close notification when action button is clicked
-self.addEventListener('notificationclose', (event: NotificationEvent) => {
-  console.log('🔔 Notification closed:', event.notification);
+// Handle notification close
+self.addEventListener('notificationclose', () => {
+  console.log('🔔 SW Notification closed');
+});
+
+// Handle messages from main thread (for showing notifications from app)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, options } = event.data;
+    console.log('🔔 SW received SHOW_NOTIFICATION message:', title);
+    
+    const notifOptions = {
+      body: options.body || '',
+      icon: options.icon || '/pwa-192x192.png',
+      badge: options.badge || '/pwa-192x192.png',
+      tag: options.tag || 'nellor-' + Date.now(),
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      data: { url: options.data?.url || '/fornecedor/pedidos' }
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(title, notifOptions)
+    );
+  }
 });
