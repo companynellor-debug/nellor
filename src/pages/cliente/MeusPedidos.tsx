@@ -55,18 +55,22 @@ const MeusPedidos = () => {
     }
 
     setRevalidatingOrderId(order.id);
-    
+
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-verify-payment', {
-        body: { sessionId: order.stripe_session_id }
+      const { data, error } = await supabase.functions.invoke("stripe-verify-payment", {
+        body: { sessionId: order.stripe_session_id },
       });
 
       if (error) throw error;
 
-      if (data?.success && data?.paymentStatus === 'paid') {
-        toast.success("Pagamento confirmado! O pedido foi atualizado.");
-        refetch();
-      } else if (data?.paymentStatus === 'pending' || data?.paymentStatus === 'unpaid') {
+      const paymentStatus = data?.paymentStatus as string | undefined;
+      const verified = data?.verified === true || paymentStatus === "paid";
+      const updated = data?.updated === true;
+
+      if (verified) {
+        toast.success(updated ? "Pagamento confirmado! Pedido atualizado." : "Pagamento confirmado pela Stripe.");
+        await refetch();
+      } else if (paymentStatus === "pending" || paymentStatus === "unpaid") {
         toast.info("O pagamento ainda não foi confirmado pela Stripe.");
       } else {
         toast.warning("Não foi possível confirmar o pagamento. Tente novamente.");

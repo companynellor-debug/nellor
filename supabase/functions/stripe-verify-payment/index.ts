@@ -191,6 +191,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        success: true,
         verified: isPaid,
         updated: orderUpdated,
         sessionId: session.id,
