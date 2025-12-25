@@ -77,24 +77,8 @@ const CheckoutSucesso = () => {
           return;
         }
 
-        // Tentar chamar verify como fallback
-        try {
-          const { data: orderWithSession } = await supabase
-            .from("orders")
-            .select("stripe_session_id")
-            .eq("id", orderIdFromQuery)
-            .single();
-
-          if (orderWithSession?.stripe_session_id) {
-            await supabase.functions.invoke("stripe-verify-payment", {
-              body: { sessionId: orderWithSession.stripe_session_id },
-            });
-          }
-        } catch (e) {
-          console.warn("stripe-verify-payment fallback failed:", e);
-        }
-
-        // Aguardar mais um pouco após o verify
+        // Aguardar mais um pouco e verificar uma última vez.
+        // OBS: o pagamento é confirmado exclusivamente pelo webhook da Stripe.
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Verificar uma última vez

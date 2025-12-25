@@ -5,23 +5,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { 
-  ArrowLeft, 
-  Package, 
-  Truck, 
-  CheckCircle, 
-  Clock, 
-  XCircle, 
-  MessageSquare, 
-  Star, 
-  Download, 
+import {
+  ArrowLeft,
+  Package,
+  Truck,
+  CheckCircle,
+  Clock,
+  XCircle,
+  MessageSquare,
+  Star,
+  Download,
   ExternalLink,
   CreditCard,
   MapPin,
   ChefHat,
   PackageCheck,
-  RefreshCw,
-  Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
@@ -30,7 +28,6 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const ORDER_STEPS = [
   { key: 'pending', label: 'Pedido Recebido', icon: Package },
@@ -46,42 +43,9 @@ const MeusPedidos = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [trackingDialog, setTrackingDialog] = useState(false);
   const [detailsDialog, setDetailsDialog] = useState(false);
-  const [revalidatingOrderId, setRevalidatingOrderId] = useState<string | null>(null);
 
-  const handleRevalidatePayment = async (order: any) => {
-    if (!order.stripe_session_id) {
-      toast.error("Este pedido não possui sessão Stripe para revalidar");
-      return;
-    }
-
-    setRevalidatingOrderId(order.id);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("stripe-verify-payment", {
-        body: { sessionId: order.stripe_session_id },
-      });
-
-      if (error) throw error;
-
-      const paymentStatus = data?.paymentStatus as string | undefined;
-      const verified = data?.verified === true || paymentStatus === "paid";
-      const updated = data?.updated === true;
-
-      if (verified) {
-        toast.success(updated ? "Pagamento confirmado! Pedido atualizado." : "Pagamento confirmado pela Stripe.");
-        await refetch();
-      } else if (paymentStatus === "pending" || paymentStatus === "unpaid") {
-        toast.info("O pagamento ainda não foi confirmado pela Stripe.");
-      } else {
-        toast.warning("Não foi possível confirmar o pagamento. Tente novamente.");
-      }
-    } catch (error: any) {
-      console.error("Erro ao revalidar pagamento:", error);
-      toast.error("Erro ao verificar pagamento. Tente novamente.");
-    } finally {
-      setRevalidatingOrderId(null);
-    }
-  };
+  // OBS: pagamento é confirmado exclusivamente pelo webhook da Stripe.
+  // Não existe revalidação manual pelo cliente.
 
   // Realtime subscription for order updates
   useEffect(() => {
@@ -279,30 +243,8 @@ const MeusPedidos = () => {
             </div>
           )}
 
-          {/* Botão Revalidar Pagamento para pedidos pendentes com stripe_session_id */}
-          {order.payment_status === 'pending' && order.stripe_session_id && (
-            <div className="mb-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
-                onClick={() => handleRevalidatePayment(order)}
-                disabled={revalidatingOrderId === order.id}
-              >
-                {revalidatingOrderId === order.id ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Verificando...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Revalidar Pagamento
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+
+          {/* Pagamento é atualizado automaticamente via webhook (sem ação manual do cliente) */}
 
           {/* Botões de ação */}
           <div className="flex gap-2">
