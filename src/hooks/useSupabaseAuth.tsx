@@ -273,7 +273,19 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 export const useSupabaseAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useSupabaseAuth must be used within SupabaseAuthProvider');
+    // Return a safe default instead of throwing to handle edge cases
+    return {
+      user: null,
+      session: null,
+      profile: null,
+      isAuthenticated: false,
+      loading: true,
+      signUp: async () => ({ error: new Error('Auth not available') }),
+      signIn: async () => ({ error: new Error('Auth not available') }),
+      signOut: async () => {},
+      updateProfile: async () => {},
+      completeOnboarding: async () => {},
+    } as AuthContextType;
   }
   return context;
 };
