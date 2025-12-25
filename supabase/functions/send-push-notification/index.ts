@@ -8,7 +8,6 @@ const corsHeaders = {
 
 // Web Push requires these functions
 function base64UrlDecode(str: string): Uint8Array {
-  // Add padding if needed
   str = str.replace(/-/g, '+').replace(/_/g, '/');
   while (str.length % 4) {
     str += '=';
@@ -28,31 +27,17 @@ async function generateVAPIDHeaders(
   vapidSubject: string
 ): Promise<{ authorization: string; cryptoKey: string }> {
   const audience = new URL(endpoint).origin;
-  const expiration = Math.floor(Date.now() / 1000) + 12 * 60 * 60; // 12 hours
+  const expiration = Math.floor(Date.now() / 1000) + 12 * 60 * 60;
 
-  // JWT header
   const header = { typ: "JWT", alg: "ES256" };
-  const payload = {
-    aud: audience,
-    exp: expiration,
-    sub: vapidSubject,
-  };
+  const payload = { aud: audience, exp: expiration, sub: vapidSubject };
 
   const headerB64 = btoa(JSON.stringify(header))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   const payloadB64 = btoa(JSON.stringify(payload))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
   const unsignedToken = `${headerB64}.${payloadB64}`;
-
-  // Decode private key and import
-  const privateKeyBytes = base64UrlDecode(vapidPrivateKey);
-  
-  // Create JWK for ES256
   const publicKeyBytes = base64UrlDecode(vapidPublicKey);
   
   const jwk = {
@@ -60,21 +45,13 @@ async function generateVAPIDHeaders(
     crv: "P-256",
     d: vapidPrivateKey,
     x: btoa(String.fromCharCode(...publicKeyBytes.slice(1, 33)))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, ""),
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
     y: btoa(String.fromCharCode(...publicKeyBytes.slice(33, 65)))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, ""),
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
   };
 
   const cryptoKey = await crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    { name: "ECDSA", namedCurve: "P-256" },
-    false,
-    ["sign"]
+    "jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]
   );
 
   const signature = await crypto.subtle.sign(
@@ -83,17 +60,12 @@ async function generateVAPIDHeaders(
     new TextEncoder().encode(unsignedToken)
   );
 
-  // Convert signature from DER to raw format
   const signatureBytes = new Uint8Array(signature);
   const signatureB64 = btoa(String.fromCharCode(...signatureBytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-
-  const jwt = `${unsignedToken}.${signatureB64}`;
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
   return {
-    authorization: `vapid t=${jwt}, k=${vapidPublicKey}`,
+    authorization: `vapid t=${unsignedToken}.${signatureB64}, k=${vapidPublicKey}`,
     cryptoKey: vapidPublicKey,
   };
 }
@@ -105,6 +77,15 @@ interface PushPayload {
   badge?: string;
   url?: string;
   tag?: string;
+  order_number?: string;
+  type?: string;
+}
+
+interface PushResult {
+  success: boolean;
+  status?: number;
+  error?: string;
+  expired?: boolean;
 }
 
 async function sendWebPush(
@@ -113,24 +94,18 @@ async function sendWebPush(
   vapidPublicKey: string,
   vapidPrivateKey: string,
   vapidSubject: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<PushResult> {
   try {
     console.log(`📤 Sending push to endpoint: ${subscription.endpoint.substring(0, 50)}...`);
 
-    // For now, use a simpler approach with fetch
-    // The complex VAPID signing is causing issues, so we'll try a direct approach
-    
     const payloadString = JSON.stringify(payload);
-    
-    // Simple approach: send without encryption (works for testing)
-    // In production, you'd want to use web-push library in a Node.js environment
     
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "TTL": "86400",
+      "Urgency": "high",
     };
 
-    // Try to generate VAPID headers
     try {
       const vapidHeaders = await generateVAPIDHeaders(
         subscription.endpoint,
@@ -141,7 +116,6 @@ async function sendWebPush(
       headers["Authorization"] = vapidHeaders.authorization;
     } catch (vapidError) {
       console.error("⚠️ VAPID header generation failed:", vapidError);
-      // Continue without VAPID for testing
     }
 
     const response = await fetch(subscription.endpoint, {
@@ -150,20 +124,18 @@ async function sendWebPush(
       body: payloadString,
     });
 
+    if (response.status === 404 || response.status === 410) {
+      return { success: false, status: response.status, expired: true, error: "Subscription expired" };
+    }
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`❌ Push failed: ${response.status} - ${errorText}`);
-      
-      // If subscription is gone, return special error
-      if (response.status === 404 || response.status === 410) {
-        return { success: false, error: "SUBSCRIPTION_EXPIRED" };
-      }
-      
-      return { success: false, error: `HTTP ${response.status}: ${errorText}` };
+      return { success: false, status: response.status, error: errorText };
     }
 
     console.log(`✅ Push sent successfully`);
-    return { success: true };
+    return { success: true, status: response.status };
   } catch (error) {
     console.error(`❌ Push error:`, error);
     return { success: false, error: String(error) };
@@ -171,7 +143,6 @@ async function sendWebPush(
 }
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -194,7 +165,7 @@ serve(async (req) => {
       );
     }
 
-    const { user_id, title, body, url, tag, order_number, total } = await req.json();
+    const { user_id, title, body, url, order_number, type } = await req.json();
 
     console.log("=================================================");
     console.log("📨 SEND PUSH NOTIFICATION REQUEST");
@@ -202,11 +173,13 @@ serve(async (req) => {
     console.log(`  Title: ${title}`);
     console.log(`  Body: ${body}`);
     console.log(`  Order: ${order_number}`);
+    console.log(`  Type: ${type}`);
+    console.log(`  URL: ${url}`);
     console.log("=================================================");
 
-    if (!user_id) {
+    if (!user_id || !title || !body) {
       return new Response(
-        JSON.stringify({ error: "user_id is required" }),
+        JSON.stringify({ error: "Missing required fields: user_id, title, body" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -214,13 +187,13 @@ serve(async (req) => {
     // Get all push subscriptions for this user
     const { data: subscriptions, error: subError } = await supabaseAdmin
       .from("push_subscriptions")
-      .select("*")
+      .select("id, endpoint, p256dh, auth")
       .eq("user_id", user_id);
 
     if (subError) {
       console.error("❌ Error fetching subscriptions:", subError);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch subscriptions" }),
+        JSON.stringify({ error: "Failed to fetch subscriptions", details: subError }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -228,23 +201,26 @@ serve(async (req) => {
     if (!subscriptions || subscriptions.length === 0) {
       console.log("⚠️ No push subscriptions found for user:", user_id);
       return new Response(
-        JSON.stringify({ message: "No subscriptions found", sent: 0 }),
+        JSON.stringify({ sent: 0, failed: 0, message: "No subscriptions found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     console.log(`📱 Found ${subscriptions.length} subscription(s) for user`);
 
+    // Build push payload with improved structure
     const payload: PushPayload = {
       title: title || "NELLOR",
       body: body || "Nova notificação",
       icon: "/pwa-192x192.png",
       badge: "/pwa-192x192.png",
       url: url || "/fornecedor/pedidos",
-      tag: tag || `nellor-${Date.now()}`,
+      tag: order_number ? `order-${order_number}` : `notification-${Date.now()}`,
+      order_number: order_number || "",
+      type: type || "general",
     };
 
-    // Send to all subscriptions
+    // Send to all subscriptions and log results
     const results = await Promise.all(
       subscriptions.map(async (sub) => {
         const result = await sendWebPush(
@@ -255,33 +231,45 @@ serve(async (req) => {
           vapidSubject
         );
 
-        // If subscription expired, delete it
-        if (!result.success && result.error === "SUBSCRIPTION_EXPIRED") {
+        // Log to push_notification_logs table for auditing
+        const logEntry = {
+          user_id,
+          endpoint: sub.endpoint.substring(0, 200),
+          title,
+          body,
+          status: result.success ? "sent" : (result.expired ? "expired" : "failed"),
+          error_message: result.error || null,
+          http_status: result.status || null,
+        };
+
+        const { error: logError } = await supabaseAdmin
+          .from("push_notification_logs")
+          .insert(logEntry);
+
+        if (logError) {
+          console.error("⚠️ Failed to log push result:", logError);
+        }
+
+        // Remove expired subscriptions
+        if (result.expired) {
           console.log(`🗑️ Removing expired subscription: ${sub.id}`);
-          await supabaseAdmin
-            .from("push_subscriptions")
-            .delete()
-            .eq("id", sub.id);
+          await supabaseAdmin.from("push_subscriptions").delete().eq("id", sub.id);
         }
 
         return result;
       })
     );
 
-    const successCount = results.filter((r) => r.success).length;
-    const failCount = results.filter((r) => !r.success).length;
+    const sent = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+    const expired = results.filter((r) => r.expired).length;
 
     console.log("=================================================");
-    console.log(`📊 PUSH RESULTS: ${successCount} sent, ${failCount} failed`);
+    console.log(`📊 PUSH RESULTS: ${sent} sent, ${failed} failed, ${expired} expired`);
     console.log("=================================================");
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        sent: successCount,
-        failed: failCount,
-        total: subscriptions.length,
-      }),
+      JSON.stringify({ sent, failed, expired, total: subscriptions.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
