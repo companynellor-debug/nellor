@@ -165,127 +165,174 @@ const Financeiro = () => {
         </div>
       </div>
 
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        {/* Total Vendido */}
-        <Card className="p-4 sm:p-6 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                Total Vendido
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3 w-3" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Soma total das vendas pagas
-                  </TooltipContent>
-                </Tooltip>
-              </p>
-              <p className="text-2xl sm:text-3xl font-bold text-primary">
-                {formatCurrency(totalVendido)}
-              </p>
-            </div>
-            <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-primary/20" />
+      {/* Cards de Resumo - 4 estados do fluxo financeiro */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* 1. Aguardando Pagamento - Pedidos que o cliente ainda não pagou */}
+        <Card className="p-4 relative overflow-hidden border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-900/10">
+          <div className="flex flex-col h-full">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+              <Clock className="h-3 w-3 text-yellow-600" />
+              Aguardando Pagamento
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Pedidos criados mas cliente ainda não finalizou pagamento no Stripe
+                </TooltipContent>
+              </Tooltip>
+            </p>
+            <p className="text-xl sm:text-2xl font-bold text-yellow-600">
+              {formatCurrency(totalPendente)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {pendingOrders.length} pedido(s)
+            </p>
           </div>
         </Card>
 
-        {/* Saldo Disponível - Stripe Real */}
-        <Card className="p-4 sm:p-6 relative overflow-hidden border-green-200 dark:border-green-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                Saldo Disponível
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3 w-3" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {isStripeConnected 
-                      ? "Valor disponível para saque automático (dados reais do Stripe)" 
-                      : "Conecte Stripe para ver seu saldo"}
-                  </TooltipContent>
-                </Tooltip>
-              </p>
-              {loadingBalance ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Carregando...</span>
-                </div>
-              ) : isStripeConnected && stripeBalance?.connected ? (
-                <div>
-                  <p className="text-2xl sm:text-3xl font-bold text-green-600">
-                    {formatCurrency(stripeBalance.available)}
-                  </p>
-                  {stripeBalance.lastUpdated && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Atualizado: {format(new Date(stripeBalance.lastUpdated), "HH:mm", { locale: ptBR })}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <Button 
-                  variant="link" 
-                  className="text-amber-600 p-0 h-auto text-lg"
-                  onClick={() => setShowConnectModal(true)}
-                >
-                  Conectar Stripe
-                </Button>
-              )}
-            </div>
-            <DollarSign className="h-8 w-8 sm:h-10 sm:w-10 text-green-600/20" />
-          </div>
-        </Card>
-
-        {/* Saldo Pendente - Stripe Real */}
-        <Card className="p-4 sm:p-6 relative overflow-hidden border-orange-200 dark:border-orange-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                Saldo Pendente
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3 w-3" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {isStripeConnected 
-                      ? "Valor em processamento no Stripe (liberação em 2-14 dias)" 
-                      : "Conecte Stripe para ver"}
-                  </TooltipContent>
-                </Tooltip>
-              </p>
-              {loadingBalance ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : isStripeConnected && stripeBalance?.connected ? (
-                <p className="text-2xl sm:text-3xl font-bold text-orange-600">
+        {/* 2. Em Processamento - Stripe pending (já pagos, aguardando liberação) */}
+        <Card className="p-4 relative overflow-hidden border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-900/10">
+          <div className="flex flex-col h-full">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+              <RefreshCw className="h-3 w-3 text-orange-600" />
+              Em Processamento
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Pagamentos confirmados mas Stripe ainda retendo (2-14 dias)
+                </TooltipContent>
+              </Tooltip>
+            </p>
+            {loadingBalance ? (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            ) : isStripeConnected && stripeBalance?.connected ? (
+              <>
+                <p className="text-xl sm:text-2xl font-bold text-orange-600">
                   {formatCurrency(stripeBalance.pending)}
                 </p>
-              ) : (
-                <p className="text-lg text-muted-foreground">---</p>
-              )}
-            </div>
-            <Clock className="h-8 w-8 sm:h-10 sm:w-10 text-orange-600/20" />
+                {stripeBalance.inTransit && stripeBalance.inTransit > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    + {formatCurrency(stripeBalance.inTransit)} em trânsito
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-lg text-muted-foreground">---</p>
+            )}
+          </div>
+        </Card>
+
+        {/* 3. Disponível para Saque - Stripe available */}
+        <Card className="p-4 relative overflow-hidden border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10">
+          <div className="flex flex-col h-full">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+              <CheckCircle className="h-3 w-3 text-green-600" />
+              Disponível p/ Saque
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Valor liberado pelo Stripe, transferido automaticamente para sua conta
+                </TooltipContent>
+              </Tooltip>
+            </p>
+            {loadingBalance ? (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            ) : isStripeConnected && stripeBalance?.connected ? (
+              <>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">
+                  {formatCurrency(stripeBalance.available)}
+                </p>
+                {stripeBalance.lastUpdated && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Atualizado {format(new Date(stripeBalance.lastUpdated), "HH:mm", { locale: ptBR })}
+                  </p>
+                )}
+              </>
+            ) : (
+              <Button 
+                variant="link" 
+                className="text-amber-600 p-0 h-auto text-sm"
+                onClick={() => setShowConnectModal(true)}
+              >
+                Conectar Stripe
+              </Button>
+            )}
+          </div>
+        </Card>
+
+        {/* 4. Total Recebido - Soma de todas vendas pagas */}
+        <Card className="p-4 relative overflow-hidden border-primary/20 bg-primary/5">
+          <div className="flex flex-col h-full">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+              <TrendingUp className="h-3 w-3 text-primary" />
+              Total Recebido
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Soma total de todas as vendas com pagamento confirmado
+                </TooltipContent>
+              </Tooltip>
+            </p>
+            <p className="text-xl sm:text-2xl font-bold text-primary">
+              {formatCurrency(totalVendido)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {orders.filter(o => o.payment_status === 'paid' && o.order_status !== 'cancelled').length} venda(s)
+            </p>
           </div>
         </Card>
       </div>
 
-      {/* Card adicional: Pedidos aguardando pagamento */}
+      {/* Resumo visual do fluxo */}
+      <Card className="bg-muted/20">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-yellow-500" />
+              <span>Aguardando</span>
+              <span className="font-semibold">{formatCurrency(totalPendente)}</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-orange-500" />
+              <span>Processando</span>
+              <span className="font-semibold">{formatCurrency(stripeBalance?.pending || 0)}</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-green-500" />
+              <span>Disponível</span>
+              <span className="font-semibold">{formatCurrency(stripeBalance?.available || 0)}</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-primary" />
+              <span>Total Recebido</span>
+              <span className="font-semibold">{formatCurrency(totalVendido)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Alerta de pedidos pendentes (se houver muitos) */}
       {pendingOrders.length > 0 && (
         <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-900/20">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-start gap-4">
-              <Banknote className="h-8 w-8 text-yellow-600 flex-shrink-0" />
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Banknote className="h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
-                  {pendingOrders.length} pedido(s) aguardando pagamento
+                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm">
+                  {pendingOrders.length} pedido(s) aguardando pagamento do cliente
                 </h3>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                  Total pendente: {formatCurrency(totalPendente)}
-                </p>
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                  O pagamento será confirmado automaticamente via Stripe webhook.
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                  O status será atualizado automaticamente quando o cliente finalizar o pagamento no Stripe.
                 </p>
               </div>
             </div>
