@@ -350,6 +350,24 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_sent_events: {
+        Row: {
+          created_at: string
+          event_key: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          event_key: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          event_key?: string
+          id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
