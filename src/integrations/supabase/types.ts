@@ -413,6 +413,7 @@ export type Database = {
           itens: Json
           order_number: string
           order_status: Database["public"]["Enums"]["order_status"] | null
+          paid_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           payment_status_label: string | null
@@ -441,6 +442,7 @@ export type Database = {
           itens: Json
           order_number: string
           order_status?: Database["public"]["Enums"]["order_status"] | null
+          paid_at?: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           payment_status_label?: string | null
@@ -469,6 +471,7 @@ export type Database = {
           itens?: Json
           order_number?: string
           order_status?: Database["public"]["Enums"]["order_status"] | null
+          paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           payment_status_label?: string | null
