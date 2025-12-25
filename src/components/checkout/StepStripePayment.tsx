@@ -150,6 +150,8 @@ export const StepStripePayment = ({
         payment_method: "cartao" as const,
         payment_status: "pending",
         order_status: "pending",
+        status_label: "AGUARDANDO_PAGAMENTO",
+        payment_status_label: "PENDENTE",
         subtotal,
         frete: shipping,
         desconto: discount,

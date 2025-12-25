@@ -16,6 +16,9 @@ export interface Order {
   payment_method: 'pix' | 'boleto' | 'cartao';
   payment_status: 'pending' | 'paid' | 'refunded' | 'cancelled';
   order_status: 'pending' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
+  status_label?: string | null;
+  payment_status_label?: string | null;
+  paid_at?: string | null;
   tracking_code: string | null;
   proof_url: string | null;
   shipping_company: string | null;
