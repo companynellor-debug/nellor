@@ -324,12 +324,12 @@ serve(async (req) => {
       }
 
       // ================================================================
-      // NOTIFICATIONS - Trigger will send push automatically
+      // NOTIFICATIONS - ONLY SUPPLIER gets payment notification here
+      // Client notification handled by trigger when status -> 'preparing'
       // ================================================================
-      const actualBuyerId = buyerId || order.buyer_id;
       const orderTotal = Number(order.total || totalAmount).toFixed(2);
       
-      // Notify Supplier: "VENDA APROVADA"
+      // Notify Supplier ONLY: "VENDA APROVADA"
       await createNotificationWithIdempotency(
         supabaseAdmin,
         actualSupplierId,
@@ -341,21 +341,7 @@ serve(async (req) => {
         "supplier_payment_confirmed",
         "/fornecedor/pedidos"
       );
-
-      // Notify Buyer: "PAGAMENTO CONFIRMADO"
-      if (actualBuyerId) {
-        await createNotificationWithIdempotency(
-          supabaseAdmin,
-          actualBuyerId,
-          "✅ Pagamento Confirmado!",
-          `Seu pedido #${order.order_number} - R$ ${orderTotal} foi confirmado e está sendo preparado!`,
-          orderId,
-          order.order_number,
-          totalAmount,
-          "buyer_payment_confirmed",
-          "/cliente/meus-pedidos"
-        );
-      }
+      // Cliente receberá notificação via trigger (status -> preparing)
 
       console.log("🎉 Payment processing complete!");
 
@@ -455,7 +441,7 @@ serve(async (req) => {
 
         const orderTotal = Number(order.total || totalAmount).toFixed(2);
 
-        // Create notifications (trigger sends push)
+        // Notify ONLY Supplier (buyer gets notification via trigger when status changes)
         await createNotificationWithIdempotency(
           supabaseAdmin,
           order.supplier_id,
@@ -467,20 +453,7 @@ serve(async (req) => {
           "supplier_payment_confirmed",
           "/fornecedor/pedidos"
         );
-
-        if (order.buyer_id) {
-          await createNotificationWithIdempotency(
-            supabaseAdmin,
-            order.buyer_id,
-            "✅ Pagamento Confirmado!",
-            `Seu pedido #${order.order_number} - R$ ${orderTotal} foi confirmado!`,
-            orderId,
-            order.order_number,
-            totalAmount,
-            "buyer_payment_confirmed",
-            "/cliente/meus-pedidos"
-          );
-        }
+        // Cliente receberá notificação via trigger (status -> preparing)
       }
 
       return new Response(
