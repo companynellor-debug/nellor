@@ -24,6 +24,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useReviews } from "@/hooks/useReviews";
+import { useAutoStripeRevalidation } from "@/hooks/useAutoStripeRevalidation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -44,8 +45,8 @@ const MeusPedidos = () => {
   const [trackingDialog, setTrackingDialog] = useState(false);
   const [detailsDialog, setDetailsDialog] = useState(false);
 
-  // OBS: pagamento é confirmado exclusivamente pelo webhook da Stripe.
-  // Não existe revalidação manual pelo cliente.
+  // Fallback automático do webhook: revalida pagamentos pendentes via Stripe (backend)
+  useAutoStripeRevalidation({ orders, intervalMs: 120_000 });
 
   // Realtime subscription for order updates
   useEffect(() => {

@@ -136,7 +136,10 @@ serve(async (req) => {
             .from("orders")
             .update({
               payment_status: "paid",
+              payment_status_label: "PAGO",
               order_status: "preparing",
+              status_label: "PAGO",
+              paid_at: new Date().toISOString(),
               stripe_session_id: session.id,
               stripe_payment_intent_id: paymentDetails?.id ?? null,
               stripe_payment_amount: (session.amount_total || 0) / 100,
