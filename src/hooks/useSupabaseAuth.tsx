@@ -1,8 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface Profile {
   id: string;
@@ -34,7 +33,7 @@ interface AuthContextType {
     pix_key?: string;
     endereco_principal?: any;
   }) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; redirectTo?: string }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   completeOnboarding: () => Promise<void>;
@@ -47,8 +46,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -128,19 +125,12 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      toast({
-        title: 'Conta criada!',
-        description: 'Verifique seu email para confirmar o cadastro.',
-      });
+      toast.success('Conta criada! Verifique seu email para confirmar o cadastro.');
 
       return { error: null };
     } catch (error: any) {
       console.error('Error signing up:', error);
-      toast({
-        title: 'Erro ao criar conta',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error('Erro ao criar conta: ' + error.message);
       return { error };
     } finally {
       setLoading(false);
@@ -164,29 +154,25 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         await fetchProfile(data.user.id);
       }
 
-      toast({
-        title: 'Login realizado!',
-        description: 'Bem-vindo de volta!',
-      });
+      toast.success('Login realizado! Bem-vindo de volta!');
 
-      // Redirect based on user type
+      // Get redirect path based on user type
       const { data: profileData } = await supabase
         .from('profiles')
         .select('tipo, onboarding_completed')
         .eq('id', data.user.id)
         .single();
 
-       if (profileData?.tipo === 'fornecedor' && !profileData?.onboarding_completed) {
-         navigate('/fornecedor/onboarding');
-       } else if (profileData?.tipo === 'fornecedor') {
-         navigate('/fornecedor/dashboard');
-       } else if (profileData?.tipo === 'admin') {
-         navigate('/admin');
-       } else {
-         navigate('/cliente');
-       }
+      let redirectTo = '/cliente';
+      if (profileData?.tipo === 'fornecedor' && !profileData?.onboarding_completed) {
+        redirectTo = '/fornecedor/onboarding';
+      } else if (profileData?.tipo === 'fornecedor') {
+        redirectTo = '/fornecedor/dashboard';
+      } else if (profileData?.tipo === 'admin') {
+        redirectTo = '/admin';
+      }
 
-      return { error: null };
+      return { error: null, redirectTo };
     } catch (error: any) {
       console.error('Error signing in:', error);
       
@@ -197,11 +183,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         errorMessage = 'Por favor, confirme seu email antes de fazer login.';
       }
       
-      toast({
-        title: 'Erro ao fazer login',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      toast.error('Erro ao fazer login: ' + errorMessage);
       return { error };
     } finally {
       setLoading(false);
@@ -217,19 +199,13 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(null);
       setProfile(null);
       
-      toast({
-        title: 'Logout realizado',
-        description: 'Até logo!',
-      });
+      toast.success('Logout realizado. Até logo!');
 
-      navigate('/');
+      // Navigate using window.location to avoid router context issues
+      window.location.href = '/';
     } catch (error: any) {
       console.error('Error signing out:', error);
-      toast({
-        title: 'Erro ao fazer logout',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error('Erro ao fazer logout: ' + error.message);
     }
   };
 
@@ -246,17 +222,10 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       await fetchProfile(user.id);
 
-      toast({
-        title: 'Perfil atualizado',
-        description: 'Suas informações foram atualizadas com sucesso.',
-      });
+      toast.success('Perfil atualizado com sucesso!');
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast({
-        title: 'Erro ao atualizar perfil',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error('Erro ao atualizar perfil: ' + error.message);
       throw error;
     }
   };
@@ -274,14 +243,11 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       await fetchProfile(user.id);
 
-      navigate('/fornecedor/dashboard');
+      // Navigate using window.location to avoid router context issues
+      window.location.href = '/fornecedor/dashboard';
     } catch (error: any) {
       console.error('Error completing onboarding:', error);
-      toast({
-        title: 'Erro ao completar onboarding',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error('Erro ao completar onboarding: ' + error.message);
       throw error;
     }
   };

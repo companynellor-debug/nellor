@@ -76,7 +76,10 @@ const Auth = () => {
     setSubmitting(true);
     try {
       if (isLogin) {
-        await signIn(email, password);
+        const { error, redirectTo } = await signIn(email, password);
+        if (!error && redirectTo) {
+          navigate(redirectTo, { replace: true });
+        }
       } else {
         await signUp(email, password, {
           nome: `${nome} ${sobrenome}`.trim(),
