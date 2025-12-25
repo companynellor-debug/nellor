@@ -38,10 +38,10 @@ const CheckoutSucesso = () => {
         // Aguarda um pouco para dar tempo do webhook processar
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Buscar pedido para verificar status
+        // Buscar pedido para verificar status (inclui stripe_session_id para fallback)
         const { data: order, error: orderError } = await supabase
           .from("orders")
-          .select("id, order_number, payment_status")
+          .select("id, order_number, payment_status, stripe_session_id")
           .eq("id", orderIdFromQuery)
           .single();
 
@@ -60,9 +60,19 @@ const CheckoutSucesso = () => {
           return;
         }
 
-        // Se ainda está pendente, aguarda um pouco mais e verifica novamente
-        // O webhook pode ainda não ter processado
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Fallback obrigatório: revalida automaticamente no backend (mesma lógica do botão antigo)
+        if (order.stripe_session_id) {
+          try {
+            await supabase.functions.invoke("stripe-verify-payment", {
+              body: { sessionId: order.stripe_session_id },
+            });
+          } catch (verifyErr) {
+            console.warn("stripe-verify-payment failed:", verifyErr);
+          }
+        }
+
+        // Rebusca (somente reflete o banco)
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         const { data: orderRetry } = await supabase
           .from("orders")
@@ -78,10 +88,9 @@ const CheckoutSucesso = () => {
         }
 
         // Aguardar mais um pouco e verificar uma última vez.
-        // OBS: o pagamento é confirmado exclusivamente pelo webhook da Stripe.
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // OBS: o pagamento é confirmado via webhook (primário) ou revalidação automática (fallback)
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Verificar uma última vez
         const { data: finalOrder } = await supabase
           .from("orders")
           .select("payment_status")
