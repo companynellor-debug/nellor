@@ -224,7 +224,8 @@ export const StepStripePayment = ({
         throw new Error("URL de pagamento não gerada");
       }
 
-      // Salva contexto local para a página de sucesso (fallback)
+      // Salva contexto local para a página de sucesso (fallback visual apenas)
+      // IMPORTANTE: O status do pedido é atualizado APENAS pelo webhook Stripe
       localStorage.setItem(
         "pendingOrder",
         JSON.stringify({
@@ -244,14 +245,8 @@ export const StepStripePayment = ({
         })
       );
 
-      // Vincula session_id no pedido
-      await supabase
-        .from("orders")
-        .update({
-          stripe_session_id: result.sessionId,
-        })
-        .eq("id", pendingOrder.id);
-
+      // stripe_session_id já foi salvo pela edge function stripe-create-payment
+      // Redireciona para Stripe Checkout
       window.location.href = result.url;
     } catch (error: any) {
       console.error("Payment error:", error);

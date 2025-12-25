@@ -161,24 +161,47 @@ serve(async (req) => {
         );
       }
 
-      const orderId = session.metadata?.order_id;
+      let orderId = session.metadata?.order_id;
       const supplierId = session.metadata?.supplier_id;
       const buyerId = session.metadata?.buyer_id;
 
-      if (!orderId) {
-        console.error("❌ No order_id in metadata!");
+      // CRITICAL: Try to find order by metadata first, then by stripe_session_id
+      let order: any = null;
+      let fetchError: any = null;
+
+      if (orderId) {
+        const result = await supabaseAdmin
+          .from("orders")
+          .select("id, payment_status, order_number, supplier_id, buyer_id, total")
+          .eq("id", orderId)
+          .single();
+        order = result.data;
+        fetchError = result.error;
+      }
+
+      // Fallback: search by stripe_session_id if order not found by metadata
+      if (!order && session.id) {
+        console.log("🔍 Searching order by stripe_session_id:", session.id);
+        const result = await supabaseAdmin
+          .from("orders")
+          .select("id, payment_status, order_number, supplier_id, buyer_id, total")
+          .eq("stripe_session_id", session.id)
+          .single();
+        
+        if (result.data) {
+          order = result.data;
+          orderId = result.data.id;
+          console.log("✅ Found order by stripe_session_id:", order.order_number);
+        }
+      }
+
+      if (!order) {
+        console.error("❌ Order not found by metadata or stripe_session_id!", { orderId, sessionId: session.id });
         return new Response(
-          JSON.stringify({ received: true, error: "No order_id in metadata" }),
+          JSON.stringify({ received: true, error: "Order not found", orderId, sessionId: session.id }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
-      // Fetch order
-      const { data: order, error: fetchError } = await supabaseAdmin
-        .from("orders")
-        .select("id, payment_status, order_number, supplier_id, buyer_id, total")
-        .eq("id", orderId)
-        .single();
 
       if (fetchError || !order) {
         console.error("❌ Order not found:", orderId, fetchError);
