@@ -196,7 +196,19 @@ serve(async (req) => {
     });
 
     console.log("Created Stripe checkout session:", session.id);
+    console.log("Payment intent:", session.payment_intent);
     console.log("Payment will be automatically split between platform and supplier");
+
+    // CRITICAL: Update order with stripe_session_id immediately after creating checkout
+    await supabaseAdmin
+      .from("orders")
+      .update({
+        stripe_session_id: session.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", orderId);
+
+    console.log(`✅ Order ${orderId} updated with stripe_session_id: ${session.id}`);
 
     return new Response(
       JSON.stringify({ 
@@ -206,6 +218,7 @@ serve(async (req) => {
         platformFeePercentage: PLATFORM_FEE_PERCENTAGE,
         supplierAmount: supplierAmountInCents / 100,
         stripeConnectedAccountId: supplier.stripe_account_id,
+        paymentIntentId: session.payment_intent,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
