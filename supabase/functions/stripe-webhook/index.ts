@@ -229,6 +229,9 @@ serve(async (req) => {
         .update({
           payment_status: "paid",
           order_status: "preparing",
+          status_label: "CONFIRMADO",
+          payment_status_label: "PAGO",
+          paid_at: new Date().toISOString(),
           stripe_session_id: session.id,
           stripe_payment_intent_id: session.payment_intent as string,
           stripe_payment_amount: totalAmount,
@@ -382,6 +385,9 @@ serve(async (req) => {
         .update({
           payment_status: "paid",
           order_status: "preparing",
+          status_label: "CONFIRMADO",
+          payment_status_label: "PAGO",
+          paid_at: new Date().toISOString(),
           stripe_payment_intent_id: paymentIntent.id,
           stripe_payment_amount: totalAmount,
           platform_fee: platformFee,
@@ -468,6 +474,8 @@ serve(async (req) => {
           .update({
             payment_status: "cancelled",
             order_status: "cancelled",
+            status_label: "CANCELADO",
+            payment_status_label: "CANCELADO",
             updated_at: new Date().toISOString(),
           })
           .eq("id", orderId)
