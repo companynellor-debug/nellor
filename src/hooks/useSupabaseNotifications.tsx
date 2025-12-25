@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { showPushNotification, requestNotificationPermission, getNotificationPermission } from '@/utils/pushNotifications';
+import { requestNotificationPermission, getNotificationPermission } from '@/utils/pushNotifications';
 
 export interface Notification {
   id: string;
@@ -81,68 +81,10 @@ export const useSupabaseNotifications = () => {
       
       if (!userId) return;
 
-      // Subscribe to order updates for this client
-      const ordersChannel = supabase
-        .channel('client-orders-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'orders',
-            filter: `buyer_id=eq.${userId}`
-          },
-          async (payload) => {
-            const updatedOrder = payload.new as any;
-            const oldOrder = payload.old as any;
-            
-            // Check for status changes
-            if (oldOrder.order_status !== updatedOrder.order_status) {
-              playNotificationSound();
-              
-              const statusMessages: Record<string, string> = {
-                preparing: '📦 Pedido em Preparação',
-                shipped: '🚚 Pedido Enviado',
-                delivered: '✅ Pedido Entregue',
-                cancelled: '❌ Pedido Cancelado'
-              };
-              
-              const title = statusMessages[updatedOrder.order_status] || '📋 Atualização do Pedido';
-              const body = `Pedido #${updatedOrder.order_number} - ${updatedOrder.order_status === 'shipped' ? 'Código de rastreio: ' + (updatedOrder.tracking_code || 'Em breve') : ''}`;
-              
-              await showPushNotification(title, {
-                body,
-                tag: `order-${updatedOrder.order_number}`,
-                data: { order_id: updatedOrder.id }
-              });
-              
-              toast({
-                title,
-                description: body,
-              });
-            }
-            
-            // Check for payment status changes
-            if (oldOrder.payment_status !== updatedOrder.payment_status && updatedOrder.payment_status === 'paid') {
-              playNotificationSound();
-              
-              await showPushNotification('✅ Pagamento Confirmado!', {
-                body: `Pedido #${updatedOrder.order_number} foi pago com sucesso`,
-                tag: `payment-${updatedOrder.order_number}`,
-              });
-              
-              toast({
-                title: '✅ Pagamento Confirmado!',
-                description: `Pedido #${updatedOrder.order_number} foi pago com sucesso`,
-              });
-            }
-          }
-        )
-        .subscribe();
-
       // Subscribe to realtime changes for this user's notifications
+      // ONLY updates local state - NO PUSH NOTIFICATIONS (backend handles push)
       const notificationsChannel = supabase
-        .channel('notifications-realtime')
+        .channel('notifications-realtime-display')
         .on(
           'postgres_changes',
           {
@@ -151,21 +93,15 @@ export const useSupabaseNotifications = () => {
             table: 'notifications',
             filter: `user_id=eq.${userId}`
           },
-          async (payload) => {
+          (payload) => {
             const newNotif = payload.new as Notification;
             
-            // Play sound for new notification
+            // Play sound for new notification (in-app only)
             if (newNotif.sound) {
               playNotificationSound();
             }
-
-            // Show browser push notification
-            await showPushNotification(newNotif.title, {
-              body: newNotif.body,
-              data: newNotif.data
-            });
             
-            // Show in-app toast
+            // Show in-app toast ONLY (no push - backend handles push)
             toast({
               title: newNotif.title,
               description: newNotif.body,
@@ -179,7 +115,6 @@ export const useSupabaseNotifications = () => {
         .subscribe();
 
       return () => {
-        supabase.removeChannel(ordersChannel);
         supabase.removeChannel(notificationsChannel);
       };
     };

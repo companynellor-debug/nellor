@@ -10,19 +10,69 @@ const corsHeaders = {
 // Nellor platform fee: 7.5%
 const PLATFORM_FEE_PERCENTAGE = 7.5;
 
-// Helper to send push notification
-async function sendPushNotification(
+// Check if notification was already sent (idempotency)
+async function wasEventAlreadySent(
+  supabaseAdmin: any,
+  eventKey: string
+): Promise<boolean> {
+  try {
+    const { data } = await supabaseAdmin
+      .from("notification_sent_events")
+      .select("id")
+      .eq("event_key", eventKey)
+      .maybeSingle();
+    
+    return !!data;
+  } catch (error) {
+    console.error("⚠️ Error checking event idempotency:", error);
+    return false;
+  }
+}
+
+// Mark event as sent (idempotency)
+async function markEventAsSent(
+  supabaseAdmin: any,
+  eventKey: string
+): Promise<void> {
+  try {
+    await supabaseAdmin
+      .from("notification_sent_events")
+      .insert({ event_key: eventKey });
+    console.log(`🔒 Event marked as sent: ${eventKey}`);
+  } catch (error) {
+    // Ignore duplicate key errors (concurrent requests)
+    console.log(`⚠️ Could not mark event (may be duplicate): ${eventKey}`);
+  }
+}
+
+// Helper to send push notification with idempotency
+async function sendPushNotificationWithIdempotency(
+  supabaseAdmin: any,
   supabaseUrl: string,
   serviceRoleKey: string,
   userId: string,
   title: string,
   body: string,
   orderNumber: string,
-  url: string,
-  type: string
-): Promise<void> {
+  orderId: string,
+  eventType: string,
+  url: string
+): Promise<boolean> {
+  // Create unique event key for idempotency
+  const eventKey = `${orderId}-${eventType}`;
+  
+  // Check if already sent
+  const alreadySent = await wasEventAlreadySent(supabaseAdmin, eventKey);
+  if (alreadySent) {
+    console.log(`⏭️ SKIPPING duplicate notification: ${eventKey}`);
+    return false;
+  }
+  
+  // Mark as sent BEFORE sending (prevent race conditions)
+  await markEventAsSent(supabaseAdmin, eventKey);
+  
   try {
-    console.log(`📱 Sending push notification to ${userId}: ${title}`);
+    console.log(`📱 Sending push notification: ${eventKey}`);
     
     const response = await fetch(
       `${supabaseUrl}/functions/v1/send-push-notification`,
@@ -38,15 +88,60 @@ async function sendPushNotification(
           body,
           url,
           order_number: orderNumber,
-          type,
+          type: eventType,
         }),
       }
     );
     
     const result = await response.json();
     console.log(`📱 Push result for ${userId}:`, result);
+    return true;
   } catch (error) {
     console.error(`⚠️ Push notification error for ${userId}:`, error);
+    return false;
+  }
+}
+
+// Create notification in database with idempotency
+async function createNotificationWithIdempotency(
+  supabaseAdmin: any,
+  userId: string,
+  title: string,
+  body: string,
+  orderId: string,
+  orderNumber: string,
+  total: number,
+  eventType: string
+): Promise<boolean> {
+  const eventKey = `${orderId}-${eventType}-db`;
+  
+  const alreadySent = await wasEventAlreadySent(supabaseAdmin, eventKey);
+  if (alreadySent) {
+    console.log(`⏭️ SKIPPING duplicate DB notification: ${eventKey}`);
+    return false;
+  }
+  
+  await markEventAsSent(supabaseAdmin, eventKey);
+  
+  try {
+    await supabaseAdmin.from("notifications").insert({
+      user_id: userId,
+      title,
+      body,
+      type: "order_update",
+      sound: true,
+      data: {
+        order_id: orderId,
+        order_number: orderNumber,
+        total,
+        event: eventType,
+      },
+    });
+    console.log(`✅ DB notification created: ${eventKey}`);
+    return true;
+  } catch (error) {
+    console.error(`⚠️ Error creating DB notification: ${eventKey}`, error);
+    return false;
   }
 }
 
@@ -167,7 +262,6 @@ serve(async (req) => {
 
       // CRITICAL: Try to find order by metadata first, then by stripe_session_id
       let order: any = null;
-      let fetchError: any = null;
 
       if (orderId) {
         const result = await supabaseAdmin
@@ -176,7 +270,6 @@ serve(async (req) => {
           .eq("id", orderId)
           .single();
         order = result.data;
-        fetchError = result.error;
       }
 
       // Fallback: search by stripe_session_id if order not found by metadata
@@ -196,22 +289,14 @@ serve(async (req) => {
       }
 
       if (!order) {
-        console.error("❌ Order not found by metadata or stripe_session_id!", { orderId, sessionId: session.id });
+        console.error("❌ Order not found!", { orderId, sessionId: session.id });
         return new Response(
-          JSON.stringify({ received: true, error: "Order not found", orderId, sessionId: session.id }),
+          JSON.stringify({ received: true, error: "Order not found" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      if (fetchError || !order) {
-        console.error("❌ Order not found:", orderId, fetchError);
-        return new Response(
-          JSON.stringify({ error: "Order not found", orderId }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Check if already processed (idempotency)
+      // Check if already processed (idempotency at order level)
       if (order.payment_status === "paid") {
         console.log(`✅ Order ${orderId} already paid - skipping duplicate`);
         return new Response(
@@ -309,38 +394,67 @@ serve(async (req) => {
       }
 
       // ================================================================
-      // PUSH NOTIFICATIONS - Supplier & Buyer
+      // NOTIFICATIONS WITH IDEMPOTENCY - ONE PER EVENT PER ORDER
       // ================================================================
+      const actualBuyerId = buyerId || order.buyer_id;
+      const orderTotal = Number(order.total || totalAmount).toFixed(2);
       
-      // Notify Supplier: "VENDA APROVADA"
-      await sendPushNotification(
+      // Notify Supplier: "VENDA APROVADA" (only once per order)
+      await sendPushNotificationWithIdempotency(
+        supabaseAdmin,
         supabaseUrl,
         serviceRoleKey,
         actualSupplierId,
-        "✅ Venda Aprovada!",
-        `Pagamento confirmado! Pedido #${order.order_number} - R$ ${supplierAmount.toFixed(2)} líquido.`,
+        "💰 Venda Aprovada!",
+        `Pedido #${order.order_number} - R$ ${orderTotal} confirmado! Líquido: R$ ${supplierAmount.toFixed(2)}`,
         order.order_number,
-        "/fornecedor/pedidos",
-        "payment_confirmed"
+        orderId,
+        "supplier_payment_confirmed",
+        "/fornecedor/pedidos"
+      );
+      
+      // Create DB notification for supplier
+      await createNotificationWithIdempotency(
+        supabaseAdmin,
+        actualSupplierId,
+        "💰 Venda Aprovada!",
+        `Pedido #${order.order_number} - R$ ${orderTotal} confirmado! Líquido: R$ ${supplierAmount.toFixed(2)}`,
+        orderId,
+        order.order_number,
+        totalAmount,
+        "supplier_payment_confirmed"
       );
 
-      // Notify Buyer: "PAGAMENTO CONFIRMADO"
-      const actualBuyerId = buyerId || order.buyer_id;
+      // Notify Buyer: "PAGAMENTO CONFIRMADO" (only once per order)
       if (actualBuyerId) {
-        await sendPushNotification(
+        await sendPushNotificationWithIdempotency(
+          supabaseAdmin,
           supabaseUrl,
           serviceRoleKey,
           actualBuyerId,
           "✅ Pagamento Confirmado!",
-          `Seu pedido #${order.order_number} foi confirmado e está sendo preparado!`,
+          `Seu pedido #${order.order_number} - R$ ${orderTotal} foi confirmado e está sendo preparado!`,
           order.order_number,
-          "/cliente/meus-pedidos",
-          "payment_confirmed"
+          orderId,
+          "buyer_payment_confirmed",
+          "/cliente/meus-pedidos"
+        );
+        
+        // Create DB notification for buyer
+        await createNotificationWithIdempotency(
+          supabaseAdmin,
+          actualBuyerId,
+          "✅ Pagamento Confirmado!",
+          `Seu pedido #${order.order_number} - R$ ${orderTotal} foi confirmado e está sendo preparado!`,
+          orderId,
+          order.order_number,
+          totalAmount,
+          "buyer_payment_confirmed"
         );
       }
 
       console.log("=================================================");
-      console.log("🎉 PAYMENT PROCESSING COMPLETE");
+      console.log("🎉 PAYMENT PROCESSING COMPLETE (WITH IDEMPOTENCY)");
       console.log(`  Order: ${order.order_number}`);
       console.log(`  Status: PAID / PREPARING`);
       console.log("=================================================");
@@ -360,7 +474,7 @@ serve(async (req) => {
     }
 
     // ================================================================
-    // PAYMENT_INTENT.SUCCEEDED - Backup handler
+    // PAYMENT_INTENT.SUCCEEDED - Backup handler (with idempotency)
     // ================================================================
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
@@ -384,7 +498,7 @@ serve(async (req) => {
       // Check if already processed
       const { data: order } = await supabaseAdmin
         .from("orders")
-        .select("id, payment_status, order_number, supplier_id, buyer_id")
+        .select("id, payment_status, order_number, supplier_id, buyer_id, total")
         .eq("id", orderId)
         .single();
 
@@ -450,28 +564,34 @@ serve(async (req) => {
           });
         }
 
-        // Send push notifications
-        await sendPushNotification(
+        const orderTotal = Number(order.total || totalAmount).toFixed(2);
+
+        // Send notifications with idempotency
+        await sendPushNotificationWithIdempotency(
+          supabaseAdmin,
           supabaseUrl,
           serviceRoleKey,
           order.supplier_id,
-          "✅ Venda Aprovada!",
-          `Pagamento confirmado! Pedido #${order.order_number} - R$ ${supplierAmount.toFixed(2)} líquido.`,
+          "💰 Venda Aprovada!",
+          `Pedido #${order.order_number} - R$ ${orderTotal} confirmado! Líquido: R$ ${supplierAmount.toFixed(2)}`,
           order.order_number,
-          "/fornecedor/pedidos",
-          "payment_confirmed"
+          orderId,
+          "supplier_payment_confirmed",
+          "/fornecedor/pedidos"
         );
 
         if (order.buyer_id) {
-          await sendPushNotification(
+          await sendPushNotificationWithIdempotency(
+            supabaseAdmin,
             supabaseUrl,
             serviceRoleKey,
             order.buyer_id,
             "✅ Pagamento Confirmado!",
-            `Seu pedido #${order.order_number} foi confirmado!`,
+            `Seu pedido #${order.order_number} - R$ ${orderTotal} foi confirmado!`,
             order.order_number,
-            "/cliente/meus-pedidos",
-            "payment_confirmed"
+            orderId,
+            "buyer_payment_confirmed",
+            "/cliente/meus-pedidos"
           );
         }
       }

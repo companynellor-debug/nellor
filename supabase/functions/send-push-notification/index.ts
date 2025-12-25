@@ -208,14 +208,16 @@ serve(async (req) => {
 
     console.log(`📱 Found ${subscriptions.length} subscription(s) for user`);
 
-    // Build push payload with improved structure
+    // Build push payload - use tag to prevent duplicate notifications on same device
     const payload: PushPayload = {
       title: title || "NELLOR",
       body: body || "Nova notificação",
       icon: "/pwa-192x192.png",
       badge: "/pwa-192x192.png",
       url: url || "/fornecedor/pedidos",
-      tag: order_number ? `order-${order_number}` : `notification-${Date.now()}`,
+      // CRITICAL: Use consistent tag to prevent duplicates
+      // Same tag = browser replaces previous notification instead of stacking
+      tag: order_number && type ? `${order_number}-${type}` : `notification-${Date.now()}`,
       order_number: order_number || "",
       type: type || "general",
     };
