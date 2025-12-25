@@ -316,6 +316,42 @@ serve(async (req) => {
         // Don't fail the webhook because of push notification error
       }
 
+      // ================================================================
+      // SEND PUSH NOTIFICATION TO BUYER: "PAGAMENTO CONFIRMADO"
+      // ================================================================
+      const targetBuyerId = buyerId;
+      if (targetBuyerId) {
+        console.log("📱 Sending PAGAMENTO CONFIRMADO push notification to buyer:", targetBuyerId);
+        
+        try {
+          const pushResponseBuyer = await fetch(
+            `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                user_id: targetBuyerId,
+                title: "✅ Pagamento Confirmado!",
+                body: `Seu pedido #${existingOrder.order_number} foi confirmado e já está sendo preparado!`,
+                url: "/cliente/meus-pedidos",
+                tag: `order-confirmed-${existingOrder.order_number}`,
+                order_number: existingOrder.order_number,
+                total: totalAmount,
+              }),
+            }
+          );
+          
+          const pushResultBuyer = await pushResponseBuyer.json();
+          console.log("📱 Push notification PAGAMENTO CONFIRMADO result:", pushResultBuyer);
+        } catch (pushErrorBuyer) {
+          console.error("⚠️ Error sending PAGAMENTO CONFIRMADO push notification:", pushErrorBuyer);
+          // Don't fail the webhook because of push notification error
+        }
+      }
+
       console.log("=================================================");
       console.log("🎉 PAYMENT PROCESSING COMPLETE");
       console.log(`  Order: ${existingOrder.order_number}`);

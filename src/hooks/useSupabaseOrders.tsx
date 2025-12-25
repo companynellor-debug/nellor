@@ -154,12 +154,44 @@ export const useSupabaseOrders = () => {
 
   const updateOrderStatus = async (orderId: string, status: Order['order_status']) => {
     try {
+      // Get order details before update for notification
+      const order = orders.find(o => o.id === orderId);
+      
       const { error } = await supabase
         .from('orders')
-        .update({ order_status: status })
+        .update({ order_status: status, updated_at: new Date().toISOString() })
         .eq('id', orderId);
 
       if (error) throw error;
+
+      // Send push notification to buyer when status changes to shipped or delivered
+      if (order?.buyer_id && (status === 'shipped' || status === 'delivered')) {
+        try {
+          const statusMessages = {
+            shipped: {
+              title: '📦 Pedido Enviado!',
+              body: `Seu pedido #${order.order_number} foi enviado e está a caminho!`,
+            },
+            delivered: {
+              title: '✅ Pedido Entregue!',
+              body: `Seu pedido #${order.order_number} foi entregue com sucesso!`,
+            },
+          };
+          
+          await supabase.functions.invoke('send-push-notification', {
+            body: {
+              user_id: order.buyer_id,
+              title: statusMessages[status].title,
+              body: statusMessages[status].body,
+              url: '/cliente/meus-pedidos',
+              tag: `order-${status}-${order.order_number}`,
+            },
+          });
+        } catch (pushError) {
+          console.warn('Push notification failed:', pushError);
+          // Don't fail the status update because of push notification error
+        }
+      }
 
       toast({
         title: 'Status atualizado',
