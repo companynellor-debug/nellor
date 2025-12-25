@@ -183,27 +183,9 @@ export const StepStripePayment = ({
         supplier_amount: supplierAmount,
       });
 
-      // ✅ DISPARA NOTIFICAÇÃO PUSH "PEDIDO PENDENTE" PARA O FORNECEDOR
-      console.log("📨 Disparando notificação de pedido pendente para fornecedor:", supplierId);
-      const { supabase } = await import("@/integrations/supabase/client");
-      
-      try {
-        await supabase.functions.invoke("send-push-notification", {
-          body: {
-            user_id: supplierId,
-            title: "🛒 Pedido Pendente",
-            body: `Um cliente iniciou o pedido #${pendingOrder.order_number}. Aguardando pagamento.`,
-            url: "/fornecedor/pedidos",
-            tag: `order-pending-${pendingOrder.order_number}`,
-            order_number: pendingOrder.order_number,
-            total,
-          },
-        });
-        console.log("✅ Notificação de pedido pendente enviada");
-      } catch (pushError) {
-        console.error("⚠️ Erro ao enviar push pendente:", pushError);
-        // Não bloqueia o fluxo
-      }
+
+      // Notificação de pedido pendente agora é gerada via INSERT na tabela `notifications`
+      // (trigger do banco + edge function cuidam do push mesmo fora do app)
 
       const description = `Pedido Nellor - ${cartItems.length} item(s)`;
 
