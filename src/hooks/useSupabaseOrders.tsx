@@ -210,9 +210,11 @@ export const useSupabaseOrders = () => {
 
   const updatePaymentProof = async (orderId: string, proofUrl: string) => {
     try {
+      // OBS: pagamento só pode ser confirmado pelo webhook da Stripe.
+      // Enviar comprovante NÃO altera payment_status.
       const { error } = await supabase
         .from('orders')
-        .update({ proof_url: proofUrl, payment_status: 'paid' })
+        .update({ proof_url: proofUrl })
         .eq('id', orderId);
 
       if (error) throw error;
