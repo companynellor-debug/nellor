@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { useSupabaseAuth } from "./useSupabaseAuth";
+import { useState, useEffect, useContext, createContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -16,40 +15,80 @@ export interface StoreProfile {
   customCategories: string[];
 }
 
-export const useStoreProfile = () => {
-  const { user, profile } = useSupabaseAuth();
-  const [storeProfile, setStoreProfile] = useState<StoreProfile>({
-    storeName: "",
-    bio: "",
-    avatar: "",
-    banner: "",
-    whatsapp: "",
-    address: "",
-    pixKey: "",
-    minOrderQuantity: 0,
-    minOrderValue: 0,
-    customCategories: [],
-  });
+const defaultStoreProfile: StoreProfile = {
+  storeName: "",
+  bio: "",
+  avatar: "",
+  banner: "",
+  whatsapp: "",
+  address: "",
+  pixKey: "",
+  minOrderQuantity: 0,
+  minOrderValue: 0,
+  customCategories: [],
+};
 
+export const useStoreProfile = () => {
+  const [storeProfile, setStoreProfile] = useState<StoreProfile>(defaultStoreProfile);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Get user directly from supabase instead of context to avoid dependency issues
   useEffect(() => {
-    if (profile) {
-      setStoreProfile({
-        storeName: profile.nome || "",
-        bio: profile.descricao_loja || "",
-        avatar: profile.foto_perfil_url || "",
-        banner: profile.banner_loja_url || "",
-        whatsapp: profile.telefone || "",
-        address: profile.endereco_principal as any || "",
-        pixKey: profile.pix_key || "",
-        minOrderQuantity: 0,
-        minOrderValue: 0,
-        customCategories: [],
-      });
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+      }
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch profile when userId changes
+  useEffect(() => {
+    if (!userId) {
+      setStoreProfile(defaultStoreProfile);
+      return;
     }
-  }, [profile]);
+
+    const fetchProfile = async () => {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching store profile:', error);
+        return;
+      }
+
+      if (profile) {
+        setStoreProfile({
+          storeName: profile.nome || "",
+          bio: profile.descricao_loja || "",
+          avatar: profile.foto_perfil_url || "",
+          banner: profile.banner_loja_url || "",
+          whatsapp: profile.telefone || "",
+          address: profile.endereco_principal as any || "",
+          pixKey: profile.pix_key || "",
+          minOrderQuantity: 0,
+          minOrderValue: 0,
+          customCategories: [],
+        });
+      }
+    };
+
+    fetchProfile();
+  }, [userId]);
 
   const updateStoreProfile = async (newData: Partial<StoreProfile>) => {
-    if (!user?.id) return;
+    if (!userId) return;
 
     try {
       const { error } = await supabase
@@ -62,7 +101,7 @@ export const useStoreProfile = () => {
           telefone: newData.whatsapp,
           pix_key: newData.pixKey,
         })
-        .eq('id', user.id);
+        .eq('id', userId);
 
       if (error) throw error;
 
