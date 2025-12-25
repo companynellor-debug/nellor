@@ -23,7 +23,7 @@ interface Options {
 export function useAutoStripeRevalidation({
   orders,
   enabled = true,
-  intervalMs = 120_000,
+  intervalMs = 15_000, // Verificar a cada 15 segundos para atualização mais rápida
 }: Options) {
   const runningRef = useRef(false);
 

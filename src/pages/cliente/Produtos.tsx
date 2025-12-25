@@ -126,10 +126,13 @@ const Produtos = () => {
                     </h3>
                     <div className="flex items-center justify-between">
                       <p className="text-primary font-bold">{product.price}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
                       <div className="flex items-center gap-1 text-xs">
                         <span className="text-yellow-500">⭐</span>
-                        <span className="text-foreground">{product.rating}</span>
+                        <span className="text-foreground">{product.rating > 0 ? product.rating.toFixed(1) : '-'}</span>
                       </div>
+                      <span className="text-xs text-muted-foreground">{product.salesCount || 0} vendidos</span>
                     </div>
                   </div>
                 </Card>

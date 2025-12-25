@@ -16,6 +16,7 @@ export interface Product {
   ativo: boolean;
   rating_medio: number;
   total_reviews: number;
+  vendas_count: number;
   peso: number | null;
   dimensoes: any;
   created_at: string;

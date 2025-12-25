@@ -647,6 +647,7 @@ export type Database = {
           total_reviews: number | null
           updated_at: string | null
           variacoes: Json | null
+          vendas_count: number | null
         }
         Insert: {
           ativo?: boolean | null
@@ -666,6 +667,7 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string | null
           variacoes?: Json | null
+          vendas_count?: number | null
         }
         Update: {
           ativo?: boolean | null
@@ -685,6 +687,7 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string | null
           variacoes?: Json | null
+          vendas_count?: number | null
         }
         Relationships: [
           {

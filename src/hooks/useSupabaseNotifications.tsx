@@ -15,15 +15,39 @@ export interface Notification {
   created_at: string;
 }
 
+// Verificar se o usuário é fornecedor
+const checkIfSupplier = async (): Promise<boolean> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tipo')
+      .eq('id', user.id)
+      .single();
+    
+    return profile?.tipo === 'fornecedor' || profile?.tipo === 'admin';
+  } catch {
+    return false;
+  }
+};
+
 export const useSupabaseNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [isSupplier, setIsSupplier] = useState(false);
   const { toast } = useToast();
 
-  // Check and request push notification permission
+  // Check and request push notification permission (only for suppliers)
   const requestPushPermission = useCallback(async () => {
+    const supplierCheck = await checkIfSupplier();
+    if (!supplierCheck) {
+      console.log('📱 Notificações push desabilitadas para clientes');
+      return false;
+    }
     const granted = await requestNotificationPermission();
     setPushPermission(getNotificationPermission());
     return granted;
@@ -32,6 +56,7 @@ export const useSupabaseNotifications = () => {
   // Initialize permission state
   useEffect(() => {
     setPushPermission(getNotificationPermission());
+    checkIfSupplier().then(setIsSupplier);
   }, []);
 
   const playNotificationSound = useCallback(() => {
@@ -96,18 +121,23 @@ export const useSupabaseNotifications = () => {
           (payload) => {
             const newNotif = payload.new as Notification;
             
-            // Play sound for new notification (in-app only)
-            if (newNotif.sound) {
-              playNotificationSound();
-            }
-            
-            // Show in-app toast ONLY (no push - backend handles push)
-            toast({
-              title: newNotif.title,
-              description: newNotif.body,
+            // Verificar se é fornecedor antes de mostrar toast/som
+            checkIfSupplier().then(isSupp => {
+              if (isSupp) {
+                // Play sound for new notification (in-app only - para fornecedores)
+                if (newNotif.sound) {
+                  playNotificationSound();
+                }
+                
+                // Show in-app toast ONLY para fornecedores
+                toast({
+                  title: newNotif.title,
+                  description: newNotif.body,
+                });
+              }
             });
             
-            // Update notifications list
+            // Update notifications list (sempre atualiza a lista)
             setNotifications(prev => [newNotif, ...prev]);
             setUnreadCount(prev => prev + 1);
           }

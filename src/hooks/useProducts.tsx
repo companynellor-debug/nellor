@@ -64,6 +64,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         priceNumber: sp.preco,
         rating: sp.rating_medio || 0,
         reviews: sp.total_reviews || 0,
+        salesCount: sp.vendas_count || 0,
         description: sp.descricao_longa || sp.descricao_curta || '',
         images: sp.imagens.length > 0 ? sp.imagens : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=600&fit=crop'],
         specs: [],
