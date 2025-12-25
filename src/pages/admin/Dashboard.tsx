@@ -93,19 +93,22 @@ const Dashboard = () => {
       const gmvPeriod = filteredOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
       const commission = gmvPeriod * 0.075;
 
-      // Dados de evolução dos últimos 30 dias
-      const last30Days = [];
-      for (let i = 29; i >= 0; i--) {
+      // Dados de evolução baseados no filtro selecionado
+      const daysToShow = dateFilter === 'today' ? 1 : dateFilter === '7days' ? 7 : dateFilter === '14days' ? 14 : 30;
+      const chartDays = [];
+      for (let i = daysToShow - 1; i >= 0; i--) {
         const day = subDays(new Date(), i);
-        const dayStart = new Date(day.setHours(0,0,0,0));
-        const dayEnd = new Date(day.setHours(23,59,59,999));
+        const dayStart = new Date(day);
+        dayStart.setHours(0,0,0,0);
+        const dayEnd = new Date(day);
+        dayEnd.setHours(23,59,59,999);
 
         const dayOrders = paidOrders.filter((o: any) => {
           const orderDate = new Date(o.created_at);
           return orderDate >= dayStart && orderDate <= dayEnd;
         });
 
-        last30Days.push({
+        chartDays.push({
           date: format(day, 'dd/MM'),
           pedidos: dayOrders.length,
           receita: dayOrders.reduce((sum: number, o: any) => sum + Number(o.total) * 0.075, 0)
@@ -152,8 +155,8 @@ const Dashboard = () => {
         commission,
       });
 
-      setSalesData(last30Days);
-      setRevenueData(last30Days);
+      setSalesData(chartDays);
+      setRevenueData(chartDays);
       setDistributionData(distribution);
       setTopSuppliers(topSuppliersData);
       setRecentOrders(latestOrders);
@@ -296,7 +299,7 @@ const Dashboard = () => {
         {/* Evolução de Pedidos */}
         <Card className="border-border hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg text-foreground">📈 Evolução de Pedidos (30 dias)</CardTitle>
+            <CardTitle className="text-lg text-foreground">📈 Evolução de Pedidos ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'})</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -320,7 +323,7 @@ const Dashboard = () => {
         {/* Evolução de Receita (Comissão) */}
         <Card className="border-border hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg text-foreground">💰 Evolução de Receita Nellor (30 dias)</CardTitle>
+            <CardTitle className="text-lg text-foreground">💰 Evolução de Receita Nellor ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'})</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>

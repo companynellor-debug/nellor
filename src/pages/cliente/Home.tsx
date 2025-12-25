@@ -268,9 +268,12 @@ const ClienteHome = () => {
                   <div className="p-3">
                     <p className="text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</p>
                     <p className="text-primary font-bold text-lg">{product.price}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-yellow-500 text-sm">⭐</span>
-                      <span className="text-xs text-muted-foreground">{product.rating}</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-yellow-500 text-sm">⭐</span>
+                        <span className="text-xs text-muted-foreground">{product.rating > 0 ? product.rating.toFixed(1) : '-'}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{product.salesCount || 0} vendidos</span>
                     </div>
                   </div>
                 </Card>
@@ -301,12 +304,13 @@ const ClienteHome = () => {
                   </div>
                   <div className="p-3">
                     <h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</h3>
-                    <div className="flex items-center justify-between">
-                      <p className="text-primary font-bold">{product.price}</p>
+                    <p className="text-primary font-bold">{product.price}</p>
+                    <div className="flex items-center justify-between mt-1">
                       <div className="flex items-center gap-1 text-xs">
                         <span className="text-yellow-500">⭐</span>
-                        <span className="text-muted-foreground">{product.rating}</span>
+                        <span className="text-muted-foreground">{product.rating > 0 ? product.rating.toFixed(1) : '-'}</span>
                       </div>
+                      <span className="text-xs text-muted-foreground">{product.salesCount || 0} vendidos</span>
                     </div>
                   </div>
                 </Card>
