@@ -3,149 +3,105 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Store, DollarSign, ShoppingCart, Percent, Loader2, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { format, subMonths, startOfMonth, endOfMonth, subDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
+import { useAdminData } from "@/hooks/useAdminData";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
   
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    activeSuppliers: 0,
-    gmvTotal: 0,
-    gmvPeriod: 0,
-    completedOrders: 0,
-    pendingOrders: 0,
-    commission: 0,
-  });
-  const [salesData, setSalesData] = useState<any[]>([]);
-  const [revenueData, setRevenueData] = useState<any[]>([]);
-  const [distributionData, setDistributionData] = useState<any[]>([]);
-  const [topSuppliers, setTopSuppliers] = useState<any[]>([]);
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const { orders: allOrders, profiles: allProfiles, stats: statsData, loading, error, refetch } = useAdminData();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [dateFilter]);
+  // ✅ Calcular tudo com useMemo para evitar recálculos desnecessários
+  const { stats, salesData, revenueData, distributionData, topSuppliers, recentOrders, paidOrdersCount } = useMemo(() => {
+    const getStartDate = () => {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      
+      if (dateFilter === 'today') return now;
+      else if (dateFilter === '7days') return subDays(now, 7);
+      else if (dateFilter === '14days') return subDays(now, 14);
+      else return subDays(now, 30);
+    };
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const getStartDate = () => {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        
-        if (dateFilter === 'today') return now;
-        else if (dateFilter === '7days') return subDays(now, 7);
-        else if (dateFilter === '14days') return subDays(now, 14);
-        else return subDays(now, 30);
-      };
+    const startDate = getStartDate();
+    const stats_result = statsData || { total_users: 0, active_suppliers: 0, paid_orders: 0, delivered_orders: 0, total_revenue: 0 };
+    
+    // Pedidos pagos totais (GMV)
+    const paidOrders = allOrders.filter((o) => 
+      o.payment_status === 'paid' && o.order_status !== 'cancelled'
+    );
+    
+    // Pedidos no período
+    const filteredOrders = paidOrders.filter((o) => 
+      new Date(o.created_at) >= startDate
+    );
+    
+    // Pedidos pendentes
+    const pendingOrders = allOrders.filter((o) => 
+      o.order_status === 'pending' && o.payment_status !== 'cancelled'
+    );
 
-      const startDate = getStartDate();
-      
-      // Fetch data using direct RPC calls
-      const [statsResult, ordersResult, profilesResult] = await Promise.all([
-        supabase.rpc('get_admin_stats'),
-        supabase.rpc('get_admin_orders'),
-        supabase.rpc('get_admin_profiles')
-      ]);
-      
-      if (statsResult.error) console.error("Stats error:", statsResult.error);
-      if (ordersResult.error) console.error("Orders error:", ordersResult.error);
-      if (profilesResult.error) console.error("Profiles error:", profilesResult.error);
-      
-      const statsData = statsResult.data;
-      const allOrders = ordersResult.data || [];
-      const allProfiles = profilesResult.data || [];
-      
-      console.log("Dashboard data loaded:", { 
-        stats: statsData, 
-        orders: allOrders?.length, 
-        profiles: allProfiles?.length 
+    const gmvTotal = paidOrders.reduce((sum, order) => sum + Number(order.total), 0);
+    const gmvPeriod = filteredOrders.reduce((sum, order) => sum + Number(order.total), 0);
+    const commission = gmvPeriod * 0.075;
+
+    // Dados de evolução baseados no filtro selecionado
+    const daysToShow = dateFilter === 'today' ? 1 : dateFilter === '7days' ? 7 : dateFilter === '14days' ? 14 : 30;
+    const chartDays = [];
+    for (let i = daysToShow - 1; i >= 0; i--) {
+      const day = subDays(new Date(), i);
+      const dayStart = new Date(day);
+      dayStart.setHours(0,0,0,0);
+      const dayEnd = new Date(day);
+      dayEnd.setHours(23,59,59,999);
+
+      const dayOrders = paidOrders.filter((o) => {
+        const orderDate = new Date(o.created_at);
+        return orderDate >= dayStart && orderDate <= dayEnd;
       });
-      
-      const stats_result = statsData?.[0] || { total_users: 0, active_suppliers: 0, paid_orders: 0, delivered_orders: 0, total_revenue: 0 };
-      
-      // Pedidos pagos totais (GMV)
-      const paidOrders = (allOrders || []).filter((o: any) => 
-        o.payment_status === 'paid' && o.order_status !== 'cancelled'
-      );
-      
-      // Pedidos no período
-      const filteredOrders = paidOrders.filter((o: any) => 
-        new Date(o.created_at) >= startDate
-      );
-      
-      // Pedidos pendentes
-      const pendingOrders = (allOrders || []).filter((o: any) => 
-        o.order_status === 'pending' && o.payment_status !== 'cancelled'
-      );
 
-      const gmvTotal = paidOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
-      const gmvPeriod = filteredOrders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
-      const commission = gmvPeriod * 0.075;
+      chartDays.push({
+        date: format(day, 'dd/MM'),
+        pedidos: dayOrders.length,
+        receita: dayOrders.reduce((sum, o) => sum + Number(o.total) * 0.075, 0)
+      });
+    }
 
-      // Dados de evolução baseados no filtro selecionado
-      const daysToShow = dateFilter === 'today' ? 1 : dateFilter === '7days' ? 7 : dateFilter === '14days' ? 14 : 30;
-      const chartDays = [];
-      for (let i = daysToShow - 1; i >= 0; i--) {
-        const day = subDays(new Date(), i);
-        const dayStart = new Date(day);
-        dayStart.setHours(0,0,0,0);
-        const dayEnd = new Date(day);
-        dayEnd.setHours(23,59,59,999);
-
-        const dayOrders = paidOrders.filter((o: any) => {
-          const orderDate = new Date(o.created_at);
-          return orderDate >= dayStart && orderDate <= dayEnd;
-        });
-
-        chartDays.push({
-          date: format(day, 'dd/MM'),
-          pedidos: dayOrders.length,
-          receita: dayOrders.reduce((sum: number, o: any) => sum + Number(o.total) * 0.075, 0)
-        });
+    // Top 5 fornecedores
+    const supplierRevenue: Record<string, { name: string; vendas: number }> = {};
+    paidOrders.forEach((order) => {
+      const supplierId = order.supplier_id;
+      const supplierName = order.supplier_name || 'Fornecedor';
+      if (!supplierRevenue[supplierId]) {
+        supplierRevenue[supplierId] = { name: supplierName, vendas: 0 };
       }
+      supplierRevenue[supplierId].vendas += Number(order.total);
+    });
 
-      // Top 5 fornecedores
-      const supplierRevenue: Record<string, { name: string; vendas: number }> = {};
-      paidOrders.forEach((order: any) => {
-        const supplierId = order.supplier_id;
-        const supplierName = order.supplier_name || 'Fornecedor';
-        if (!supplierRevenue[supplierId]) {
-          supplierRevenue[supplierId] = { name: supplierName, vendas: 0 };
-        }
-        supplierRevenue[supplierId].vendas += Number(order.total);
-      });
+    const topSuppliersData = Object.values(supplierRevenue)
+      .sort((a, b) => b.vendas - a.vendas)
+      .slice(0, 5);
 
-      const topSuppliersData = Object.values(supplierRevenue)
-        .sort((a, b) => b.vendas - a.vendas)
-        .slice(0, 5);
+    // Distribuição de receita
+    const fornecedorValue = gmvPeriod - (gmvPeriod * 0.075) - (gmvPeriod * 0.034);
+    const distribution = [
+      { name: "Fornecedores", value: fornecedorValue, color: "#3B82F6" },
+      { name: "Comissão Nellor", value: gmvPeriod * 0.075, color: "#8B5CF6" },
+      { name: "Taxa Stripe (est.)", value: gmvPeriod * 0.034, color: "#F59E0B" },
+    ];
 
-      // Distribuição de receita
-      const fornecedorValue = gmvPeriod - (gmvPeriod * 0.075) - (gmvPeriod * 0.034);
-      const distribution = [
-        { name: "Fornecedores", value: fornecedorValue, color: "#3B82F6" },
-        { name: "Comissão Nellor", value: gmvPeriod * 0.075, color: "#8B5CF6" },
-        { name: "Taxa Stripe (est.)", value: gmvPeriod * 0.034, color: "#F59E0B" },
-      ];
+    // Pedidos recentes
+    const latestOrders = allOrders.slice(0, 10).map((o) => ({
+      ...o,
+      clientName: o.buyer_name || 'Cliente',
+      supplierName: o.supplier_name || 'Fornecedor'
+    }));
 
-      // Pedidos recentes com mais detalhes
-      const latestOrders = (allOrders || []).slice(0, 10).map((o: any) => ({
-        ...o,
-        clientName: o.buyer_name || 'Cliente',
-        supplierName: o.supplier_name || 'Fornecedor'
-      }));
-
-      setStats({
+    return {
+      stats: {
         totalUsers: Number(stats_result.total_users) || 0,
         activeSuppliers: Number(stats_result.active_suppliers) || 0,
         gmvTotal,
@@ -153,24 +109,15 @@ const Dashboard = () => {
         completedOrders: Number(stats_result.delivered_orders) || 0,
         pendingOrders: pendingOrders.length,
         commission,
-      });
-
-      setSalesData(chartDays);
-      setRevenueData(chartDays);
-      setDistributionData(distribution);
-      setTopSuppliers(topSuppliersData);
-      setRecentOrders(latestOrders);
-
-    } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
-      setError('Erro ao carregar dados. Verifique sua conexão e tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Pedidos pagos filtrados por período
-  const paidOrdersCount = recentOrders.filter((o: any) => o.payment_status === 'paid' && o.order_status !== 'cancelled').length;
+      },
+      salesData: chartDays,
+      revenueData: chartDays,
+      distributionData: distribution,
+      topSuppliers: topSuppliersData,
+      recentOrders: latestOrders,
+      paidOrdersCount: filteredOrders.length,
+    };
+  }, [allOrders, statsData, dateFilter]);
 
   const statsCards = [
     {
@@ -188,7 +135,7 @@ const Dashboard = () => {
       color: "from-green-500 to-green-600",
     },
     {
-      title: "💳 Pedidos Pagos",
+      title: "💳 Pedidos Pagos (período)",
       value: paidOrdersCount.toLocaleString('pt-BR'),
       subtitle: "Pagamentos confirmados",
       icon: DollarSign,
@@ -222,8 +169,8 @@ const Dashboard = () => {
     }
   ];
 
-  // Mostrar skeleton loading em vez de tela de carregamento completa
-  const isInitialLoad = loading && salesData.length === 0;
+  // Skeleton loading apenas se não tiver dados cacheados
+  const isInitialLoad = loading && allOrders.length === 0;
 
   if (isInitialLoad) {
     return (
@@ -236,12 +183,12 @@ const Dashboard = () => {
     );
   }
 
-  if (error) {
+  if (error && allOrders.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <p className="text-destructive mb-4">{error}</p>
-          <Button onClick={fetchDashboardData}>Tentar Novamente</Button>
+          <Button onClick={refetch}>Tentar Novamente</Button>
         </div>
       </div>
     );
@@ -415,25 +362,28 @@ const Dashboard = () => {
               </thead>
               <tbody>
                 {recentOrders.length > 0 ? (
-                  recentOrders.map((order) => (
-                    <tr key={order.id} className="border-b hover:bg-muted/20">
-                      <td className="py-3 px-2 font-medium">#{order.order_number}</td>
+                  recentOrders.map((order: any) => (
+                    <tr key={order.id} className="border-b hover:bg-muted/50">
+                      <td className="py-3 px-2 font-medium">{order.order_number}</td>
                       <td className="py-3 px-2">{order.clientName}</td>
                       <td className="py-3 px-2">{order.supplierName}</td>
                       <td className="py-3 px-2 text-right">R$ {Number(order.total).toFixed(2)}</td>
                       <td className="py-3 px-2 text-center">
-                        <Badge variant="outline" className="text-xs">
-                          {order.order_status}
+                        <Badge 
+                          variant={order.payment_status === 'paid' ? 'default' : 'secondary'}
+                          className={order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : ''}
+                        >
+                          {order.payment_status === 'paid' ? 'Pago' : order.payment_status === 'pending' ? 'Pendente' : order.payment_status}
                         </Badge>
                       </td>
                       <td className="py-3 px-2 text-right text-muted-foreground">
-                        {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        {format(new Date(order.created_at), 'dd/MM HH:mm')}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="text-center py-8 text-muted-foreground">
                       Nenhum pedido encontrado
                     </td>
                   </tr>
