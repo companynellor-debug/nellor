@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { registerSW } from "virtual:pwa-register";
 import App from "./App.tsx";
 import "./index.css";
 import { FavoritesProvider } from "./hooks/useFavorites";
@@ -11,6 +12,17 @@ import { SupplierOrdersProvider } from "./hooks/useSupplierOrders";
 import { StoresProvider } from "./hooks/useStores";
 import { ProductsProvider } from "./hooks/useProducts";
 import { ReviewsProvider } from "./hooks/useReviews";
+
+// ✅ Correct SW registration for VitePWA (works in dev and prod)
+registerSW({
+  immediate: true,
+  onRegistered(r) {
+    console.log("✅ PWA Service Worker registered", r);
+  },
+  onRegisterError(error) {
+    console.error("❌ PWA Service Worker registration error", error);
+  },
+});
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -35,3 +47,4 @@ createRoot(document.getElementById("root")!).render(
     </SupabaseAuthProvider>
   </BrowserRouter>
 );
+
