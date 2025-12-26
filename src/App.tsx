@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -72,25 +71,258 @@ import TesteNotificacoes from "./pages/fornecedor/TesteNotificacoes";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Register Service Worker for Web Push notifications
-  useEffect(() => {
-    const registerServiceWorker = async () => {
-      if ('serviceWorker' in navigator) {
-        try {
-          const registration = await navigator.serviceWorker.register('/sw.js', {
-            scope: '/',
-          });
-          console.log('✅ Service Worker registered:', registration.scope);
-        } catch (error) {
-          console.error('❌ Service Worker registration failed:', error);
-        }
-      }
-    };
-    
-    registerServiceWorker();
-  }, []);
-
   return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/sobre" element={<Sobre />} />
+          <Route path="/contato" element={<Contato />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/fornecedor/escolher-plano" element={<EscolherPlano />} />
+          <Route
+            path="/fornecedor/onboarding"
+            element={
+              <ProtectedRoute requireType="fornecedor">
+                <Onboarding />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/download" element={<Download />} />
+          <Route path="/recursos" element={<Recursos />} />
+          <Route path="/faq" element={<FAQ />} />
+
+          {/* Public Product Share Route */}
+          <Route path="/p/:id" element={<PublicProduto />} />
+
+          {/* Cliente Panel Routes */}
+          <Route
+            path="/cliente"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <ClienteHome />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/produtos"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Produtos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/produto/:id"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <ProdutoDetalhes />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/loja/:id" element={<PerfilLoja />} />
+          <Route
+            path="/cliente/loja/:id"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <PerfilLoja />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/checkout"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/checkout/sucesso"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <CheckoutSucesso />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/pedido-confirmado"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <PedidoConfirmado />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/chat"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Chat />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/perfil"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Perfil />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/editar-perfil"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <EditarPerfil />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/meus-pedidos"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <MeusPedidos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/enderecos"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Enderecos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/notificacoes"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Notificacoes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/avaliacoes"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Avaliacoes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/avaliar-pedido/:orderId"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <AvaliarPedido />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/favoritos"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Favoritos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/metodos-pagamento"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <MetodosPagamento />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/suporte"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Suporte />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/instalar"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <InstalarApp />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/configuracoes-notificacoes"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <ConfiguracoesNotificacoes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cliente/carrinho"
+            element={
+              <ProtectedRoute requireType="cliente">
+                <Carrinho />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Fornecedor Panel Routes */}
+          <Route
+            path="/fornecedor"
+            element={
+              <ProtectedRoute requireType="fornecedor">
+                <FornecedorLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="pedidos" element={<Pedidos />} />
+            <Route path="chat" element={<ChatFornecedor />} />
+            <Route path="produtos" element={<ProdutosFornecedor />} />
+            <Route path="financeiro" element={<Financeiro />} />
+            <Route path="notificacoes" element={<NotificacoesFornecedor />} />
+            <Route path="editar-loja" element={<EditarLoja />} />
+            <Route path="estatisticas" element={<Estatisticas />} />
+            <Route path="recebimentos" element={<Recebimentos />} />
+            <Route path="cupons" element={<CuponsFornecedor />} />
+            <Route path="cupons/relatorio" element={<RelatorioCupons />} />
+            <Route path="planos" element={<PlanosFornecedor />} />
+            <Route path="teste-notificacoes" element={<TesteNotificacoes />} />
+          </Route>
+
+          {/* Admin Panel */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="indicadores" element={<AdminIndicadores />} />
+            <Route path="usuarios" element={<AdminUsuarios />} />
+            <Route path="fornecedores" element={<AdminFornecedores />} />
+            <Route path="vendas" element={<AdminVendas />} />
+            <Route path="financeiro" element={<AdminFinanceiro />} />
+            <Route path="relatorios" element={<AdminRelatorios />} />
+            <Route path="alertas" element={<AdminAlertas />} />
+            <Route path="configuracoes" element={<AdminConfiguracoes />} />
+            <Route path="saques" element={<AdminSaques />} />
+            <Route path="suporte" element={<AdminSuporteAdmin />} />
+            <Route path="categorias" element={<AdminCategorias />} />
+            <Route path="banners" element={<AdminBanners />} />
+            <Route path="notificacoes" element={<AdminNotificacoes />} />
+            <Route path="reconciliacao" element={<AdminReconciliacao />} />
+          </Route>
+
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
+export default App;
+
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />

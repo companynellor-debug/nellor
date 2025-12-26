@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,47 +32,61 @@ export interface Order {
   updated_at: string;
 }
 
+function upsertOrder(list: Order[], next: Order): Order[] {
+  const idx = list.findIndex((o) => o.id === next.id);
+  if (idx === -1) return [next, ...list].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  const copy = list.slice();
+  copy[idx] = { ...copy[idx], ...next };
+  return copy.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
 export const useSupabaseOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const roleRef = useRef<'fornecedor' | 'cliente' | 'admin' | 'unknown'>('unknown');
+  const userIdRef = useRef<string | null>(null);
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
+        userIdRef.current = null;
+        roleRef.current = 'unknown';
         setOrders([]);
-        setLoading(false);
         return;
       }
 
+      userIdRef.current = user.id;
+
       // Busca o perfil do usuário para saber o tipo
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('tipo')
         .eq('id', user.id)
         .single();
 
+      if (profileError) throw profileError;
+
+      roleRef.current = (profile?.tipo as any) || 'unknown';
+
       let query = supabase.from('orders').select('*');
 
       if (profile?.tipo === 'fornecedor') {
-        // Fornecedor: vê TODOS os pedidos dele (incluindo pendentes para notificação)
-        // Mostra todos para que o fornecedor veja pedidos aguardando pagamento
         query = query.eq('supplier_id', user.id);
       } else if (profile?.tipo === 'cliente') {
-        // Cliente: vê todos os seus pedidos (incluindo pendentes)
         query = query.eq('buyer_id', user.id);
       } else {
-        // Admin ou outros: vê tudo
         query = query.or(`buyer_id.eq.${user.id},supplier_id.eq.${user.id}`);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
-
       if (error) throw error;
-      setOrders(data || []);
+
+      setOrders((data || []) as Order[]);
     } catch (error: any) {
       console.error('Error fetching orders:', error);
       toast({
@@ -86,27 +100,56 @@ export const useSupabaseOrders = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('orders-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders'
-        },
-        () => {
-          fetchOrders();
-        }
-      )
-      .subscribe();
+    const start = async () => {
+      await fetchOrders();
+
+      const uid = userIdRef.current;
+      const role = roleRef.current;
+
+      if (!uid) return;
+
+      // ✅ Realtime com filtro (evita refetch global e melhora o delay ao trocar de abas)
+      const filter =
+        role === 'fornecedor'
+          ? `supplier_id=eq.${uid}`
+          : role === 'cliente'
+            ? `buyer_id=eq.${uid}`
+            : undefined;
+
+      channel = supabase
+        .channel(`orders-changes-${uid}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            ...(filter ? { filter } : {}),
+          },
+          (payload) => {
+            const eventType = payload.eventType;
+
+            if (eventType === 'DELETE') {
+              const oldRow = payload.old as any as Order;
+              setOrders((prev) => prev.filter((o) => o.id !== oldRow.id));
+              return;
+            }
+
+            const newRow = payload.new as any as Order;
+            setOrders((prev) => upsertOrder(prev, newRow));
+          }
+        )
+        .subscribe();
+    };
+
+    start();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at' | 'buyer_id'> & {
