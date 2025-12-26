@@ -35,11 +35,23 @@ const ProdutoDetalhes = () => {
 
   const productId = id ? parseInt(id) : 1;
   const product = getProductById(productId);
-  const { reviews, loading: reviewsLoading } = useSupabaseReviews(product?.supplierUuid);
   const { products: supabaseProducts } = useSupabaseProducts();
+  
+  // Buscar produto real do Supabase para dados atualizados
+  const supabaseProduct = product?.supplierUuid 
+    ? supabaseProducts.find(p => p.id === product.supplierUuid) 
+    : null;
+  
+  // Buscar reviews pelo product_id real (não supplier)
+  const { reviews, loading: reviewsLoading } = useSupabaseReviews(product?.supplierUuid);
+  
   const store = product ? stores.find(s => s.id === product.storeId) : undefined;
   const isProductFavorite = isFavorite(productId);
-
+  
+  // Usar dados reais do banco
+  const realRating = supabaseProduct?.rating_medio ?? product?.rating ?? 0;
+  const realReviewCount = supabaseProduct?.total_reviews ?? product?.reviews ?? 0;
+  const realSalesCount = supabaseProduct?.vendas_count ?? 0;
   // Buscar perfil do fornecedor (via VIEW pública) e estoque atual
   useEffect(() => {
     const fetchSupplierData = async () => {
@@ -257,11 +269,14 @@ const ProdutoDetalhes = () => {
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                    <Star key={i} className={`h-4 w-4 ${i < Math.floor(realRating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
                   ))}
-                  <span className="text-sm font-medium ml-1">{product.rating.toFixed(1)}</span>
+                  <span className="text-sm font-medium ml-1">{realRating.toFixed(1)}</span>
                 </div>
-                <span className="text-sm text-muted-foreground">({product.reviews} avaliações)</span>
+                <span className="text-sm text-muted-foreground">({realReviewCount} avaliações)</span>
+                {realSalesCount > 0 && (
+                  <span className="text-sm text-orange-600 font-medium">{realSalesCount} vendidos</span>
+                )}
                 <Badge variant={currentStock > 0 ? "outline" : "destructive"} className="flex items-center gap-1 text-xs">
                   <Package className="h-3 w-3" />
                   {currentStock > 0 ? `${currentStock} em estoque` : 'Sem estoque'}
@@ -344,9 +359,9 @@ const ProdutoDetalhes = () => {
             <div className="flex items-center gap-2 text-sm">
               <div className="flex items-center gap-1">
                 <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                <span className="font-bold text-lg">{product.rating.toFixed(1)}</span>
+                <span className="font-bold text-lg">{realRating.toFixed(1)}</span>
               </div>
-              <span className="text-muted-foreground">({product.reviews} avaliações)</span>
+              <span className="text-muted-foreground">({realReviewCount} avaliações)</span>
             </div>
           </div>
           <Card className="bg-white border shadow-sm p-5">
