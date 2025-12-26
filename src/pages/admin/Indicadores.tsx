@@ -1,96 +1,78 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, TrendingUp, DollarSign, Users, Building2, Percent, Calculator } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { fetchAdminOrders } from "@/lib/adminRpc";
+import { useMemo } from "react";
+import { useAdminData } from "@/hooks/useAdminData";
+
 const Indicadores = () => {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({
-    gmvTotal: 0,
-    gmvMes: 0,
-    receitaNellorTotal: 0,
-    receitaNellorMes: 0,
-    totalPedidos: 0,
-    pedidosMes: 0,
-    ticketMedio: 0,
-    valuationEstimado: 0
-  });
-  const [monthlyData, setMonthlyData] = useState<any[]>([]);
-  useEffect(() => {
-    fetchData();
-  }, []);
-  const fetchData = async () => {
-    try {
-      setLoading(true);
+  const { orders, loading } = useAdminData();
 
-      const allOrders = (await fetchAdminOrders()).filter(
-        (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
-      );
+  const { data, monthlyData } = useMemo(() => {
+    const paidOrders = orders.filter(
+      (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
+    );
 
-      // GMV Total (valor total de todas as transações)
-      const gmvTotal = allOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    // GMV Total
+    const gmvTotal = paidOrders.reduce((sum, o) => sum + Number(o.total), 0);
 
-      // Pedidos do mês atual
-      const now = new Date();
-      const startOfCurrentMonth = startOfMonth(now);
-      const endOfCurrentMonth = endOfMonth(now);
-      const pedidosMesAtual = allOrders.filter(o => {
+    // Pedidos do mês atual
+    const now = new Date();
+    const startOfCurrentMonth = startOfMonth(now);
+    const endOfCurrentMonth = endOfMonth(now);
+    const pedidosMesAtual = paidOrders.filter(o => {
+      const orderDate = new Date(o.created_at);
+      return orderDate >= startOfCurrentMonth && orderDate <= endOfCurrentMonth;
+    });
+    const gmvMes = pedidosMesAtual.reduce((sum, o) => sum + Number(o.total), 0);
+
+    // Receita Nellor (7.5%)
+    const receitaNellorTotal = paidOrders.reduce((sum, o) => sum + Number(o.total) * 0.075, 0);
+    const receitaNellorMes = pedidosMesAtual.reduce((sum, o) => sum + Number(o.total) * 0.075, 0);
+
+    // Ticket médio
+    const ticketMedio = paidOrders.length > 0 ? gmvTotal / paidOrders.length : 0;
+
+    // Valuation estimado: Receita mensal × 18
+    const valuationEstimado = receitaNellorMes * 18;
+
+    // Dados mensais dos últimos 6 meses
+    const monthlyDataArr = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = subMonths(now, i);
+      const monthStart = startOfMonth(monthDate);
+      const monthEnd = endOfMonth(monthDate);
+      const monthOrders = paidOrders.filter(o => {
         const orderDate = new Date(o.created_at);
-        return orderDate >= startOfCurrentMonth && orderDate <= endOfCurrentMonth;
+        return orderDate >= monthStart && orderDate <= monthEnd;
       });
-      const gmvMes = pedidosMesAtual.reduce((sum, o) => sum + Number(o.total), 0);
+      const monthGMV = monthOrders.reduce((sum, o) => sum + Number(o.total), 0);
+      const monthReceita = monthGMV * 0.075;
+      monthlyDataArr.push({
+        month: format(monthDate, "MMM", { locale: ptBR }),
+        gmv: Math.round(monthGMV),
+        receita: Math.round(monthReceita),
+        pedidos: monthOrders.length
+      });
+    }
 
-      // Receita Nellor (7.5% de cada pedido)
-      const receitaNellorTotal = allOrders.reduce((sum, o) => sum + Number(o.total) * 0.075, 0);
-      const receitaNellorMes = pedidosMesAtual.reduce((sum, o) => sum + Number(o.total) * 0.075, 0);
-
-      // Ticket médio
-      const ticketMedio = allOrders.length > 0 ? gmvTotal / allOrders.length : 0;
-
-      // Valuation estimado: Receita mensal × 18
-      const valuationEstimado = receitaNellorMes * 18;
-
-      // Dados mensais dos últimos 6 meses
-      const monthlyDataArr = [];
-      for (let i = 5; i >= 0; i--) {
-        const monthDate = subMonths(now, i);
-        const monthStart = startOfMonth(monthDate);
-        const monthEnd = endOfMonth(monthDate);
-        const monthOrders = allOrders.filter(o => {
-          const orderDate = new Date(o.created_at);
-          return orderDate >= monthStart && orderDate <= monthEnd;
-        });
-        const monthGMV = monthOrders.reduce((sum, o) => sum + Number(o.total), 0);
-        const monthReceita = monthGMV * 0.075;
-        monthlyDataArr.push({
-          month: format(monthDate, "MMM", {
-            locale: ptBR
-          }),
-          gmv: Math.round(monthGMV),
-          receita: Math.round(monthReceita),
-          pedidos: monthOrders.length
-        });
-      }
-      setData({
+    return {
+      data: {
         gmvTotal,
         gmvMes,
         receitaNellorTotal,
         receitaNellorMes,
-        totalPedidos: allOrders.length,
+        totalPedidos: paidOrders.length,
         pedidosMes: pedidosMesAtual.length,
         ticketMedio,
         valuationEstimado
-      });
-      setMonthlyData(monthlyDataArr);
-    } catch (error) {
-      console.error("Erro ao carregar indicadores:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      },
+      monthlyData: monthlyDataArr,
+    };
+  }, [orders]);
+
   const formatCurrency = (value: number) => {
     return `R$ ${value.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
@@ -107,24 +89,34 @@ const Indicadores = () => {
   // Valuation por sócio
   const valuationNatan = data.valuationEstimado * 0.5;
   const valuationGustavo = data.valuationEstimado * 0.5;
-  const societyData = [{
-    name: "Natan (50%)",
-    value: parteNatan,
-    color: "#8B5CF6"
-  }, {
-    name: "Gustavo (50%)",
-    value: parteGustavo,
-    color: "#06B6D4"
-  }];
+  const societyData = [
+    { name: "Natan (50%)", value: parteNatan, color: "#8B5CF6" },
+    { name: "Gustavo (50%)", value: parteGustavo, color: "#06B6D4" }
+  ];
+
+  if (loading && orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando indicadores...</p>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
-          📊 Indicadores da Nellor
-        </h1>
-        <p className="text-muted-foreground">Métricas internas da empresa e divisão societária</p>
-        <Badge variant="outline" className="mt-2 text-amber-600 border-amber-600">
-          ⚠️ Indicador interno - não contábil
-        </Badge>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
+            📊 Indicadores da Nellor
+          </h1>
+          <p className="text-muted-foreground">Métricas internas da empresa e divisão societária</p>
+          <Badge variant="outline" className="mt-2 text-amber-600 border-amber-600">
+            ⚠️ Indicador interno - não contábil
+          </Badge>
+        </div>
+        {loading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
       </div>
 
       {/* GMV e Receita */}
@@ -318,7 +310,7 @@ const Indicadores = () => {
                   <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="colorReceitaInd" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
                 </linearGradient>
@@ -329,7 +321,7 @@ const Indicadores = () => {
               <Tooltip formatter={(value: number) => formatCurrency(value)} />
               <Legend />
               <Area type="monotone" dataKey="gmv" name="GMV" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorGMV)" />
-              <Area type="monotone" dataKey="receita" name="Receita Nellor" stroke="#06B6D4" fillOpacity={1} fill="url(#colorReceita)" />
+              <Area type="monotone" dataKey="receita" name="Receita Nellor" stroke="#06B6D4" fillOpacity={1} fill="url(#colorReceitaInd)" />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>

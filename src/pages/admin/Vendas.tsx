@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Package, CheckCircle, DollarSign, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
-import { fetchAdminOrders } from "@/lib/adminRpc";
+import { useMemo } from "react";
+import { useAdminData } from "@/hooks/useAdminData";
 
 const getStatusBadge = (status: string) => {
   const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; }> = {
@@ -20,91 +20,70 @@ const getStatusBadge = (status: string) => {
 };
 
 const Vendas = () => {
-  const [loading, setLoading] = useState(true);
-  const [totalPedidos, setTotalPedidos] = useState(0);
-  const [pedidosPendentes, setPedidosPendentes] = useState(0);
-  const [pedidosConcluidos, setPedidosConcluidos] = useState(0);
-  const [vendasMes, setVendasMes] = useState(0);
-  const [pedidos, setPedidos] = useState<any[]>([]);
-  const [statusDistribution, setStatusDistribution] = useState<any[]>([]);
-  const [dailyOrders, setDailyOrders] = useState<any[]>([]);
+  const { orders, loading } = useAdminData();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { totalPedidos, pedidosPendentes, pedidosConcluidos, vendasMes, pedidos, statusDistribution, dailyOrders } = useMemo(() => {
+    const total = orders.length;
+    const pendentes = orders.filter(p => p.order_status === 'pending').length;
+    const concluidos = orders.filter(p => p.order_status === 'delivered').length;
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
+    // Vendas do mês
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    const vendasDoMes = orders
+      .filter(p => new Date(p.created_at) >= startOfMonth && p.payment_status === 'paid')
+      .reduce((sum, p) => sum + Number(p.total), 0);
+
+    // Pedidos recentes
+    const pedidosRecentes = orders.slice(0, 10).map((order) => ({
+      id: order.order_number,
+      customer: order.buyer_name || "Cliente",
+      supplier: order.supplier_name || "Fornecedor",
+      value: `R$ ${Number(order.total).toFixed(2)}`,
+      status: order.order_status,
+      date: format(new Date(order.created_at), "dd/MM"),
+    }));
+
+    // Distribuição de status
+    const statusCount = {
+      pending: orders.filter(p => p.order_status === 'pending').length,
+      shipped: orders.filter(p => p.order_status === 'shipped').length,
+      delivered: orders.filter(p => p.order_status === 'delivered').length,
+    };
+
+    const distribution = [
+      { name: "Pendentes", value: statusCount.pending, color: "#F59E0B" },
+      { name: "Enviados", value: statusCount.shipped, color: "#3B82F6" },
+      { name: "Entregues", value: statusCount.delivered, color: "#10B981" },
+    ];
+
+    // Pedidos dos últimos 7 dias
+    const daily = [];
+    const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    for (let i = 6; i >= 0; i--) {
+      const date = subDays(new Date(), i);
+      const count = orders.filter(p => 
+        format(new Date(p.created_at), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+      ).length;
       
-      // Buscar pedidos via RPC (bypass RLS)
-      const pedidosList = await fetchAdminOrders();
-
-      setTotalPedidos(pedidosList.length);
-
-
-      // Contar status
-      const pendentes = pedidosList.filter(p => p.order_status === 'pending').length;
-      const concluidos = pedidosList.filter(p => p.order_status === 'delivered').length;
-      setPedidosPendentes(pendentes);
-      setPedidosConcluidos(concluidos);
-
-      // Vendas do mês
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-      
-      const vendasDoMes = pedidosList
-        .filter(p => new Date(p.created_at) >= startOfMonth && p.payment_status === 'paid')
-        .reduce((sum, p) => sum + Number(p.total), 0);
-      setVendasMes(vendasDoMes);
-
-      // Pedidos recentes com nomes corretos
-      const pedidosRecentes = pedidosList.slice(0, 10).map((order) => ({
-        id: order.order_number,
-        customer: order.buyer_name || "Cliente",
-        supplier: order.supplier_name || "Fornecedor",
-        value: `R$ ${Number(order.total).toFixed(2)}`,
-        status: order.order_status,
-        date: format(new Date(order.created_at), "dd/MM"),
-      }));
-      setPedidos(pedidosRecentes);
-
-      // Distribuição de status
-      const statusCount = {
-        pending: pedidosList.filter(p => p.order_status === 'pending').length,
-        shipped: pedidosList.filter(p => p.order_status === 'shipped').length,
-        delivered: pedidosList.filter(p => p.order_status === 'delivered').length,
-      };
-
-      setStatusDistribution([
-        { name: "Pendentes", value: statusCount.pending, color: "#F59E0B" },
-        { name: "Enviados", value: statusCount.shipped, color: "#3B82F6" },
-        { name: "Entregues", value: statusCount.delivered, color: "#10B981" },
-      ]);
-
-      // Pedidos dos últimos 7 dias
-      const daily = [];
-      const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-      for (let i = 6; i >= 0; i--) {
-        const date = subDays(new Date(), i);
-        const count = pedidosList.filter(p => 
-          format(new Date(p.created_at), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
-        ).length;
-        
-        daily.push({
-          day: diasSemana[date.getDay()],
-          orders: count
-        });
-      }
-      setDailyOrders(daily);
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
+      daily.push({
+        day: diasSemana[date.getDay()],
+        orders: count
+      });
     }
-  };
+
+    return {
+      totalPedidos: total,
+      pedidosPendentes: pendentes,
+      pedidosConcluidos: concluidos,
+      vendasMes: vendasDoMes,
+      pedidos: pedidosRecentes,
+      statusDistribution: distribution,
+      dailyOrders: daily,
+    };
+  }, [orders]);
 
 
   const statsCards = [
@@ -134,12 +113,26 @@ const Vendas = () => {
     }
   ];
 
+  if (loading && orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando vendas...</p>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
-          📦 Vendas & Pedidos
-        </h1>
-        <p className="text-muted-foreground">Informações gerais das transações</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
+            📦 Vendas & Pedidos
+          </h1>
+          <p className="text-muted-foreground">Informações gerais das transações</p>
+        </div>
+        {loading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -180,7 +173,7 @@ const Vendas = () => {
                     <TableCell>{order.customer}</TableCell>
                     <TableCell>{order.supplier}</TableCell>
                     <TableCell>{order.value}</TableCell>
-                    <TableCell>{getStatusBadge(order.status)}</TableCell>
+                    <TableCell>{getStatusBadge(order.status || 'pending')}</TableCell>
                     <TableCell>{order.date}</TableCell>
                   </TableRow>
                 )) : (

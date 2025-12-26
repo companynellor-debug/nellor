@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -8,91 +7,64 @@ import { Store, TrendingUp, Loader2, CreditCard, RefreshCw, UserX, Star } from "
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { fetchAdminOrders, fetchAdminProfiles } from "@/lib/adminRpc";
+import { useState, useMemo } from "react";
+import { useAdminData } from "@/hooks/useAdminData";
 
 const Fornecedores = () => {
-  const [loading, setLoading] = useState(true);
-  const [totalFornecedores, setTotalFornecedores] = useState(0);
-  const [novosNoMes, setNovosNoMes] = useState(0);
-  const [fornecedores, setFornecedores] = useState<any[]>([]);
-  const [topSuppliers, setTopSuppliers] = useState<any[]>([]);
-  const [topSupplier, setTopSupplier] = useState<any>(null);
+  const { orders, profiles, loading, refetch } = useAdminData();
   const [selectedFornecedor, setSelectedFornecedor] = useState<any>(null);
   const [showReconnectModal, setShowReconnectModal] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // ✅ Calcular dados derivados com useMemo
+  const { fornecedores, topSuppliers, topSupplier, novosNoMes } = useMemo(() => {
+    const fornecedoresList = profiles.filter((p) => p.tipo === "fornecedor");
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Buscar fornecedores via RPC (bypass RLS)
-      const profiles = await fetchAdminProfiles();
-      const fornecedoresList = profiles
-        .filter((p) => p.tipo === "fornecedor")
-        .map((p) => ({ ...p, created_at: p.created_at }));
+    // Fornecedores novos no mês
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-      setTotalFornecedores(fornecedoresList.length);
+    const novos = fornecedoresList.filter((f) => new Date(f.created_at) >= startOfMonth).length;
 
-      // Fornecedores novos no mês
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
+    // Pedidos pagos
+    const paidOrders = orders.filter(
+      (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
+    );
 
-      const novos = fornecedoresList.filter((f) => new Date(f.created_at) >= startOfMonth).length;
-      setNovosNoMes(novos);
+    // Calcular dados dos fornecedores
+    const fornecedoresData = fornecedoresList.map((fornecedor) => {
+      const pedidosFornecedor = paidOrders.filter((o) => o.supplier_id === fornecedor.id);
+      const receita = pedidosFornecedor.reduce((sum, o) => sum + Number(o.total), 0);
 
-      // Buscar produtos e pedidos por fornecedor
-      const { data: products } = await supabase.from("products").select("supplier_id, categoria_id, categories(nome)");
+      return {
+        id: fornecedor.id,
+        name: fornecedor.nome,
+        email: fornecedor.email,
+        category: "Diversos",
+        orders: pedidosFornecedor.length,
+        revenue: receita,
+        vendas: receita,
+        plano: "Grátis",
+        stripeConnected: !!fornecedor.stripe_account_id,
+        stripeAccountId: fornecedor.stripe_account_id,
+        lastPayout: null,
+        ativo: fornecedor.ativo !== false,
+      };
+    });
 
-      const orders = (await fetchAdminOrders()).filter(
-        (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
-      );
+    // Top 5 vendedores
+    const top5 = [...fornecedoresData]
+      .sort((a, b) => b.vendas - a.vendas)
+      .slice(0, 5)
+      .map(f => ({ name: f.name, vendas: f.vendas }));
 
-      // Calcular dados dos fornecedores com faturamento REAL
-      const fornecedoresData = fornecedoresList.map((fornecedor) => {
-        const produtosFornecedor = products?.filter((p) => p.supplier_id === fornecedor.id) || [];
-        const pedidosFornecedor = orders?.filter((o) => o.supplier_id === fornecedor.id) || [];
-        const receita = pedidosFornecedor.reduce((sum, o) => sum + Number(o.total), 0);
-        const categoria = (produtosFornecedor[0] as any)?.categories?.nome || "Diversos";
-
-        return {
-          id: fornecedor.id,
-          name: fornecedor.nome,
-          email: fornecedor.email,
-          category: categoria,
-          orders: pedidosFornecedor.length,
-          revenue: receita,
-          vendas: receita,
-          plano: "Grátis",
-          stripeConnected: !!fornecedor.stripe_account_id,
-          stripeAccountId: fornecedor.stripe_account_id,
-          lastPayout: null,
-          ativo: fornecedor.ativo !== false,
-        };
-      });
-
-      setFornecedores(fornecedoresData);
-
-      // Top 5 vendedores por faturamento real
-      const top5 = [...fornecedoresData]
-        .sort((a, b) => b.vendas - a.vendas)
-        .slice(0, 5)
-        .map(f => ({ name: f.name, vendas: f.vendas }));
-      setTopSuppliers(top5);
-
-      if (top5.length > 0) {
-        setTopSupplier(top5[0]);
-      }
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return {
+      fornecedores: fornecedoresData,
+      topSuppliers: top5,
+      topSupplier: top5[0] || null,
+      novosNoMes: novos,
+    };
+  }, [orders, profiles]);
 
   const handleForceReconnect = (fornecedor: any) => {
     setSelectedFornecedor(fornecedor);
@@ -109,7 +81,7 @@ const Fornecedores = () => {
       if (error) throw error;
       
       toast.success(`Fornecedor ${fornecedor.name} desativado`);
-      fetchData();
+      refetch();
     } catch (error) {
       console.error('Error deactivating:', error);
       toast.error('Erro ao desativar fornecedor');
@@ -126,7 +98,7 @@ const Fornecedores = () => {
       if (error) throw error;
       
       toast.success(`Fornecedor ${fornecedor.name} ativado`);
-      fetchData();
+      refetch();
     } catch (error) {
       console.error('Error activating:', error);
       toast.error('Erro ao ativar fornecedor');
@@ -161,13 +133,28 @@ const Fornecedores = () => {
     }
   ];
 
+  // Loading apenas se não tiver cache
+  if (loading && fornecedores.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando fornecedores...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
-          🏢 Fornecedores
-        </h1>
-        <p className="text-muted-foreground">Acompanhamento de lojas e integração Stripe Connect</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
+            🏢 Fornecedores
+          </h1>
+          <p className="text-muted-foreground">Acompanhamento de lojas e integração Stripe Connect</p>
+        </div>
+        {loading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -233,7 +220,6 @@ const Fornecedores = () => {
                       <TableCell>R$ {supplier.revenue.toFixed(2)}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {supplier.lastPayout || '---'}
-                        {/* TODO: Popular via Stripe API */}
                       </TableCell>
                       <TableCell>
                         {supplier.ativo ? (
@@ -369,7 +355,6 @@ const Fornecedores = () => {
               <Button 
                 className="w-full"
                 onClick={() => {
-                  // TODO: Implementar envio de link de reconexão via email
                   toast.info("Funcionalidade de envio de link será implementada após integração Stripe");
                   setShowReconnectModal(false);
                 }}

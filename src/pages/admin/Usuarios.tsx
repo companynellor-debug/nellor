@@ -1,112 +1,95 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users, UserPlus, DollarSign, Loader2, Percent } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format, subMonths, startOfMonth } from "date-fns";
-import { fetchAdminOrders, fetchAdminProfiles } from "@/lib/adminRpc";
+import { useMemo } from "react";
+import { useAdminData } from "@/hooks/useAdminData";
 
 const Usuarios = () => {
-  const [loading, setLoading] = useState(true);
-  const [totalClientes, setTotalClientes] = useState(0);
-  const [novosNoMes, setNovosNoMes] = useState(0);
-  const [ticketMedio, setTicketMedio] = useState(0);
-  const [taxaRetencao, setTaxaRetencao] = useState(0);
-  const [totalGasto, setTotalGasto] = useState(0);
-  const [clientes, setClientes] = useState<any[]>([]);
-  const [growthData, setGrowthData] = useState<any[]>([]);
+  const { orders, profiles, loading } = useAdminData();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { totalClientes, novosNoMes, ticketMedio, taxaRetencao, totalGasto, clientes, growthData } = useMemo(() => {
+    const clientesList = profiles.filter((p) => p.tipo === "cliente");
+    const total = clientesList.length;
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
+    // Clientes novos no mês
+    const startOfCurrentMonth = startOfMonth(new Date());
+    const novos = clientesList.filter((c) => new Date(c.created_at) >= startOfCurrentMonth).length;
 
-      const profiles = await fetchAdminProfiles();
-      const clientesList = profiles
-        .filter((p) => p.tipo === "cliente")
-        .map((p) => ({ ...p, created_at: p.created_at }));
+    const paidOrders = orders.filter(
+      (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
+    );
 
-      setTotalClientes(clientesList.length);
-
-      // Clientes novos no mês
-      const startOfCurrentMonth = startOfMonth(new Date());
-      const novos = clientesList.filter((c) => new Date(c.created_at) >= startOfCurrentMonth).length;
-      setNovosNoMes(novos);
-
-      const allOrders = (await fetchAdminOrders()).filter(
-        (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
-      );
-
-      // Calcular ticket médio
-      if (allOrders.length > 0) {
-        const totalReceita = allOrders.reduce((sum, order) => sum + Number(order.total), 0);
-        setTicketMedio(totalReceita / allOrders.length);
-        setTotalGasto(totalReceita);
-      }
-
-      // Taxa de retenção: clientes que fizeram mais de 1 pedido
-      const pedidosPorCliente: Record<string, number> = {};
-      allOrders.forEach(order => {
-        if (order.buyer_id) {
-          pedidosPorCliente[order.buyer_id] = (pedidosPorCliente[order.buyer_id] || 0) + 1;
-        }
-      });
-
-      const clientesComPedidos = Object.keys(pedidosPorCliente).length;
-      const clientesRecorrentes = Object.values(pedidosPorCliente).filter(count => count > 1).length;
-      const retencao = clientesComPedidos > 0 ? (clientesRecorrentes / clientesComPedidos) * 100 : 0;
-      setTaxaRetencao(retencao);
-
-      // Criar lista de clientes com dados de pedidos
-      const clientesComPedidosList = clientesList.slice(0, 20).map(cliente => {
-        const pedidosCliente = allOrders.filter(o => o.buyer_id === cliente.id);
-        const totalGastoCliente = pedidosCliente.reduce((sum, o) => sum + Number(o.total), 0);
-        const ultimoPedido = pedidosCliente.length > 0 
-          ? format(new Date(Math.max(...pedidosCliente.map(o => new Date(o.created_at).getTime()))), 'dd/MM/yyyy')
-          : '-';
-
-        return {
-          id: cliente.id,
-          name: cliente.nome || 'Sem nome',
-          email: cliente.email,
-          lastOrder: ultimoPedido,
-          totalSpent: totalGastoCliente,
-          orders: pedidosCliente.length,
-          createdAt: format(new Date(cliente.created_at), 'dd/MM/yyyy')
-        };
-      });
-      setClientes(clientesComPedidosList);
-
-      // Dados de crescimento (últimos 6 meses)
-      const growth = [];
-      for (let i = 5; i >= 0; i--) {
-        const date = subMonths(new Date(), i);
-        const monthStart = startOfMonth(date);
-
-        const countUntilMonth = clientesList.filter((c) => new Date(c.created_at) <= monthStart).length;
-
-        const novosNoMes = clientesList.filter((c) => {
-          const createdAt = new Date(c.created_at);
-          return createdAt.getMonth() === date.getMonth() && createdAt.getFullYear() === date.getFullYear();
-        }).length;
-
-        growth.push({
-          month: format(date, "MMM"),
-          total: countUntilMonth + novosNoMes,
-          novos: novosNoMes,
-        });
-      }
-      setGrowthData(growth);
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
+    // Calcular ticket médio
+    let ticket = 0;
+    let totalReceita = 0;
+    if (paidOrders.length > 0) {
+      totalReceita = paidOrders.reduce((sum, order) => sum + Number(order.total), 0);
+      ticket = totalReceita / paidOrders.length;
     }
-  };
+
+    // Taxa de retenção: clientes que fizeram mais de 1 pedido
+    const pedidosPorCliente: Record<string, number> = {};
+    paidOrders.forEach(order => {
+      if (order.buyer_id) {
+        pedidosPorCliente[order.buyer_id] = (pedidosPorCliente[order.buyer_id] || 0) + 1;
+      }
+    });
+
+    const clientesComPedidos = Object.keys(pedidosPorCliente).length;
+    const clientesRecorrentes = Object.values(pedidosPorCliente).filter(count => count > 1).length;
+    const retencao = clientesComPedidos > 0 ? (clientesRecorrentes / clientesComPedidos) * 100 : 0;
+
+    // Lista de clientes com dados de pedidos
+    const clientesComPedidosList = clientesList.slice(0, 20).map(cliente => {
+      const pedidosCliente = paidOrders.filter(o => o.buyer_id === cliente.id);
+      const totalGastoCliente = pedidosCliente.reduce((sum, o) => sum + Number(o.total), 0);
+      const ultimoPedido = pedidosCliente.length > 0 
+        ? format(new Date(Math.max(...pedidosCliente.map(o => new Date(o.created_at).getTime()))), 'dd/MM/yyyy')
+        : '-';
+
+      return {
+        id: cliente.id,
+        name: cliente.nome || 'Sem nome',
+        email: cliente.email,
+        lastOrder: ultimoPedido,
+        totalSpent: totalGastoCliente,
+        orders: pedidosCliente.length,
+        createdAt: format(new Date(cliente.created_at), 'dd/MM/yyyy')
+      };
+    });
+
+    // Dados de crescimento (últimos 6 meses)
+    const growth = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = subMonths(new Date(), i);
+      const monthStart = startOfMonth(date);
+
+      const countUntilMonth = clientesList.filter((c) => new Date(c.created_at) <= monthStart).length;
+
+      const novosNoMes = clientesList.filter((c) => {
+        const createdAt = new Date(c.created_at);
+        return createdAt.getMonth() === date.getMonth() && createdAt.getFullYear() === date.getFullYear();
+      }).length;
+
+      growth.push({
+        month: format(date, "MMM"),
+        total: countUntilMonth + novosNoMes,
+        novos: novosNoMes,
+      });
+    }
+
+    return {
+      totalClientes: total,
+      novosNoMes: novos,
+      ticketMedio: ticket,
+      taxaRetencao: retencao,
+      totalGasto: totalReceita,
+      clientes: clientesComPedidosList,
+      growthData: growth,
+    };
+  }, [orders, profiles]);
 
 
   const statsCards = [
@@ -137,13 +120,27 @@ const Usuarios = () => {
     }
   ];
 
+  if (loading && clientes.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando usuários...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
-          👥 Usuários
-        </h1>
-        <p className="text-muted-foreground">Dados gerais dos clientes da plataforma</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
+            👥 Usuários
+          </h1>
+          <p className="text-muted-foreground">Dados gerais dos clientes da plataforma</p>
+        </div>
+        {loading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
