@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone, CheckCircle2 } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProducts } from "@/hooks/useProducts";
@@ -15,9 +15,11 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { useCart } from "@/hooks/useCart";
 import { usePWA } from "@/hooks/usePWA";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ClienteHome = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { favorites } = useFavorites();
   const { products } = useProducts();
   const { banners } = useSupabaseBanners();
@@ -26,6 +28,18 @@ const ClienteHome = () => {
   const { canInstall, isInstalled, isIOS, installApp } = usePWA();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [showStripeReturnModal, setShowStripeReturnModal] = useState(false);
+
+  // Detecta retorno do Stripe
+  useEffect(() => {
+    if (searchParams.get("stripe_return") === "1") {
+      setShowStripeReturnModal(true);
+      // Remove o parâmetro da URL
+      searchParams.delete("stripe_return");
+      searchParams.delete("session_id");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const mainBanners = banners.slice(0, 3);
   const sideBanners = banners.slice(3, 5);
@@ -361,6 +375,32 @@ const ClienteHome = () => {
           </Card>
         </div>
       )}
+
+      {/* Modal de Retorno do Stripe */}
+      <Dialog open={showStripeReturnModal} onOpenChange={setShowStripeReturnModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </div>
+            <DialogTitle className="text-center text-xl">Pagamento em processamento!</DialogTitle>
+            <DialogDescription className="text-center">
+              Para acompanhar e confirmar seu pedido, acesse a aba <strong>Meus Pedidos</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center mt-4">
+            <Button 
+              size="lg"
+              onClick={() => {
+                setShowStripeReturnModal(false);
+                navigate("/cliente/meus-pedidos");
+              }}
+            >
+              Ir para Meus Pedidos
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>
