@@ -10,10 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierNotifications } from "@/hooks/useSupplierNotifications";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
+import { FornecedorPrefetchProvider } from "@/hooks/useFornecedorPrefetch";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-const FornecedorLayout = () => {
+const FornecedorLayoutContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -131,6 +132,15 @@ const FornecedorLayout = () => {
         <BottomNavFornecedor />
       </div>
     </div>
+  );
+};
+
+// Wrapper com prefetch provider
+const FornecedorLayout = () => {
+  return (
+    <FornecedorPrefetchProvider>
+      <FornecedorLayoutContent />
+    </FornecedorPrefetchProvider>
   );
 };
 

@@ -8,11 +8,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { AdminPrefetchProvider } from "@/hooks/useAdminPrefetch";
 import logo from "@/assets/logo.png";
 
 const ADMIN_PASSWORD = "nellor2024";
 
-const AdminLayout = () => {
+const AdminLayoutContent = () => {
   const [open, setOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("admin-dark-mode");
@@ -162,4 +163,14 @@ const AdminLayout = () => {
     </div>
   );
 };
+
+// Wrapper com prefetch provider
+const AdminLayout = () => {
+  return (
+    <AdminPrefetchProvider>
+      <AdminLayoutContent />
+    </AdminPrefetchProvider>
+  );
+};
+
 export default AdminLayout;

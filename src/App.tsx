@@ -67,8 +67,16 @@ import ConfiguracoesNotificacoes from "./pages/cliente/ConfiguracoesNotificacoes
 import CuponsFornecedor from "./pages/fornecedor/Cupons";
 import RelatorioCupons from "./pages/fornecedor/RelatorioCupons";
 import TesteNotificacoes from "./pages/fornecedor/TesteNotificacoes";
+import ClienteLayout from "./pages/cliente/ClienteLayout";
 
 const queryClient = new QueryClient();
+
+// Componente wrapper para rotas de cliente com prefetch
+const ClienteRoute = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute requireType="cliente">
+    <ClienteLayout>{children}</ClienteLayout>
+  </ProtectedRoute>
+);
 
 const App = () => {
   return (
@@ -97,176 +105,29 @@ const App = () => {
           {/* Public Product Share Route */}
           <Route path="/p/:id" element={<PublicProduto />} />
 
-          {/* Cliente Panel Routes */}
-          <Route
-            path="/cliente"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <ClienteHome />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/produtos"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Produtos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/produto/:id"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <ProdutoDetalhes />
-              </ProtectedRoute>
-            }
-          />
+          {/* Cliente Panel Routes - Todas com prefetch */}
+          <Route path="/cliente" element={<ClienteRoute><ClienteHome /></ClienteRoute>} />
+          <Route path="/cliente/produtos" element={<ClienteRoute><Produtos /></ClienteRoute>} />
+          <Route path="/cliente/produto/:id" element={<ClienteRoute><ProdutoDetalhes /></ClienteRoute>} />
           <Route path="/loja/:id" element={<PerfilLoja />} />
-          <Route
-            path="/cliente/loja/:id"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <PerfilLoja />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/checkout"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Checkout />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/checkout/sucesso"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <CheckoutSucesso />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/pedido-confirmado"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <PedidoConfirmado />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/chat"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Chat />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/perfil"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Perfil />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/editar-perfil"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <EditarPerfil />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/meus-pedidos"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <MeusPedidos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/enderecos"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Enderecos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/notificacoes"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Notificacoes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/avaliacoes"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Avaliacoes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/avaliar-pedido/:orderId"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <AvaliarPedido />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/favoritos"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Favoritos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/metodos-pagamento"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <MetodosPagamento />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/suporte"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Suporte />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/instalar"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <InstalarApp />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/configuracoes-notificacoes"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <ConfiguracoesNotificacoes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cliente/carrinho"
-            element={
-              <ProtectedRoute requireType="cliente">
-                <Carrinho />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/cliente/loja/:id" element={<ClienteRoute><PerfilLoja /></ClienteRoute>} />
+          <Route path="/cliente/checkout" element={<ClienteRoute><Checkout /></ClienteRoute>} />
+          <Route path="/cliente/checkout/sucesso" element={<ClienteRoute><CheckoutSucesso /></ClienteRoute>} />
+          <Route path="/cliente/pedido-confirmado" element={<ClienteRoute><PedidoConfirmado /></ClienteRoute>} />
+          <Route path="/cliente/chat" element={<ClienteRoute><Chat /></ClienteRoute>} />
+          <Route path="/cliente/perfil" element={<ClienteRoute><Perfil /></ClienteRoute>} />
+          <Route path="/cliente/editar-perfil" element={<ClienteRoute><EditarPerfil /></ClienteRoute>} />
+          <Route path="/cliente/meus-pedidos" element={<ClienteRoute><MeusPedidos /></ClienteRoute>} />
+          <Route path="/cliente/enderecos" element={<ClienteRoute><Enderecos /></ClienteRoute>} />
+          <Route path="/cliente/notificacoes" element={<ClienteRoute><Notificacoes /></ClienteRoute>} />
+          <Route path="/cliente/avaliacoes" element={<ClienteRoute><Avaliacoes /></ClienteRoute>} />
+          <Route path="/cliente/avaliar-pedido/:orderId" element={<ClienteRoute><AvaliarPedido /></ClienteRoute>} />
+          <Route path="/cliente/favoritos" element={<ClienteRoute><Favoritos /></ClienteRoute>} />
+          <Route path="/cliente/metodos-pagamento" element={<ClienteRoute><MetodosPagamento /></ClienteRoute>} />
+          <Route path="/cliente/suporte" element={<ClienteRoute><Suporte /></ClienteRoute>} />
+          <Route path="/cliente/instalar" element={<ClienteRoute><InstalarApp /></ClienteRoute>} />
+          <Route path="/cliente/configuracoes-notificacoes" element={<ClienteRoute><ConfiguracoesNotificacoes /></ClienteRoute>} />
+          <Route path="/cliente/carrinho" element={<ClienteRoute><Carrinho /></ClienteRoute>} />
 
           {/* Fornecedor Panel Routes */}
           <Route
