@@ -191,8 +191,8 @@ export const StepStripePayment = ({
 
       const baseUrl = window.location.origin;
       // Stripe adiciona automaticamente o session_id quando usamos o placeholder {CHECKOUT_SESSION_ID}
-      // Isso permite confirmar o pagamento imediatamente ao voltar para a plataforma.
-      const successUrl = `${baseUrl}/cliente/checkout/sucesso?order_id=${pendingOrder.id}&session_id={CHECKOUT_SESSION_ID}`;
+      // Ao voltar, já caímos em "Meus Pedidos" e confirmamos instantaneamente.
+      const successUrl = `${baseUrl}/cliente/meus-pedidos?order_id=${pendingOrder.id}&session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${baseUrl}/cliente/checkout?cancelled=true`;
 
       const result = await createPayment(
