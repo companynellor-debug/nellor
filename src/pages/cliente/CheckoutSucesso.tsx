@@ -3,11 +3,20 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, Package, Truck, ClipboardList, Home, AlertTriangle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle, Package, Truck, ClipboardList, Home, AlertTriangle, CreditCard, Shield, Loader2 } from "lucide-react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { useCart } from "@/hooks/useCart";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
+
+// Processing steps for visual feedback
+const PROCESSING_STEPS = [
+  { id: 1, label: "Conectando ao Stripe", icon: CreditCard },
+  { id: 2, label: "Verificando pagamento", icon: Shield },
+  { id: 3, label: "Confirmando pedido", icon: Package },
+  { id: 4, label: "Finalizando", icon: CheckCircle },
+];
 
 const CheckoutSucesso = () => {
   const navigate = useNavigate();
@@ -18,6 +27,8 @@ const CheckoutSucesso = () => {
   const [orderNumber, setOrderNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const processOrder = async () => {
@@ -36,8 +47,14 @@ const CheckoutSucesso = () => {
       localStorage.removeItem("pendingOrder");
 
       try {
+        // Step 1: Conectando
+        setCurrentStep(1);
+        setProgress(10);
+        
         // 1) Se vier session_id no retorno do Stripe, confirma imediatamente (sem depender do webhook)
         if (sessionIdFromQuery) {
+          setCurrentStep(2);
+          setProgress(30);
           try {
             await supabase.functions.invoke("stripe-verify-payment", {
               body: { sessionId: sessionIdFromQuery },
@@ -46,6 +63,10 @@ const CheckoutSucesso = () => {
             console.warn("stripe-verify-payment failed:", verifyErr);
           }
         }
+
+        // Step 3: Confirmando
+        setCurrentStep(3);
+        setProgress(50);
 
         // 2) Busca pedido para exibir o número e checar status
         const { data: order, error: orderError } = await supabase
@@ -64,6 +85,7 @@ const CheckoutSucesso = () => {
         }
 
         setOrderNumber(order.order_number);
+        setProgress(60);
 
         // 3) Se ainda estiver pendente, tenta fallback com stripe_session_id salvo no banco
         if (order.payment_status !== "paid" && order.stripe_session_id) {
@@ -76,6 +98,10 @@ const CheckoutSucesso = () => {
           }
         }
 
+        // Step 4: Finalizando
+        setCurrentStep(4);
+        setProgress(80);
+
         // 4) Poll curto para refletir o banco (realtime pode não estar ativo nesta página)
         const maxAttempts = 6;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -86,16 +112,21 @@ const CheckoutSucesso = () => {
             .maybeSingle();
 
           if (statusRow?.payment_status === "paid") {
+            setProgress(100);
+            await new Promise((resolve) => setTimeout(resolve, 300));
             setIsProcessing(false);
             setShowAnimation(true);
             triggerConfetti();
             return;
           }
 
+          setProgress(80 + (attempt * 3));
           await new Promise((resolve) => setTimeout(resolve, 800));
         }
 
         // Mesmo se continuar pendente, não bloqueia a página (o webhook pode confirmar depois)
+        setProgress(100);
+        await new Promise((resolve) => setTimeout(resolve, 300));
         setIsProcessing(false);
         setShowAnimation(true);
         triggerConfetti();
@@ -165,13 +196,94 @@ const CheckoutSucesso = () => {
 
   if (isProcessing) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <ParticlesBackground />
-        <div className="text-center relative z-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-lg font-medium">Processando seu pedido...</p>
-          <p className="text-sm text-muted-foreground">Aguarde um momento</p>
-        </div>
+        <Card className="w-full max-w-md border shadow-xl relative z-10 overflow-hidden">
+          {/* Header com gradiente */}
+          <div className="bg-gradient-to-br from-primary/90 to-primary p-6 text-center text-primary-foreground">
+            <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4 animate-pulse">
+              <CreditCard className="h-10 w-10" />
+            </div>
+            <h1 className="text-2xl font-bold mb-1">Processando Pagamento</h1>
+            <p className="text-primary-foreground/80 text-sm">
+              Aguarde enquanto confirmamos seu pagamento
+            </p>
+          </div>
+
+          <CardContent className="p-6 space-y-6">
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Progresso</span>
+                <span className="font-medium text-primary">{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+
+            {/* Steps */}
+            <div className="space-y-3">
+              {PROCESSING_STEPS.map((step) => {
+                const StepIcon = step.icon;
+                const isActive = step.id === currentStep;
+                const isCompleted = step.id < currentStep;
+                
+                return (
+                  <div 
+                    key={step.id}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-lg transition-all duration-300
+                      ${isActive ? 'bg-primary/10 border border-primary/30' : ''}
+                      ${isCompleted ? 'opacity-60' : ''}
+                    `}
+                  >
+                    <div className={`
+                      w-10 h-10 rounded-full flex items-center justify-center transition-all
+                      ${isActive ? 'bg-primary text-primary-foreground' : ''}
+                      ${isCompleted ? 'bg-green-500 text-white' : ''}
+                      ${!isActive && !isCompleted ? 'bg-muted text-muted-foreground' : ''}
+                    `}>
+                      {isActive ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : isCompleted ? (
+                        <CheckCircle className="h-5 w-5" />
+                      ) : (
+                        <StepIcon className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className={`font-medium text-sm ${isActive ? 'text-primary' : ''}`}>
+                        {step.label}
+                      </p>
+                    </div>
+                    {isActive && (
+                      <div className="flex gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Tempo estimado */}
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium">Tempo estimado:</span> 5-10 segundos
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Não feche esta página
+              </p>
+            </div>
+
+            {/* Security badge */}
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Shield className="h-4 w-4" />
+              <span>Conexão segura com criptografia SSL</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
