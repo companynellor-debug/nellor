@@ -47,9 +47,19 @@ const MeusPedidos = () => {
   const [detailsDialog, setDetailsDialog] = useState(false);
 
   // Fluxo pós-Stripe: abre "Meus Pedidos" por 6s e volta automaticamente.
-  // (Sem confirmar pagamento aqui; o status vem do webhook / revalidação.)
+  // Também dispara 1 verificação imediata do pagamento (fallback do webhook).
   useEffect(() => {
     if (searchParams.get("autoclose") !== "1") return;
+
+    const sessionId = searchParams.get("session_id");
+    if (sessionId) {
+      // Não bloqueia UI; apenas tenta confirmar no backend e refetch em seguida.
+      supabase.functions
+        .invoke("stripe-verify-payment", { body: { sessionId } })
+        .finally(() => {
+          refetch();
+        });
+    }
 
     const returnTo = searchParams.get("return_to") || "/cliente";
     const t = window.setTimeout(() => {
@@ -57,10 +67,10 @@ const MeusPedidos = () => {
     }, 6000);
 
     return () => window.clearTimeout(t);
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, refetch]);
 
   // Fallback automático do webhook: revalida pagamentos pendentes via Stripe (backend)
-  useAutoStripeRevalidation({ orders, intervalMs: 120_000 });
+  useAutoStripeRevalidation({ orders, intervalMs: 15_000 });
 
   // Realtime subscription for order updates
   useEffect(() => {
