@@ -25,11 +25,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useClienteOrders } from "@/hooks/useClientePrefetch";
 import { useReviews } from "@/hooks/useReviews";
 import { useAutoStripeRevalidation } from "@/hooks/useAutoStripeRevalidation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 
 const ORDER_STEPS = [
   { key: 'pending', label: 'Pedido Recebido', icon: Package },
@@ -73,43 +72,18 @@ const MeusPedidos = () => {
   // Fallback automático do webhook: revalida pagamentos pendentes via Stripe (backend)
   useAutoStripeRevalidation({ orders, intervalMs: 15_000 });
 
-  // Track previous payment statuses to detect changes
-  const prevPaymentStatuses = useRef<Record<string, string>>({});
-
-  // Initialize payment statuses when orders load
-  useEffect(() => {
-    const statuses: Record<string, string> = {};
-    orders.forEach(order => {
-      statuses[order.id] = order.payment_status;
-    });
-    prevPaymentStatuses.current = statuses;
-  }, [orders.length]);
-
-  // Realtime subscription for order updates with toast on payment confirmation
+  // Realtime subscription for order updates
   useEffect(() => {
     const channel = supabase
       .channel('orders-realtime')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'orders'
         },
-        (payload) => {
-          const newOrder = payload.new as any;
-          const oldStatus = prevPaymentStatuses.current[newOrder.id];
-          
-          // Show toast when payment changes to 'paid'
-          if (oldStatus !== 'paid' && newOrder.payment_status === 'paid') {
-            toast({
-              title: "Pagamento confirmado!",
-              description: `O pagamento do pedido #${newOrder.order_number} foi confirmado com sucesso.`,
-            });
-          }
-          
-          // Update tracked status
-          prevPaymentStatuses.current[newOrder.id] = newOrder.payment_status;
+        () => {
           refetch();
         }
       )
