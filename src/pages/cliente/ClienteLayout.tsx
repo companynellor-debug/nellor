@@ -1,20 +1,18 @@
-import { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 import { ClientePrefetchProvider } from "@/hooks/useClientePrefetch";
 
-interface ClienteLayoutProps {
-  children: ReactNode;
-}
-
 /**
- * Layout do painel do cliente que prefetcha todos os dados ao entrar.
- * Isso garante que ao trocar de aba, os dados já estão carregados.
+ * Layout persistente do painel do cliente.
+ * - Prefetch roda uma vez ao entrar no /cliente
+ * - Provider NÃO remonta ao trocar de abas (rotas filhas)
  */
-const ClienteLayout = ({ children }: ClienteLayoutProps) => {
+const ClienteLayout = () => {
   return (
     <ClientePrefetchProvider>
-      {children}
+      <Outlet />
     </ClientePrefetchProvider>
   );
 };
 
 export default ClienteLayout;
+
