@@ -21,7 +21,7 @@ import {
   ChefHat,
   PackageCheck,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useReviews } from "@/hooks/useReviews";
 import { useAutoStripeRevalidation } from "@/hooks/useAutoStripeRevalidation";
@@ -39,11 +39,25 @@ const ORDER_STEPS = [
 
 const MeusPedidos = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { orders, refetch } = useSupabaseOrders();
   const { hasReviewedOrder } = useReviews();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [trackingDialog, setTrackingDialog] = useState(false);
   const [detailsDialog, setDetailsDialog] = useState(false);
+
+  // Fluxo pós-Stripe: abre "Meus Pedidos" por 6s e volta automaticamente.
+  // (Sem confirmar pagamento aqui; o status vem do webhook / revalidação.)
+  useEffect(() => {
+    if (searchParams.get("autoclose") !== "1") return;
+
+    const returnTo = searchParams.get("return_to") || "/cliente";
+    const t = window.setTimeout(() => {
+      navigate(returnTo, { replace: true });
+    }, 6000);
+
+    return () => window.clearTimeout(t);
+  }, [searchParams, navigate]);
 
   // Fallback automático do webhook: revalida pagamentos pendentes via Stripe (backend)
   useAutoStripeRevalidation({ orders, intervalMs: 120_000 });
