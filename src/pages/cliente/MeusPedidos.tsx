@@ -21,7 +21,7 @@ import {
   ChefHat,
   PackageCheck,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useReviews } from "@/hooks/useReviews";
 import { useAutoStripeRevalidation } from "@/hooks/useAutoStripeRevalidation";
@@ -39,11 +39,30 @@ const ORDER_STEPS = [
 
 const MeusPedidos = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { orders, refetch } = useSupabaseOrders();
   const { hasReviewedOrder } = useReviews();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [trackingDialog, setTrackingDialog] = useState(false);
   const [detailsDialog, setDetailsDialog] = useState(false);
+
+  // Se o usuário voltar do Stripe, confirma o pagamento imediatamente aqui (sem precisar “entrar na aba”).
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    if (!sessionId) return;
+
+    (async () => {
+      try {
+        await supabase.functions.invoke("stripe-verify-payment", {
+          body: { sessionId },
+        });
+      } catch (e) {
+        console.warn("stripe-verify-payment failed on /meus-pedidos:", e);
+      } finally {
+        refetch();
+      }
+    })();
+  }, [searchParams, refetch]);
 
   // Fallback automático do webhook: revalida pagamentos pendentes via Stripe (backend)
   useAutoStripeRevalidation({ orders, intervalMs: 120_000 });
