@@ -15,7 +15,6 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { useCart } from "@/hooks/useCart";
 import { usePWA } from "@/hooks/usePWA";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ClienteHome = () => {
   const navigate = useNavigate();
@@ -28,12 +27,12 @@ const ClienteHome = () => {
   const { canInstall, isInstalled, isIOS, installApp } = usePWA();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
-  const [showStripeReturnModal, setShowStripeReturnModal] = useState(false);
+  const [showStripeReturnBanner, setShowStripeReturnBanner] = useState(false);
 
   // Detecta retorno do Stripe
   useEffect(() => {
     if (searchParams.get("stripe_return") === "1") {
-      setShowStripeReturnModal(true);
+      setShowStripeReturnBanner(true);
       // Remove o parâmetro da URL
       searchParams.delete("stripe_return");
       searchParams.delete("session_id");
@@ -138,6 +137,33 @@ const ClienteHome = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
+        {showStripeReturnBanner && (
+          <div className="mb-6">
+            <Card className="border-primary/20 bg-primary/5">
+              <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 rounded-full bg-primary/10 p-2">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Pagamento em processamento</p>
+                    <p className="text-sm text-muted-foreground">
+                      Para o pedido prosseguir, abra <strong>Meus Pedidos</strong> e acompanhe o status.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Button onClick={() => navigate("/cliente/meus-pedidos")}>Ir para Meus Pedidos</Button>
+                  <Button variant="ghost" onClick={() => setShowStripeReturnBanner(false)}>
+                    Fechar
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Banners Section - Desktop: main + side layout */}
         {banners.length > 0 && (
           <div className="mb-8">
@@ -375,32 +401,6 @@ const ClienteHome = () => {
           </Card>
         </div>
       )}
-
-      {/* Modal de Retorno do Stripe */}
-      <Dialog open={showStripeReturnModal} onOpenChange={setShowStripeReturnModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle2 className="w-10 h-10 text-green-600" />
-            </div>
-            <DialogTitle className="text-center text-xl">Pagamento em processamento!</DialogTitle>
-            <DialogDescription className="text-center">
-              Para acompanhar e confirmar seu pedido, acesse a aba <strong>Meus Pedidos</strong>.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center mt-4">
-            <Button 
-              size="lg"
-              onClick={() => {
-                setShowStripeReturnModal(false);
-                navigate("/cliente/meus-pedidos");
-              }}
-            >
-              Ir para Meus Pedidos
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <BottomNav />
     </div>
