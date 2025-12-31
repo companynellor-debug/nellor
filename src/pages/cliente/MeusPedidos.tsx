@@ -22,7 +22,7 @@ import {
   PackageCheck,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
+import { useClienteOrders } from "@/hooks/useClientePrefetch";
 import { useReviews } from "@/hooks/useReviews";
 import { useAutoStripeRevalidation } from "@/hooks/useAutoStripeRevalidation";
 import { useState, useEffect } from "react";
@@ -40,7 +40,7 @@ const ORDER_STEPS = [
 const MeusPedidos = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { orders, refetch } = useSupabaseOrders();
+  const { orders, refetch } = useClienteOrders();
   const { hasReviewedOrder } = useReviews();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [trackingDialog, setTrackingDialog] = useState(false);
