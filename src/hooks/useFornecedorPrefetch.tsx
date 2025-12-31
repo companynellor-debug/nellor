@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Tipos para os dados prefetchados do fornecedor
@@ -23,6 +23,7 @@ interface FornecedorPrefetchContextType {
   refetchProfile: () => Promise<void>;
   refetchCoupons: () => Promise<void>;
   refetchTransactions: () => Promise<void>;
+  refetchPayouts: () => Promise<void>;
 }
 
 const defaultData: FornecedorData = {
@@ -57,77 +58,105 @@ const upsertById = (list: any[], next: any) => {
 export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }) => {
   const [data, setData] = useState<FornecedorData>(globalCache || defaultData);
   const [loading, setLoading] = useState(!globalCache);
+  const [userId, setUserId] = useState<string | null>(null);
+  const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", userId).single();
+  // Listener de auth: atualiza userId quando sessão muda
+  useEffect(() => {
+    // Primeiro, pegar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    // Depois, escutar mudanças
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUid = session?.user?.id ?? null;
+      console.log("[fornecedor-prefetch] auth changed:", event, newUid);
+      setUserId(newUid);
+
+      // Limpar cache no logout
+      if (!newUid) {
+        globalCache = null;
+        setData(defaultData);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchProfile = useCallback(async (uid: string) => {
+    const { data: profile } = await supabase.from("profiles").select("*").eq("id", uid).single();
     return profile;
   }, []);
 
-  const fetchOrders = useCallback(async (userId: string) => {
+  const fetchOrders = useCallback(async (uid: string) => {
     const { data: orders } = await supabase
       .from("orders")
       .select("*")
-      .eq("supplier_id", userId)
-      .order("created_at", { ascending: false });
+      .eq("supplier_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(100);
     return orders || [];
   }, []);
 
-  const fetchProducts = useCallback(async (userId: string) => {
+  const fetchProducts = useCallback(async (uid: string) => {
     const { data: products } = await supabase
       .from("products")
       .select("*")
-      .eq("supplier_id", userId)
+      .eq("supplier_id", uid)
       .order("created_at", { ascending: false });
     return products || [];
   }, []);
 
-  const fetchNotifications = useCallback(async (userId: string) => {
+  const fetchNotifications = useCallback(async (uid: string) => {
     const { data: notifications } = await supabase
       .from("notifications")
       .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(50);
     return notifications || [];
   }, []);
 
-  const fetchCoupons = useCallback(async (userId: string) => {
+  const fetchCoupons = useCallback(async (uid: string) => {
     const { data: coupons } = await supabase
       .from("coupons")
       .select("*")
-      .eq("supplier_id", userId)
+      .eq("supplier_id", uid)
       .order("created_at", { ascending: false });
     return coupons || [];
   }, []);
 
-  const fetchTransactions = useCallback(async (userId: string) => {
+  const fetchTransactions = useCallback(async (uid: string) => {
     const { data: transactions } = await supabase
       .from("transactions")
       .select("*")
-      .eq("supplier_id", userId)
-      .order("created_at", { ascending: false });
+      .eq("supplier_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(100);
     return transactions || [];
   }, []);
 
-  const fetchPayouts = useCallback(async (userId: string) => {
+  const fetchPayouts = useCallback(async (uid: string) => {
     const { data: payouts } = await supabase
       .from("payouts")
       .select("*")
-      .eq("supplier_id", userId)
+      .eq("supplier_id", uid)
       .order("created_at", { ascending: false });
     return payouts || [];
   }, []);
 
-  const fetchAnalytics = useCallback(async (userId: string) => {
+  const fetchAnalytics = useCallback(async (uid: string) => {
     const { data: analytics } = await supabase
       .from("analytics")
       .select("*")
-      .eq("supplier_id", userId)
+      .eq("supplier_id", uid)
       .order("mes_referencia", { ascending: false });
     return analytics || [];
   }, []);
 
   const fetchAllData = useCallback(
-    async (force = false) => {
+    async (uid: string, force = false) => {
       // Usar cache se ainda válido
       if (!force && globalCache && Date.now() - lastFetchTime < CACHE_TTL) {
         setData(globalCache);
@@ -136,29 +165,19 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
       }
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-          setData(defaultData);
-          globalCache = null;
-          return;
-        }
-
         setLoading(true);
 
         // Buscar todos os dados em paralelo
         const [profile, orders, products, notifications, coupons, transactions, payouts, analytics] =
           await Promise.all([
-            fetchProfile(user.id),
-            fetchOrders(user.id),
-            fetchProducts(user.id),
-            fetchNotifications(user.id),
-            fetchCoupons(user.id),
-            fetchTransactions(user.id),
-            fetchPayouts(user.id),
-            fetchAnalytics(user.id),
+            fetchProfile(uid),
+            fetchOrders(uid),
+            fetchProducts(uid),
+            fetchNotifications(uid),
+            fetchCoupons(uid),
+            fetchTransactions(uid),
+            fetchPayouts(uid),
+            fetchAnalytics(uid),
           ]);
 
         const newData: FornecedorData = {
@@ -195,245 +214,268 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
 
   // Funções individuais de refetch (mantidas para forçar refresh quando necessário)
   const refetchOrders = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const orders = await fetchOrders(user.id);
+    if (!userId) return;
+    const orders = await fetchOrders(userId);
     setData((prev) => {
       const newData = { ...prev, orders };
       globalCache = newData;
       return newData;
     });
-  }, [fetchOrders]);
+  }, [userId, fetchOrders]);
 
   const refetchProducts = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const products = await fetchProducts(user.id);
+    if (!userId) return;
+    const products = await fetchProducts(userId);
     setData((prev) => {
       const newData = { ...prev, products };
       globalCache = newData;
       return newData;
     });
-  }, [fetchProducts]);
+  }, [userId, fetchProducts]);
 
   const refetchNotifications = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const notifications = await fetchNotifications(user.id);
+    if (!userId) return;
+    const notifications = await fetchNotifications(userId);
     setData((prev) => {
       const newData = { ...prev, notifications };
       globalCache = newData;
       return newData;
     });
-  }, [fetchNotifications]);
+  }, [userId, fetchNotifications]);
 
   const refetchProfile = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const profile = await fetchProfile(user.id);
+    if (!userId) return;
+    const profile = await fetchProfile(userId);
     setData((prev) => {
       const newData = { ...prev, profile };
       globalCache = newData;
       return newData;
     });
-  }, [fetchProfile]);
+  }, [userId, fetchProfile]);
 
   const refetchCoupons = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const coupons = await fetchCoupons(user.id);
+    if (!userId) return;
+    const coupons = await fetchCoupons(userId);
     setData((prev) => {
       const newData = { ...prev, coupons };
       globalCache = newData;
       return newData;
     });
-  }, [fetchCoupons]);
+  }, [userId, fetchCoupons]);
 
   const refetchTransactions = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const transactions = await fetchTransactions(user.id);
+    if (!userId) return;
+    const transactions = await fetchTransactions(userId);
     setData((prev) => {
       const newData = { ...prev, transactions };
       globalCache = newData;
       return newData;
     });
-  }, [fetchTransactions]);
+  }, [userId, fetchTransactions]);
+
+  const refetchPayouts = useCallback(async () => {
+    if (!userId) return;
+    const payouts = await fetchPayouts(userId);
+    setData((prev) => {
+      const newData = { ...prev, payouts };
+      globalCache = newData;
+      return newData;
+    });
+  }, [userId, fetchPayouts]);
 
   const refetchAll = useCallback(async () => {
-    await fetchAllData(true);
-  }, [fetchAllData]);
+    if (!userId) return;
+    await fetchAllData(userId, true);
+  }, [userId, fetchAllData]);
 
-  // Prefetch ao montar (uma vez, layout persistente)
+  // Efeito 1: Fetch inicial quando userId muda (login)
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (userId) {
+      console.log("[fornecedor-prefetch] userId set, fetching data:", userId);
+      fetchAllData(userId, true);
+    }
+  }, [userId, fetchAllData]);
 
-  // Realtime (atualiza estado global SEM refetch completo)
+  // Efeito 2: Realtime - assina quando userId existir, limpa quando mudar/logout
   useEffect(() => {
-    let ordersChannel: ReturnType<typeof supabase.channel> | null = null;
-    let notificationsChannel: ReturnType<typeof supabase.channel> | null = null;
-    let productsChannel: ReturnType<typeof supabase.channel> | null = null;
-    let transactionsChannel: ReturnType<typeof supabase.channel> | null = null;
+    // Limpar canais anteriores
+    channelsRef.current.forEach((ch) => supabase.removeChannel(ch));
+    channelsRef.current = [];
 
-    const setupRealtime = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+    if (!userId) {
+      console.log("[fornecedor-prefetch] no userId, skipping realtime");
+      return;
+    }
 
-      console.log("[realtime] subscribing fornecedor orders/notifications/products/transactions", user.id);
+    console.log("[fornecedor-prefetch] subscribing realtime for:", userId);
 
-      // Orders
-      ordersChannel = supabase
-        .channel(`fornecedor-orders-${user.id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "orders", filter: `supplier_id=eq.${user.id}` },
-          (payload) => {
-            const p: any = payload;
-            console.log("[realtime] fornecedor orders", p.eventType, p.new?.id || p.old?.id);
+    // Orders
+    const ordersChannel = supabase
+      .channel(`fornecedor-orders-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `supplier_id=eq.${userId}` },
+        (payload) => {
+          const p: any = payload;
+          console.log("[realtime] fornecedor orders", p.eventType, p.new?.id || p.old?.id, "payment_status:", p.new?.payment_status);
 
-            if (p.eventType === "DELETE") {
-              const oldRow: any = p.old;
-              setData((prev) => {
-                const orders = prev.orders.filter((o: any) => o?.id !== oldRow?.id);
-                const next = { ...prev, orders };
-                globalCache = next;
-                return next;
-              });
-              return;
-            }
-
-            const newRow: any = p.new;
+          if (p.eventType === "DELETE") {
+            const oldRow: any = p.old;
             setData((prev) => {
-              const orders = upsertById(prev.orders, newRow);
+              const orders = prev.orders.filter((o: any) => o?.id !== oldRow?.id);
               const next = { ...prev, orders };
               globalCache = next;
               return next;
             });
+            return;
           }
-        )
-        .subscribe((status) => console.log("[realtime] fornecedor orders status", status));
 
-      // Notifications
-      notificationsChannel = supabase
-        .channel(`fornecedor-notifications-${user.id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-          (payload) => {
-            const p: any = payload;
-            console.log("[realtime] fornecedor notifications", p.eventType, p.new?.id || p.old?.id);
+          const newRow: any = p.new;
+          setData((prev) => {
+            const orders = upsertById(prev.orders, newRow);
+            const next = { ...prev, orders };
+            globalCache = next;
+            return next;
+          });
+        }
+      )
+      .subscribe((status) => console.log("[realtime] fornecedor orders status:", status));
 
-            if (p.eventType === "DELETE") {
-              const oldRow: any = p.old;
-              setData((prev) => {
-                const notifications = prev.notifications.filter((n: any) => n?.id !== oldRow?.id);
-                const next = { ...prev, notifications };
-                globalCache = next;
-                return next;
-              });
-              return;
-            }
+    // Notifications
+    const notificationsChannel = supabase
+      .channel(`fornecedor-notifications-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const p: any = payload;
+          console.log("[realtime] fornecedor notifications", p.eventType, p.new?.id || p.old?.id);
 
-            const newRow: any = p.new;
+          if (p.eventType === "DELETE") {
+            const oldRow: any = p.old;
             setData((prev) => {
-              const notifications = upsertById(prev.notifications, newRow);
+              const notifications = prev.notifications.filter((n: any) => n?.id !== oldRow?.id);
               const next = { ...prev, notifications };
               globalCache = next;
               return next;
             });
+            return;
           }
-        )
-        .subscribe((status) => console.log("[realtime] fornecedor notifications status", status));
 
-      // Products
-      productsChannel = supabase
-        .channel(`fornecedor-products-${user.id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "products", filter: `supplier_id=eq.${user.id}` },
-          (payload) => {
-            const p: any = payload;
-            console.log("[realtime] fornecedor products", p.eventType, p.new?.id || p.old?.id);
+          const newRow: any = p.new;
+          setData((prev) => {
+            const notifications = upsertById(prev.notifications, newRow);
+            const next = { ...prev, notifications };
+            globalCache = next;
+            return next;
+          });
+        }
+      )
+      .subscribe((status) => console.log("[realtime] fornecedor notifications status:", status));
 
-            if (p.eventType === "DELETE") {
-              const oldRow: any = p.old;
-              setData((prev) => {
-                const products = prev.products.filter((x: any) => x?.id !== oldRow?.id);
-                const next = { ...prev, products };
-                globalCache = next;
-                return next;
-              });
-              return;
-            }
+    // Products
+    const productsChannel = supabase
+      .channel(`fornecedor-products-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products", filter: `supplier_id=eq.${userId}` },
+        (payload) => {
+          const p: any = payload;
+          console.log("[realtime] fornecedor products", p.eventType, p.new?.id || p.old?.id);
 
-            const newRow: any = p.new;
+          if (p.eventType === "DELETE") {
+            const oldRow: any = p.old;
             setData((prev) => {
-              const products = upsertById(prev.products, newRow);
+              const products = prev.products.filter((x: any) => x?.id !== oldRow?.id);
               const next = { ...prev, products };
               globalCache = next;
               return next;
             });
+            return;
           }
-        )
-        .subscribe((status) => console.log("[realtime] fornecedor products status", status));
 
-      // Transactions
-      transactionsChannel = supabase
-        .channel(`fornecedor-transactions-${user.id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "transactions", filter: `supplier_id=eq.${user.id}` },
-          (payload) => {
-            const p: any = payload;
-            console.log("[realtime] fornecedor transactions", p.eventType, p.new?.id || p.old?.id);
+          const newRow: any = p.new;
+          setData((prev) => {
+            const products = upsertById(prev.products, newRow);
+            const next = { ...prev, products };
+            globalCache = next;
+            return next;
+          });
+        }
+      )
+      .subscribe((status) => console.log("[realtime] fornecedor products status:", status));
 
-            if (p.eventType === "DELETE") {
-              const oldRow: any = p.old;
-              setData((prev) => {
-                const transactions = prev.transactions.filter((x: any) => x?.id !== oldRow?.id);
-                const next = { ...prev, transactions };
-                globalCache = next;
-                return next;
-              });
-              return;
-            }
+    // Transactions
+    const transactionsChannel = supabase
+      .channel(`fornecedor-transactions-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "transactions", filter: `supplier_id=eq.${userId}` },
+        (payload) => {
+          const p: any = payload;
+          console.log("[realtime] fornecedor transactions", p.eventType, p.new?.id || p.old?.id);
 
-            const newRow: any = p.new;
+          if (p.eventType === "DELETE") {
+            const oldRow: any = p.old;
             setData((prev) => {
-              const transactions = upsertById(prev.transactions, newRow);
+              const transactions = prev.transactions.filter((x: any) => x?.id !== oldRow?.id);
               const next = { ...prev, transactions };
               globalCache = next;
               return next;
             });
+            return;
           }
-        )
-        .subscribe((status) => console.log("[realtime] fornecedor transactions status", status));
-    };
 
-    setupRealtime();
+          const newRow: any = p.new;
+          setData((prev) => {
+            const transactions = upsertById(prev.transactions, newRow);
+            const next = { ...prev, transactions };
+            globalCache = next;
+            return next;
+          });
+        }
+      )
+      .subscribe((status) => console.log("[realtime] fornecedor transactions status:", status));
+
+    // Payouts
+    const payoutsChannel = supabase
+      .channel(`fornecedor-payouts-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "payouts", filter: `supplier_id=eq.${userId}` },
+        (payload) => {
+          const p: any = payload;
+          console.log("[realtime] fornecedor payouts", p.eventType, p.new?.id || p.old?.id);
+
+          if (p.eventType === "DELETE") {
+            const oldRow: any = p.old;
+            setData((prev) => {
+              const payouts = prev.payouts.filter((x: any) => x?.id !== oldRow?.id);
+              const next = { ...prev, payouts };
+              globalCache = next;
+              return next;
+            });
+            return;
+          }
+
+          const newRow: any = p.new;
+          setData((prev) => {
+            const payouts = upsertById(prev.payouts, newRow);
+            const next = { ...prev, payouts };
+            globalCache = next;
+            return next;
+          });
+        }
+      )
+      .subscribe((status) => console.log("[realtime] fornecedor payouts status:", status));
+
+    channelsRef.current = [ordersChannel, notificationsChannel, productsChannel, transactionsChannel, payoutsChannel];
 
     return () => {
-      if (ordersChannel) supabase.removeChannel(ordersChannel);
-      if (notificationsChannel) supabase.removeChannel(notificationsChannel);
-      if (productsChannel) supabase.removeChannel(productsChannel);
-      if (transactionsChannel) supabase.removeChannel(transactionsChannel);
+      channelsRef.current.forEach((ch) => supabase.removeChannel(ch));
+      channelsRef.current = [];
     };
-  }, []);
+  }, [userId]);
 
   return (
     <FornecedorPrefetchContext.Provider
@@ -447,6 +489,7 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
         refetchProfile,
         refetchCoupons,
         refetchTransactions,
+        refetchPayouts,
       }}
     >
       {children}
@@ -491,4 +534,9 @@ export const useFornecedorCoupons = () => {
 export const useFornecedorTransactions = () => {
   const { data, loading, refetchTransactions } = useFornecedorPrefetch();
   return { transactions: data.transactions, loading, refetch: refetchTransactions };
+};
+
+export const useFornecedorPayouts = () => {
+  const { data, loading, refetchPayouts } = useFornecedorPrefetch();
+  return { payouts: data.payouts, loading, refetch: refetchPayouts };
 };

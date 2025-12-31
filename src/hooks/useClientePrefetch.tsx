@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Tipos para os dados prefetchados
@@ -52,59 +52,86 @@ const upsertById = (list: any[], next: any) => {
 export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) => {
   const [data, setData] = useState<ClienteData>(globalCache || defaultData);
   const [loading, setLoading] = useState(!globalCache);
+  const [userId, setUserId] = useState<string | null>(null);
+  const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", userId).single();
+  // Listener de auth: atualiza userId quando sessão muda
+  useEffect(() => {
+    // Primeiro, pegar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    // Depois, escutar mudanças
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUid = session?.user?.id ?? null;
+      console.log("[cliente-prefetch] auth changed:", event, newUid);
+      setUserId(newUid);
+
+      // Limpar cache no logout
+      if (!newUid) {
+        globalCache = null;
+        setData(defaultData);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchProfile = useCallback(async (uid: string) => {
+    const { data: profile } = await supabase.from("profiles").select("*").eq("id", uid).single();
     return profile;
   }, []);
 
-  const fetchOrders = useCallback(async (userId: string) => {
+  const fetchOrders = useCallback(async (uid: string) => {
     const { data: orders } = await supabase
       .from("orders")
       .select("*")
-      .eq("buyer_id", userId)
-      .order("created_at", { ascending: false });
+      .eq("buyer_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(100);
     return orders || [];
   }, []);
 
-  const fetchAddresses = useCallback(async (userId: string) => {
+  const fetchAddresses = useCallback(async (uid: string) => {
     const { data: addresses } = await supabase
       .from("addresses")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", uid)
       .order("is_default", { ascending: false });
     return addresses || [];
   }, []);
 
-  const fetchPaymentMethods = useCallback(async (userId: string) => {
+  const fetchPaymentMethods = useCallback(async (uid: string) => {
     const { data: methods } = await supabase
       .from("payment_methods")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", uid)
       .order("is_default", { ascending: false });
     return methods || [];
   }, []);
 
-  const fetchNotifications = useCallback(async (userId: string) => {
+  const fetchNotifications = useCallback(async (uid: string) => {
     const { data: notifications } = await supabase
       .from("notifications")
       .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(50);
     return notifications || [];
   }, []);
 
-  const fetchSupportTickets = useCallback(async (userId: string) => {
+  const fetchSupportTickets = useCallback(async (uid: string) => {
     const { data: tickets } = await supabase
       .from("support_tickets")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", uid)
       .order("created_at", { ascending: false });
     return tickets || [];
   }, []);
 
   const fetchAllData = useCallback(
-    async (force = false) => {
+    async (uid: string, force = false) => {
       // Usar cache se ainda válido
       if (!force && globalCache && Date.now() - lastFetchTime < CACHE_TTL) {
         setData(globalCache);
@@ -113,26 +140,16 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
       }
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-          setData(defaultData);
-          globalCache = null;
-          return;
-        }
-
         setLoading(true);
 
         // Buscar todos os dados em paralelo
         const [profile, orders, addresses, paymentMethods, notifications, supportTickets] = await Promise.all([
-          fetchProfile(user.id),
-          fetchOrders(user.id),
-          fetchAddresses(user.id),
-          fetchPaymentMethods(user.id),
-          fetchNotifications(user.id),
-          fetchSupportTickets(user.id),
+          fetchProfile(uid),
+          fetchOrders(uid),
+          fetchAddresses(uid),
+          fetchPaymentMethods(uid),
+          fetchNotifications(uid),
+          fetchSupportTickets(uid),
         ]);
 
         const newData: ClienteData = {
@@ -158,165 +175,150 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
 
   // Funções individuais de refetch (mantidas para telas que precisam forçar refresh)
   const refetchOrders = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const orders = await fetchOrders(user.id);
+    if (!userId) return;
+    const orders = await fetchOrders(userId);
     setData((prev) => {
       const newData = { ...prev, orders };
       globalCache = newData;
       return newData;
     });
-  }, [fetchOrders]);
+  }, [userId, fetchOrders]);
 
   const refetchAddresses = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const addresses = await fetchAddresses(user.id);
+    if (!userId) return;
+    const addresses = await fetchAddresses(userId);
     setData((prev) => {
       const newData = { ...prev, addresses };
       globalCache = newData;
       return newData;
     });
-  }, [fetchAddresses]);
+  }, [userId, fetchAddresses]);
 
   const refetchPaymentMethods = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const paymentMethods = await fetchPaymentMethods(user.id);
+    if (!userId) return;
+    const paymentMethods = await fetchPaymentMethods(userId);
     setData((prev) => {
       const newData = { ...prev, paymentMethods };
       globalCache = newData;
       return newData;
     });
-  }, [fetchPaymentMethods]);
+  }, [userId, fetchPaymentMethods]);
 
   const refetchNotifications = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const notifications = await fetchNotifications(user.id);
+    if (!userId) return;
+    const notifications = await fetchNotifications(userId);
     setData((prev) => {
       const newData = { ...prev, notifications };
       globalCache = newData;
       return newData;
     });
-  }, [fetchNotifications]);
+  }, [userId, fetchNotifications]);
 
   const refetchProfile = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const profile = await fetchProfile(user.id);
+    if (!userId) return;
+    const profile = await fetchProfile(userId);
     setData((prev) => {
       const newData = { ...prev, profile };
       globalCache = newData;
       return newData;
     });
-  }, [fetchProfile]);
+  }, [userId, fetchProfile]);
 
   const refetchAll = useCallback(async () => {
-    await fetchAllData(true);
-  }, [fetchAllData]);
+    if (!userId) return;
+    await fetchAllData(userId, true);
+  }, [userId, fetchAllData]);
 
-  // Prefetch ao montar (uma vez por sessão no /cliente, já que o layout agora é persistente)
+  // Efeito 1: Fetch inicial quando userId muda (login)
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (userId) {
+      console.log("[cliente-prefetch] userId set, fetching data:", userId);
+      fetchAllData(userId, true);
+    }
+  }, [userId, fetchAllData]);
 
-  // Realtime (atualiza estado global SEM refetch completo)
+  // Efeito 2: Realtime - assina quando userId existir, limpa quando mudar/logout
   useEffect(() => {
-    let ordersChannel: ReturnType<typeof supabase.channel> | null = null;
-    let notificationsChannel: ReturnType<typeof supabase.channel> | null = null;
+    // Limpar canais anteriores
+    channelsRef.current.forEach((ch) => supabase.removeChannel(ch));
+    channelsRef.current = [];
 
-    const setupRealtime = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+    if (!userId) {
+      console.log("[cliente-prefetch] no userId, skipping realtime");
+      return;
+    }
 
-      console.log("[realtime] subscribing cliente orders/notifications", user.id);
+    console.log("[cliente-prefetch] subscribing realtime for:", userId);
 
-      ordersChannel = supabase
-        .channel(`cliente-orders-${user.id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "orders", filter: `buyer_id=eq.${user.id}` },
-          (payload) => {
-            const p: any = payload;
-            console.log("[realtime] orders", p.eventType, p.new?.id || p.old?.id);
+    const ordersChannel = supabase
+      .channel(`cliente-orders-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `buyer_id=eq.${userId}` },
+        (payload) => {
+          const p: any = payload;
+          console.log("[realtime] cliente orders", p.eventType, p.new?.id || p.old?.id, "payment_status:", p.new?.payment_status);
 
-            if (payload.eventType === "DELETE") {
-              const oldRow: any = payload.old;
-              setData((prev) => {
-                const orders = prev.orders.filter((o: any) => o?.id !== oldRow?.id);
-                const next = { ...prev, orders };
-                globalCache = next;
-                return next;
-              });
-              return;
-            }
-
-            const newRow: any = payload.new;
+          if (p.eventType === "DELETE") {
+            const oldRow: any = p.old;
             setData((prev) => {
-              const orders = upsertById(prev.orders, newRow);
+              const orders = prev.orders.filter((o: any) => o?.id !== oldRow?.id);
               const next = { ...prev, orders };
               globalCache = next;
               return next;
             });
+            return;
           }
-        )
-        .subscribe((status) => console.log("[realtime] orders status", status));
 
-      notificationsChannel = supabase
-        .channel(`cliente-notifications-${user.id}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-          (payload) => {
-            console.log(
-              "[realtime] notifications",
-              payload.eventType,
-              (payload.new as any)?.id || (payload.old as any)?.id
-            );
+          const newRow: any = p.new;
+          setData((prev) => {
+            const orders = upsertById(prev.orders, newRow);
+            const next = { ...prev, orders };
+            globalCache = next;
+            return next;
+          });
+        }
+      )
+      .subscribe((status) => console.log("[realtime] cliente orders status:", status));
 
-            if (payload.eventType === "DELETE") {
-              const oldRow: any = payload.old;
-              setData((prev) => {
-                const notifications = prev.notifications.filter((n: any) => n?.id !== oldRow?.id);
-                const next = { ...prev, notifications };
-                globalCache = next;
-                return next;
-              });
-              return;
-            }
+    const notificationsChannel = supabase
+      .channel(`cliente-notifications-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const p: any = payload;
+          console.log("[realtime] cliente notifications", p.eventType, p.new?.id || p.old?.id);
 
-            const newRow: any = payload.new;
+          if (p.eventType === "DELETE") {
+            const oldRow: any = p.old;
             setData((prev) => {
-              const notifications = upsertById(prev.notifications, newRow);
+              const notifications = prev.notifications.filter((n: any) => n?.id !== oldRow?.id);
               const next = { ...prev, notifications };
               globalCache = next;
               return next;
             });
+            return;
           }
-        )
-        .subscribe((status) => console.log("[realtime] notifications status", status));
-    };
 
-    setupRealtime();
+          const newRow: any = p.new;
+          setData((prev) => {
+            const notifications = upsertById(prev.notifications, newRow);
+            const next = { ...prev, notifications };
+            globalCache = next;
+            return next;
+          });
+        }
+      )
+      .subscribe((status) => console.log("[realtime] cliente notifications status:", status));
+
+    channelsRef.current = [ordersChannel, notificationsChannel];
 
     return () => {
-      if (ordersChannel) supabase.removeChannel(ordersChannel);
-      if (notificationsChannel) supabase.removeChannel(notificationsChannel);
+      channelsRef.current.forEach((ch) => supabase.removeChannel(ch));
+      channelsRef.current = [];
     };
-  }, []);
+  }, [userId]);
 
   return (
     <ClientePrefetchContext.Provider
