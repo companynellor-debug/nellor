@@ -320,6 +320,58 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
     };
   }, [userId]);
 
+  // Polling inteligente (fallback) para confirmação de pagamentos Stripe
+  // - Só roda enquanto existir pedido cartão pendente com stripe_session_id
+  // - Dispara stripe-verify-payment no backend e refaz fetch somente se houve update
+  const pollingRunningRef = useRef(false);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const candidates = (data.orders || []).filter(
+      (o: any) =>
+        o?.payment_method === "cartao" &&
+        o?.payment_status === "pending" &&
+        !!o?.stripe_session_id
+    );
+
+    if (candidates.length === 0) return;
+
+    let cancelled = false;
+
+    const tick = async () => {
+      if (pollingRunningRef.current) return;
+      pollingRunningRef.current = true;
+      try {
+        const results = await Promise.allSettled(
+          candidates.map((o: any) =>
+            supabase.functions.invoke("stripe-verify-payment", {
+              body: { sessionId: o.stripe_session_id },
+            })
+          )
+        );
+
+        const anyUpdated = results.some(
+          (r) => r.status === "fulfilled" && (r as any).value?.data?.updated
+        );
+
+        if (anyUpdated && !cancelled) {
+          await refetchOrders();
+        }
+      } finally {
+        pollingRunningRef.current = false;
+      }
+    };
+
+    tick();
+    const id = window.setInterval(tick, 15_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [userId, data.orders, refetchOrders]);
+
   return (
     <ClientePrefetchContext.Provider
       value={{

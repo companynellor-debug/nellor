@@ -24,7 +24,6 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useClienteOrders } from "@/hooks/useClientePrefetch";
 import { useReviews } from "@/hooks/useReviews";
-import { useAutoStripeRevalidation } from "@/hooks/useAutoStripeRevalidation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -69,8 +68,7 @@ const MeusPedidos = () => {
     return () => window.clearTimeout(t);
   }, [searchParams, navigate, refetch]);
 
-  // Fallback automático do webhook: revalida pagamentos pendentes via Stripe (backend)
-  useAutoStripeRevalidation({ orders, intervalMs: 15_000 });
+  // Polling/Realtime de pagamento é gerenciado globalmente pelo ClientePrefetchProvider
 
   // Realtime agora é gerenciado pelo ClientePrefetchProvider (auth-aware)
   // Não precisa de listener duplicado aqui
