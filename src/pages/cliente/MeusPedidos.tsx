@@ -72,27 +72,8 @@ const MeusPedidos = () => {
   // Fallback automático do webhook: revalida pagamentos pendentes via Stripe (backend)
   useAutoStripeRevalidation({ orders, intervalMs: 15_000 });
 
-  // Realtime subscription for order updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('orders-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders'
-        },
-        () => {
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetch]);
+  // Realtime agora é gerenciado pelo ClientePrefetchProvider (auth-aware)
+  // Não precisa de listener duplicado aqui
 
   // Separar pedidos ativos e histórico
   const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.order_status));
