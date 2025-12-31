@@ -22,6 +22,7 @@ const CheckoutSucesso = () => {
   useEffect(() => {
     const processOrder = async () => {
       const orderIdFromQuery = searchParams.get("order_id");
+      const sessionIdFromQuery = searchParams.get("session_id");
 
       if (!orderIdFromQuery) {
         navigate("/cliente");
@@ -35,33 +36,37 @@ const CheckoutSucesso = () => {
       localStorage.removeItem("pendingOrder");
 
       try {
-        // Aguarda um pouco para dar tempo do webhook processar
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // 1) Se vier session_id no retorno do Stripe, confirma imediatamente (sem depender do webhook)
+        if (sessionIdFromQuery) {
+          try {
+            await supabase.functions.invoke("stripe-verify-payment", {
+              body: { sessionId: sessionIdFromQuery },
+            });
+          } catch (verifyErr) {
+            console.warn("stripe-verify-payment failed:", verifyErr);
+          }
+        }
 
-        // Buscar pedido para verificar status (inclui stripe_session_id para fallback)
+        // 2) Busca pedido para exibir o número e checar status
         const { data: order, error: orderError } = await supabase
           .from("orders")
           .select("id, order_number, payment_status, stripe_session_id")
           .eq("id", orderIdFromQuery)
-          .single();
+          .maybeSingle();
 
         if (orderError) {
           console.error("Error fetching order:", orderError);
           throw orderError;
         }
 
-        setOrderNumber(order.order_number);
-
-        // Se já está pago, mostra sucesso imediatamente
-        if (order.payment_status === "paid") {
-          setIsProcessing(false);
-          setShowAnimation(true);
-          triggerConfetti();
-          return;
+        if (!order) {
+          throw new Error("Pedido não encontrado");
         }
 
-        // Fallback obrigatório: revalida automaticamente no backend (mesma lógica do botão antigo)
-        if (order.stripe_session_id) {
+        setOrderNumber(order.order_number);
+
+        // 3) Se ainda estiver pendente, tenta fallback com stripe_session_id salvo no banco
+        if (order.payment_status !== "paid" && order.stripe_session_id) {
           try {
             await supabase.functions.invoke("stripe-verify-payment", {
               body: { sessionId: order.stripe_session_id },
@@ -71,41 +76,29 @@ const CheckoutSucesso = () => {
           }
         }
 
-        // Rebusca (somente reflete o banco)
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // 4) Poll curto para refletir o banco (realtime pode não estar ativo nesta página)
+        const maxAttempts = 6;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          const { data: statusRow } = await supabase
+            .from("orders")
+            .select("payment_status")
+            .eq("id", orderIdFromQuery)
+            .maybeSingle();
 
-        const { data: orderRetry } = await supabase
-          .from("orders")
-          .select("payment_status")
-          .eq("id", orderIdFromQuery)
-          .single();
+          if (statusRow?.payment_status === "paid") {
+            setIsProcessing(false);
+            setShowAnimation(true);
+            triggerConfetti();
+            return;
+          }
 
-        if (orderRetry?.payment_status === "paid") {
-          setIsProcessing(false);
-          setShowAnimation(true);
-          triggerConfetti();
-          return;
+          await new Promise((resolve) => setTimeout(resolve, 800));
         }
 
-        // Aguardar mais um pouco e verificar uma última vez.
-        // OBS: o pagamento é confirmado via webhook (primário) ou revalidação automática (fallback)
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        const { data: finalOrder } = await supabase
-          .from("orders")
-          .select("payment_status")
-          .eq("id", orderIdFromQuery)
-          .single();
-
+        // Mesmo se continuar pendente, não bloqueia a página (o webhook pode confirmar depois)
         setIsProcessing(false);
         setShowAnimation(true);
         triggerConfetti();
-
-        // Se ainda não está pago, mostra aviso mas não erro
-        if (finalOrder?.payment_status !== "paid") {
-          console.log("Payment still pending - webhook may be delayed");
-        }
-
       } catch (err) {
         console.error("Error processing success page:", err);
         setError("Não foi possível verificar o status do pedido. Verifique em 'Meus Pedidos'.");
