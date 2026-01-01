@@ -213,32 +213,72 @@ const Banners = () => {
 
     try {
       setUploading(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `banner_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      // Tentar upload com retry
-      let uploadError = null;
+      // Compressão leve para reduzir chance de timeout no Storage
+      const compressIfNeeded = async (input: File) => {
+        const maxBytes = 1_500_000; // ~1.5MB
+        if (input.size <= maxBytes) return input;
+
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const i = new Image();
+          i.onload = () => resolve(i);
+          i.onerror = reject;
+          i.src = URL.createObjectURL(input);
+        });
+
+        const maxW = 1600;
+        const scale = Math.min(1, maxW / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return input;
+
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(img.src);
+
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, 'image/jpeg', 0.82)
+        );
+        if (!blob) return input;
+
+        return new File([blob], input.name.replace(/\.[^/.]+$/, '') + '.jpg', {
+          type: 'image/jpeg',
+        });
+      };
+
+      const uploadFile = await compressIfNeeded(file);
+      const fileName = `banner_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+
+      // Retry com backoff (2s, 4s, 8s) em caso de timeout
+      let lastError: any = null;
       for (let attempt = 0; attempt < 3; attempt++) {
-        const result = await supabase.storage
-          .from('banners')
-          .upload(fileName, file, { upsert: true });
-        
-        if (!result.error) {
-          uploadError = null;
+        const { error } = await supabase.storage.from('banners').upload(fileName, uploadFile, {
+          upsert: true,
+          cacheControl: '3600',
+          contentType: uploadFile.type,
+        });
+
+        if (!error) {
+          lastError = null;
           break;
         }
-        
-        uploadError = result.error;
-        
-        // Se erro de timeout, esperar e tentar novamente
-        if (result.error.message?.includes('timeout') && attempt < 2) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+
+        lastError = error;
+        const msg = String(error.message || '').toLowerCase();
+        const isTimeout = msg.includes('timeout') || msg.includes('databasetimeout');
+        if (isTimeout && attempt < 2) {
+          const waitMs = 2000 * Math.pow(2, attempt);
+          await new Promise((r) => setTimeout(r, waitMs));
           continue;
         }
         break;
       }
 
-      if (uploadError) throw uploadError;
+      if (lastError) throw lastError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('banners')
@@ -248,16 +288,19 @@ const Banners = () => {
       toast.success('Imagem enviada!');
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      
-      // Mensagem de erro mais informativa
-      if (error.message?.includes('timeout')) {
-        toast.error('Servidor ocupado. Tente novamente em alguns segundos.');
-      } else if (error.message?.includes('bucket') || error.statusCode === '404') {
-        toast.error('Bucket de storage não configurado. Contate o administrador.');
+
+      const msg = String(error?.message || '').toLowerCase();
+      const isTimeout = msg.includes('timeout') || msg.includes('databasetimeout');
+
+      if (isTimeout) {
+        toast.error('Servidor de upload ocupado. Tente novamente em 10s.');
       } else {
         toast.error('Erro ao enviar imagem. Tente novamente.');
       }
+
       setImagePreview("");
+      setFormData(prev => ({ ...prev, imageUrl: "" }));
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } finally {
       setUploading(false);
     }
