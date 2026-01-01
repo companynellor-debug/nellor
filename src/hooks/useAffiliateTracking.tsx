@@ -52,18 +52,29 @@ async function trackAffiliateClick(code: string) {
       _user_agent: navigator.userAgent,
     });
 
-    if (error || !data?.ok) {
-      console.log("Affiliate click not tracked:", code, error?.message ?? data?.error);
+    // Cast to expected shape
+    const result = data as {
+      ok?: boolean;
+      error?: string;
+      clicked_at?: string;
+      expires_at?: string;
+      link_id?: string;
+      supplier_id?: string;
+      affiliate_id?: string;
+    } | null;
+
+    if (error || !result?.ok) {
+      console.log("Affiliate click not tracked:", code, error?.message ?? result?.error);
       return;
     }
 
     const attribution: AffiliateAttribution = {
       code,
-      clickedAt: data.clicked_at,
-      expiresAt: data.expires_at,
-      linkId: data.link_id,
-      supplierId: data.supplier_id,
-      affiliateId: data.affiliate_id,
+      clickedAt: result.clicked_at ?? new Date().toISOString(),
+      expiresAt: result.expires_at ?? new Date().toISOString(),
+      linkId: result.link_id ?? "",
+      supplierId: result.supplier_id ?? "",
+      affiliateId: result.affiliate_id ?? "",
     };
 
     // Keep only one active attribution per supplier (latest wins)
