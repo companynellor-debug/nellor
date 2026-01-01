@@ -68,6 +68,195 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_attributions: {
+        Row: {
+          affiliate_link_id: string
+          buyer_id: string | null
+          clicked_at: string | null
+          converted: boolean | null
+          expires_at: string
+          id: string
+          supplier_id: string
+          visitor_id: string | null
+        }
+        Insert: {
+          affiliate_link_id: string
+          buyer_id?: string | null
+          clicked_at?: string | null
+          converted?: boolean | null
+          expires_at: string
+          id?: string
+          supplier_id: string
+          visitor_id?: string | null
+        }
+        Update: {
+          affiliate_link_id?: string
+          buyer_id?: string | null
+          clicked_at?: string | null
+          converted?: boolean | null
+          expires_at?: string
+          id?: string
+          supplier_id?: string
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_attributions_affiliate_link_id_fkey"
+            columns: ["affiliate_link_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_commissions: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          attribution_id: string | null
+          created_at: string | null
+          id: string
+          order_id: string
+          paid_at: string | null
+          status: Database["public"]["Enums"]["commission_status"] | null
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          attribution_id?: string | null
+          created_at?: string | null
+          id?: string
+          order_id: string
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["commission_status"] | null
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          attribution_id?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["commission_status"] | null
+          stripe_transfer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commissions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_attribution_id_fkey"
+            columns: ["attribution_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_attributions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_links: {
+        Row: {
+          affiliate_id: string
+          clicks: number | null
+          code: string
+          conversions: number | null
+          created_at: string | null
+          id: string
+          product_id: string | null
+          supplier_id: string
+        }
+        Insert: {
+          affiliate_id: string
+          clicks?: number | null
+          code: string
+          conversions?: number | null
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          supplier_id: string
+        }
+        Update: {
+          affiliate_id?: string
+          clicks?: number | null
+          code?: string
+          conversions?: number | null
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_links_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_links_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliates: {
+        Row: {
+          created_at: string | null
+          id: string
+          pending_earnings: number | null
+          pix_key: string | null
+          status: Database["public"]["Enums"]["affiliate_status"]
+          stripe_account_id: string | null
+          stripe_ready: boolean | null
+          terms_accepted_at: string | null
+          total_earnings: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pending_earnings?: number | null
+          pix_key?: string | null
+          status?: Database["public"]["Enums"]["affiliate_status"]
+          stripe_account_id?: string | null
+          stripe_ready?: boolean | null
+          terms_accepted_at?: string | null
+          total_earnings?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pending_earnings?: number | null
+          pix_key?: string | null
+          status?: Database["public"]["Enums"]["affiliate_status"]
+          stripe_account_id?: string | null
+          stripe_ready?: boolean | null
+          terms_accepted_at?: string | null
+          total_earnings?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       analytics: {
         Row: {
           created_at: string | null
@@ -630,6 +819,7 @@ export type Database = {
       }
       products: {
         Row: {
+          affiliate_commission_percent: number | null
           ativo: boolean | null
           categoria_id: string | null
           created_at: string | null
@@ -650,6 +840,7 @@ export type Database = {
           vendas_count: number | null
         }
         Insert: {
+          affiliate_commission_percent?: number | null
           ativo?: boolean | null
           categoria_id?: string | null
           created_at?: string | null
@@ -670,6 +861,7 @@ export type Database = {
           vendas_count?: number | null
         }
         Update: {
+          affiliate_commission_percent?: number | null
           ativo?: boolean | null
           categoria_id?: string | null
           created_at?: string | null
@@ -934,6 +1126,191 @@ export type Database = {
           },
         ]
       }
+      service_provider_crm: {
+        Row: {
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          contract_type: Database["public"]["Enums"]["crm_contract_type"] | null
+          created_at: string | null
+          id: string
+          monthly_value: number | null
+          next_billing_date: string | null
+          notes: string | null
+          service_provider_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          contract_type?:
+            | Database["public"]["Enums"]["crm_contract_type"]
+            | null
+          created_at?: string | null
+          id?: string
+          monthly_value?: number | null
+          next_billing_date?: string | null
+          notes?: string | null
+          service_provider_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          contract_type?:
+            | Database["public"]["Enums"]["crm_contract_type"]
+            | null
+          created_at?: string | null
+          id?: string
+          monthly_value?: number | null
+          next_billing_date?: string | null
+          notes?: string | null
+          service_provider_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_crm_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_provider_suppliers: {
+        Row: {
+          created_at: string | null
+          id: string
+          service_provider_id: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          service_provider_id: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          service_provider_id?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_suppliers_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_providers: {
+        Row: {
+          business_name: string
+          created_at: string | null
+          description: string | null
+          id: string
+          service_type: string
+          status: Database["public"]["Enums"]["service_provider_status"] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          service_type: string
+          status?: Database["public"]["Enums"]["service_provider_status"] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          service_type?: string
+          status?: Database["public"]["Enums"]["service_provider_status"] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      supplier_affiliate_settings: {
+        Row: {
+          allow_affiliates: boolean | null
+          allow_recurring_commission: boolean | null
+          created_at: string | null
+          default_commission_percent: number | null
+          id: string
+          recurring_duration_months: number | null
+          supplier_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_affiliates?: boolean | null
+          allow_recurring_commission?: boolean | null
+          created_at?: string | null
+          default_commission_percent?: number | null
+          id?: string
+          recurring_duration_months?: number | null
+          supplier_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_affiliates?: boolean | null
+          allow_recurring_commission?: boolean | null
+          created_at?: string | null
+          default_commission_percent?: number | null
+          id?: string
+          recurring_duration_months?: number | null
+          supplier_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      supplier_service_provider_settings: {
+        Row: {
+          allow_service_providers: boolean | null
+          can_edit_description: boolean | null
+          can_edit_photos: boolean | null
+          can_edit_price: boolean | null
+          can_edit_stock: boolean | null
+          created_at: string | null
+          id: string
+          supplier_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_service_providers?: boolean | null
+          can_edit_description?: boolean | null
+          can_edit_photos?: boolean | null
+          can_edit_price?: boolean | null
+          can_edit_stock?: boolean | null
+          created_at?: string | null
+          id?: string
+          supplier_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_service_providers?: boolean | null
+          can_edit_description?: boolean | null
+          can_edit_photos?: boolean | null
+          can_edit_price?: boolean | null
+          can_edit_stock?: boolean | null
+          created_at?: string | null
+          id?: string
+          supplier_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           assunto: string
@@ -1103,6 +1480,7 @@ export type Database = {
         Returns: boolean
       }
       bytea_to_text: { Args: { data: string }; Returns: string }
+      generate_affiliate_code: { Args: never; Returns: string }
       generate_order_number: { Args: never; Returns: string }
       get_admin_orders: {
         Args: never
@@ -1341,8 +1719,11 @@ export type Database = {
           }
     }
     Enums: {
+      affiliate_status: "pending" | "active" | "suspended"
       app_role: "admin" | "fornecedor" | "cliente"
+      commission_status: "pending" | "confirmed" | "paid" | "cancelled"
       coupon_type: "percentage" | "fixed"
+      crm_contract_type: "single" | "monthly"
       notification_type:
         | "order_update"
         | "message"
@@ -1358,6 +1739,7 @@ export type Database = {
       payment_method: "pix" | "boleto" | "cartao"
       payment_status: "pending" | "paid" | "refunded" | "cancelled"
       payout_status: "requested" | "approved" | "paid" | "rejected"
+      service_provider_status: "pending" | "active" | "suspended"
       support_status: "open" | "pending" | "closed"
       transaction_type: "sale" | "platform_fee" | "payout" | "refund"
       user_type: "cliente" | "fornecedor" | "admin"
@@ -1504,8 +1886,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      affiliate_status: ["pending", "active", "suspended"],
       app_role: ["admin", "fornecedor", "cliente"],
+      commission_status: ["pending", "confirmed", "paid", "cancelled"],
       coupon_type: ["percentage", "fixed"],
+      crm_contract_type: ["single", "monthly"],
       notification_type: [
         "order_update",
         "message",
@@ -1523,6 +1908,7 @@ export const Constants = {
       payment_method: ["pix", "boleto", "cartao"],
       payment_status: ["pending", "paid", "refunded", "cancelled"],
       payout_status: ["requested", "approved", "paid", "rejected"],
+      service_provider_status: ["pending", "active", "suspended"],
       support_status: ["open", "pending", "closed"],
       transaction_type: ["sale", "platform_fee", "payout", "refund"],
       user_type: ["cliente", "fornecedor", "admin"],
