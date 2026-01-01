@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Loader2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -30,19 +30,42 @@ interface Banner {
 const Banners = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
+    subtitle: "",
     imageUrl: "",
     link: "",
     order: 1,
     active: true
   });
   const [imagePreview, setImagePreview] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchBanners();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel('admin-banners-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'banners'
+        },
+        () => {
+          fetchBanners();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchBanners = async () => {
@@ -75,6 +98,7 @@ const Banners = () => {
           .from('banners')
           .update({
             title: formData.title,
+            subtitle: formData.subtitle || null,
             image_url: formData.imageUrl,
             link_url: formData.link || null,
             order_index: formData.order,
@@ -89,6 +113,7 @@ const Banners = () => {
           .from('banners')
           .insert({
             title: formData.title,
+            subtitle: formData.subtitle || null,
             image_url: formData.imageUrl,
             link_url: formData.link || null,
             order_index: formData.order,
@@ -101,7 +126,6 @@ const Banners = () => {
 
       setOpen(false);
       resetForm();
-      fetchBanners();
     } catch (error) {
       console.error('Error saving banner:', error);
       toast.error('Erro ao salvar banner');
@@ -111,13 +135,17 @@ const Banners = () => {
   const resetForm = () => {
     setFormData({ 
       title: "", 
+      subtitle: "",
       imageUrl: "", 
       link: "", 
-      order: 1, 
+      order: banners.length + 1, 
       active: true
     });
     setImagePreview("");
     setEditingId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleEdit = (id: string) => {
@@ -125,6 +153,7 @@ const Banners = () => {
     if (banner) {
       setFormData({
         title: banner.title || "",
+        subtitle: banner.subtitle || "",
         imageUrl: banner.image_url,
         link: banner.link_url || "",
         order: banner.order_index || 1,
@@ -146,7 +175,6 @@ const Banners = () => {
 
         if (error) throw error;
         toast.success("Banner excluído!");
-        fetchBanners();
       } catch (error) {
         console.error('Error deleting banner:', error);
         toast.error('Erro ao excluir banner');
@@ -165,7 +193,7 @@ const Banners = () => {
         .eq('id', id);
 
       if (error) throw error;
-      fetchBanners();
+      toast.success(banner.ativo ? "Banner desativado" : "Banner ativado");
     } catch (error) {
       console.error('Error toggling banner:', error);
       toast.error('Erro ao alterar status');
@@ -176,9 +204,17 @@ const Banners = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Preview local imediato
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
     try {
+      setUploading(true);
       const fileExt = file.name.split('.').pop();
-      const fileName = `banner_${Date.now()}.${fileExt}`;
+      const fileName = `banner_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('banners')
@@ -191,21 +227,35 @@ const Banners = () => {
         .getPublicUrl(fileName);
 
       setFormData({ ...formData, imageUrl: publicUrl });
-      setImagePreview(publicUrl);
       toast.success('Imagem enviada!');
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Erro ao enviar imagem');
+      setImagePreview("");
+    } finally {
+      setUploading(false);
     }
   };
 
+  const handleRemoveImage = () => {
+    setImagePreview("");
+    setFormData({ ...formData, imageUrl: "" });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const activeBanners = banners.filter(b => b.ativo);
+  const inactiveBanners = banners.filter(b => !b.ativo);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2 dark:text-white">Banners</h1>
-          <p className="text-muted-foreground">Gerenciar banners da plataforma</p>
+          <p className="text-muted-foreground">
+            {activeBanners.length} ativos • {inactiveBanners.length} inativos
+          </p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
           <DialogTrigger asChild>
@@ -220,7 +270,7 @@ const Banners = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Título</Label>
+                <Label>Título *</Label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -229,47 +279,77 @@ const Banners = () => {
               </div>
 
               <div>
-                <Label>Upload de Imagem</Label>
+                <Label>Subtítulo (opcional)</Label>
                 <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  placeholder="Descrição curta do banner"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Formatos aceitos: JPG, PNG, WEBP
-                </p>
               </div>
 
+              {/* Upload de Imagem */}
               <div>
-                <Label>Ou cole a URL da imagem</Label>
-                <Input
-                  value={formData.imageUrl}
-                  onChange={(e) => {
-                    setFormData({ ...formData, imageUrl: e.target.value });
-                    setImagePreview(e.target.value);
-                  }}
-                  placeholder="https://..."
-                />
-              </div>
-
-              {imagePreview && (
-                <div className="border rounded-lg overflow-hidden">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-48 object-cover"
-                    onError={() => setImagePreview("")}
+                <Label>Imagem do Banner *</Label>
+                <div className="mt-2 space-y-3">
+                  {imagePreview ? (
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                        onError={() => setImagePreview("")}
+                      />
+                      {uploading && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Loader2 className="h-8 w-8 text-white animate-spin" />
+                        </div>
+                      )}
+                      {!uploading && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:opacity-80"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => !uploading && fileInputRef.current?.click()}
+                      className="w-full h-48 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 transition-colors"
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Clique para fazer upload</span>
+                          <span className="text-xs text-muted-foreground">Recomendado: 1200x400px</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
                   />
                 </div>
-              )}
+              </div>
 
               <div>
-                <Label>Link (opcional)</Label>
+                <Label>Link de Destino (opcional)</Label>
                 <Input
                   value={formData.link}
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  placeholder="https://..."
+                  placeholder="/cliente/produtos ou https://..."
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Deixe vazio se o banner não deve ser clicável
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -291,8 +371,15 @@ const Banners = () => {
                 </div>
               </div>
 
-              <Button onClick={handleSubmit} className="w-full">
-                {editingId ? "Atualizar" : "Criar"} Banner
+              <Button onClick={handleSubmit} className="w-full" disabled={uploading || !formData.imageUrl}>
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Enviando imagem...
+                  </>
+                ) : (
+                  <>{editingId ? "Atualizar" : "Criar"} Banner</>
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -306,68 +393,81 @@ const Banners = () => {
           <Badge variant="secondary">{banners.length}</Badge>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          {banners
-            .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-            .map((banner) => (
-              <Card key={banner.id} className="p-4 hover:shadow-lg transition-shadow">
-                <div className="flex gap-4">
-                  <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                    <img
-                      src={banner.image_url}
-                      alt={banner.title || 'Banner'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=400&q=80";
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{banner.title || 'Sem título'}</h3>
-                        {banner.subtitle && (
-                          <p className="text-sm text-muted-foreground">{banner.subtitle}</p>
-                        )}
+        {loading ? (
+          <div className="text-center py-12">
+            <Loader2 className="h-8 w-8 mx-auto text-muted-foreground animate-spin mb-2" />
+            <p className="text-muted-foreground">Carregando banners...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {banners
+              .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+              .map((banner) => (
+                <Card key={banner.id} className={`p-4 hover:shadow-lg transition-shadow ${!banner.ativo ? 'opacity-60' : ''}`}>
+                  <div className="flex gap-4">
+                    <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
+                      <img
+                        src={banner.image_url}
+                        alt={banner.title || 'Banner'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=400&q=80";
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{banner.title || 'Sem título'}</h3>
+                          {banner.subtitle && (
+                            <p className="text-sm text-muted-foreground">{banner.subtitle}</p>
+                          )}
+                          {banner.link_url && (
+                            <p className="text-xs text-primary mt-1">Link: {banner.link_url}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={banner.ativo ? "default" : "secondary"}>
+                            #{banner.order_index || 0}
+                          </Badge>
+                          <Switch
+                            checked={banner.ativo ?? false}
+                            onCheckedChange={() => toggleBannerStatus(banner.id)}
+                          />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={banner.ativo ? "default" : "secondary"}>
-                          Ordem: {banner.order_index || 0}
-                        </Badge>
-                        <Switch
-                          checked={banner.ativo ?? false}
-                          onCheckedChange={() => toggleBannerStatus(banner.id)}
-                        />
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(banner.id)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(banner.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                          Excluir
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(banner.id)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(banner.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1 text-destructive" />
-                        Excluir
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-        </div>
+                </Card>
+              ))}
+          </div>
+        )}
 
-        {banners.length === 0 && (
+        {!loading && banners.length === 0 && (
           <div className="text-center py-12">
             <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground">Nenhum banner cadastrado</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Clique em "Novo Banner" para adicionar
+            </p>
           </div>
         )}
       </Card>
