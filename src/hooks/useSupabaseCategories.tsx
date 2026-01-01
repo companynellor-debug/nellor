@@ -40,9 +40,9 @@ export const useSupabaseCategories = () => {
   useEffect(() => {
     fetchCategories();
 
-    // Subscribe to realtime changes
+    // Subscribe to realtime changes para atualização automática em todos os painéis
     const channel = supabase
-      .channel('categories-changes')
+      .channel('categories-realtime')
       .on(
         'postgres_changes',
         {
@@ -50,11 +50,14 @@ export const useSupabaseCategories = () => {
           schema: 'public',
           table: 'categories'
         },
-        () => {
+        (payload) => {
+          console.log('[Categories] Realtime update:', payload.eventType);
           fetchCategories();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[Categories] Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

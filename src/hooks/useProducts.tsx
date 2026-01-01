@@ -1,23 +1,34 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product as BaseProduct } from '@/data/products';
 import { useSupabaseProducts } from './useSupabaseProducts';
+import { useSupabaseCategories, Category } from './useSupabaseCategories';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Product extends BaseProduct {}
 
 interface ProductsContextType {
   products: Product[];
+  categories: Category[];
   getProductById: (id: number) => Product | undefined;
   getRelatedProducts: (currentProductId: number, category: string, limit?: number) => Product[];
   getProductsByStore: (storeId: number) => Product[];
+  getProductsByCategory: (categoryIdOrSlug: string) => Product[];
+  getCategoryName: (categoryId: string | null) => string;
 }
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
 
 export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   const { products: supabaseProducts, loading } = useSupabaseProducts();
+  const { categories } = useSupabaseCategories();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [supplierProfiles, setSupplierProfiles] = useState<Record<string, any>>({});
+
+  // Criar mapa de categorias para lookup rápido
+  const categoryMap = categories.reduce((acc, cat) => {
+    acc[cat.id] = cat;
+    return acc;
+  }, {} as Record<string, Category>);
 
   useEffect(() => {
     const fetchSupplierProfiles = async () => {
@@ -45,6 +56,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     // Converter produtos do Supabase para o formato Product
     const convertedProducts: Product[] = supabaseProducts.map((sp) => {
       const profile = supplierProfiles[sp.supplier_id];
+      const categoryData = sp.categoria_id ? categoryMap[sp.categoria_id] : null;
       
       // Gerar ID numérico único baseado no UUID
       const hashCode = (str: string) => {
@@ -69,7 +81,10 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         images: sp.imagens.length > 0 ? sp.imagens : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=600&fit=crop'],
         specs: [],
         customerReviews: [],
-        category: sp.categoria_id || 'outros',
+        // Usar slug para filtragem (compatível com URL) e armazenar categoria_id também
+        category: categoryData?.slug || 'outros',
+        categoryId: sp.categoria_id,
+        categoryName: categoryData?.nome || 'Outros',
         storeId: hashCode(sp.supplier_id),
         minQuantity: 1,
         minValue: 0,
@@ -79,7 +94,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     });
 
     setAllProducts(convertedProducts);
-  }, [supabaseProducts, supplierProfiles]);
+  }, [supabaseProducts, supplierProfiles, categories]);
 
   const getProductById = (id: number): Product | undefined => {
     return allProducts.find((product) => product.id === id);
@@ -95,8 +110,28 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     return allProducts.filter((product) => product.storeId === storeId);
   };
 
+  const getProductsByCategory = (categoryIdOrSlug: string): Product[] => {
+    return allProducts.filter((product) => 
+      product.category === categoryIdOrSlug || 
+      (product as any).categoryId === categoryIdOrSlug
+    );
+  };
+
+  const getCategoryName = (categoryId: string | null): string => {
+    if (!categoryId) return 'Sem categoria';
+    return categoryMap[categoryId]?.nome || 'Outros';
+  };
+
   return (
-    <ProductsContext.Provider value={{ products: allProducts, getProductById, getRelatedProducts, getProductsByStore }}>
+    <ProductsContext.Provider value={{ 
+      products: allProducts, 
+      categories,
+      getProductById, 
+      getRelatedProducts, 
+      getProductsByStore,
+      getProductsByCategory,
+      getCategoryName
+    }}>
       {children}
     </ProductsContext.Provider>
   );

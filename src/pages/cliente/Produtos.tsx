@@ -7,15 +7,13 @@ import { Search, ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
-import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 
 const Produtos = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("categoria");
   const searchParam = searchParams.get("busca");
-  const { products } = useProducts();
-  const { categories } = useSupabaseCategories();
+  const { products, categories } = useProducts();
 
   const [searchTerm, setSearchTerm] = useState(searchParam || "");
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || "");
@@ -25,12 +23,18 @@ const Produtos = () => {
     setSelectedCategory(categoryParam || "");
   }, [searchParam, categoryParam]);
 
+  // Encontrar nome da categoria selecionada para exibir no título
+  const selectedCategoryName = selectedCategory 
+    ? categories.find(c => c.slug === selectedCategory)?.nome || selectedCategory
+    : "";
+
   const filteredProducts = products.filter((product) => {
     const matchesSearch = searchTerm
       ? product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
       : true;
 
+    // Filtrar por slug da categoria
     const matchesCategory = selectedCategory
       ? product.category === selectedCategory
       : true;
@@ -42,11 +46,11 @@ const Produtos = () => {
     setSearchTerm(value);
   };
 
-  const handleCategoryClick = (category: string) => {
-    if (selectedCategory === category) {
+  const handleCategoryClick = (categorySlug: string) => {
+    if (selectedCategory === categorySlug) {
       setSelectedCategory("");
     } else {
-      setSelectedCategory(category);
+      setSelectedCategory(categorySlug);
     }
   };
 
@@ -64,7 +68,7 @@ const Produtos = () => {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="text-2xl font-bold text-primary flex-1">
-              {selectedCategory || "Todos os Produtos"}
+              {selectedCategoryName || "Todos os Produtos"}
             </h1>
           </div>
 
