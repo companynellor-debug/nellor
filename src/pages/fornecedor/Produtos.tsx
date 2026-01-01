@@ -122,7 +122,10 @@ const Produtos = () => {
 
       {/* Grid de Produtos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+        {products.map((product) => {
+          // Encontrar nome da categoria pelo ID
+          const categoryName = categories.find(c => c.id === product.category)?.nome || 'Sem categoria';
+          return (
           <Card key={product.id} className="overflow-hidden">
             <img
               src={product.images[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e'}
@@ -131,7 +134,7 @@ const Produtos = () => {
             />
             <div className="p-4 space-y-2">
               <h3 className="font-semibold text-lg">{product.name}</h3>
-              <p className="text-sm text-muted-foreground">{product.category}</p>
+              <p className="text-sm text-muted-foreground">{categoryName}</p>
               <p className="text-sm line-clamp-2">{product.description}</p>
               <div className="flex justify-between items-center pt-2">
                 <p className="text-lg font-bold text-primary">R$ {product.price.toFixed(2)}</p>
@@ -157,7 +160,8 @@ const Produtos = () => {
               </div>
             </div>
           </Card>
-        ))}
+        );
+        })}
       </div>
 
       {/* Modal de Adicionar/Editar */}
