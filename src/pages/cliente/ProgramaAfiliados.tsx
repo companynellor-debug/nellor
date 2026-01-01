@@ -36,8 +36,9 @@ interface AffiliateLink {
   conversions: number;
   product_id: string | null;
   supplier_id: string;
-  product?: { nome: string; preco: number; imagens: string[] };
+  product?: { nome: string; preco: number; imagens: string[]; affiliate_commission_percent?: number | null };
   supplierName?: string;
+  defaultCommissionPercent?: number | null;
 }
 
 interface AffiliableProduct {
@@ -87,7 +88,7 @@ const ProgramaAfiliados = () => {
 
         const { data: linksData } = await supabase
           .from("affiliate_links")
-          .select("*, product:products(nome, preco, imagens)")
+          .select("*, product:products(nome, preco, imagens, affiliate_commission_percent)")
           .eq("affiliate_id", affiliateData.id);
 
         const supplierIds = Array.from(
@@ -95,14 +96,28 @@ const ProgramaAfiliados = () => {
         );
 
         const supplierNameById = new Map<string, string>();
+        const defaultCommissionBySupplier = new Map<string, number>();
+
         if (supplierIds.length > 0) {
-          const { data: supplierRows } = await supabase
-            .from("public_supplier_profiles")
-            .select("id, nome")
-            .in("id", supplierIds);
+          const [{ data: supplierRows }, { data: settingsData }] = await Promise.all([
+            supabase
+              .from("public_supplier_profiles")
+              .select("id, nome")
+              .in("id", supplierIds),
+            supabase
+              .from("supplier_affiliate_settings")
+              .select("supplier_id, default_commission_percent")
+              .in("supplier_id", supplierIds),
+          ]);
 
           (supplierRows ?? []).forEach((s: any) => {
             if (s?.id) supplierNameById.set(s.id, s.nome ?? "");
+          });
+
+          (settingsData ?? []).forEach((s: any) => {
+            if (s?.supplier_id) {
+              defaultCommissionBySupplier.set(s.supplier_id, s.default_commission_percent ?? 5);
+            }
           });
         }
 
@@ -110,6 +125,7 @@ const ProgramaAfiliados = () => {
           (linksData ?? []).map((l: any) => ({
             ...l,
             supplierName: supplierNameById.get(l.supplier_id) ?? "",
+            defaultCommissionPercent: defaultCommissionBySupplier.get(l.supplier_id) ?? 5,
           })) as AffiliateLink[]
         );
       }
@@ -494,47 +510,72 @@ const ProgramaAfiliados = () => {
                   </Card>
                 ) : (
                   <div className="space-y-4">
-                    {links.map((link) => (
-                      <Card key={link.id} className="p-4">
-                        <div className="flex gap-4">
-                          <img
-                            src={link.product?.imagens?.[0] || "/placeholder.svg"}
-                            alt={link.product?.nome || "Produto"}
-                            loading="lazy"
-                            className="w-16 h-16 rounded-lg object-cover"
-                          />
-                          <div className="flex-1">
-                            <h3 className="font-medium line-clamp-1">
-                              {link.product?.nome || "Link do Produto"}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {link.supplierName}
-                            </p>
-                            <div className="flex gap-4 mt-2 text-sm">
-                              <span className="text-muted-foreground">
-                                {link.clicks ?? 0} cliques
-                              </span>
-                              <span className="text-muted-foreground">
-                                {link.conversions ?? 0} vendas
-                              </span>
+                    {links.map((link) => {
+                      const commissionPercent = link.product?.affiliate_commission_percent ?? link.defaultCommissionPercent ?? 5;
+                      const simulatedOrderValue = 100;
+                      const commissionAmount = (simulatedOrderValue * commissionPercent) / 100;
+
+                      return (
+                        <Card key={link.id} className="p-4">
+                          <div className="flex gap-4">
+                            <img
+                              src={link.product?.imagens?.[0] || "/placeholder.svg"}
+                              alt={link.product?.nome || "Produto"}
+                              loading="lazy"
+                              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium line-clamp-1">
+                                {link.product?.nome || "Link do Produto"}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {link.supplierName}
+                              </p>
+                              <div className="flex gap-4 mt-1 text-sm">
+                                <span className="text-muted-foreground">
+                                  {link.clicks ?? 0} cliques
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {link.conversions ?? 0} vendas
+                                </span>
+                              </div>
+                              
+                              {/* Commission details */}
+                              <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-muted-foreground">Comissão:</span>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {commissionPercent}%
+                                  </Badge>
+                                </div>
+                                <div className="mt-1.5 pt-1.5 border-t border-border/50">
+                                  <p className="text-xs text-muted-foreground">
+                                    Pedido de R$ {simulatedOrderValue.toFixed(2)} →
+                                  </p>
+                                  <p className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                    Você ganha: R$ {commissionAmount.toFixed(2)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col justify-center gap-2 flex-shrink-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => copyLink(link.code)}
+                              >
+                                {copiedLink === link.code ? (
+                                  <Check className="h-4 w-4" />
+                                ) : (
+                                  <Copy className="h-4 w-4" />
+                                )}
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex flex-col justify-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => copyLink(link.code)}
-                            >
-                              {copiedLink === link.code ? (
-                                <Check className="h-4 w-4" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </TabsContent>
