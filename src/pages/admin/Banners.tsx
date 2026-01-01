@@ -204,100 +204,51 @@ const Banners = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validar tamanho máximo de 20MB
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (file.size > maxSize) {
+      toast.error('Arquivo muito grande! Máximo permitido: 20MB');
+      return;
+    }
+
     // Preview local imediato
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    const isVideo = file.type.startsWith('video/');
+    if (!isVideo) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Para vídeos, criar preview com URL temporária
+      setImagePreview(URL.createObjectURL(file));
+    }
 
     try {
       setUploading(true);
 
-      // Compressão leve para reduzir chance de timeout no Storage
-      const compressIfNeeded = async (input: File) => {
-        const maxBytes = 1_500_000; // ~1.5MB
-        if (input.size <= maxBytes) return input;
+      // Gerar nome único mantendo extensão original
+      const ext = file.name.split('.').pop() || 'file';
+      const fileName = `banner_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
-        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const i = new Image();
-          i.onload = () => resolve(i);
-          i.onerror = reject;
-          i.src = URL.createObjectURL(input);
-        });
+      // Upload direto sem compressão (aceita qualquer formato)
+      const { error } = await supabase.storage.from('banners').upload(fileName, file, {
+        upsert: true,
+        cacheControl: '3600',
+        contentType: file.type,
+      });
 
-        const maxW = 1600;
-        const scale = Math.min(1, maxW / img.width);
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return input;
-
-        ctx.drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(img.src);
-
-        const blob = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob(resolve, 'image/jpeg', 0.82)
-        );
-        if (!blob) return input;
-
-        return new File([blob], input.name.replace(/\.[^/.]+$/, '') + '.jpg', {
-          type: 'image/jpeg',
-        });
-      };
-
-      const uploadFile = await compressIfNeeded(file);
-      const fileName = `banner_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-
-      // Retry com backoff (2s, 4s, 8s) em caso de timeout
-      let lastError: any = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const { error } = await supabase.storage.from('banners').upload(fileName, uploadFile, {
-          upsert: true,
-          cacheControl: '3600',
-          contentType: uploadFile.type,
-        });
-
-        if (!error) {
-          lastError = null;
-          break;
-        }
-
-        lastError = error;
-        const msg = String(error.message || '').toLowerCase();
-        const isTimeout = msg.includes('timeout') || msg.includes('databasetimeout');
-        if (isTimeout && attempt < 2) {
-          const waitMs = 2000 * Math.pow(2, attempt);
-          await new Promise((r) => setTimeout(r, waitMs));
-          continue;
-        }
-        break;
-      }
-
-      if (lastError) throw lastError;
+      if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage
         .from('banners')
         .getPublicUrl(fileName);
 
       setFormData(prev => ({ ...prev, imageUrl: publicUrl }));
-      toast.success('Imagem enviada!');
+      toast.success('Arquivo enviado!');
     } catch (error: any) {
-      console.error('Error uploading image:', error);
-
-      const msg = String(error?.message || '').toLowerCase();
-      const isTimeout = msg.includes('timeout') || msg.includes('databasetimeout');
-
-      if (isTimeout) {
-        toast.error('Servidor de upload ocupado. Tente novamente em 10s.');
-      } else {
-        toast.error('Erro ao enviar imagem. Tente novamente.');
-      }
-
+      console.error('Error uploading file:', error);
+      toast.error('Erro ao enviar arquivo. Tente novamente.');
       setImagePreview("");
       setFormData(prev => ({ ...prev, imageUrl: "" }));
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -394,7 +345,7 @@ const Banners = () => {
                         <>
                           <Upload className="h-8 w-8 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">Clique para fazer upload</span>
-                          <span className="text-xs text-muted-foreground">Recomendado: 1200x400px</span>
+                          <span className="text-xs text-muted-foreground">Imagem ou vídeo • Máximo 20MB</span>
                         </>
                       )}
                     </div>
@@ -402,7 +353,7 @@ const Banners = () => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     onChange={handleFileUpload}
                     className="hidden"
                   />
