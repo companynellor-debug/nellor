@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export interface SupabaseBanner {
   id: string;
@@ -15,7 +16,7 @@ export interface SupabaseBanner {
 export const useSupabaseBanners = () => {
   const queryClient = useQueryClient();
 
-  const { data: banners = [], isLoading } = useQuery({
+  const { data: banners = [], isLoading, refetch } = useQuery({
     queryKey: ['banners'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,85 +27,38 @@ export const useSupabaseBanners = () => {
 
       if (error) throw error;
       return data as SupabaseBanner[];
-    }
-  });
-
-  const addBanner = useMutation({
-    mutationFn: async (banner: Omit<SupabaseBanner, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase
-        .from('banners')
-        .insert([banner])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['banners'] });
-    }
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
-  const updateBanner = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<SupabaseBanner> }) => {
-      const { data, error } = await supabase
-        .from('banners')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+  // Realtime subscription para atualização automática
+  useEffect(() => {
+    const channel = supabase
+      .channel('banners-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'banners'
+        },
+        (payload) => {
+          console.log('[Banners] Realtime update:', payload.eventType);
+          queryClient.invalidateQueries({ queryKey: ['banners'] });
+        }
+      )
+      .subscribe((status) => {
+        console.log('[Banners] Realtime subscription status:', status);
+      });
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['banners'] });
-    }
-  });
-
-  const deleteBanner = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('banners')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['banners'] });
-    }
-  });
-
-  const toggleBannerStatus = useMutation({
-    mutationFn: async (id: string) => {
-      // Get current status
-      const { data: banner } = await supabase
-        .from('banners')
-        .select('ativo')
-        .eq('id', id)
-        .single();
-
-      if (!banner) throw new Error('Banner not found');
-
-      const { error } = await supabase
-        .from('banners')
-        .update({ ativo: !banner.ativo })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['banners'] });
-    }
-  });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return {
     banners,
     isLoading,
-    addBanner: addBanner.mutateAsync,
-    updateBanner: updateBanner.mutateAsync,
-    deleteBanner: deleteBanner.mutateAsync,
-    toggleBannerStatus: toggleBannerStatus.mutateAsync
+    refetch
   };
 };
