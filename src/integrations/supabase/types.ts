@@ -1471,6 +1471,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_service_provider_invite: {
+        Args: { _service_provider_id: string; _supplier_id: string }
+        Returns: boolean
+      }
       admin_update_support_ticket: {
         Args: {
           _resposta_admin?: string
@@ -1703,6 +1707,15 @@ export type Database = {
         Returns: boolean
       }
       text_to_bytea: { Args: { data: string }; Returns: string }
+      track_affiliate_click: {
+        Args: {
+          _buyer_id?: string
+          _code: string
+          _user_agent?: string
+          _visitor_id?: string
+        }
+        Returns: Json
+      }
       urlencode:
         | { Args: { data: Json }; Returns: string }
         | {
