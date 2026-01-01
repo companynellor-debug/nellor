@@ -6,13 +6,18 @@ import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
-import { useAdminData } from "@/hooks/useAdminData";
+import { useAdminOrders, useAdminProfiles, useAdminStats } from "@/hooks/useAdminPrefetch";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
   
-  const { orders: allOrders, profiles: allProfiles, stats: statsData, loading, error, refetch } = useAdminData();
+  const { orders: allOrders, loading: ordersLoading, refetch: refetchOrders } = useAdminOrders();
+  const { profiles: allProfiles, loading: profilesLoading } = useAdminProfiles();
+  const { stats: statsData, loading: statsLoading } = useAdminStats();
+  
+  const loading = ordersLoading || profilesLoading || statsLoading;
+  const refetch = refetchOrders;
 
   // ✅ Calcular tudo com useMemo para evitar recálculos desnecessários
   const { stats, salesData, revenueData, distributionData, topSuppliers, recentOrders, paidOrdersCount } = useMemo(() => {
@@ -183,16 +188,6 @@ const Dashboard = () => {
     );
   }
 
-  if (error && allOrders.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <p className="text-destructive mb-4">{error}</p>
-          <Button onClick={refetch}>Tentar Novamente</Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">

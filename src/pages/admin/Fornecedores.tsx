@@ -8,10 +8,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
-import { useAdminData } from "@/hooks/useAdminData";
+import { useAdminOrders, useAdminProfiles } from "@/hooks/useAdminPrefetch";
 
 const Fornecedores = () => {
-  const { orders, profiles, loading, refetch } = useAdminData();
+  const { orders, loading: ordersLoading } = useAdminOrders();
+  const { profiles, loading: profilesLoading, refetch } = useAdminProfiles();
+  const loading = ordersLoading || profilesLoading;
   const [selectedFornecedor, setSelectedFornecedor] = useState<any>(null);
   const [showReconnectModal, setShowReconnectModal] = useState(false);
 

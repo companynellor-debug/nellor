@@ -5,7 +5,7 @@ import { ShoppingCart, Package, CheckCircle, DollarSign, Loader2 } from "lucide-
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
 import { useMemo } from "react";
-import { useAdminData } from "@/hooks/useAdminData";
+import { useAdminOrders } from "@/hooks/useAdminPrefetch";
 
 const getStatusBadge = (status: string) => {
   const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; }> = {
@@ -20,7 +20,7 @@ const getStatusBadge = (status: string) => {
 };
 
 const Vendas = () => {
-  const { orders, loading } = useAdminData();
+  const { orders, loading } = useAdminOrders();
 
   const { totalPedidos, pedidosPendentes, pedidosConcluidos, vendasMes, pedidos, statusDistribution, dailyOrders } = useMemo(() => {
     const total = orders.length;

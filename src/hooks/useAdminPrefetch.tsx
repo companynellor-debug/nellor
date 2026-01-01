@@ -1,207 +1,64 @@
-import { createContext, useContext, ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useMemo, useCallback } from "react";
 
 // Tipos para os dados do admin
-interface AdminData {
-  orders: any[];
-  profiles: any[];
-  stats: any | null;
-  supportTickets: any[];
-  payouts: any[];
-  banners: any[];
-  categories: any[];
-}
-
-interface AdminPrefetchContextType {
-  data: AdminData;
-  loading: boolean;
-  refetchAll: () => void;
-  refetchOrders: () => void;
-  refetchProfiles: () => void;
-  refetchStats: () => void;
-  refetchSupportTickets: () => void;
-  refetchPayouts: () => void;
-}
-
-const defaultData: AdminData = {
-  orders: [],
-  profiles: [],
-  stats: null,
-  supportTickets: [],
-  payouts: [],
-  banners: [],
-  categories: [],
+export type AdminOrder = {
+  id: string;
+  order_number: string;
+  buyer_id: string | null;
+  supplier_id: string;
+  total: number;
+  subtotal: number;
+  frete: number;
+  desconto: number;
+  payment_status: string | null;
+  order_status: string | null;
+  payment_method: string;
+  tracking_code: string | null;
+  created_at: string;
+  updated_at: string | null;
+  endereco_entrega: any;
+  itens: any;
+  proof_url: string | null;
+  supplier_name: string | null;
+  buyer_name: string | null;
 };
 
-const AdminPrefetchContext = createContext<AdminPrefetchContextType | undefined>(undefined);
-
-// Configuração otimizada: cache longo, sem refetch automático agressivo
-const STALE_TIME = 5 * 60 * 1000; // 5 minutos
-const CACHE_TIME = 10 * 60 * 1000; // 10 minutos
-
-export const AdminPrefetchProvider = ({ children }: { children: ReactNode }) => {
-  const queryClient = useQueryClient();
-
-  // Cada query individual com lazy loading - só busca quando necessário
-  const ordersQuery = useQuery({
-    queryKey: ["admin-orders"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_orders");
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    enabled: false, // Lazy - só busca quando chamado
-  });
-
-  const profilesQuery = useQuery({
-    queryKey: ["admin-profiles"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_profiles");
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    enabled: false,
-  });
-
-  const statsQuery = useQuery({
-    queryKey: ["admin-stats"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_stats");
-      if (error) throw error;
-      return data?.[0] || null;
-    },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    enabled: false,
-  });
-
-  const supportTicketsQuery = useQuery({
-    queryKey: ["admin-support-tickets"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_support_tickets");
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    enabled: false,
-  });
-
-  const payoutsQuery = useQuery({
-    queryKey: ["admin-payouts"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("payouts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100);
-      return data || [];
-    },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    enabled: false,
-  });
-
-  const bannersQuery = useQuery({
-    queryKey: ["admin-banners"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("banners")
-        .select("*")
-        .order("order_index", { ascending: true });
-      return data || [];
-    },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    enabled: false,
-  });
-
-  const categoriesQuery = useQuery({
-    queryKey: ["admin-categories"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select("*")
-        .order("nome", { ascending: true });
-      return data || [];
-    },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    enabled: false,
-  });
-
-  const data: AdminData = {
-    orders: ordersQuery.data || [],
-    profiles: profilesQuery.data || [],
-    stats: statsQuery.data || null,
-    supportTickets: supportTicketsQuery.data || [],
-    payouts: payoutsQuery.data || [],
-    banners: bannersQuery.data || [],
-    categories: categoriesQuery.data || [],
-  };
-
-  const loading = ordersQuery.isLoading || profilesQuery.isLoading || statsQuery.isLoading;
-
-  const refetchAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-    queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
-    queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-    queryClient.invalidateQueries({ queryKey: ["admin-support-tickets"] });
-    queryClient.invalidateQueries({ queryKey: ["admin-payouts"] });
-  };
-
-  const refetchOrders = () => queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-  const refetchProfiles = () => queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
-  const refetchStats = () => queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-  const refetchSupportTickets = () => queryClient.invalidateQueries({ queryKey: ["admin-support-tickets"] });
-  const refetchPayouts = () => queryClient.invalidateQueries({ queryKey: ["admin-payouts"] });
-
-  return (
-    <AdminPrefetchContext.Provider
-      value={{
-        data,
-        loading,
-        refetchAll,
-        refetchOrders,
-        refetchProfiles,
-        refetchStats,
-        refetchSupportTickets,
-        refetchPayouts,
-      }}
-    >
-      {children}
-    </AdminPrefetchContext.Provider>
-  );
+export type AdminProfile = {
+  id: string;
+  nome: string;
+  email: string;
+  tipo: string;
+  telefone: string | null;
+  ativo: boolean;
+  created_at: string;
+  onboarding_completed: boolean;
+  stripe_account_id: string | null;
 };
 
-export const useAdminPrefetch = () => {
-  const context = useContext(AdminPrefetchContext);
-  if (!context) {
-    throw new Error("useAdminPrefetch must be used within AdminPrefetchProvider");
-  }
-  return context;
+export type AdminStats = {
+  total_users: number;
+  active_suppliers: number;
+  total_orders: number;
+  paid_orders: number;
+  delivered_orders: number;
+  total_revenue: number;
 };
 
-// Hooks individuais para cada página - só busca quando o hook é usado
+// Configuração otimizada: cache longo, sem refetch automático
+const STALE_TIME = 10 * 60 * 1000; // 10 minutos
+const CACHE_TIME = 15 * 60 * 1000; // 15 minutos
+
+const queryConfig = {
+  staleTime: STALE_TIME,
+  gcTime: CACHE_TIME,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  retry: 1,
+};
+
+// Hook otimizado para orders - só busca quando usado
 export const useAdminOrders = () => {
   const queryClient = useQueryClient();
   
@@ -210,20 +67,25 @@ export const useAdminOrders = () => {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_orders");
       if (error) throw error;
-      return data || [];
+      return (data ?? []) as AdminOrder[];
     },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
+    ...queryConfig,
+    refetchOnMount: "always" as const,
   });
 
-  return {
-    orders: query.data || [],
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+  }, [queryClient]);
+
+  return useMemo(() => ({
+    orders: query.data ?? [],
     loading: query.isLoading,
-    refetch: () => queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
-  };
+    error: query.error,
+    refetch,
+  }), [query.data, query.isLoading, query.error, refetch]);
 };
 
+// Hook otimizado para profiles
 export const useAdminProfiles = () => {
   const queryClient = useQueryClient();
   
@@ -232,20 +94,25 @@ export const useAdminProfiles = () => {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_profiles");
       if (error) throw error;
-      return data || [];
+      return (data ?? []) as AdminProfile[];
     },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
+    ...queryConfig,
+    refetchOnMount: "always" as const,
   });
 
-  return {
-    profiles: query.data || [],
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
+  }, [queryClient]);
+
+  return useMemo(() => ({
+    profiles: query.data ?? [],
     loading: query.isLoading,
-    refetch: () => queryClient.invalidateQueries({ queryKey: ["admin-profiles"] }),
-  };
+    error: query.error,
+    refetch,
+  }), [query.data, query.isLoading, query.error, refetch]);
 };
 
+// Hook otimizado para stats
 export const useAdminStats = () => {
   const queryClient = useQueryClient();
   
@@ -254,20 +121,25 @@ export const useAdminStats = () => {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_stats");
       if (error) throw error;
-      return data?.[0] || null;
+      return (data?.[0] ?? null) as AdminStats | null;
     },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
+    ...queryConfig,
+    refetchOnMount: "always" as const,
   });
 
-  return {
-    stats: query.data || null,
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+  }, [queryClient]);
+
+  return useMemo(() => ({
+    stats: query.data ?? null,
     loading: query.isLoading,
-    refetch: () => queryClient.invalidateQueries({ queryKey: ["admin-stats"] }),
-  };
+    error: query.error,
+    refetch,
+  }), [query.data, query.isLoading, query.error, refetch]);
 };
 
+// Hook otimizado para support tickets
 export const useAdminSupportTickets = () => {
   const queryClient = useQueryClient();
   
@@ -276,41 +148,94 @@ export const useAdminSupportTickets = () => {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_support_tickets");
       if (error) throw error;
-      return data || [];
+      return data ?? [];
     },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
+    ...queryConfig,
+    refetchOnMount: "always" as const,
   });
 
-  return {
-    supportTickets: query.data || [],
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin-support-tickets"] });
+  }, [queryClient]);
+
+  return useMemo(() => ({
+    supportTickets: query.data ?? [],
     loading: query.isLoading,
-    refetch: () => queryClient.invalidateQueries({ queryKey: ["admin-support-tickets"] }),
-  };
+    error: query.error,
+    refetch,
+  }), [query.data, query.isLoading, query.error, refetch]);
 };
 
-export const useAdminPayouts = () => {
+// Hook otimizado para banners
+export const useAdminBanners = () => {
   const queryClient = useQueryClient();
   
   const query = useQuery({
-    queryKey: ["admin-payouts"],
+    queryKey: ["admin-banners"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("payouts")
+        .from("banners")
         .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100);
-      return data || [];
+        .order("order_index", { ascending: true });
+      return data ?? [];
     },
-    staleTime: STALE_TIME,
-    gcTime: CACHE_TIME,
-    refetchOnWindowFocus: false,
+    ...queryConfig,
+    refetchOnMount: "always" as const,
   });
 
-  return {
-    payouts: query.data || [],
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+  }, [queryClient]);
+
+  return useMemo(() => ({
+    banners: query.data ?? [],
     loading: query.isLoading,
-    refetch: () => queryClient.invalidateQueries({ queryKey: ["admin-payouts"] }),
-  };
+    error: query.error,
+    refetch,
+  }), [query.data, query.isLoading, query.error, refetch]);
+};
+
+// Hook otimizado para categories
+export const useAdminCategories = () => {
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
+    queryKey: ["admin-categories"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("categories")
+        .select("*")
+        .order("nome", { ascending: true });
+      return data ?? [];
+    },
+    ...queryConfig,
+    refetchOnMount: "always" as const,
+  });
+
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+  }, [queryClient]);
+
+  return useMemo(() => ({
+    categories: query.data ?? [],
+    loading: query.isLoading,
+    error: query.error,
+    refetch,
+  }), [query.data, query.isLoading, query.error, refetch]);
+};
+
+// Hook para invalidar todos os caches admin de uma vez
+export const useAdminCacheInvalidation = () => {
+  const queryClient = useQueryClient();
+
+  const invalidateAll = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-support-tickets"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+  }, [queryClient]);
+
+  return { invalidateAll };
 };

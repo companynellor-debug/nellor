@@ -4,10 +4,12 @@ import { Users, UserPlus, DollarSign, Loader2, Percent } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format, subMonths, startOfMonth } from "date-fns";
 import { useMemo } from "react";
-import { useAdminData } from "@/hooks/useAdminData";
+import { useAdminOrders, useAdminProfiles } from "@/hooks/useAdminPrefetch";
 
 const Usuarios = () => {
-  const { orders, profiles, loading } = useAdminData();
+  const { orders, loading: ordersLoading } = useAdminOrders();
+  const { profiles, loading: profilesLoading } = useAdminProfiles();
+  const loading = ordersLoading || profilesLoading;
 
   const { totalClientes, novosNoMes, ticketMedio, taxaRetencao, totalGasto, clientes, growthData } = useMemo(() => {
     const clientesList = profiles.filter((p) => p.tipo === "cliente");
