@@ -2,7 +2,7 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, MessageCircle, Download, Smartphone } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, MessageCircle, Download, Smartphone, Users, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProfile } from "@/hooks/useProfile";
@@ -27,7 +27,9 @@ const Perfil = () => {
     { icon: MapPin, label: "Endereços", action: () => navigate("/cliente/enderecos") },
     { icon: CreditCard, label: "Métodos de Pagamento", action: () => navigate("/cliente/metodos-pagamento") },
     { icon: Bell, label: "Notificações", action: () => navigate("/cliente/notificacoes") },
-    ...(canInstall && !isInstalled ? [{ icon: Smartphone, label: "Instalar App", action: () => navigate("/cliente/instalar"), highlight: true }] : []),
+    { icon: Users, label: "Programa de Afiliados", action: () => navigate("/cliente/afiliados"), highlight: true },
+    { icon: Briefcase, label: "Prestador de Serviços", action: () => navigate("/cliente/prestador-servicos") },
+    ...(canInstall && !isInstalled ? [{ icon: Smartphone, label: "Instalar App", action: () => navigate("/cliente/instalar") }] : []),
     { icon: MessageCircle, label: "Suporte", action: () => navigate("/cliente/suporte") },
     { icon: LogOut, label: "Sair", action: handleLogout },
   ];
