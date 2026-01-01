@@ -15,6 +15,10 @@ import {
   Sparkles,
   ShoppingBag,
   Loader2,
+  History,
+  Store,
+  CreditCard,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +31,7 @@ interface AffiliateData {
   total_earnings: number;
   pending_earnings: number;
   stripe_ready: boolean;
+  stripe_account_id: string | null;
 }
 
 interface AffiliateLink {
@@ -52,6 +57,23 @@ interface AffiliableProduct {
   defaultCommissionPercent?: number | null;
 }
 
+interface Commission {
+  id: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  order_id: string;
+  order?: { order_number: string; total: number };
+}
+
+interface ActiveSupplier {
+  id: string;
+  nome: string;
+  foto_perfil_url: string | null;
+  linkCount: number;
+  conversions: number;
+}
+
 const ProgramaAfiliados = () => {
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
@@ -59,9 +81,12 @@ const ProgramaAfiliados = () => {
   const [affiliate, setAffiliate] = useState<AffiliateData | null>(null);
   const [links, setLinks] = useState<AffiliateLink[]>([]);
   const [products, setProducts] = useState<AffiliableProduct[]>([]);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
+  const [activeSuppliers, setActiveSuppliers] = useState<ActiveSupplier[]>([]);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [activatingAffiliate, setActivatingAffiliate] = useState(false);
   const [creatingLink, setCreatingLink] = useState<string | null>(null);
+  const [connectingStripe, setConnectingStripe] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -86,6 +111,7 @@ const ProgramaAfiliados = () => {
       if (affiliateData) {
         setAffiliate(affiliateData as any);
 
+        // Fetch links with product info
         const { data: linksData } = await supabase
           .from("affiliate_links")
           .select("*, product:products(nome, preco, imagens, affiliate_commission_percent)")
@@ -96,13 +122,14 @@ const ProgramaAfiliados = () => {
         );
 
         const supplierNameById = new Map<string, string>();
+        const supplierPhotoById = new Map<string, string | null>();
         const defaultCommissionBySupplier = new Map<string, number>();
 
         if (supplierIds.length > 0) {
           const [{ data: supplierRows }, { data: settingsData }] = await Promise.all([
             supabase
               .from("public_supplier_profiles")
-              .select("id, nome")
+              .select("id, nome, foto_perfil_url")
               .in("id", supplierIds),
             supabase
               .from("supplier_affiliate_settings")
@@ -111,7 +138,10 @@ const ProgramaAfiliados = () => {
           ]);
 
           (supplierRows ?? []).forEach((s: any) => {
-            if (s?.id) supplierNameById.set(s.id, s.nome ?? "");
+            if (s?.id) {
+              supplierNameById.set(s.id, s.nome ?? "");
+              supplierPhotoById.set(s.id, s.foto_perfil_url);
+            }
           });
 
           (settingsData ?? []).forEach((s: any) => {
@@ -121,13 +151,63 @@ const ProgramaAfiliados = () => {
           });
         }
 
-        setLinks(
-          (linksData ?? []).map((l: any) => ({
-            ...l,
-            supplierName: supplierNameById.get(l.supplier_id) ?? "",
-            defaultCommissionPercent: defaultCommissionBySupplier.get(l.supplier_id) ?? 5,
-          })) as AffiliateLink[]
-        );
+        const enrichedLinks = (linksData ?? []).map((l: any) => ({
+          ...l,
+          supplierName: supplierNameById.get(l.supplier_id) ?? "",
+          defaultCommissionPercent: defaultCommissionBySupplier.get(l.supplier_id) ?? 5,
+        })) as AffiliateLink[];
+
+        setLinks(enrichedLinks);
+
+        // Calculate active suppliers with real data
+        const supplierStats = new Map<string, { linkCount: number; conversions: number }>();
+        enrichedLinks.forEach((link) => {
+          const existing = supplierStats.get(link.supplier_id) || { linkCount: 0, conversions: 0 };
+          supplierStats.set(link.supplier_id, {
+            linkCount: existing.linkCount + 1,
+            conversions: existing.conversions + (link.conversions ?? 0),
+          });
+        });
+
+        const activeSuppliersList: ActiveSupplier[] = [];
+        supplierStats.forEach((stats, supplierId) => {
+          activeSuppliersList.push({
+            id: supplierId,
+            nome: supplierNameById.get(supplierId) ?? "",
+            foto_perfil_url: supplierPhotoById.get(supplierId) ?? null,
+            linkCount: stats.linkCount,
+            conversions: stats.conversions,
+          });
+        });
+        setActiveSuppliers(activeSuppliersList);
+
+        // Fetch real commissions
+        const { data: commissionsData } = await supabase
+          .from("affiliate_commissions")
+          .select("id, amount, status, created_at, order_id")
+          .eq("affiliate_id", affiliateData.id)
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (commissionsData && commissionsData.length > 0) {
+          // Fetch order details
+          const orderIds = commissionsData.map((c) => c.order_id);
+          const { data: ordersData } = await supabase
+            .from("orders")
+            .select("id, order_number, total")
+            .in("id", orderIds);
+
+          const orderById = new Map<string, { order_number: string; total: number }>();
+          (ordersData ?? []).forEach((o: any) => {
+            orderById.set(o.id, { order_number: o.order_number, total: o.total });
+          });
+
+          const enrichedCommissions = commissionsData.map((c) => ({
+            ...c,
+            order: orderById.get(c.order_id),
+          }));
+          setCommissions(enrichedCommissions);
+        }
       }
 
       // Suppliers that allow affiliates
@@ -272,6 +352,33 @@ const ProgramaAfiliados = () => {
     setTimeout(() => setCopiedLink(null), 2000);
   };
 
+  const connectStripe = async () => {
+    if (!affiliate) return;
+    
+    setConnectingStripe(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-connect-onboarding", {
+        body: { 
+          user_id: user?.id,
+          account_type: "affiliate",
+          affiliate_id: affiliate.id,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No onboarding URL returned");
+      }
+    } catch (error: any) {
+      console.error("Error connecting Stripe:", error);
+      toast.error("Erro ao conectar Stripe");
+    } finally {
+      setConnectingStripe(false);
+    }
+  };
+
   const getCommission = (product: AffiliableProduct) => {
     if (product.affiliate_commission_percent !== null) {
       return product.affiliate_commission_percent;
@@ -287,6 +394,24 @@ const ProgramaAfiliados = () => {
   const hasLinkForProduct = (productId: string) => {
     return links.some((l) => l.product_id === productId);
   };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Badge variant="secondary">Pendente</Badge>;
+      case "confirmed":
+        return <Badge variant="outline">Confirmada</Badge>;
+      case "paid":
+        return <Badge className="bg-green-500">Paga</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Cancelada</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const totalConversions = links.reduce((acc, l) => acc + (l.conversions ?? 0), 0);
+  const totalClicks = links.reduce((acc, l) => acc + (l.clicks ?? 0), 0);
 
   if (loading) {
     return (
@@ -364,11 +489,39 @@ const ProgramaAfiliados = () => {
           </Card>
         ) : (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            {/* Stripe Connect Banner */}
+            {!affiliate.stripe_ready && (
+              <Card className="p-4 border-amber-500/50 bg-amber-500/10">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-6 w-6 text-amber-600" />
+                    <div>
+                      <p className="font-medium text-foreground">Conecte seu Stripe</p>
+                      <p className="text-sm text-muted-foreground">
+                        Para receber suas comissões automaticamente
+                      </p>
+                    </div>
+                  </div>
+                  <Button onClick={connectStripe} disabled={connectingStripe} size="sm">
+                    {connectingStripe ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Conectar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <DollarSign className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <DollarSign className="h-5 w-5 text-green-500" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Ganhos Totais</p>
@@ -380,8 +533,8 @@ const ProgramaAfiliados = () => {
               </Card>
               <Card className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent/30 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-foreground" />
+                  <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-amber-500" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Pendente</p>
@@ -391,17 +544,47 @@ const ProgramaAfiliados = () => {
                   </div>
                 </div>
               </Card>
+              <Card className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Vendas</p>
+                    <p className="text-xl font-bold">{totalConversions}</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <LinkIcon className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Cliques</p>
+                    <p className="text-xl font-bold">{totalClicks}</p>
+                  </div>
+                </div>
+              </Card>
             </div>
 
             <Tabs defaultValue="products" className="w-full">
-              <TabsList className="w-full grid grid-cols-2">
+              <TabsList className="w-full grid grid-cols-4">
                 <TabsTrigger value="products">
-                  <ShoppingBag className="h-4 w-4 mr-2" />
-                  Produtos
+                  <ShoppingBag className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Produtos</span>
                 </TabsTrigger>
                 <TabsTrigger value="links">
-                  <LinkIcon className="h-4 w-4 mr-2" />
-                  Meus Links
+                  <LinkIcon className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Links</span>
+                </TabsTrigger>
+                <TabsTrigger value="history">
+                  <History className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Histórico</span>
+                </TabsTrigger>
+                <TabsTrigger value="suppliers">
+                  <Store className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Lojas</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -578,6 +761,102 @@ const ProgramaAfiliados = () => {
                         </Card>
                       );
                     })}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Histórico de Comissões */}
+              <TabsContent value="history" className="mt-4">
+                {commissions.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <History className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">
+                      Nenhuma comissão registrada ainda
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Suas comissões aparecerão aqui quando houver vendas pelos seus links
+                    </p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {commissions.map((commission) => (
+                      <Card key={commission.id} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">
+                              Pedido #{commission.order?.order_number || "..."}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(commission.created_at).toLocaleDateString("pt-BR", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </p>
+                            {commission.order?.total && (
+                              <p className="text-xs text-muted-foreground">
+                                Valor do pedido: R$ {Number(commission.order.total).toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                              + R$ {Number(commission.amount).toFixed(2)}
+                            </p>
+                            {getStatusBadge(commission.status)}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Fornecedores Ativos */}
+              <TabsContent value="suppliers" className="mt-4">
+                {activeSuppliers.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">
+                      Nenhum fornecedor ativo
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Crie links de produtos para ver os fornecedores aqui
+                    </p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {activeSuppliers.map((supplier) => (
+                      <Card key={supplier.id} className="p-4">
+                        <div className="flex items-center gap-4">
+                          {supplier.foto_perfil_url ? (
+                            <img
+                              src={supplier.foto_perfil_url}
+                              alt={supplier.nome}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Store className="h-6 w-6 text-primary" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-medium">{supplier.nome}</h3>
+                            <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
+                              <span>{supplier.linkCount} links</span>
+                              <span>{supplier.conversions} vendas</span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/loja/${supplier.id}`)}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
                   </div>
                 )}
               </TabsContent>

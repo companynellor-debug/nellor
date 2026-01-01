@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
@@ -21,7 +21,10 @@ import {
   Calendar,
   DollarSign,
   Edit,
-  Trash2
+  Trash2,
+  AlertTriangle,
+  TrendingUp,
+  Package,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +57,14 @@ interface ServiceProviderData {
 interface ManagedSupplier {
   id: string;
   supplier_id: string;
-  supplier: { nome: string; email: string; foto_perfil_url: string };
+  supplier: { 
+    nome: string; 
+    email: string; 
+    foto_perfil_url: string | null;
+    ativo?: boolean;
+  } | null;
+  productCount?: number;
+  lowStockCount?: number;
 }
 
 interface CRMClient {
@@ -66,6 +76,16 @@ interface CRMClient {
   monthly_value: number | null;
   next_billing_date: string | null;
   notes: string;
+  created_at: string;
+}
+
+interface DashboardStats {
+  totalSuppliers: number;
+  activeSuppliers: number;
+  totalMonthlyRevenue: number;
+  totalClients: number;
+  monthlyClients: number;
+  lowStockAlerts: number;
 }
 
 const PrestadorServicos = () => {
@@ -93,6 +113,24 @@ const PrestadorServicos = () => {
   const [monthlyValue, setMonthlyValue] = useState("");
   const [clientNotes, setClientNotes] = useState("");
   const [savingClient, setSavingClient] = useState(false);
+
+  // Dashboard stats
+  const stats = useMemo<DashboardStats>(() => {
+    const totalMonthlyRevenue = crmClients
+      .filter(c => c.contract_type === 'monthly' && c.monthly_value)
+      .reduce((acc, c) => acc + (c.monthly_value || 0), 0);
+    
+    const lowStockAlerts = suppliers.reduce((acc, s) => acc + (s.lowStockCount || 0), 0);
+    
+    return {
+      totalSuppliers: suppliers.length,
+      activeSuppliers: suppliers.filter(s => s.supplier?.ativo !== false).length,
+      totalMonthlyRevenue,
+      totalClients: crmClients.length,
+      monthlyClients: crmClients.filter(c => c.contract_type === 'monthly').length,
+      lowStockAlerts,
+    };
+  }, [suppliers, crmClients]);
 
   useEffect(() => {
     if (user) {
@@ -122,14 +160,25 @@ const PrestadorServicos = () => {
           .select('*')
           .eq('service_provider_id', spData.id);
         
-        // Fetch supplier details separately
+        // Fetch supplier details separately with product counts
         const suppliersWithDetails = await Promise.all((suppliersData || []).map(async (sp) => {
-          const { data: supplier } = await supabase
-            .from('profiles')
-            .select('nome, email, foto_perfil_url')
-            .eq('id', sp.supplier_id)
-            .single();
-          return { ...sp, supplier } as ManagedSupplier;
+          const [{ data: supplier }, { count: productCount }, { count: lowStockCount }] = await Promise.all([
+            supabase
+              .from('profiles')
+              .select('nome, email, foto_perfil_url, ativo')
+              .eq('id', sp.supplier_id)
+              .single(),
+            supabase
+              .from('products')
+              .select('id', { count: 'exact', head: true })
+              .eq('supplier_id', sp.supplier_id),
+            supabase
+              .from('products')
+              .select('id', { count: 'exact', head: true })
+              .eq('supplier_id', sp.supplier_id)
+              .lt('estoque', 5),
+          ]);
+          return { ...sp, supplier, productCount: productCount || 0, lowStockCount: lowStockCount || 0 } as ManagedSupplier;
         }));
         
         setSuppliers(suppliersWithDetails);
