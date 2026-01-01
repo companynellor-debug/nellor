@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AdminOrder = {
@@ -44,90 +44,65 @@ export type AdminStats = {
   total_revenue: number;
 };
 
-// ✅ Global cache to prevent redundant fetches when switching tabs
-const cache = {
-  orders: null as AdminOrder[] | null,
-  profiles: null as AdminProfile[] | null,
-  stats: null as AdminStats | null,
-  lastFetch: 0,
-};
-
-const CACHE_TTL = 60_000; // 1 minute cache
-
-function isCacheValid() {
-  return Date.now() - cache.lastFetch < CACHE_TTL;
-}
+// Cache time otimizado: 5 minutos stale, 10 minutos em cache
+const STALE_TIME = 5 * 60 * 1000;
+const CACHE_TIME = 10 * 60 * 1000;
 
 export function useAdminData() {
-  const [orders, setOrders] = useState<AdminOrder[]>(cache.orders || []);
-  const [profiles, setProfiles] = useState<AdminProfile[]>(cache.profiles || []);
-  const [stats, setStats] = useState<AdminStats | null>(cache.stats);
-  const [loading, setLoading] = useState(!isCacheValid());
-  const [error, setError] = useState<string | null>(null);
-  const isFetching = useRef(false);
+  const queryClient = useQueryClient();
 
-  const fetchData = useCallback(async (force = false) => {
-    // Use cache if valid and not forcing refresh
-    if (!force && isCacheValid() && cache.orders && cache.profiles && cache.stats) {
-      setOrders(cache.orders);
-      setProfiles(cache.profiles);
-      setStats(cache.stats);
-      setLoading(false);
-      return;
-    }
+  // Buscar dados em paralelo mas com cache adequado
+  const ordersQuery = useQuery({
+    queryKey: ["admin-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_admin_orders");
+      if (error) throw error;
+      return (data ?? []) as AdminOrder[];
+    },
+    staleTime: STALE_TIME,
+    gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
+  });
 
-    // Prevent concurrent fetches
-    if (isFetching.current) return;
-    isFetching.current = true;
+  const profilesQuery = useQuery({
+    queryKey: ["admin-profiles"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_admin_profiles");
+      if (error) throw error;
+      return (data ?? []) as AdminProfile[];
+    },
+    staleTime: STALE_TIME,
+    gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
+  });
 
-    try {
-      setLoading(true);
-      setError(null);
+  const statsQuery = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_admin_stats");
+      if (error) throw error;
+      return (data?.[0] ?? null) as AdminStats | null;
+    },
+    staleTime: STALE_TIME,
+    gcTime: CACHE_TIME,
+    refetchOnWindowFocus: false,
+  });
 
-      const [ordersRes, profilesRes, statsRes] = await Promise.all([
-        supabase.rpc("get_admin_orders"),
-        supabase.rpc("get_admin_profiles"),
-        supabase.rpc("get_admin_stats"),
-      ]);
+  const loading = ordersQuery.isLoading || profilesQuery.isLoading || statsQuery.isLoading;
+  const error = ordersQuery.error || profilesQuery.error || statsQuery.error;
 
-      if (ordersRes.error) throw ordersRes.error;
-      if (profilesRes.error) throw profilesRes.error;
-      if (statsRes.error) throw statsRes.error;
-
-      const ordersData = (ordersRes.data ?? []) as AdminOrder[];
-      const profilesData = (profilesRes.data ?? []) as AdminProfile[];
-      const statsData = (statsRes.data?.[0] ?? null) as AdminStats | null;
-
-      // Update cache
-      cache.orders = ordersData;
-      cache.profiles = profilesData;
-      cache.stats = statsData;
-      cache.lastFetch = Date.now();
-
-      setOrders(ordersData);
-      setProfiles(profilesData);
-      setStats(statsData);
-    } catch (err: any) {
-      console.error("Error fetching admin data:", err);
-      setError(err.message || "Erro ao carregar dados");
-    } finally {
-      setLoading(false);
-      isFetching.current = false;
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const refetch = useCallback(() => fetchData(true), [fetchData]);
+  const refetch = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+  };
 
   return {
-    orders,
-    profiles,
-    stats,
+    orders: ordersQuery.data || [],
+    profiles: profilesQuery.data || [],
+    stats: statsQuery.data || null,
     loading,
-    error,
+    error: error ? (error as Error).message : null,
     refetch,
   };
 }

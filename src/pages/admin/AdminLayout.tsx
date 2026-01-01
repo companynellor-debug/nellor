@@ -8,7 +8,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { AdminPrefetchProvider } from "@/hooks/useAdminPrefetch";
 import logo from "@/assets/logo.png";
 
 const ADMIN_PASSWORD = "nellor2024";
@@ -164,13 +163,9 @@ const AdminLayoutContent = () => {
   );
 };
 
-// Wrapper com prefetch provider
+// Layout direto sem prefetch agressivo - cada página carrega seus dados
 const AdminLayout = () => {
-  return (
-    <AdminPrefetchProvider>
-      <AdminLayoutContent />
-    </AdminPrefetchProvider>
-  );
+  return <AdminLayoutContent />;
 };
 
 export default AdminLayout;

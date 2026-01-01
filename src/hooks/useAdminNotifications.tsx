@@ -27,9 +27,14 @@ export interface AdminNotification {
   order_number?: string;
 }
 
+// Cache simples para evitar refetch desnecessário
+let notificationsCache: AdminNotification[] | null = null;
+let lastFetch = 0;
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutos
+
 export const useAdminNotifications = () => {
-  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<AdminNotification[]>(notificationsCache || []);
+  const [loading, setLoading] = useState(!notificationsCache);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const { toast } = useToast();
@@ -37,9 +42,7 @@ export const useAdminNotifications = () => {
   const playNotificationSound = useCallback(() => {
     const audio = new Audio('/notification-sound.mp3');
     audio.volume = 0.5;
-    audio.play().catch(error => {
-      console.error('Error playing notification sound:', error);
-    });
+    audio.play().catch(() => {});
   }, []);
 
   const requestPermission = useCallback(async () => {
@@ -48,13 +51,24 @@ export const useAdminNotifications = () => {
     return granted;
   }, []);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async (force = false) => {
+    // Usar cache se válido
+    if (!force && notificationsCache && Date.now() - lastFetch < CACHE_TTL) {
+      setNotifications(notificationsCache);
+      setUnreadCount(notificationsCache.filter(n => !n.read).length);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       
-      // Fetch all paid orders as sale/commission notifications
+      // Query SIMPLES e LEVE - só buscar dados essenciais dos últimos 20 pedidos
       const { data: ordersData, error: ordersError } = await supabase
-        .rpc('get_admin_orders');
+        .from('orders')
+        .select('id, order_number, total, payment_status, order_status, created_at, updated_at, platform_fee')
+        .order('created_at', { ascending: false })
+        .limit(20);
 
       if (ordersError) {
         console.error('Error fetching orders:', ordersError);
@@ -62,30 +76,26 @@ export const useAdminNotifications = () => {
 
       const allNotifications: AdminNotification[] = [];
 
-      // Transform paid orders into sale and commission notifications
+      // Transform orders into notifications
       if (ordersData) {
-        ordersData.forEach((order: any) => {
+        ordersData.forEach((order) => {
           if (order.payment_status === 'paid' && order.order_status !== 'cancelled') {
-            const commission = order.total * 0.075;
+            const commission = (order.platform_fee as number) || order.total * 0.075;
             
-            // Sale notification
             allNotifications.push({
               id: `sale-${order.id}`,
               type: 'sale',
               title: 'Venda Aprovada',
-              body: `Pedido #${order.order_number} - ${order.buyer_name || 'Cliente'}`,
+              body: `Pedido #${order.order_number}`,
               value: order.total,
               commission: commission,
               reference_id: order.id,
               reference_type: 'order',
-              read: true, // Historical data is considered read
-              created_at: order.created_at,
-              supplier_name: order.supplier_name,
-              buyer_name: order.buyer_name,
+              read: true,
+              created_at: order.created_at || '',
               order_number: order.order_number
             });
 
-            // Commission notification
             allNotifications.push({
               id: `commission-${order.id}`,
               type: 'commission',
@@ -95,13 +105,11 @@ export const useAdminNotifications = () => {
               reference_id: order.id,
               reference_type: 'order',
               read: true,
-              created_at: order.created_at,
-              supplier_name: order.supplier_name,
+              created_at: order.created_at || '',
               order_number: order.order_number
             });
           }
 
-          // Failed/cancelled payment notifications
           if (order.payment_status === 'cancelled' || order.order_status === 'cancelled') {
             allNotifications.push({
               id: `cancelled-${order.id}`,
@@ -112,205 +120,77 @@ export const useAdminNotifications = () => {
               reference_id: order.id,
               reference_type: 'order',
               read: true,
-              created_at: order.updated_at || order.created_at,
-              supplier_name: order.supplier_name,
+              created_at: order.updated_at || order.created_at || '',
               order_number: order.order_number
             });
           }
         });
       }
 
-      // Fetch supplier registrations from profiles
-      const { data: suppliersData } = await supabase
-        .rpc('get_admin_profiles');
-
-      if (suppliersData) {
-        suppliersData.forEach((profile: any) => {
-          if (profile.tipo === 'fornecedor') {
-            allNotifications.push({
-              id: `supplier-${profile.id}`,
-              type: 'supplier',
-              title: profile.stripe_account_id ? 'Stripe Conectado' : 'Novo Fornecedor',
-              body: profile.stripe_account_id 
-                ? `${profile.nome} conectou sua conta Stripe`
-                : `${profile.nome} se cadastrou na plataforma`,
-              reference_id: profile.id,
-              reference_type: 'supplier',
-              read: true,
-              created_at: profile.created_at,
-              supplier_name: profile.nome
-            });
-          }
-        });
-      }
-
-      // Sort all notifications by date (newest first)
+      // Sort by date
       allNotifications.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
+      // Update cache
+      notificationsCache = allNotifications;
+      lastFetch = Date.now();
+
       setNotifications(allNotifications);
       setUnreadCount(allNotifications.filter(n => !n.read).length);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching admin notifications:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    // Check notification permission on mount
     setNotificationPermission(getNotificationPermission());
     fetchNotifications();
 
-    // Subscribe to realtime changes for new orders
+    // Apenas UM canal realtime para orders (eventos importantes)
     const ordersChannel = supabase
-      .channel('admin-orders-realtime')
+      .channel('admin-orders-notify')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'orders'
-        },
+        { event: 'INSERT', schema: 'public', table: 'orders' },
         async (payload) => {
           const order = payload.new as any;
-          console.log('New order received:', order);
-          
           playNotificationSound();
           toast({
             title: '🛒 Novo Pedido!',
             description: `Pedido #${order.order_number} - R$ ${Number(order.total)?.toFixed(2)}`,
           });
-          
-          // Show push notification
-          await showOrderNotification(
-            order.order_number,
-            Number(order.total),
-            order.buyer_name
-          );
-          
-          fetchNotifications();
+          await showOrderNotification(order.order_number, Number(order.total), order.buyer_name);
+          // Invalidar cache
+          notificationsCache = null;
+          fetchNotifications(true);
         }
       )
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders'
-        },
+        { event: 'UPDATE', schema: 'public', table: 'orders' },
         async (payload) => {
           const order = payload.new as any;
           const oldOrder = payload.old as any;
           
-          // Payment status changed to paid
           if (order?.payment_status === 'paid' && oldOrder?.payment_status !== 'paid') {
             const commission = Number(order.platform_fee) || Number(order.total) * 0.075;
-            
             playNotificationSound();
-            
-            // Toast for sale
             toast({
               title: '✅ Pagamento Confirmado!',
               description: `Pedido #${order.order_number} - R$ ${Number(order.total)?.toFixed(2)}`,
             });
-            
-            // Toast for commission
             setTimeout(() => {
               toast({
                 title: '💰 Comissão Recebida!',
-                description: `R$ ${commission.toFixed(2).replace('.', ',')} (7,5% do pedido #${order.order_number})`,
+                description: `R$ ${commission.toFixed(2).replace('.', ',')} (7,5%)`,
               });
             }, 1500);
-            
-            await showPaymentNotification(
-              order.order_number,
-              Number(order.total),
-              'paid'
-            );
-            
-            // Add new unread notifications immediately
-            const saleNotification: AdminNotification = {
-              id: `sale-${order.id}-${Date.now()}`,
-              type: 'sale',
-              title: 'Venda Aprovada',
-              body: `Pedido #${order.order_number} pago com sucesso`,
-              value: Number(order.total),
-              commission: commission,
-              reference_id: order.id,
-              reference_type: 'order',
-              read: false,
-              created_at: new Date().toISOString(),
-              order_number: order.order_number
-            };
-            
-            const commissionNotification: AdminNotification = {
-              id: `commission-${order.id}-${Date.now()}`,
-              type: 'commission',
-              title: 'Comissão Nellor',
-              body: `7,5% do pedido #${order.order_number}`,
-              value: commission,
-              reference_id: order.id,
-              reference_type: 'order',
-              read: false,
-              created_at: new Date().toISOString(),
-              order_number: order.order_number
-            };
-            
-            setNotifications(prev => [saleNotification, commissionNotification, ...prev]);
-            setUnreadCount(prev => prev + 2);
-          }
-        }
-      )
-      .subscribe();
-
-    // Subscribe to new suppliers
-    const profilesChannel = supabase
-      .channel('admin-profiles-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'profiles'
-        },
-        async (payload) => {
-          const profile = payload.new as any;
-          
-          if (profile?.tipo === 'fornecedor') {
-            playNotificationSound();
-            toast({
-              title: '🏪 Novo Fornecedor!',
-              description: `${profile.nome} se cadastrou na plataforma`,
-            });
-            
-            await showSupplierNotification(profile.nome, 'registered');
-            fetchNotifications();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles'
-        },
-        async (payload) => {
-          const profile = payload.new as any;
-          const oldProfile = payload.old as any;
-          
-          // Stripe connected
-          if (profile?.stripe_account_id && !oldProfile?.stripe_account_id) {
-            playNotificationSound();
-            toast({
-              title: '💳 Stripe Conectado!',
-              description: `${profile.nome} conectou sua conta Stripe`,
-            });
-            
-            await showSupplierNotification(profile.nome, 'stripe_connected');
-            fetchNotifications();
+            await showPaymentNotification(order.order_number, Number(order.total), 'paid');
+            notificationsCache = null;
+            fetchNotifications(true);
           }
         }
       )
@@ -318,12 +198,10 @@ export const useAdminNotifications = () => {
 
     return () => {
       supabase.removeChannel(ordersChannel);
-      supabase.removeChannel(profilesChannel);
     };
-  }, [playNotificationSound, toast]);
+  }, [playNotificationSound, toast, fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
-    // For historical data, just update local state
     setNotifications(prev => 
       prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
@@ -333,10 +211,7 @@ export const useAdminNotifications = () => {
   const markAllAsRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
-    
-    toast({
-      title: 'Notificações marcadas como lidas',
-    });
+    toast({ title: 'Notificações marcadas como lidas' });
   };
 
   const getNotificationsByType = (type: AdminNotificationType) => {
@@ -352,6 +227,6 @@ export const useAdminNotifications = () => {
     markAsRead,
     markAllAsRead,
     getNotificationsByType,
-    refetch: fetchNotifications
+    refetch: () => fetchNotifications(true)
   };
 };
