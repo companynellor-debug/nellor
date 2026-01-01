@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Package, Image } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Image, Upload, X, Loader2 } from "lucide-react";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import {
   Dialog,
@@ -17,14 +16,47 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const Categorias = () => {
-  const { categories, createCategory, updateCategory, deleteCategory, loading } = useSupabaseCategories();
+  const { categories, createCategory, updateCategory, deleteCategory, uploadCategoryImage, loading } = useSupabaseCategories();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
     slug: "",
     imagem_url: ""
   });
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Preview local
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload para Storage
+    setUploading(true);
+    const url = await uploadCategoryImage(file);
+    setUploading(false);
+
+    if (url) {
+      setFormData({ ...formData, imagem_url: url });
+      toast.success("Imagem enviada com sucesso!");
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setPreviewImage(null);
+    setFormData({ ...formData, imagem_url: "" });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.nome) {
@@ -58,6 +90,10 @@ const Categorias = () => {
   const resetForm = () => {
     setFormData({ nome: "", slug: "", imagem_url: "" });
     setEditingId(null);
+    setPreviewImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleEdit = (category: typeof categories[0]) => {
@@ -67,6 +103,7 @@ const Categorias = () => {
       slug: category.slug,
       imagem_url: category.imagem_url || ""
     });
+    setPreviewImage(category.imagem_url || null);
     setOpen(true);
   };
 
@@ -80,12 +117,17 @@ const Categorias = () => {
     }
   };
 
+  // Calcular total de produtos
+  const totalProducts = categories.reduce((sum, cat) => sum + (cat.product_count || 0), 0);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2 dark:text-white">Categorias</h1>
-          <p className="text-muted-foreground">Gerenciar categorias de produtos</p>
+          <p className="text-muted-foreground">
+            {categories.length} categorias • {totalProducts} produtos no total
+          </p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
           <DialogTrigger asChild>
@@ -115,15 +157,68 @@ const Categorias = () => {
                   placeholder="ex: eletronicos (gerado automaticamente se vazio)"
                 />
               </div>
+              
+              {/* Upload de Imagem */}
               <div>
-                <Label>URL da Imagem (opcional)</Label>
-                <Input
-                  value={formData.imagem_url}
-                  onChange={(e) => setFormData({ ...formData, imagem_url: e.target.value })}
-                  placeholder="https://exemplo.com/imagem.jpg"
-                />
+                <Label>Imagem da Categoria</Label>
+                <div className="mt-2 space-y-3">
+                  {(previewImage || formData.imagem_url) ? (
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden border">
+                      <img 
+                        src={previewImage || formData.imagem_url} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:opacity-80"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full h-32 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 transition-colors"
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Clique para fazer upload</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                  {!previewImage && !formData.imagem_url && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full gap-2"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      {uploading ? "Enviando..." : "Selecionar Imagem"}
+                    </Button>
+                  )}
+                </div>
               </div>
-              <Button onClick={handleSubmit} className="w-full">
+
+              <Button onClick={handleSubmit} className="w-full" disabled={uploading}>
                 {editingId ? 'Salvar Alterações' : 'Criar Categoria'}
               </Button>
             </div>
@@ -140,6 +235,7 @@ const Categorias = () => {
 
         {loading ? (
           <div className="text-center py-12">
+            <Loader2 className="h-8 w-8 mx-auto text-muted-foreground animate-spin mb-2" />
             <p className="text-muted-foreground">Carregando categorias...</p>
           </div>
         ) : (
@@ -183,9 +279,12 @@ const Categorias = () => {
                     </Button>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Criado em: {new Date(category.created_at || '').toLocaleDateString('pt-BR')}
-                </p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Criado em: {new Date(category.created_at || '').toLocaleDateString('pt-BR')}</span>
+                  <Badge variant="outline" className="text-xs">
+                    {category.product_count || 0} {category.product_count === 1 ? 'produto' : 'produtos'}
+                  </Badge>
+                </div>
               </Card>
             ))}
           </div>
