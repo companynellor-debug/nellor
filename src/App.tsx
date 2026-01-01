@@ -77,7 +77,7 @@ const AdminFinanceiro = lazy(() => import("./pages/admin/Financeiro"));
 const AdminRelatorios = lazy(() => import("./pages/admin/Relatorios"));
 const AdminAlertas = lazy(() => import("./pages/admin/Alertas"));
 const AdminConfiguracoes = lazy(() => import("./pages/admin/Configuracoes"));
-const AdminSaques = lazy(() => import("./pages/admin/Saques"));
+
 const AdminSuporteAdmin = lazy(() => import("./pages/admin/SuporteAdmin"));
 const AdminCategorias = lazy(() => import("./pages/admin/Categorias"));
 const AdminBanners = lazy(() => import("./pages/admin/Banners"));
@@ -203,7 +203,7 @@ const App = () => {
               <Route path="relatorios" element={<Suspense fallback={<PageSkeleton />}><AdminRelatorios /></Suspense>} />
               <Route path="alertas" element={<Suspense fallback={<PageSkeleton />}><AdminAlertas /></Suspense>} />
               <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><AdminConfiguracoes /></Suspense>} />
-              <Route path="saques" element={<Suspense fallback={<PageSkeleton />}><AdminSaques /></Suspense>} />
+              
               <Route path="suporte" element={<Suspense fallback={<PageSkeleton />}><AdminSuporteAdmin /></Suspense>} />
               <Route path="categorias" element={<Suspense fallback={<PageSkeleton />}><AdminCategorias /></Suspense>} />
               <Route path="banners" element={<Suspense fallback={<PageSkeleton />}><AdminBanners /></Suspense>} />
