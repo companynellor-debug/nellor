@@ -324,6 +324,105 @@ serve(async (req) => {
       }
 
       // ================================================================
+      // AFFILIATE COMMISSION PROCESSING
+      // ================================================================
+      const actualBuyerId = buyerId || order.buyer_id;
+      
+      if (actualBuyerId && actualSupplierId) {
+        try {
+          // Look for active, non-converted attribution for this buyer + supplier
+          const { data: attribution } = await supabaseAdmin
+            .from("affiliate_attributions")
+            .select(`
+              id, 
+              affiliate_link_id, 
+              expires_at, 
+              converted,
+              affiliate_links!inner (
+                id,
+                affiliate_id,
+                product_id,
+                affiliates!inner (
+                  id,
+                  user_id
+                )
+              )
+            `)
+            .eq("supplier_id", actualSupplierId)
+            .eq("buyer_id", actualBuyerId)
+            .eq("converted", false)
+            .gte("expires_at", new Date().toISOString())
+            .order("clicked_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (attribution) {
+            const affiliateLink = attribution.affiliate_links as any;
+            const affiliate = affiliateLink?.affiliates;
+            
+            if (affiliate) {
+              // Get commission percentage from product or supplier default
+              const { data: product } = await supabaseAdmin
+                .from("products")
+                .select("affiliate_commission_percent")
+                .eq("id", affiliateLink.product_id)
+                .maybeSingle();
+
+              const { data: supplierSettings } = await supabaseAdmin
+                .from("supplier_affiliate_settings")
+                .select("default_commission_percent")
+                .eq("supplier_id", actualSupplierId)
+                .maybeSingle();
+
+              const commissionPercent = product?.affiliate_commission_percent 
+                ?? supplierSettings?.default_commission_percent 
+                ?? 5;
+
+              const commissionAmount = (totalAmount * commissionPercent) / 100;
+
+              // Create commission record
+              const { error: commissionError } = await supabaseAdmin
+                .from("affiliate_commissions")
+                .insert({
+                  affiliate_id: affiliate.id,
+                  order_id: orderId,
+                  attribution_id: attribution.id,
+                  amount: commissionAmount,
+                  status: "pending",
+                });
+
+              if (!commissionError) {
+                // Update affiliate pending earnings
+                await supabaseAdmin.rpc("update_affiliate_earnings", {
+                  _affiliate_id: affiliate.id,
+                  _amount: commissionAmount,
+                });
+
+                // Update attribution converted status (for single-product attribution)
+                // Note: For recurring commissions, we keep converted=false until expiry
+                // This is handled by the recurring_duration_months setting
+                
+                // Update link conversions count
+                await supabaseAdmin
+                  .from("affiliate_links")
+                  .update({ conversions: (affiliateLink.conversions || 0) + 1 })
+                  .eq("id", affiliateLink.id);
+
+                console.log(`✅ Affiliate commission created: R$ ${commissionAmount.toFixed(2)} for affiliate ${affiliate.id}`);
+              } else {
+                console.error("⚠️ Error creating commission:", commissionError);
+              }
+            }
+          } else {
+            console.log("ℹ️ No active affiliate attribution for this order");
+          }
+        } catch (affError) {
+          console.error("⚠️ Error processing affiliate commission:", affError);
+          // Don't fail the whole webhook for affiliate errors
+        }
+      }
+
+      // ================================================================
       // NOTIFICATIONS - ONLY SUPPLIER gets payment notification here
       // Client notification handled by trigger when status -> 'preparing'
       // ================================================================

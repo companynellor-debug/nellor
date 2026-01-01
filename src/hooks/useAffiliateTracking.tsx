@@ -12,6 +12,7 @@ interface AffiliateAttribution {
   linkId: string;
   supplierId: string;
   affiliateId: string;
+  productId?: string;
 }
 
 function getOrCreateVisitorId(): string {
@@ -61,6 +62,7 @@ async function trackAffiliateClick(code: string) {
       link_id?: string;
       supplier_id?: string;
       affiliate_id?: string;
+      product_id?: string;
     } | null;
 
     if (error || !result?.ok) {
@@ -75,6 +77,7 @@ async function trackAffiliateClick(code: string) {
       linkId: result.link_id ?? "",
       supplierId: result.supplier_id ?? "",
       affiliateId: result.affiliate_id ?? "",
+      productId: result.product_id,
     };
 
     // Keep only one active attribution per supplier (latest wins)
@@ -106,8 +109,24 @@ export function getActiveAttribution(supplierId: string): AffiliateAttribution |
   return attributions.find((attr) => attr.supplierId === supplierId) || null;
 }
 
-// Kept for API compatibility; server-side attribution is already created via track_affiliate_click.
-export async function syncAttributionsOnLogin(_userId: string) {
-  return;
-}
+// Sync visitor attributions when user logs in
+// This updates any attributions that were created without a buyer_id
+export async function syncAttributionsOnLogin(userId: string) {
+  try {
+    const visitorId = localStorage.getItem(VISITOR_ID_KEY);
+    if (!visitorId) return;
 
+    // Update any attributions with this visitor_id to have the buyer_id
+    const { error } = await supabase
+      .from("affiliate_attributions")
+      .update({ buyer_id: userId })
+      .eq("visitor_id", visitorId)
+      .is("buyer_id", null);
+
+    if (error) {
+      console.log("Could not sync attributions:", error.message);
+    }
+  } catch (error) {
+    console.error("Error syncing affiliate attributions:", error);
+  }
+}

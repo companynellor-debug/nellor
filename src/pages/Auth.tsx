@@ -6,6 +6,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/logo.png';
 import { Loader2 } from 'lucide-react';
+import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -27,6 +28,9 @@ const Auth = () => {
   const navigate = useNavigate();
   useEffect(() => {
     if (!loading && isAuthenticated && profile) {
+      // Sync affiliate attributions when user logs in
+      void syncAttributionsOnLogin(profile.id);
+      
       if (profile.tipo === 'fornecedor' && !profile.onboarding_completed) {
         navigate('/fornecedor/onboarding', {
           replace: true
