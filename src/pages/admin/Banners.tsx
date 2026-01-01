@@ -216,9 +216,27 @@ const Banners = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `banner_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('banners')
-        .upload(fileName, file, { upsert: true });
+      // Tentar upload com retry
+      let uploadError = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const result = await supabase.storage
+          .from('banners')
+          .upload(fileName, file, { upsert: true });
+        
+        if (!result.error) {
+          uploadError = null;
+          break;
+        }
+        
+        uploadError = result.error;
+        
+        // Se erro de timeout, esperar e tentar novamente
+        if (result.error.message?.includes('timeout') && attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        break;
+      }
 
       if (uploadError) throw uploadError;
 
@@ -226,11 +244,19 @@ const Banners = () => {
         .from('banners')
         .getPublicUrl(fileName);
 
-      setFormData({ ...formData, imageUrl: publicUrl });
+      setFormData(prev => ({ ...prev, imageUrl: publicUrl }));
       toast.success('Imagem enviada!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      toast.error('Erro ao enviar imagem');
+      
+      // Mensagem de erro mais informativa
+      if (error.message?.includes('timeout')) {
+        toast.error('Servidor ocupado. Tente novamente em alguns segundos.');
+      } else if (error.message?.includes('bucket') || error.statusCode === '404') {
+        toast.error('Bucket de storage não configurado. Contate o administrador.');
+      } else {
+        toast.error('Erro ao enviar imagem. Tente novamente.');
+      }
       setImagePreview("");
     } finally {
       setUploading(false);
