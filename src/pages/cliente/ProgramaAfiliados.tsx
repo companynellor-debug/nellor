@@ -261,6 +261,11 @@ const ProgramaAfiliados = () => {
     return product.defaultCommissionPercent ?? 5;
   };
 
+  const getCommissionAmount = (product: AffiliableProduct, orderValue: number = 100) => {
+    const commissionPercent = getCommission(product);
+    return (orderValue * commissionPercent) / 100;
+  };
+
   const hasLinkForProduct = (productId: string) => {
     return links.some((l) => l.product_id === productId);
   };
@@ -392,67 +397,89 @@ const ProgramaAfiliados = () => {
                   </Card>
                 ) : (
                   <div className="space-y-4">
-                    {products.map((product) => (
-                      <Card key={product.id} className="p-4">
-                        <div className="flex gap-4">
-                          <img
-                            src={product.imagens?.[0] || "/placeholder.svg"}
-                            alt={product.nome}
-                            loading="lazy"
-                            className="w-20 h-20 rounded-lg object-cover"
-                          />
-                          <div className="flex-1">
-                            <h3 className="font-medium line-clamp-1">{product.nome}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {product.supplierName}
-                            </p>
-                            <p className="text-lg font-bold text-primary mt-1">
-                              R$ {Number(product.preco ?? 0).toFixed(2)}
-                            </p>
-                            <Badge variant="secondary" className="mt-1">
-                              {getCommission(product)}% de comissão
-                            </Badge>
+                    {products.map((product) => {
+                      const commissionPercent = getCommission(product);
+                      const simulatedOrderValue = 100;
+                      const commissionAmount = getCommissionAmount(product, simulatedOrderValue);
+                      
+                      return (
+                        <Card key={product.id} className="p-4">
+                          <div className="flex gap-4">
+                            <img
+                              src={product.imagens?.[0] || "/placeholder.svg"}
+                              alt={product.nome}
+                              loading="lazy"
+                              className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold line-clamp-2 text-foreground">{product.nome}</h3>
+                              <p className="text-sm text-muted-foreground mt-0.5">
+                                {product.supplierName}
+                              </p>
+                              <p className="text-lg font-bold text-primary mt-1">
+                                R$ {Number(product.preco ?? 0).toFixed(2)}
+                              </p>
+                              
+                              {/* Commission details */}
+                              <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-muted-foreground">Comissão:</span>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {commissionPercent}%
+                                  </Badge>
+                                </div>
+                                <div className="mt-1.5 pt-1.5 border-t border-border/50">
+                                  <p className="text-xs text-muted-foreground">
+                                    Simulação: pedido de R$ {simulatedOrderValue.toFixed(2)}
+                                  </p>
+                                  <p className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1 mt-0.5">
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                    Você ganha: R$ {commissionAmount.toFixed(2)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col justify-center flex-shrink-0">
+                              {hasLinkForProduct(product.id) ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const link = links.find(
+                                      (l) => l.product_id === product.id
+                                    );
+                                    if (link) copyLink(link.code);
+                                  }}
+                                  aria-label="Copiar link"
+                                >
+                                  {copiedLink ===
+                                  links.find((l) => l.product_id === product.id)?.code ? (
+                                    <Check className="h-4 w-4" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  disabled={creatingLink === product.id}
+                                  onClick={() =>
+                                    createAffiliateLink(product.id, product.supplier_id)
+                                  }
+                                  aria-label="Criar link"
+                                >
+                                  {creatingLink === product.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <LinkIcon className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex flex-col justify-center">
-                            {hasLinkForProduct(product.id) ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const link = links.find(
-                                    (l) => l.product_id === product.id
-                                  );
-                                  if (link) copyLink(link.code);
-                                }}
-                                aria-label="Copiar link"
-                              >
-                                {copiedLink ===
-                                links.find((l) => l.product_id === product.id)?.code ? (
-                                  <Check className="h-4 w-4" />
-                                ) : (
-                                  <Copy className="h-4 w-4" />
-                                )}
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                disabled={creatingLink === product.id}
-                                onClick={() =>
-                                  createAffiliateLink(product.id, product.supplier_id)
-                                }
-                                aria-label="Criar link"
-                              >
-                                {creatingLink === product.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <LinkIcon className="h-4 w-4" />
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </TabsContent>
