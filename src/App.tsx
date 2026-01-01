@@ -48,6 +48,8 @@ const Suporte = lazy(() => import("./pages/cliente/Suporte"));
 const PedidoConfirmado = lazy(() => import("./pages/cliente/PedidoConfirmado"));
 const InstalarApp = lazy(() => import("./pages/cliente/InstalarApp"));
 const ConfiguracoesNotificacoes = lazy(() => import("./pages/cliente/ConfiguracoesNotificacoes"));
+const ProgramaAfiliados = lazy(() => import("./pages/cliente/ProgramaAfiliados"));
+const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
 
 // Lazy load fornecedor pages
 const Dashboard = lazy(() => import("./pages/fornecedor/Dashboard"));
@@ -63,6 +65,7 @@ const PlanosFornecedor = lazy(() => import("./pages/fornecedor/Planos"));
 const CuponsFornecedor = lazy(() => import("./pages/fornecedor/Cupons"));
 const RelatorioCupons = lazy(() => import("./pages/fornecedor/RelatorioCupons"));
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
+const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -153,6 +156,8 @@ const App = () => {
               <Route path="configuracoes-notificacoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesNotificacoes /></Suspense>} />
               <Route path="carrinho" element={<Suspense fallback={<PageSkeleton />}><Carrinho /></Suspense>} />
               <Route path="loja/:id" element={<Suspense fallback={<PageSkeleton />}><PerfilLoja /></Suspense>} />
+              <Route path="afiliados" element={<Suspense fallback={<PageSkeleton />}><ProgramaAfiliados /></Suspense>} />
+              <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
             </Route>
 
             {/* Public store profile route */}
@@ -182,6 +187,7 @@ const App = () => {
               <Route path="planos" element={<Suspense fallback={<PageSkeleton />}><PlanosFornecedor /></Suspense>} />
               <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
               <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
+              <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
             </Route>
 
             {/* Admin Panel */}
