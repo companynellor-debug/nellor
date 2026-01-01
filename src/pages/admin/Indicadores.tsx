@@ -5,10 +5,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, AreaChart, A
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMemo } from "react";
-import { useAdminData } from "@/hooks/useAdminData";
+import { useAdminOrders } from "@/hooks/useAdminPrefetch";
 
 const Indicadores = () => {
-  const { orders, loading } = useAdminData();
+  const { orders, loading } = useAdminOrders();
 
   const { data, monthlyData } = useMemo(() => {
     const paidOrders = orders.filter(
