@@ -1716,6 +1716,10 @@ export type Database = {
         }
         Returns: Json
       }
+      update_affiliate_earnings: {
+        Args: { _affiliate_id: string; _amount: number }
+        Returns: undefined
+      }
       urlencode:
         | { Args: { data: Json }; Returns: string }
         | {

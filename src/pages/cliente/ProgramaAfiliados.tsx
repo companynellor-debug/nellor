@@ -262,8 +262,10 @@ const ProgramaAfiliados = () => {
     return result;
   };
 
-  const copyLink = (code: string) => {
-    const link = `${window.location.origin}/cliente/produtos?ref=${code}`;
+  const copyLink = (code: string, productId?: string | null) => {
+    // Link vai direto para o produto público com ref
+    const basePath = productId ? `/p/${productId}` : '/';
+    const link = `${window.location.origin}${basePath}?ref=${code}`;
     void navigator.clipboard.writeText(link);
     setCopiedLink(code);
     toast.success("Link copiado!");
@@ -464,7 +466,7 @@ const ProgramaAfiliados = () => {
                                     const link = links.find(
                                       (l) => l.product_id === product.id
                                     );
-                                    if (link) copyLink(link.code);
+                                    if (link) copyLink(link.code, product.id);
                                   }}
                                   aria-label="Copiar link"
                                 >
@@ -563,7 +565,7 @@ const ProgramaAfiliados = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => copyLink(link.code)}
+                                onClick={() => copyLink(link.code, link.product_id)}
                               >
                                 {copiedLink === link.code ? (
                                   <Check className="h-4 w-4" />
