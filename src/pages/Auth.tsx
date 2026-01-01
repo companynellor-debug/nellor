@@ -3,11 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '@/assets/logo.png';
 import { Loader2 } from 'lucide-react';
 import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
+import { supabase } from '@/integrations/supabase/client';
+
 const Auth = () => {
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +21,10 @@ const Auth = () => {
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
+  
+  // Service provider referral
+  const serviceProviderId = searchParams.get('sp');
+  
   const {
     signIn,
     signUp,
@@ -26,10 +33,28 @@ const Auth = () => {
     loading
   } = useSupabaseAuth();
   const navigate = useNavigate();
+
+  // Set tipo to fornecedor if sp param is present
+  useEffect(() => {
+    if (serviceProviderId) {
+      setTipo('fornecedor');
+      setIsLogin(false); // Force signup mode for referrals
+    }
+    const tipoParam = searchParams.get('tipo');
+    if (tipoParam === 'fornecedor') {
+      setTipo('fornecedor');
+    }
+  }, [serviceProviderId, searchParams]);
+
   useEffect(() => {
     if (!loading && isAuthenticated && profile) {
       // Sync affiliate attributions when user logs in
       void syncAttributionsOnLogin(profile.id);
+      
+      // Link service provider if sp param exists and user is a fornecedor
+      if (serviceProviderId && profile.tipo === 'fornecedor') {
+        void linkServiceProvider(profile.id, serviceProviderId);
+      }
       
       if (profile.tipo === 'fornecedor' && !profile.onboarding_completed) {
         navigate('/fornecedor/onboarding', {
@@ -49,7 +74,40 @@ const Auth = () => {
         });
       }
     }
-  }, [isAuthenticated, profile, loading, navigate]);
+  }, [isAuthenticated, profile, loading, navigate, serviceProviderId]);
+
+  const linkServiceProvider = async (supplierId: string, spId: string) => {
+    try {
+      // Check if service provider exists
+      const { data: sp } = await supabase
+        .from('service_providers')
+        .select('id')
+        .eq('id', spId)
+        .single();
+
+      if (!sp) {
+        console.log('Service provider not found:', spId);
+        return;
+      }
+
+      // Create link between supplier and service provider
+      const { error } = await supabase
+        .from('service_provider_suppliers')
+        .insert({
+          service_provider_id: spId,
+          supplier_id: supplierId,
+        });
+
+      if (error && !error.message.includes('duplicate')) {
+        console.error('Error linking service provider:', error);
+      } else {
+        console.log('Successfully linked supplier to service provider');
+      }
+    } catch (error) {
+      console.error('Error in linkServiceProvider:', error);
+    }
+  };
+
   if (loading || isAuthenticated && profile) {
     return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9]">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
