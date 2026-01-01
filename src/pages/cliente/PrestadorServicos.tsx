@@ -184,7 +184,8 @@ const PrestadorServicos = () => {
 
   const copyReferralLink = () => {
     if (!serviceProvider) return;
-    const link = `${window.location.origin}/fornecedor/cadastro?sp=${serviceProvider.id}`;
+    // Use rota de cadastro existente: /auth com parâmetro sp
+    const link = `${window.location.origin}/auth?tipo=fornecedor&sp=${serviceProvider.id}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     toast.success('Link copiado!');
@@ -295,13 +296,13 @@ const PrestadorServicos = () => {
       <ParticlesBackground />
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/cliente/perfil")}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold text-primary">Prestador de Serviços</h1>
+            <h1 className="text-xl font-bold text-foreground">Prestador de Serviços</h1>
             <p className="text-sm text-muted-foreground">Gerencie fornecedores e clientes</p>
           </div>
         </div>
@@ -310,11 +311,11 @@ const PrestadorServicos = () => {
       <main className="container mx-auto px-4 py-6 relative z-10">
         {!serviceProvider ? (
           // Ativação
-          <Card className="p-6">
+          <Card className="p-6 border-border">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
               <Briefcase className="h-10 w-10 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-center mb-2">Seja um Prestador de Serviços</h2>
+            <h2 className="text-2xl font-bold text-center mb-2 text-foreground">Seja um Prestador de Serviços</h2>
             <p className="text-muted-foreground text-center mb-6">
               Cadastre fornecedores na plataforma, gerencie seus produtos e organize seus clientes em um CRM integrado.
             </p>
@@ -365,10 +366,10 @@ const PrestadorServicos = () => {
           // Painel do prestador
           <div className="space-y-6">
             {/* Link de indicação */}
-            <Card className="p-4">
+            <Card className="p-4 border-border">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium">Link de Cadastro de Fornecedores</h3>
+                  <h3 className="font-medium text-foreground">Link de Cadastro de Fornecedores</h3>
                   <p className="text-sm text-muted-foreground">
                     Compartilhe para cadastrar novos fornecedores
                   </p>
@@ -381,25 +382,25 @@ const PrestadorServicos = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <Card className="p-4">
+              <Card className="p-4 border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                    <Store className="h-5 w-5 text-blue-500" />
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Store className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Fornecedores</p>
-                    <p className="text-xl font-bold">{suppliers.length}</p>
+                    <p className="text-xl font-bold text-foreground">{suppliers.length}</p>
                   </div>
                 </div>
               </Card>
-              <Card className="p-4">
+              <Card className="p-4 border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                    <Users className="h-5 w-5 text-purple-500" />
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Clientes CRM</p>
-                    <p className="text-xl font-bold">{crmClients.length}</p>
+                    <p className="text-xl font-bold text-foreground">{crmClients.length}</p>
                   </div>
                 </div>
               </Card>
@@ -420,7 +421,7 @@ const PrestadorServicos = () => {
 
               <TabsContent value="suppliers" className="mt-4">
                 {suppliers.length === 0 ? (
-                  <Card className="p-8 text-center">
+                  <Card className="p-8 text-center border-border">
                     <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground mb-4">
                       Nenhum fornecedor cadastrado ainda
@@ -433,7 +434,7 @@ const PrestadorServicos = () => {
                 ) : (
                   <div className="space-y-4">
                     {suppliers.map(supplier => (
-                      <Card key={supplier.id} className="p-4">
+                      <Card key={supplier.id} className="p-4 border-border">
                         <div className="flex items-center gap-4">
                           {supplier.supplier?.foto_perfil_url ? (
                             <img 
@@ -447,7 +448,7 @@ const PrestadorServicos = () => {
                             </div>
                           )}
                           <div className="flex-1">
-                            <h3 className="font-medium">{supplier.supplier?.nome}</h3>
+                            <h3 className="font-medium text-foreground">{supplier.supplier?.nome}</h3>
                             <p className="text-sm text-muted-foreground">
                               {supplier.supplier?.email}
                             </p>
@@ -553,7 +554,7 @@ const PrestadorServicos = () => {
                 </div>
 
                 {crmClients.length === 0 ? (
-                  <Card className="p-8 text-center">
+                  <Card className="p-8 text-center border-border">
                     <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground">
                       Nenhum cliente cadastrado no CRM
@@ -562,7 +563,7 @@ const PrestadorServicos = () => {
                 ) : (
                   <div className="space-y-4">
                     {crmClients.map(client => (
-                      <Card key={client.id} className="p-4">
+                      <Card key={client.id} className="p-4 border-border">
                         <div className="flex items-start justify-between">
                           <div>
                             <h3 className="font-medium">{client.client_name}</h3>

@@ -83,6 +83,7 @@ const AdminCategorias = lazy(() => import("./pages/admin/Categorias"));
 const AdminBanners = lazy(() => import("./pages/admin/Banners"));
 const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
 const AdminReconciliacao = lazy(() => import("./pages/admin/Reconciliacao"));
+const AdminAffiliatePrestadores = lazy(() => import("./pages/admin/AffiliatePrestadores"));
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 
 // Optimized QueryClient with aggressive caching
@@ -208,6 +209,7 @@ const App = () => {
               <Route path="banners" element={<Suspense fallback={<PageSkeleton />}><AdminBanners /></Suspense>} />
               <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
               <Route path="reconciliacao" element={<Suspense fallback={<PageSkeleton />}><AdminReconciliacao /></Suspense>} />
+              <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
