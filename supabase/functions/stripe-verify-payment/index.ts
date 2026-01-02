@@ -29,24 +29,16 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get user from auth header
+    // Try to get user from auth header (optional - user may have session expired during Stripe checkout)
+    let userId: string | null = null;
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Não autorizado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabaseClient.auth.getUser(token);
+      userId = user?.id || null;
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Usuário não encontrado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    console.log("User ID from auth:", userId || "not authenticated (will use metadata)");
 
     const { sessionId } = await req.json();
 
@@ -126,12 +118,14 @@ serve(async (req) => {
           console.error("Error fetching order to update:", orderErr);
         } else if (!orderRow) {
           console.warn("Order not found for metadata order_id:", orderIdFromMetadata);
-        } else if (orderRow.buyer_id && orderRow.buyer_id !== user.id) {
-          return new Response(
-            JSON.stringify({ error: "Acesso negado", verified: false }),
-            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        } else if (orderRow.payment_status !== "paid") {
+        } else if (orderRow.buyer_id && userId && orderRow.buyer_id !== userId) {
+          // Only log warning if user IS authenticated but doesn't match
+          // If user is not authenticated, we proceed (session expired during checkout)
+          console.warn("Authenticated user doesn't match order buyer, but proceeding with verification");
+        }
+        
+        // Proceed with update if order exists and not yet paid
+        if (orderRow && orderRow.payment_status !== "paid") {
           const { error: updateErr } = await supabaseAdmin
             .from("orders")
             .update({
