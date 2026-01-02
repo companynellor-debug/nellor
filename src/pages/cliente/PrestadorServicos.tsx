@@ -233,8 +233,8 @@ const PrestadorServicos = () => {
 
   const copyReferralLink = () => {
     if (!serviceProvider) return;
-    // Use rota de cadastro existente: /auth com parâmetro sp
-    const link = `${window.location.origin}/auth?tipo=fornecedor&sp=${serviceProvider.id}`;
+    // Rota dedicada de cadastro de fornecedor com provider
+    const link = `${window.location.origin}/cadastro-fornecedor?provider=${serviceProvider.id}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     toast.success('Link copiado!');

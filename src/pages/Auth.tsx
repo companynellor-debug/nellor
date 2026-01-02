@@ -21,22 +21,25 @@ const Auth = () => {
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
-  
-  // Service provider referral
-  const serviceProviderId = searchParams.get('sp');
-  
+
   const {
     signIn,
     signUp,
     isAuthenticated,
     profile,
-    loading
+    loading,
   } = useSupabaseAuth();
   const navigate = useNavigate();
+  // Service provider referral + post-auth redirect
+  const serviceProviderId = searchParams.get('provider') ?? searchParams.get('sp');
+  const nextParam = searchParams.get('next');
 
-  // Set tipo to fornecedor if sp param is present
   useEffect(() => {
+    if (nextParam) {
+      localStorage.setItem('nellor_post_auth_redirect', nextParam);
+    }
     if (serviceProviderId) {
+      localStorage.setItem('nellor_service_provider_ref', serviceProviderId);
       setTipo('fornecedor');
       setIsLogin(false); // Force signup mode for referrals
     }
@@ -44,67 +47,53 @@ const Auth = () => {
     if (tipoParam === 'fornecedor') {
       setTipo('fornecedor');
     }
-  }, [serviceProviderId, searchParams]);
+  }, [serviceProviderId, nextParam, searchParams]);
 
   useEffect(() => {
     if (!loading && isAuthenticated && profile) {
       // Sync affiliate attributions when user logs in
       void syncAttributionsOnLogin(profile.id);
-      
-      // Link service provider if sp param exists and user is a fornecedor
-      if (serviceProviderId && profile.tipo === 'fornecedor') {
-        void linkServiceProvider(profile.id, serviceProviderId);
-      }
-      
-      if (profile.tipo === 'fornecedor' && !profile.onboarding_completed) {
-        navigate('/fornecedor/onboarding', {
-          replace: true
-        });
-      } else if (profile.tipo === 'fornecedor') {
-        navigate('/fornecedor/dashboard', {
-          replace: true
-        });
-      } else if (profile.tipo === 'admin') {
-        navigate('/admin', {
-          replace: true
-        });
-      } else {
-        navigate('/cliente', {
-          replace: true
+
+      // Service provider linking (persisted even if user refreshed)
+      const storedSp = localStorage.getItem('nellor_service_provider_ref');
+      if (storedSp && profile.tipo === 'fornecedor') {
+        void acceptServiceProviderInvite(profile.id, storedSp).finally(() => {
+          localStorage.removeItem('nellor_service_provider_ref');
         });
       }
-    }
-  }, [isAuthenticated, profile, loading, navigate, serviceProviderId]);
 
-  const linkServiceProvider = async (supplierId: string, spId: string) => {
-    try {
-      // Check if service provider exists
-      const { data: sp } = await supabase
-        .from('service_providers')
-        .select('id')
-        .eq('id', spId)
-        .single();
-
-      if (!sp) {
-        console.log('Service provider not found:', spId);
+      // Post-auth redirect for cliente (keeps product context)
+      const next = localStorage.getItem('nellor_post_auth_redirect');
+      if (next && profile.tipo === 'cliente') {
+        localStorage.removeItem('nellor_post_auth_redirect');
+        navigate(next, { replace: true });
         return;
       }
 
-      // Create link between supplier and service provider
-      const { error } = await supabase
-        .from('service_provider_suppliers')
-        .insert({
-          service_provider_id: spId,
-          supplier_id: supplierId,
-        });
-
-      if (error && !error.message.includes('duplicate')) {
-        console.error('Error linking service provider:', error);
+      if (profile.tipo === 'fornecedor' && !profile.onboarding_completed) {
+        navigate('/fornecedor/onboarding', { replace: true });
+      } else if (profile.tipo === 'fornecedor') {
+        navigate('/fornecedor/dashboard', { replace: true });
+      } else if (profile.tipo === 'admin') {
+        navigate('/admin', { replace: true });
       } else {
-        console.log('Successfully linked supplier to service provider');
+        navigate('/cliente', { replace: true });
+      }
+    }
+  }, [isAuthenticated, profile, loading, navigate]);
+
+  const acceptServiceProviderInvite = async (supplierId: string, spId: string) => {
+    try {
+      const { error } = await supabase.rpc('accept_service_provider_invite', {
+        _service_provider_id: spId,
+        _supplier_id: supplierId,
+      });
+
+      if (error) {
+        console.error('Error accepting service provider invite:', error);
       }
     } catch (error) {
-      console.error('Error in linkServiceProvider:', error);
+      console.error('Error in acceptServiceProviderInvite:', error);
     }
   };
 

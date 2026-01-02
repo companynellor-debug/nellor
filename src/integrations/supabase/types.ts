@@ -109,39 +109,99 @@ export type Database = {
           },
         ]
       }
+      affiliate_commission_items: {
+        Row: {
+          commission_amount: number
+          commission_id: string
+          commission_percent: number
+          created_at: string
+          id: string
+          line_total: number
+          product_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          commission_amount: number
+          commission_id: string
+          commission_percent: number
+          created_at?: string
+          id?: string
+          line_total: number
+          product_id: string
+          quantity?: number
+          unit_price: number
+        }
+        Update: {
+          commission_amount?: number
+          commission_id?: string
+          commission_percent?: number
+          created_at?: string
+          id?: string
+          line_total?: number
+          product_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commission_items_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_commissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commission_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_commissions: {
         Row: {
           affiliate_id: string
           amount: number
           attribution_id: string | null
+          commission_percent: number | null
           created_at: string | null
           id: string
           order_id: string
+          order_total: number | null
           paid_at: string | null
           status: Database["public"]["Enums"]["commission_status"] | null
           stripe_transfer_id: string | null
+          supplier_id: string | null
         }
         Insert: {
           affiliate_id: string
           amount: number
           attribution_id?: string | null
+          commission_percent?: number | null
           created_at?: string | null
           id?: string
           order_id: string
+          order_total?: number | null
           paid_at?: string | null
           status?: Database["public"]["Enums"]["commission_status"] | null
           stripe_transfer_id?: string | null
+          supplier_id?: string | null
         }
         Update: {
           affiliate_id?: string
           amount?: number
           attribution_id?: string | null
+          commission_percent?: number | null
           created_at?: string | null
           id?: string
           order_id?: string
+          order_total?: number | null
           paid_at?: string | null
           status?: Database["public"]["Enums"]["commission_status"] | null
           stripe_transfer_id?: string | null
+          supplier_id?: string | null
         }
         Relationships: [
           {
@@ -1246,6 +1306,7 @@ export type Database = {
         Row: {
           allow_affiliates: boolean | null
           allow_recurring_commission: boolean | null
+          commission_duration_days: number
           created_at: string | null
           default_commission_percent: number | null
           id: string
@@ -1256,6 +1317,7 @@ export type Database = {
         Insert: {
           allow_affiliates?: boolean | null
           allow_recurring_commission?: boolean | null
+          commission_duration_days?: number
           created_at?: string | null
           default_commission_percent?: number | null
           id?: string
@@ -1266,6 +1328,7 @@ export type Database = {
         Update: {
           allow_affiliates?: boolean | null
           allow_recurring_commission?: boolean | null
+          commission_duration_days?: number
           created_at?: string | null
           default_commission_percent?: number | null
           id?: string
@@ -1484,6 +1547,10 @@ export type Database = {
         Returns: boolean
       }
       bytea_to_text: { Args: { data: string }; Returns: string }
+      create_affiliate_commission_for_order: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
       generate_affiliate_code: { Args: never; Returns: string }
       generate_order_number: { Args: never; Returns: string }
       get_admin_orders: {

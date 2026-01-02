@@ -20,6 +20,7 @@ interface AffiliateAttribution {
   linkId: string;
   supplierId: string;
   affiliateId: string;
+  productId?: string;
   isNewUser?: boolean;
 }
 
@@ -53,16 +54,14 @@ const PublicProduto = () => {
   const product = useMemo(() => products.find((p) => p.id === id), [products, id]);
 
   const publicBaseUrl = useMemo(() => {
-    const envUrl = (import.meta as any).env?.VITE_PUBLIC_SITE_URL as string | undefined;
-    if (envUrl) return envUrl.replace(/\/$/, "");
     return window.location.origin;
   }, []);
 
   const productUrl = useMemo(() => `${publicBaseUrl}/p/${id}`, [publicBaseUrl, id]);
 
-  // Track affiliate click when ref param is present
+  // Track affiliate click when ref/aff param is present
   useEffect(() => {
-    const refCode = searchParams.get("ref");
+    const refCode = searchParams.get("ref") ?? searchParams.get("aff");
     if (!refCode) return;
 
     const trackClick = async () => {
@@ -77,15 +76,17 @@ const PublicProduto = () => {
           _user_agent: navigator.userAgent,
         });
 
-        const result = data as {
-          ok?: boolean;
-          error?: string;
-          clicked_at?: string;
-          expires_at?: string;
-          link_id?: string;
-          supplier_id?: string;
-          affiliate_id?: string;
-        } | null;
+        const result =
+          (data as {
+            ok?: boolean;
+            error?: string;
+            clicked_at?: string;
+            expires_at?: string;
+            link_id?: string;
+            supplier_id?: string;
+            affiliate_id?: string;
+            product_id?: string;
+          } | null) ?? null;
 
         if (error || !result?.ok) {
           console.log("Affiliate click not tracked:", refCode, error?.message ?? result?.error);
@@ -99,7 +100,8 @@ const PublicProduto = () => {
           linkId: result.link_id ?? "",
           supplierId: result.supplier_id ?? "",
           affiliateId: result.affiliate_id ?? "",
-          isNewUser: !auth.user, // Track if this is a guest (potential new user)
+          productId: result.product_id ?? id,
+          isNewUser: !auth.user,
         };
 
         // Keep only one active attribution per supplier
@@ -114,11 +116,12 @@ const PublicProduto = () => {
 
     void trackClick();
 
-    // Remove ref from URL without reload
+    // Remove tracking param from URL without reload
     const newParams = new URLSearchParams(searchParams);
     newParams.delete("ref");
+    newParams.delete("aff");
     setSearchParams(newParams, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, id]);
 
   const handleCopyLink = async () => {
     try {
@@ -219,7 +222,9 @@ const PublicProduto = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate(`/auth`)}
+                  onClick={() =>
+                    navigate(`/auth?next=${encodeURIComponent(`/cliente/produto/${product.id}`)}`)
+                  }
                 >
                   Entrar para comprar
                 </Button>
