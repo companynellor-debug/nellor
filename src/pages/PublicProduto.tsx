@@ -222,9 +222,18 @@ const PublicProduto = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() =>
-                    navigate(`/auth?next=${encodeURIComponent(`/cliente/produto/${product.id}`)}`)
-                  }
+                  onClick={async () => {
+                    const { data } = await supabase.auth.getSession();
+
+                    // Se já estiver logado, vai direto para o produto (sem depender de querystring)
+                    if (data.session) {
+                      navigate(`/cliente/produto/${product.id}`);
+                      return;
+                    }
+
+                    // Se não estiver logado, guarda o destino e manda pro login
+                    navigate(`/auth?next=${encodeURIComponent(`/cliente/produto/${product.id}`)}`);
+                  }}
                 >
                   Entrar para comprar
                 </Button>
