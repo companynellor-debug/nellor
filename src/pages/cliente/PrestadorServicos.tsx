@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ServiceProviderIntegration } from "@/components/cliente/ServiceProviderIntegration";
+import { ServiceProviderProducts } from "@/components/cliente/ServiceProviderProducts";
 
 interface ServiceProviderData {
   id: string;
@@ -520,14 +521,19 @@ const PrestadorServicos = () => {
 
             {/* Tabs */}
             <Tabs defaultValue="suppliers" className="w-full">
-              <TabsList className="w-full grid grid-cols-2">
+              <TabsList className="w-full grid grid-cols-3">
                 <TabsTrigger value="suppliers">
-                  <Store className="h-4 w-4 mr-2" />
-                  Fornecedores ({suppliers.length})
+                  <Store className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Fornecedores</span>
+                  <span className="sm:hidden">({suppliers.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="products">
+                  <Package className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Produtos</span>
                 </TabsTrigger>
                 <TabsTrigger value="crm">
-                  <Users className="h-4 w-4 mr-2" />
-                  CRM ({crmEntries.length})
+                  <Users className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">CRM</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -619,6 +625,14 @@ const PrestadorServicos = () => {
                     })}
                   </div>
                 )}
+              </TabsContent>
+
+              {/* Products Tab */}
+              <TabsContent value="products" className="mt-4">
+                <ServiceProviderProducts 
+                  suppliers={suppliers}
+                  onRefresh={fetchServiceProviderData}
+                />
               </TabsContent>
 
               {/* CRM Tab */}
