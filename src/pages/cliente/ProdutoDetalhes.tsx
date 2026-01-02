@@ -9,7 +9,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart, Package, MessageCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStores } from "@/hooks/useStores";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
@@ -23,35 +23,78 @@ const ProdutoDetalhes = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [supplierProfile, setSupplierProfile] = useState<any>(null);
   const [currentStock, setCurrentStock] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showQuantityDialog, setShowQuantityDialog] = useState(false);
+
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { addToCart } = useCart();
   const { stores } = useStores();
   const { getProductById, getRelatedProducts } = useProducts();
 
-  const productId = id ? parseInt(id) : 1;
-  const product = getProductById(productId);
   const { products: supabaseProducts } = useSupabaseProducts();
-  
-  // Buscar produto real do Supabase para dados atualizados
-  const supabaseProduct = product?.supplierUuid 
-    ? supabaseProducts.find(p => p.id === product.supplierUuid) 
-    : null;
-  
-  // Buscar reviews pelo product_id real (não supplier)
-  const { reviews, loading: reviewsLoading } = useSupabaseReviews(product?.supplierUuid);
-  
-  const store = product ? stores.find(s => s.id === product.storeId) : undefined;
+
+  const routeId = id ?? "";
+  const isUuid = useMemo(
+    () => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(routeId),
+    [routeId]
+  );
+
+  const supabaseProductById = useMemo(() => {
+    if (!isUuid) return null;
+    return supabaseProducts.find((p) => p.id === routeId) ?? null;
+  }, [isUuid, supabaseProducts, routeId]);
+
+  // Fallback legado (IDs numéricos) – mantém compatibilidade sem depender só do URL para UUID.
+  const legacyProductId = useMemo(() => {
+    const n = Number.parseInt(routeId, 10);
+    return Number.isFinite(n) ? n : null;
+  }, [routeId]);
+  const legacyProduct = legacyProductId ? getProductById(legacyProductId) : undefined;
+
+  // Produto “fonte da verdade” para a UI desta tela
+  const product = useMemo(() => {
+    if (supabaseProductById) {
+      const images = (supabaseProductById.imagens ?? []).filter(Boolean);
+      const description = supabaseProductById.descricao_longa || supabaseProductById.descricao_curta || "";
+
+      return {
+        // Campos usados pela UI existente
+        id: 0,
+        name: supabaseProductById.nome,
+        images: images.length ? images : [""],
+        priceNumber: supabaseProductById.preco,
+        price: `R$ ${supabaseProductById.preco.toFixed(2).replace(".", ",")}`,
+        description,
+        specs: [] as Array<{ label: string; value: string }>,
+        category: supabaseProductById.categoria_id ?? "",
+
+        // IDs reais do Supabase (importantes para carrinho/loja)
+        supplierUuid: supabaseProductById.id,
+        supplierProfileId: supabaseProductById.supplier_id,
+        storeId: supabaseProductById.supplier_id,
+      };
+    }
+
+    return legacyProduct;
+  }, [supabaseProductById, legacyProduct]);
+
+  // Reviews sempre pelo product_id real (UUID quando existir)
+  const { reviews, loading: reviewsLoading } = useSupabaseReviews(
+    (supabaseProductById?.id ?? (legacyProduct as any)?.supplierUuid) || undefined
+  );
+
+  const store = product ? stores.find((s) => s.id === (product as any).storeId) : undefined;
+  const productId = legacyProductId ?? 0;
   const isProductFavorite = isFavorite(productId);
-  
-  // Usar dados reais do banco
-  const realRating = supabaseProduct?.rating_medio ?? product?.rating ?? 0;
-  const realReviewCount = supabaseProduct?.total_reviews ?? product?.reviews ?? 0;
-  const realSalesCount = supabaseProduct?.vendas_count ?? 0;
+
+  // Usar dados reais do banco quando disponível
+  const realRating = supabaseProductById?.rating_medio ?? (legacyProduct as any)?.rating ?? 0;
+  const realReviewCount = supabaseProductById?.total_reviews ?? (legacyProduct as any)?.reviews ?? 0;
+  const realSalesCount = supabaseProductById?.vendas_count ?? 0;
   // Buscar perfil do fornecedor (via VIEW pública) e estoque atual
   useEffect(() => {
     const fetchSupplierData = async () => {
