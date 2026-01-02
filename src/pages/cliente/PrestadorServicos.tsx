@@ -45,6 +45,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ServiceProviderIntegration } from "@/components/cliente/ServiceProviderIntegration";
 
 interface ServiceProviderData {
   id: string;
@@ -414,20 +415,11 @@ const PrestadorServicos = () => {
         ) : (
           // Painel do prestador
           <div className="space-y-6">
-            {/* Link de indicação */}
-            <Card className="p-4 border-border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Link de Cadastro de Fornecedores</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Compartilhe para cadastrar novos fornecedores
-                  </p>
-                </div>
-                <Button variant="outline" onClick={copyReferralLink}>
-                  {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </Card>
+            {/* Integration Request */}
+            <ServiceProviderIntegration 
+              serviceProviderId={serviceProvider.id}
+              onIntegrationComplete={fetchServiceProviderData}
+            />
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
