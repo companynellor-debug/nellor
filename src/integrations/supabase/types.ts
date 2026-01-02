@@ -979,6 +979,7 @@ export type Database = {
           nome: string
           onboarding_completed: boolean | null
           pix_key: string | null
+          service_provider_code: string | null
           stripe_account_id: string | null
           stripe_ready: boolean | null
           telefone: string | null
@@ -998,6 +999,7 @@ export type Database = {
           nome: string
           onboarding_completed?: boolean | null
           pix_key?: string | null
+          service_provider_code?: string | null
           stripe_account_id?: string | null
           stripe_ready?: boolean | null
           telefone?: string | null
@@ -1017,6 +1019,7 @@ export type Database = {
           nome?: string
           onboarding_completed?: boolean | null
           pix_key?: string | null
+          service_provider_code?: string | null
           stripe_account_id?: string | null
           stripe_ready?: boolean | null
           telefone?: string | null
@@ -1236,6 +1239,61 @@ export type Database = {
             columns: ["service_provider_id"]
             isOneToOne: false
             referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_provider_requests: {
+        Row: {
+          created_at: string
+          id: string
+          requested_at: string
+          responded_at: string | null
+          service_provider_id: string
+          status: string
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requested_at?: string
+          responded_at?: string | null
+          service_provider_id: string
+          status?: string
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requested_at?: string
+          responded_at?: string | null
+          service_provider_id?: string
+          status?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_requests_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_provider_requests_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_provider_requests_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "public_supplier_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1552,7 +1610,12 @@ export type Database = {
         Returns: undefined
       }
       generate_affiliate_code: { Args: never; Returns: string }
+      generate_or_get_supplier_code: {
+        Args: { _supplier_id: string }
+        Returns: string
+      }
       generate_order_number: { Args: never; Returns: string }
+      generate_supplier_code: { Args: never; Returns: string }
       get_active_attribution: {
         Args: { _buyer_id: string; _supplier_id: string }
         Returns: {
@@ -1782,6 +1845,15 @@ export type Database = {
       http_set_curlopt: {
         Args: { curlopt: string; value: string }
         Returns: boolean
+      }
+      regenerate_supplier_code: {
+        Args: { _supplier_id: string }
+        Returns: string
+      }
+      request_supplier_integration: { Args: { _code: string }; Returns: Json }
+      respond_to_sp_request: {
+        Args: { _approve: boolean; _request_id: string }
+        Returns: Json
       }
       text_to_bytea: { Args: { data: string }; Returns: string }
       track_affiliate_click: {

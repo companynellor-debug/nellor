@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, 
   Briefcase, 
-  Settings,
   Loader2,
   Save,
   Percent,
@@ -19,6 +18,8 @@ import {
   Package,
   FileText
 } from "lucide-react";
+import { ServiceProviderCodePanel } from "@/components/fornecedor/ServiceProviderCodePanel";
+import { ServiceProviderRequestsPanel } from "@/components/fornecedor/ServiceProviderRequestsPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
@@ -277,6 +278,12 @@ const Permissoes = () => {
         </TabsContent>
 
         <TabsContent value="service-providers" className="mt-6 space-y-6">
+          {/* Code Generation Panel */}
+          <ServiceProviderCodePanel />
+          
+          {/* Requests Panel */}
+          <ServiceProviderRequestsPanel />
+
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -284,9 +291,9 @@ const Permissoes = () => {
                   <Briefcase className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold">Prestadores de Serviço</h2>
+                  <h2 className="text-xl font-bold">Permissões de Prestadores</h2>
                   <p className="text-sm text-muted-foreground">
-                    Permita que prestadores gerenciem sua loja
+                    Configure o que prestadores podem editar
                   </p>
                 </div>
               </div>
