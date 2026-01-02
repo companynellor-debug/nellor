@@ -1553,6 +1553,16 @@ export type Database = {
       }
       generate_affiliate_code: { Args: never; Returns: string }
       generate_order_number: { Args: never; Returns: string }
+      get_active_attribution: {
+        Args: { _buyer_id: string; _supplier_id: string }
+        Returns: {
+          affiliate_id: string
+          affiliate_link_id: string
+          attribution_id: string
+          clicked_at: string
+          expires_at: string
+        }[]
+      }
       get_admin_orders: {
         Args: never
         Returns: {

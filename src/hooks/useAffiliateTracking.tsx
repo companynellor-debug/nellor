@@ -27,7 +27,7 @@ export function useAffiliateTracking() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    const refCode = searchParams.get("ref");
+    const refCode = searchParams.get("ref") || searchParams.get("aff");
     if (!refCode) return;
 
     void trackAffiliateClick(refCode);
@@ -35,6 +35,7 @@ export function useAffiliateTracking() {
     // Remove ref from URL without reload
     const newParams = new URLSearchParams(searchParams);
     newParams.delete("ref");
+    newParams.delete("aff");
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
@@ -128,5 +129,25 @@ export async function syncAttributionsOnLogin(userId: string) {
     }
   } catch (error) {
     console.error("Error syncing affiliate attributions:", error);
+  }
+}
+
+// Check if there's an active attribution in the database for a buyer+supplier
+export async function checkActiveAttributionInDb(buyerId: string, supplierId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc("get_active_attribution", {
+      _buyer_id: buyerId,
+      _supplier_id: supplierId,
+    });
+
+    if (error) {
+      console.log("Error checking attribution:", error.message);
+      return false;
+    }
+
+    return Array.isArray(data) && data.length > 0;
+  } catch (error) {
+    console.error("Error checking active attribution:", error);
+    return false;
   }
 }
