@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
+import { AffiliateSettingsPanel } from "@/components/fornecedor/AffiliateSettingsPanel";
 
 const Configuracoes = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +25,9 @@ const Configuracoes = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Configurações</h1>
+
+      {/* Affiliate Settings Panel */}
+      <AffiliateSettingsPanel />
 
       <Card className="p-6">
         <div className="space-y-6">
