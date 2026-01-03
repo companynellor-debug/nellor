@@ -43,7 +43,11 @@ serve(async (req) => {
     // ignore
   }
 
-  if (!payload.password || payload.password !== adminPasswordSecret) {
+  const inputPassword = (payload.password ?? "").trim();
+  const expectedPassword = adminPasswordSecret.trim();
+  
+  if (!inputPassword || inputPassword !== expectedPassword) {
+    console.log("Password mismatch. Input length:", inputPassword.length, "Expected length:", expectedPassword.length);
     return json(401, { ok: false, error: "INVALID_PASSWORD" });
   }
 
