@@ -15,29 +15,34 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
   const [hasAdminRole, setHasAdminRole] = useState(false);
 
   useEffect(() => {
-    if (requireType !== 'admin') {
-      setHasAdminRole(false);
-      setRoleLoading(false);
-      return;
-    }
+    const checkAccess = async () => {
+      if (requireType !== 'admin') {
+        setHasAdminRole(false);
+        setRoleLoading(false);
+        return;
+      }
 
-    // Check sessionStorage for admin access (set via password login)
-    const adminAccess = sessionStorage.getItem('nellor_admin_access');
-    if (adminAccess === 'true') {
-      setHasAdminRole(true);
-      setRoleLoading(false);
-      return;
-    }
-
-    // Also check database role if user is authenticated
-    if (!user?.id) {
-      setHasAdminRole(false);
-      setRoleLoading(false);
-      return;
-    }
-
-    const checkAdminRole = async () => {
       setRoleLoading(true);
+      
+      // Check sessionStorage for admin access (set via password login)
+      const adminAccess = sessionStorage.getItem('nellor_admin_access');
+      console.log('Checking admin access:', adminAccess);
+      
+      if (adminAccess === 'true') {
+        console.log('Admin access granted via sessionStorage');
+        setHasAdminRole(true);
+        setRoleLoading(false);
+        return;
+      }
+
+      // Also check database role if user is authenticated
+      if (!user?.id) {
+        console.log('No user and no sessionStorage admin access');
+        setHasAdminRole(false);
+        setRoleLoading(false);
+        return;
+      }
+
       try {
         const { data, error } = await supabase.rpc('has_role', {
           _user_id: user.id,
@@ -50,14 +55,17 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
           return;
         }
 
+        console.log('Has admin role from DB:', Boolean(data));
         setHasAdminRole(Boolean(data));
       } finally {
         setRoleLoading(false);
       }
     };
 
-    void checkAdminRole();
+    void checkAccess();
   }, [requireType, user?.id]);
+
+  console.log('ProtectedRoute check:', { requireType, isAuthenticated, hasAdminRole, roleLoading, loading });
 
   if (loading || roleLoading) {
     return (
@@ -68,7 +76,12 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
   }
 
   // SPECIAL CASE: Admin via sessionStorage (password access) - allow without authentication
-  if (requireType === 'admin' && hasAdminRole) {
+  if (requireType === 'admin') {
+    if (!hasAdminRole) {
+      console.log('Admin required but not granted, redirecting to /auth');
+      return <Navigate to="/auth" replace />;
+    }
+    console.log('Admin access granted, rendering children');
     return <>{children}</>;
   }
 
