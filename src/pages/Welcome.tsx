@@ -83,7 +83,7 @@ const Welcome = () => {
       <div className="relative flex-1 flex flex-col items-center px-4 pt-4 sm:pt-6 pb-3 sm:px-5 sm:pb-6">
         {/* Top section - Logo */}
         <div className="flex flex-col items-center mt-4 sm:mt-6 mb-2 sm:mb-3">
-          <img src={logo} alt="Nellor" className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-lg" />
+          <img src={logo} alt="Nellor" className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-lg mt-6 sm:mt-8" />
           <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
             Nellor
           </h1>
