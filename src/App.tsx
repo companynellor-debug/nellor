@@ -12,18 +12,11 @@ const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const ClienteLayout = lazy(() => import("./pages/cliente/ClienteLayout"));
 const FornecedorLayout = lazy(() => import("./pages/fornecedor/FornecedorLayout"));
 
-// Lazy load public pages
-const Home = lazy(() => import("./pages/Home"));
-const Fornecedor = lazy(() => import("./pages/Fornecedor"));
-const Sobre = lazy(() => import("./pages/Sobre"));
-const Contato = lazy(() => import("./pages/Contato"));
+// Lazy load public pages (minimal - only welcome and auth)
+const Welcome = lazy(() => import("./pages/Welcome"));
 const Auth = lazy(() => import("./pages/Auth"));
-const Download = lazy(() => import("./pages/Download"));
-const Recursos = lazy(() => import("./pages/Recursos"));
-const FAQ = lazy(() => import("./pages/FAQ"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PublicProduto = lazy(() => import("./pages/PublicProduto"));
-const EscolherPlano = lazy(() => import("./pages/fornecedor/EscolherPlano"));
 const Onboarding = lazy(() => import("./pages/fornecedor/Onboarding"));
 
 // Lazy load cliente pages
@@ -107,11 +100,14 @@ const App = () => {
         <Sonner />
         <Suspense fallback={<PageSkeleton />}>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/sobre" element={<Sobre />} />
-            <Route path="/contato" element={<Contato />} />
+            {/* Welcome Screen - única página pública */}
+            <Route path="/" element={<Welcome />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/cadastro-fornecedor" element={<Auth />} />
+            
+            {/* Public Product Share Route (mantido para links de compartilhamento) */}
+            <Route path="/p/:id" element={<PublicProduto />} />
+
+            {/* Fornecedor Onboarding */}
             <Route
               path="/fornecedor/onboarding"
               element={
@@ -120,12 +116,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            <Route path="/download" element={<Download />} />
-            <Route path="/recursos" element={<Recursos />} />
-            <Route path="/faq" element={<FAQ />} />
-
-            {/* Public Product Share Route */}
-            <Route path="/p/:id" element={<PublicProduto />} />
 
             {/* Cliente Panel Routes */}
             <Route
@@ -160,9 +150,6 @@ const App = () => {
               <Route path="afiliados" element={<Suspense fallback={<PageSkeleton />}><ProgramaAfiliados /></Suspense>} />
               <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
             </Route>
-
-            {/* Public store profile route */}
-            <Route path="/loja/:id" element={<PerfilLoja />} />
 
             {/* Fornecedor Panel Routes */}
             <Route
@@ -212,7 +199,7 @@ const App = () => {
               <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
             </Route>
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Catch-all - redirect to welcome */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
