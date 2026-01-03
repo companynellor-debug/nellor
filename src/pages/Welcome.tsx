@@ -80,7 +80,7 @@ const Welcome = () => {
       />
 
       {/* Content - compact layout */}
-      <div className="relative flex-1 flex flex-col items-center px-4 pt-4 sm:pt-6 pb-3 sm:px-5 sm:pb-6">
+      <div className="relative flex-1 flex flex-col items-center px-4 pt-4 pb-4 gap-2 sm:gap-0 sm:px-5 sm:pb-6 sm:pt-6 sm:justify-between">
         {/* Top section - Logo */}
         <div className="flex flex-col items-center mt-2 sm:mt-6 mb-1 sm:mb-3">
           <img src={logo} alt="Nellor" className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-lg" />
@@ -91,7 +91,7 @@ const Welcome = () => {
 
         {/* Center section - Computer Preview */}
         {products.length > 0 && (
-          <div className="w-full max-w-sm sm:max-w-lg lg:max-w-2xl mx-auto flex-1 flex items-center justify-center min-h-0 py-2 sm:py-4">
+          <div className="w-full max-w-sm sm:max-w-lg lg:max-w-2xl mx-auto flex items-center justify-center min-h-0 py-1 sm:flex-1 sm:py-4">
             {/* Computer Frame */}
             <div className="relative w-full">
               {/* Screen bezel */}
@@ -100,7 +100,7 @@ const Welcome = () => {
                 <div className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 w-1 sm:w-2 h-1 sm:h-2 bg-gray-500 rounded-full" />
                 
                 {/* Screen */}
-                <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[42vh] sm:h-[35vh] lg:h-[45vh] max-h-[300px] sm:max-h-[350px] lg:max-h-[420px]">
+                <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[44vh] sm:h-[35vh] lg:h-[45vh] max-h-[320px] sm:max-h-[350px] lg:max-h-[420px]">
                   {/* Screen reflection */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
                   
@@ -156,7 +156,7 @@ const Welcome = () => {
         )}
 
         {/* Bottom section - Tagline and buttons (compact) */}
-        <div className="w-full -mt-2 sm:-mt-6">
+        <div className="w-full mt-1 sm:-mt-6">
           <p className="text-center text-white/60 text-xs sm:text-sm mb-3 sm:mb-4">
             Conectando você aos melhores fornecedores.
           </p>
