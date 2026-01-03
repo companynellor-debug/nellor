@@ -2,7 +2,7 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, MessageCircle, Download, Smartphone, Users, Briefcase } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, MessageCircle, Download, Smartphone, Users, Briefcase, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProfile } from "@/hooks/useProfile";
@@ -28,6 +28,7 @@ const Perfil = () => {
     { icon: CreditCard, label: "Métodos de Pagamento", action: () => navigate("/cliente/metodos-pagamento") },
     { icon: Bell, label: "Notificações", action: () => navigate("/cliente/notificacoes") },
     { icon: Users, label: "Programa de Afiliados", action: () => navigate("/cliente/afiliados"), highlight: true },
+    { icon: Zap, label: "Nellor Drop", action: () => navigate("/cliente/nellor-drop"), highlight: true, description: "Venda sem estoque" },
     { icon: Briefcase, label: "Prestador de Serviços", action: () => navigate("/cliente/prestador-servicos") },
     ...(canInstall && !isInstalled ? [{ icon: Smartphone, label: "Instalar App", action: () => navigate("/cliente/instalar") }] : []),
     { icon: MessageCircle, label: "Suporte", action: () => navigate("/cliente/suporte") },
@@ -103,7 +104,10 @@ const Perfil = () => {
                     <h3 className={`font-medium ${isLogout ? "text-red-500" : ""}`}>
                       {item.label}
                     </h3>
-                    {isHighlight && (
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground">{item.description}</p>
+                    )}
+                    {isHighlight && !item.description && (
                       <p className="text-xs text-muted-foreground">Acesso rápido na tela inicial</p>
                     )}
                   </div>
