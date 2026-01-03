@@ -108,6 +108,7 @@ const Auth = () => {
   const handleLogoClick = () => {
     setLogoClickCount(prev => {
       const newCount = prev + 1;
+      console.log('Logo clicks:', newCount); // Debug
       if (newCount === 5) {
         setShowAdminDialog(true);
         return 0;
