@@ -151,35 +151,29 @@ const ClienteHome = () => {
             </Card>
           </div>}
 
-        {/* Banners Section - Desktop: main + side layout */}
+        {/* Banners Section - Centered */}
         {banners.length > 0 && <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 px-[19px]">
-              {/* Main Banner Carousel */}
-              <div className="lg:col-span-2">
-                <Carousel opts={{
-              align: "start",
+            <div className="max-w-4xl mx-auto">
+              <Carousel opts={{
+              align: "center",
               loop: true
             }} plugins={[Autoplay({
               delay: 4000
             })]} className="w-full">
-                  <CarouselContent>
-                    {mainBanners.map(banner => <CarouselItem key={banner.id}>
-                        <div className="relative overflow-hidden rounded-xl cursor-pointer" onClick={() => banner.link_url && navigate(banner.link_url)}>
-                          <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-48 md:h-64 lg:h-80 object-cover" />
-                          {banner.title && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                              <h3 className="text-white font-bold text-lg">{banner.title}</h3>
-                              {banner.subtitle && <p className="text-white/90 text-sm">{banner.subtitle}</p>}
-                            </div>}
-                        </div>
-                      </CarouselItem>)}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-2" />
-                  <CarouselNext className="right-2" />
-                </Carousel>
-              </div>
-
-              {/* Side Banners - Desktop only */}
-              
+                <CarouselContent>
+                  {mainBanners.map(banner => <CarouselItem key={banner.id}>
+                      <div className="relative overflow-hidden rounded-xl cursor-pointer" onClick={() => banner.link_url && navigate(banner.link_url)}>
+                        <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-48 md:h-64 lg:h-80 object-cover" />
+                        {banner.title && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                            <h3 className="text-white font-bold text-lg">{banner.title}</h3>
+                            {banner.subtitle && <p className="text-white/90 text-sm">{banner.subtitle}</p>}
+                          </div>}
+                      </div>
+                    </CarouselItem>)}
+                </CarouselContent>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </Carousel>
             </div>
           </div>}
 
