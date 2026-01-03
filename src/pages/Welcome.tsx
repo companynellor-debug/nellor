@@ -182,6 +182,11 @@ const Welcome = () => {
                 <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-12 sm:w-20 h-0.5 sm:h-1 bg-[#333]/50 rounded-full" />
               </div>
             </div>
+            
+            {/* Diffuse shadow below laptop */}
+            <div className="absolute -bottom-4 sm:-bottom-6 left-1/2 -translate-x-1/2 w-[70%] h-4 sm:h-8 blur-xl sm:blur-2xl opacity-60" style={{
+              background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, transparent 70%)'
+            }} />
           </div>
         </div>
 
