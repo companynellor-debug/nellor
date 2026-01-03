@@ -80,6 +80,7 @@ const AdminBanners = lazy(() => import("./pages/admin/Banners"));
 const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
 const AdminReconciliacao = lazy(() => import("./pages/admin/Reconciliacao"));
 const AdminAffiliatePrestadores = lazy(() => import("./pages/admin/AffiliatePrestadores"));
+const AdminNellorDrop = lazy(() => import("./pages/admin/NellorDrop"));
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 
 // Optimized QueryClient with aggressive caching
@@ -210,6 +211,7 @@ const App = () => {
               <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
               <Route path="reconciliacao" element={<Suspense fallback={<PageSkeleton />}><AdminReconciliacao /></Suspense>} />
               <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
+              <Route path="nellor-drop" element={<Suspense fallback={<PageSkeleton />}><AdminNellorDrop /></Suspense>} />
             </Route>
 
             {/* Catch-all - redirect to welcome */}
