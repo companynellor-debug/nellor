@@ -437,6 +437,87 @@ export type Database = {
         }
         Relationships: []
       }
+      client_drop_products: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          custom_price: number
+          id: string
+          is_active: boolean | null
+          margin_type: string | null
+          margin_value: number | null
+          product_drop_setting_id: string
+          product_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          custom_price: number
+          id?: string
+          is_active?: boolean | null
+          margin_type?: string | null
+          margin_value?: number | null
+          product_drop_setting_id: string
+          product_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          custom_price?: number
+          id?: string
+          is_active?: boolean | null
+          margin_type?: string | null
+          margin_value?: number | null
+          product_drop_setting_id?: string
+          product_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_drop_products_product_drop_setting_id_fkey"
+            columns: ["product_drop_setting_id"]
+            isOneToOne: false
+            referencedRelation: "product_drop_settings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_drop_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_drop_profiles: {
+        Row: {
+          business_name: string | null
+          created_at: string | null
+          drop_enabled: boolean | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          business_name?: string | null
+          created_at?: string | null
+          drop_enabled?: boolean | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          business_name?: string | null
+          created_at?: string | null
+          drop_enabled?: boolean | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           ativo: boolean | null
@@ -500,6 +581,159 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drop_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_value: Json | null
+          old_value: Json | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      drop_orders: {
+        Row: {
+          base_price: number
+          buyer_document: string | null
+          buyer_email: string | null
+          buyer_name: string
+          buyer_phone: string | null
+          client_drop_product_id: string
+          client_id: string
+          client_margin: number
+          created_at: string | null
+          delivered_at: string | null
+          estimated_delivery: string | null
+          external_marketplace: string | null
+          external_order_id: string | null
+          id: string
+          order_number: string
+          order_status: string | null
+          paid_at: string | null
+          payment_status: string | null
+          platform_fee: number | null
+          product_id: string
+          quantity: number
+          sale_price: number
+          shipped_at: string | null
+          shipping_address: Json
+          shipping_company: string | null
+          supplier_amount: number
+          supplier_id: string
+          total: number
+          tracking_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_price: number
+          buyer_document?: string | null
+          buyer_email?: string | null
+          buyer_name: string
+          buyer_phone?: string | null
+          client_drop_product_id: string
+          client_id: string
+          client_margin: number
+          created_at?: string | null
+          delivered_at?: string | null
+          estimated_delivery?: string | null
+          external_marketplace?: string | null
+          external_order_id?: string | null
+          id?: string
+          order_number?: string
+          order_status?: string | null
+          paid_at?: string | null
+          payment_status?: string | null
+          platform_fee?: number | null
+          product_id: string
+          quantity?: number
+          sale_price: number
+          shipped_at?: string | null
+          shipping_address: Json
+          shipping_company?: string | null
+          supplier_amount: number
+          supplier_id: string
+          total: number
+          tracking_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_price?: number
+          buyer_document?: string | null
+          buyer_email?: string | null
+          buyer_name?: string
+          buyer_phone?: string | null
+          client_drop_product_id?: string
+          client_id?: string
+          client_margin?: number
+          created_at?: string | null
+          delivered_at?: string | null
+          estimated_delivery?: string | null
+          external_marketplace?: string | null
+          external_order_id?: string | null
+          id?: string
+          order_number?: string
+          order_status?: string | null
+          paid_at?: string | null
+          payment_status?: string | null
+          platform_fee?: number | null
+          product_id?: string
+          quantity?: number
+          sale_price?: number
+          shipped_at?: string | null
+          shipping_address?: Json
+          shipping_company?: string | null
+          supplier_amount?: number
+          supplier_id?: string
+          total?: number
+          tracking_code?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drop_orders_client_drop_product_id_fkey"
+            columns: ["client_drop_product_id"]
+            isOneToOne: false
+            referencedRelation: "client_drop_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drop_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -888,6 +1122,53 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_drop_settings: {
+        Row: {
+          allow_affiliates: boolean | null
+          allow_service_providers: boolean | null
+          commission_percent: number | null
+          created_at: string | null
+          drop_enabled: boolean | null
+          id: string
+          product_id: string
+          shipping_days_estimate: number | null
+          supplier_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_affiliates?: boolean | null
+          allow_service_providers?: boolean | null
+          commission_percent?: number | null
+          created_at?: string | null
+          drop_enabled?: boolean | null
+          id?: string
+          product_id: string
+          shipping_days_estimate?: number | null
+          supplier_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_affiliates?: boolean | null
+          allow_service_providers?: boolean | null
+          commission_percent?: number | null
+          created_at?: string | null
+          drop_enabled?: boolean | null
+          id?: string
+          product_id?: string
+          shipping_days_estimate?: number | null
+          supplier_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_drop_settings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -1464,6 +1745,42 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_drop_settings: {
+        Row: {
+          allow_affiliates_on_drop: boolean | null
+          allow_service_providers_on_drop: boolean | null
+          created_at: string | null
+          default_commission_percent: number | null
+          drop_enabled: boolean | null
+          id: string
+          min_order_value: number | null
+          supplier_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_affiliates_on_drop?: boolean | null
+          allow_service_providers_on_drop?: boolean | null
+          created_at?: string | null
+          default_commission_percent?: number | null
+          drop_enabled?: boolean | null
+          id?: string
+          min_order_value?: number | null
+          supplier_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_affiliates_on_drop?: boolean | null
+          allow_service_providers_on_drop?: boolean | null
+          created_at?: string | null
+          default_commission_percent?: number | null
+          drop_enabled?: boolean | null
+          id?: string
+          min_order_value?: number | null
+          supplier_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       supplier_service_provider_settings: {
         Row: {
           allow_service_providers: boolean | null
@@ -1831,6 +2148,72 @@ export type Database = {
           user_name: string
         }[]
       }
+      get_client_drop_stats: {
+        Args: { _client_id: string }
+        Returns: {
+          active_products: number
+          avg_commission: number
+          pending_orders: number
+          total_profit: number
+          total_sales: number
+        }[]
+      }
+      get_drop_admin_stats: {
+        Args: never
+        Returns: {
+          active_drop_clients: number
+          active_drop_suppliers: number
+          paid_drop_orders: number
+          pending_commissions: number
+          total_client_margin: number
+          total_drop_orders: number
+          total_gmv: number
+          total_platform_fees: number
+        }[]
+      }
+      get_drop_catalog: {
+        Args: never
+        Returns: {
+          allow_affiliates: boolean
+          allow_service_providers: boolean
+          base_price: number
+          commission_percent: number
+          product_description: string
+          product_id: string
+          product_images: string[]
+          product_name: string
+          shipping_days: number
+          stock: number
+          supplier_avatar: string
+          supplier_id: string
+          supplier_name: string
+        }[]
+      }
+      get_drop_clients_admin: {
+        Args: never
+        Returns: {
+          business_name: string
+          client_id: string
+          client_name: string
+          created_at: string
+          drop_enabled: boolean
+          products_count: number
+          total_margin: number
+          total_orders: number
+          total_revenue: number
+        }[]
+      }
+      get_drop_suppliers_admin: {
+        Args: never
+        Returns: {
+          drop_enabled: boolean
+          products_in_drop: number
+          supplier_id: string
+          supplier_name: string
+          total_orders: number
+          total_sales: number
+        }[]
+      }
       get_public_store_profile: {
         Args: { _id: string }
         Returns: {
@@ -1853,6 +2236,15 @@ export type Database = {
           foto_perfil_url: string
           id: string
           nome: string
+        }[]
+      }
+      get_supplier_drop_stats: {
+        Args: { _supplier_id: string }
+        Returns: {
+          pending_orders: number
+          products_in_drop: number
+          total_orders: number
+          total_sales: number
         }[]
       }
       has_role: {
