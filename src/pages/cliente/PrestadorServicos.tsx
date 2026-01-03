@@ -306,18 +306,36 @@ const PrestadorServicos = () => {
     
     setSavingEntry(true);
     try {
-      const entryData = {
-        service_provider_id: serviceProvider.id,
-        client_name: supplier.supplier?.nome || selectedSupplierId,
-        client_email: supplier.supplier?.email || null,
-        client_phone: null,
-        contract_type: contractType,
-        monthly_value: contractType === 'monthly' ? parseFloat(monthlyValue) || null : null,
-        next_billing_date: contractType === 'monthly' ? getNextBillingDate() : null,
-        notes: clientNotes || null
-      };
-      
-      if (editingEntry) {
+      // For new contracts, create a request that needs supplier approval
+      if (!editingEntry) {
+        const requestData = {
+          service_provider_id: serviceProvider.id,
+          supplier_id: selectedSupplierId,
+          contract_type: contractType,
+          monthly_value: contractType === 'monthly' ? parseFloat(monthlyValue) || null : null,
+          notes: clientNotes || null,
+          status: 'pending',
+        };
+        
+        const { error } = await supabase
+          .from('service_provider_contract_requests')
+          .insert(requestData);
+        
+        if (error) throw error;
+        toast.success('Solicitação de contrato enviada! Aguardando aprovação do fornecedor.');
+      } else {
+        // For existing contracts, update directly (already approved)
+        const entryData = {
+          service_provider_id: serviceProvider.id,
+          client_name: supplier.supplier?.nome || selectedSupplierId,
+          client_email: supplier.supplier?.email || null,
+          client_phone: null,
+          contract_type: contractType,
+          monthly_value: contractType === 'monthly' ? parseFloat(monthlyValue) || null : null,
+          next_billing_date: contractType === 'monthly' ? getNextBillingDate() : null,
+          notes: clientNotes || null
+        };
+
         const { error } = await supabase
           .from('service_provider_crm')
           .update(entryData)
@@ -325,13 +343,6 @@ const PrestadorServicos = () => {
         
         if (error) throw error;
         toast.success('Contrato atualizado!');
-      } else {
-        const { error } = await supabase
-          .from('service_provider_crm')
-          .insert(entryData);
-        
-        if (error) throw error;
-        toast.success('Contrato adicionado!');
       }
       
       setCrmDialogOpen(false);

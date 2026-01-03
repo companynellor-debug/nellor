@@ -42,6 +42,7 @@ const PedidoConfirmado = lazy(() => import("./pages/cliente/PedidoConfirmado"));
 const InstalarApp = lazy(() => import("./pages/cliente/InstalarApp"));
 const ConfiguracoesNotificacoes = lazy(() => import("./pages/cliente/ConfiguracoesNotificacoes"));
 const ProgramaAfiliados = lazy(() => import("./pages/cliente/ProgramaAfiliados"));
+const AfiliadoCadastro = lazy(() => import("./pages/cliente/AfiliadoCadastro"));
 const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
 
 // Lazy load fornecedor pages
@@ -148,6 +149,7 @@ const App = () => {
               <Route path="carrinho" element={<Suspense fallback={<PageSkeleton />}><Carrinho /></Suspense>} />
               <Route path="loja/:id" element={<Suspense fallback={<PageSkeleton />}><PerfilLoja /></Suspense>} />
               <Route path="afiliados" element={<Suspense fallback={<PageSkeleton />}><ProgramaAfiliados /></Suspense>} />
+              <Route path="afiliados/cadastro" element={<Suspense fallback={<PageSkeleton />}><AfiliadoCadastro /></Suspense>} />
               <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
             </Route>
 
