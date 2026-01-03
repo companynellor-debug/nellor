@@ -80,18 +80,18 @@ const Welcome = () => {
       />
 
       {/* Content - compact layout */}
-      <div className="relative flex-1 flex flex-col items-center px-4 pt-4 pb-3 sm:px-5 sm:py-6">
+      <div className="relative flex-1 flex flex-col items-center px-4 pt-8 sm:pt-12 pb-3 sm:px-5 sm:pb-6">
         {/* Top section - Logo */}
-        <div className="flex flex-col items-center">
-          <img src={logo} alt="Nellor" className="w-14 h-14 sm:w-20 sm:h-20 object-contain drop-shadow-lg" />
-          <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+        <div className="flex flex-col items-center mb-2 sm:mb-3">
+          <img src={logo} alt="Nellor" className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-lg" />
+          <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
             Nellor
           </h1>
         </div>
 
         {/* Center section - Computer Preview */}
         {products.length > 0 && (
-          <div className="w-full max-w-sm sm:max-w-lg lg:max-w-2xl mx-auto flex-1 flex items-center justify-center min-h-0 py-3 sm:py-4">
+          <div className="w-full max-w-sm sm:max-w-lg lg:max-w-2xl mx-auto flex-1 flex items-start justify-center min-h-0 sm:py-2">
             {/* Computer Frame */}
             <div className="relative w-full">
               {/* Screen bezel */}
