@@ -80,27 +80,27 @@ const Welcome = () => {
       />
 
       {/* Content - compact layout */}
-      <div className="relative flex-1 flex flex-col items-center px-5 py-4 sm:py-6">
+      <div className="relative flex-1 flex flex-col items-center px-4 pt-2 pb-3 sm:px-5 sm:py-6">
         {/* Top section - Logo (compact) */}
-        <div className="flex flex-col items-center mb-3 sm:mb-4">
-          <img src={logo} alt="Nellor" className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-lg" />
-          <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight mt-1">
+        <div className="flex flex-col items-center mb-1 sm:mb-4">
+          <img src={logo} alt="Nellor" className="w-12 h-12 sm:w-20 sm:h-20 object-contain drop-shadow-lg" />
+          <h1 className="text-lg sm:text-2xl font-semibold text-white tracking-tight">
             Nellor
           </h1>
         </div>
 
         {/* Center section - Computer Preview (takes available space) */}
         {products.length > 0 && (
-          <div className="w-full max-w-md lg:max-w-lg mx-auto flex-1 flex items-center justify-center min-h-0">
+          <div className="w-full max-w-md lg:max-w-lg mx-auto flex-1 flex items-start sm:items-center justify-center min-h-0">
             {/* Computer Frame */}
             <div className="relative w-full">
               {/* Screen bezel */}
-              <div className="bg-gradient-to-b from-gray-700 to-gray-800 rounded-t-2xl sm:rounded-t-3xl p-2 sm:p-3 pt-3 sm:pt-4 shadow-2xl">
+              <div className="bg-gradient-to-b from-gray-700 to-gray-800 rounded-t-xl sm:rounded-t-3xl p-1.5 sm:p-3 pt-2.5 sm:pt-4 shadow-2xl">
                 {/* Camera dot */}
-                <div className="absolute top-1.5 sm:top-2 left-1/2 -translate-x-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-gray-500 rounded-full" />
+                <div className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 w-1 sm:w-2 h-1 sm:h-2 bg-gray-500 rounded-full" />
                 
-                {/* Screen */}
-                <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[45vw] max-h-[280px] sm:max-h-[320px]">
+                {/* Screen - taller on mobile */}
+                <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[55vh] max-h-[400px] sm:h-[45vw] sm:max-h-[320px]">
                   {/* Screen reflection */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
                   
@@ -118,11 +118,11 @@ const Welcome = () => {
 
                   {/* Scrolling Products */}
                   <div className="animate-scroll-up">
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-4">
-                      {[...products, ...products].map((product, index) => (
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-3 p-2 sm:p-4">
+                      {[...products, ...products, ...products].map((product, index) => (
                         <div 
                           key={`${product.id}-${index}`}
-                          className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 border border-white/10 hover:bg-white/15 transition-colors"
+                          className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 border border-white/10"
                         >
                           <div className="aspect-square rounded-md sm:rounded-lg overflow-hidden mb-1 sm:mb-2 bg-white/5">
                             {product.imagens?.[0] ? (
@@ -132,13 +132,13 @@ const Welcome = () => {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-white/30 text-sm sm:text-base">
+                              <div className="w-full h-full flex items-center justify-center text-white/30 text-xs sm:text-base">
                                 📦
                               </div>
                             )}
                           </div>
-                          <p className="text-white/90 text-[10px] sm:text-xs font-medium truncate">{product.nome}</p>
-                          <p className="text-emerald-400 text-[9px] sm:text-[11px] font-medium">
+                          <p className="text-white/90 text-[8px] sm:text-xs font-medium truncate">{product.nome}</p>
+                          <p className="text-emerald-400 text-[7px] sm:text-[11px] font-medium">
                             R$ {product.preco.toFixed(2).replace('.', ',')}
                           </p>
                         </div>
@@ -149,8 +149,8 @@ const Welcome = () => {
               </div>
               
               {/* Keyboard base */}
-              <div className="bg-gradient-to-b from-gray-600 to-gray-700 h-2 sm:h-3 mx-4 sm:mx-8" />
-              <div className="bg-gray-700 h-1 sm:h-1.5 rounded-b-lg mx-8 sm:mx-16 shadow-lg" />
+              <div className="bg-gradient-to-b from-gray-600 to-gray-700 h-1.5 sm:h-3 mx-3 sm:mx-8" />
+              <div className="bg-gray-700 h-0.5 sm:h-1.5 rounded-b-lg mx-6 sm:mx-16 shadow-lg" />
             </div>
           </div>
         )}
