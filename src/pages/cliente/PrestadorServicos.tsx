@@ -14,8 +14,6 @@ import {
   Plus,
   ChevronLeft,
   Loader2,
-  Phone,
-  Mail,
   Calendar,
   DollarSign,
   Edit,
@@ -23,9 +21,12 @@ import {
   Package,
   Image,
   FileText,
-  Eye,
   CheckCircle,
   XCircle,
+  TrendingUp,
+  AlertTriangle,
+  Wallet,
+  Settings,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -422,166 +423,241 @@ const PrestadorServicos = () => {
     );
   }
 
+  const tabItems = [
+    { id: "suppliers", label: "Fornecedores", icon: Store, count: suppliers.length },
+    { id: "products", label: "Produtos", icon: Package },
+    { id: "crm", label: "CRM", icon: Users },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/cliente/perfil")}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Prestador de Serviços</h1>
-            <p className="text-sm text-muted-foreground">Gerencie fornecedores e contratos</p>
+      {/* Header com gradiente estilo Shopee */}
+      <div className="bg-gradient-to-br from-primary via-primary/90 to-primary/70 text-primary-foreground">
+        <header className="sticky top-0 z-40">
+          <div className="container mx-auto px-4 py-4 flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/cliente/perfil")} className="text-primary-foreground hover:bg-white/20">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-lg font-bold">Prestador de Serviços</h1>
+              <p className="text-xs opacity-80">Gerencie fornecedores e contratos</p>
+            </div>
+            {serviceProvider && (
+              <Badge variant="secondary" className="bg-white/20 text-primary-foreground border-0">
+                Ativo
+              </Badge>
+            )}
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="container mx-auto px-4 py-6 relative z-10">
+        {/* Stats Banner - só quando há serviceProvider */}
+        {serviceProvider && (
+          <div className="px-4 pb-6">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                <Store className="h-5 w-5 mx-auto mb-1 opacity-80" />
+                <p className="text-lg font-bold">{stats.totalSuppliers}</p>
+                <p className="text-xs opacity-80">Fornecedores</p>
+              </div>
+              <div className="text-center p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                <DollarSign className="h-5 w-5 mx-auto mb-1 opacity-80" />
+                <p className="text-lg font-bold">R$ {stats.totalMonthlyRevenue.toFixed(0)}</p>
+                <p className="text-xs opacity-80">Receita/mês</p>
+              </div>
+              <div className="text-center p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                <Calendar className="h-5 w-5 mx-auto mb-1 opacity-80" />
+                <p className="text-lg font-bold">{stats.monthlyContracts}</p>
+                <p className="text-xs opacity-80">Contratos</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <main className="container mx-auto px-4 py-6 relative z-10 -mt-4">
         {!serviceProvider ? (
-          // Ativação
-          <Card className="p-6 border-border">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-              <Briefcase className="h-10 w-10 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold text-center mb-2 text-foreground">Seja um Prestador de Serviços</h2>
-            <p className="text-muted-foreground text-center mb-6">
-              Gerencie fornecedores na plataforma e organize seus contratos em um CRM integrado.
-            </p>
-            
-            <div className="space-y-4">
-              <div>
-                <Label>Nome do Negócio *</Label>
-                <Input
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Ex: Marketing Digital Silva"
-                />
+          // Ativação com visual Shopee
+          <div className="space-y-4 animate-in fade-in duration-300">
+            {/* Hero Card */}
+            <Card className="p-6 bg-gradient-to-br from-background to-muted/30 border-border shadow-lg rounded-2xl">
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Briefcase className="h-10 w-10 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Seja um Prestador de Serviços
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Gerencie fornecedores e organize seus contratos em um CRM integrado
+                </p>
               </div>
-              <div>
-                <Label>Tipo de Serviço *</Label>
-                <Input
-                  value={serviceType}
-                  onChange={(e) => setServiceType(e.target.value)}
-                  placeholder="Ex: Gestão de E-commerce"
-                />
+
+              {/* Benefits Preview */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="text-center p-4 rounded-xl bg-primary/10 border border-primary/20">
+                  <Store className="h-6 w-6 text-primary mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">Gerencie</p>
+                  <p className="font-bold text-sm text-foreground">Lojas</p>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <Package className="h-6 w-6 text-green-500 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">Edite</p>
+                  <p className="font-bold text-sm text-foreground">Produtos</p>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <Wallet className="h-6 w-6 text-amber-500 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">Controle</p>
+                  <p className="font-bold text-sm text-foreground">Contratos</p>
+                </div>
               </div>
-              <div>
-                <Label>Descrição (opcional)</Label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Descreva seus serviços..."
-                  rows={3}
-                />
-              </div>
+            </Card>
+
+            {/* Formulário de ativação */}
+            <Card className="p-5 rounded-2xl border-border">
+              <h3 className="font-semibold mb-4 text-foreground flex items-center gap-2">
+                <Settings className="h-5 w-5 text-primary" />
+                Configurar Prestador
+              </h3>
               
-              <Button 
-                onClick={activateServiceProvider} 
-                disabled={activating || !businessName || !serviceType}
-                className="w-full"
-                size="lg"
-              >
-                {activating ? (
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                ) : (
-                  <Briefcase className="h-5 w-5 mr-2" />
-                )}
-                Ativar Prestador de Serviços
-              </Button>
-            </div>
-          </Card>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Nome do Negócio *</Label>
+                  <Input
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    placeholder="Ex: Marketing Digital Silva"
+                    className="mt-1.5 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Tipo de Serviço *</Label>
+                  <Input
+                    value={serviceType}
+                    onChange={(e) => setServiceType(e.target.value)}
+                    placeholder="Ex: Gestão de E-commerce"
+                    className="mt-1.5 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Descrição (opcional)</Label>
+                  <Textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Descreva seus serviços..."
+                    rows={3}
+                    className="mt-1.5 rounded-xl"
+                  />
+                </div>
+                
+                <Button 
+                  onClick={activateServiceProvider} 
+                  disabled={activating || !businessName || !serviceType}
+                  className="w-full rounded-xl"
+                  size="lg"
+                >
+                  {activating ? (
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  ) : (
+                    <Briefcase className="h-5 w-5 mr-2" />
+                  )}
+                  Ativar Prestador de Serviços
+                </Button>
+              </div>
+            </Card>
+          </div>
         ) : (
-          // Painel do prestador
-          <div className="space-y-6">
+          // Painel do prestador com visual Shopee
+          <div className="space-y-4">
             {/* Integration Request */}
             <ServiceProviderIntegration 
               serviceProviderId={serviceProvider.id}
               onIntegrationComplete={fetchServiceProviderData}
             />
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="p-4 border-border">
+            {/* Stats Cards sobrepostos */}
+            <div className="grid grid-cols-2 gap-3 -mt-8">
+              <Card className="p-4 rounded-2xl border-border shadow-lg bg-background">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Store className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-green-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Fornecedores</p>
-                    <p className="text-xl font-bold text-foreground">{stats.totalSuppliers}</p>
+                    <p className="text-xs text-muted-foreground">Ativos</p>
+                    <p className="text-xl font-bold text-foreground">{stats.activeSuppliers}</p>
                   </div>
                 </div>
               </Card>
-              <Card className="p-4 border-border">
+              <Card className="p-4 rounded-2xl border-border shadow-lg bg-background">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <DollarSign className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Receita Mensal</p>
-                    <p className="text-xl font-bold text-foreground">
-                      R$ {stats.totalMonthlyRevenue.toFixed(2)}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Estoque Baixo</p>
+                    <p className="text-xl font-bold text-foreground">{stats.lowStockAlerts}</p>
                   </div>
                 </div>
               </Card>
             </div>
 
-            {/* Tabs */}
+            {/* Tabs com visual Shopee */}
             <Tabs defaultValue="suppliers" className="w-full">
-              <TabsList className="w-full grid grid-cols-3">
-                <TabsTrigger value="suppliers">
-                  <Store className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Fornecedores</span>
-                  <span className="sm:hidden">({suppliers.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="products">
-                  <Package className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Produtos</span>
-                </TabsTrigger>
-                <TabsTrigger value="crm">
-                  <Users className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">CRM</span>
-                </TabsTrigger>
+              <TabsList className="w-full grid grid-cols-3 p-1 bg-muted/50 rounded-xl h-auto">
+                {tabItems.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className="flex flex-col items-center gap-1 py-3 px-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  >
+                    <tab.icon className="h-5 w-5" />
+                    <span className="text-xs font-medium">{tab.label}</span>
+                    {tab.count !== undefined && (
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0 min-w-5 h-5">
+                        {tab.count}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
               {/* Suppliers Tab */}
               <TabsContent value="suppliers" className="mt-4">
                 {suppliers.length === 0 ? (
-                  <Card className="p-8 text-center border-border">
-                    <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-2">
-                      Nenhum fornecedor integrado ainda
+                  <Card className="p-8 text-center rounded-2xl border-border">
+                    <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                      <Store className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="font-medium text-foreground mb-1">
+                      Nenhum fornecedor integrado
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Use o campo acima para solicitar integração com um código de fornecedor
+                      Use o campo acima para solicitar integração
                     </p>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {suppliers.map(supplier => {
                       const crmEntry = getCrmEntryForSupplier(supplier.supplier_id);
                       
                       return (
-                        <Card key={supplier.id} className="p-4 border-border">
+                        <Card key={supplier.id} className="p-4 rounded-2xl border-border hover:shadow-md transition-shadow">
                           <div className="flex items-start gap-4">
                             {supplier.supplier?.foto_perfil_url ? (
                               <img 
                                 src={supplier.supplier.foto_perfil_url} 
                                 alt={supplier.supplier.nome}
-                                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                <Store className="h-6 w-6 text-primary" />
+                              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                                <Store className="h-7 w-7 text-primary" />
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-medium text-foreground truncate">
+                                <h3 className="font-semibold text-foreground truncate">
                                   {supplier.supplier?.nome}
                                 </h3>
                                 {supplier.supplier?.ativo === false && (
@@ -589,23 +665,25 @@ const PrestadorServicos = () => {
                                 )}
                               </div>
                               <p className="text-sm text-muted-foreground mb-2">
-                                {supplier.productCount} produtos • {supplier.lowStockCount} com estoque baixo
+                                {supplier.productCount} produtos • {supplier.lowStockCount} estoque baixo
                               </p>
                               
                               {/* Permissions */}
                               <div className="mb-3">
-                                <p className="text-xs text-muted-foreground mb-1">Permissões:</p>
                                 {getPermissionBadges(supplier.permissions)}
                               </div>
                               
                               {/* CRM Status */}
                               {crmEntry ? (
                                 <div className="flex items-center gap-2">
-                                  <Badge variant={crmEntry.contract_type === 'monthly' ? 'default' : 'secondary'}>
+                                  <Badge 
+                                    variant={crmEntry.contract_type === 'monthly' ? 'default' : 'secondary'}
+                                    className="rounded-lg"
+                                  >
                                     {crmEntry.contract_type === 'monthly' ? (
                                       <>
                                         <Calendar className="h-3 w-3 mr-1" />
-                                        Mensal - R$ {crmEntry.monthly_value?.toFixed(2)}
+                                        R$ {crmEntry.monthly_value?.toFixed(2)}/mês
                                       </>
                                     ) : (
                                       'Contrato Único'
@@ -614,6 +692,7 @@ const PrestadorServicos = () => {
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
+                                    className="h-8 w-8 p-0"
                                     onClick={() => openCrmDialog(supplier, crmEntry)}
                                   >
                                     <Edit className="h-4 w-4" />
@@ -623,6 +702,7 @@ const PrestadorServicos = () => {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
+                                  className="rounded-lg"
                                   onClick={() => openCrmDialog(supplier)}
                                 >
                                   <Plus className="h-4 w-4 mr-1" />
@@ -649,20 +729,18 @@ const PrestadorServicos = () => {
               {/* CRM Tab */}
               <TabsContent value="crm" className="mt-4">
                 {crmEntries.length === 0 ? (
-                  <Card className="p-8 text-center border-border">
-                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-2">
+                  <Card className="p-8 text-center rounded-2xl border-border">
+                    <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                      <Users className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="font-medium text-foreground mb-1">
                       Nenhum contrato cadastrado
                     </p>
-                    {suppliers.length > 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        Adicione contratos aos seus fornecedores integrados na aba Fornecedores
-                      </p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Integre-se a fornecedores primeiro
-                      </p>
-                    )}
+                    <p className="text-sm text-muted-foreground">
+                      {suppliers.length > 0 
+                        ? "Adicione contratos na aba Fornecedores" 
+                        : "Integre-se a fornecedores primeiro"}
+                    </p>
                   </Card>
                 ) : (
                   <div className="space-y-4">
@@ -677,24 +755,24 @@ const PrestadorServicos = () => {
                           {crmEntries
                             .filter(e => e.contract_type === 'monthly')
                             .map(entry => (
-                              <Card key={entry.id} className="p-4 border-border bg-primary/5">
+                              <Card key={entry.id} className="p-4 rounded-2xl border-primary/20 bg-primary/5">
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center gap-3">
                                     {entry.supplier_photo ? (
                                       <img 
                                         src={entry.supplier_photo} 
                                         alt={entry.supplier_name}
-                                        className="w-10 h-10 rounded-full object-cover"
+                                        className="w-12 h-12 rounded-xl object-cover"
                                       />
                                     ) : (
-                                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                        <Store className="h-5 w-5 text-primary" />
+                                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                                        <Store className="h-6 w-6 text-primary" />
                                       </div>
                                     )}
                                     <div>
-                                      <h4 className="font-medium">{entry.supplier_name}</h4>
-                                      <div className="flex items-center gap-2 text-sm">
-                                        <Badge variant="default">
+                                      <h4 className="font-semibold text-foreground">{entry.supplier_name}</h4>
+                                      <div className="flex items-center gap-2 text-sm mt-1">
+                                        <Badge variant="default" className="rounded-lg">
                                           R$ {entry.monthly_value?.toFixed(2)}/mês
                                         </Badge>
                                         {entry.next_billing_date && (
@@ -714,6 +792,7 @@ const PrestadorServicos = () => {
                                     <Button 
                                       variant="ghost" 
                                       size="sm"
+                                      className="h-8 w-8 p-0"
                                       onClick={() => {
                                         const supplier = suppliers.find(s => s.supplier_id === entry.supplier_id);
                                         if (supplier) openCrmDialog(supplier, entry);
@@ -724,6 +803,7 @@ const PrestadorServicos = () => {
                                     <Button 
                                       variant="ghost" 
                                       size="sm"
+                                      className="h-8 w-8 p-0"
                                       onClick={() => deleteCrmEntry(entry.id)}
                                     >
                                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -746,23 +826,23 @@ const PrestadorServicos = () => {
                           {crmEntries
                             .filter(e => e.contract_type === 'single')
                             .map(entry => (
-                              <Card key={entry.id} className="p-4 border-border">
+                              <Card key={entry.id} className="p-4 rounded-2xl border-border">
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center gap-3">
                                     {entry.supplier_photo ? (
                                       <img 
                                         src={entry.supplier_photo} 
                                         alt={entry.supplier_name}
-                                        className="w-10 h-10 rounded-full object-cover"
+                                        className="w-12 h-12 rounded-xl object-cover"
                                       />
                                     ) : (
-                                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                                        <Store className="h-5 w-5 text-muted-foreground" />
+                                      <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                                        <Store className="h-6 w-6 text-muted-foreground" />
                                       </div>
                                     )}
                                     <div>
-                                      <h4 className="font-medium">{entry.supplier_name}</h4>
-                                      <Badge variant="secondary">Contrato Único</Badge>
+                                      <h4 className="font-semibold text-foreground">{entry.supplier_name}</h4>
+                                      <Badge variant="secondary" className="rounded-lg mt-1">Contrato Único</Badge>
                                       {entry.notes && (
                                         <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                                           {entry.notes}
@@ -774,6 +854,7 @@ const PrestadorServicos = () => {
                                     <Button 
                                       variant="ghost" 
                                       size="sm"
+                                      className="h-8 w-8 p-0"
                                       onClick={() => {
                                         const supplier = suppliers.find(s => s.supplier_id === entry.supplier_id);
                                         if (supplier) openCrmDialog(supplier, entry);
@@ -784,6 +865,7 @@ const PrestadorServicos = () => {
                                     <Button 
                                       variant="ghost" 
                                       size="sm"
+                                      className="h-8 w-8 p-0"
                                       onClick={() => deleteCrmEntry(entry.id)}
                                     >
                                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -798,7 +880,7 @@ const PrestadorServicos = () => {
 
                     {/* Suppliers without CRM */}
                     {suppliersWithoutCrm.length > 0 && (
-                      <div className="pt-4 border-t">
+                      <div className="pt-4 border-t border-border">
                         <h3 className="text-sm font-medium text-muted-foreground mb-3">
                           Sem contrato ({suppliersWithoutCrm.length})
                         </h3>
@@ -806,15 +888,16 @@ const PrestadorServicos = () => {
                           {suppliersWithoutCrm.map(supplier => (
                             <div 
                               key={supplier.id} 
-                              className="flex items-center justify-between p-3 border rounded-lg"
+                              className="flex items-center justify-between p-3 border border-border rounded-xl"
                             >
                               <div className="flex items-center gap-2">
                                 <XCircle className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">{supplier.supplier?.nome}</span>
+                                <span className="text-sm text-foreground">{supplier.supplier?.nome}</span>
                               </div>
                               <Button 
                                 variant="outline" 
                                 size="sm"
+                                className="rounded-lg"
                                 onClick={() => openCrmDialog(supplier)}
                               >
                                 <Plus className="h-4 w-4 mr-1" />
@@ -835,62 +918,84 @@ const PrestadorServicos = () => {
 
       {/* CRM Dialog */}
       <Dialog open={crmDialogOpen} onOpenChange={setCrmDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
               {editingEntry ? 'Editar Contrato' : 'Novo Contrato'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Fornecedor</Label>
+              <Label className="text-sm font-medium">Fornecedor</Label>
               <Input
                 value={suppliers.find(s => s.supplier_id === selectedSupplierId)?.supplier?.nome || ''}
                 disabled
-                className="bg-muted"
+                className="bg-muted rounded-xl mt-1.5"
               />
             </div>
             <div>
-              <Label>Tipo de Contrato</Label>
-              <Select value={contractType} onValueChange={(v) => setContractType(v as 'single' | 'monthly')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">Único</SelectItem>
-                  <SelectItem value="monthly">Mensal (Recorrente)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label className="text-sm font-medium">Tipo de Contrato</Label>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setContractType('single')}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    contractType === 'single'
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <CheckCircle className="h-6 w-6 mx-auto mb-2 text-primary" />
+                  <p className="font-medium text-sm">Único</p>
+                  <p className="text-xs text-muted-foreground">Pagamento único</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContractType('monthly')}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    contractType === 'monthly'
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <Calendar className="h-6 w-6 mx-auto mb-2 text-primary" />
+                  <p className="font-medium text-sm">Mensal</p>
+                  <p className="text-xs text-muted-foreground">Recorrente</p>
+                </button>
+              </div>
             </div>
             {contractType === 'monthly' && (
               <div>
-                <Label>Valor Mensal</Label>
+                <Label className="text-sm font-medium">Valor Mensal</Label>
                 <Input
                   type="number"
                   value={monthlyValue}
                   onChange={(e) => setMonthlyValue(e.target.value)}
                   placeholder="0.00"
+                  className="mt-1.5 rounded-xl"
                 />
               </div>
             )}
             <div>
-              <Label>Observações</Label>
+              <Label className="text-sm font-medium">Observações</Label>
               <Textarea
                 value={clientNotes}
                 onChange={(e) => setClientNotes(e.target.value)}
                 placeholder="Detalhes do contrato..."
                 rows={3}
+                className="mt-1.5 rounded-xl"
               />
             </div>
             <Button 
               onClick={saveCrmEntry} 
               disabled={savingEntry}
-              className="w-full"
+              className="w-full rounded-xl"
             >
               {savingEntry ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              {editingEntry ? 'Atualizar' : 'Adicionar'} Contrato
+              {editingEntry ? 'Atualizar' : 'Solicitar'} Contrato
             </Button>
           </div>
         </DialogContent>
