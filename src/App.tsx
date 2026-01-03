@@ -60,6 +60,7 @@ const CuponsFornecedor = lazy(() => import("./pages/fornecedor/Cupons"));
 const RelatorioCupons = lazy(() => import("./pages/fornecedor/RelatorioCupons"));
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
 const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
+const NellorDrop = lazy(() => import("./pages/fornecedor/NellorDrop"));
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -178,6 +179,7 @@ const App = () => {
               <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
               <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
               <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
+              <Route path="nellor-drop" element={<Suspense fallback={<PageSkeleton />}><NellorDrop /></Suspense>} />
             </Route>
 
             {/* Admin Panel */}
