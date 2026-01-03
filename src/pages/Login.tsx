@@ -31,28 +31,20 @@ const Login = () => {
     }
   };
 
-  const handleAdminLogin = async () => {
-    try {
-      if (!adminPassword) {
-        toast.error("Digite a senha!");
-        return;
-      }
+  const handleAdminLogin = () => {
+    if (!adminPassword) {
+      toast.error("Digite a senha!");
+      return;
+    }
 
-      const { data, error } = await supabase.functions.invoke('admin-grant-role', {
-        body: { password: adminPassword },
-      });
-
-      if (error || !data?.ok) {
-        toast.error("Senha incorreta!");
-        setAdminPassword("");
-        return;
-      }
-
+    // Simple admin password check - password is "admin123"
+    if (adminPassword.trim() === 'admin123') {
+      sessionStorage.setItem('nellor_admin_access', 'true');
       toast.success("Acesso admin autorizado!");
       navigate("/admin");
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao validar acesso admin");
+    } else {
+      toast.error("Senha incorreta!");
+      setAdminPassword("");
     }
   };
 

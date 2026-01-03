@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.stripe-get-balance]
 verify_jwt = false
+
+[functions.admin-grant-role]
+verify_jwt = false

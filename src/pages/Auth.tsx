@@ -117,29 +117,23 @@ const Auth = () => {
     setTimeout(() => setLogoClickCount(0), 2000);
   };
 
-  const handleAdminAccess = async () => {
-    try {
-      if (!adminPassword) {
-        toast.error('Digite a senha de administrador.');
-        return;
-      }
+  const handleAdminAccess = () => {
+    if (!adminPassword) {
+      toast.error('Digite a senha de administrador.');
+      return;
+    }
 
-      const { data, error } = await supabase.functions.invoke('admin-grant-role', {
-        body: { password: adminPassword },
-      });
-
-      if (error || !data?.ok) {
-        toast.error('Senha incorreta ou acesso negado.');
-        return;
-      }
-
+    // Simple admin password check - password is "admin123"
+    if (adminPassword.trim() === 'admin123') {
+      // Store admin session
+      sessionStorage.setItem('nellor_admin_access', 'true');
       toast.success('Acesso admin liberado!');
       setShowAdminDialog(false);
       setAdminPassword('');
       navigate('/admin');
-    } catch (e: any) {
-      console.error('Admin access error:', e);
-      toast.error('Erro ao validar acesso admin.');
+    } else {
+      toast.error('Senha incorreta!');
+      setAdminPassword('');
     }
   };
 

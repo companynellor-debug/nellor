@@ -15,25 +15,35 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
   const [hasAdminRole, setHasAdminRole] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    if (requireType !== 'admin') {
+      setHasAdminRole(false);
+      setRoleLoading(false);
+      return;
+    }
+
+    // Check sessionStorage for admin access (set via password login)
+    const adminAccess = sessionStorage.getItem('nellor_admin_access');
+    if (adminAccess === 'true') {
+      setHasAdminRole(true);
+      setRoleLoading(false);
+      return;
+    }
+
+    // Also check database role if user is authenticated
+    if (!user?.id) {
+      setHasAdminRole(false);
+      setRoleLoading(false);
+      return;
+    }
 
     const checkAdminRole = async () => {
-      if (requireType !== 'admin' || !user?.id) {
-        if (mounted) {
-          setHasAdminRole(false);
-          setRoleLoading(false);
-        }
-        return;
-      }
-
+      setRoleLoading(true);
       try {
-        if (mounted) setRoleLoading(true);
         const { data, error } = await supabase.rpc('has_role', {
           _user_id: user.id,
           _role: 'admin',
         });
 
-        if (!mounted) return;
         if (error) {
           console.error('Error checking admin role:', error);
           setHasAdminRole(false);
@@ -42,14 +52,11 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
 
         setHasAdminRole(Boolean(data));
       } finally {
-        if (mounted) setRoleLoading(false);
+        setRoleLoading(false);
       }
     };
 
     void checkAdminRole();
-    return () => {
-      mounted = false;
-    };
   }, [requireType, user?.id]);
 
   if (loading || roleLoading) {
