@@ -129,8 +129,16 @@ const Welcome = () => {
 
                 {/* Screen */}
                 <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-md sm:rounded-lg overflow-hidden relative h-[44vh] sm:h-[35vh] lg:h-[45vh] max-h-[320px] sm:max-h-[350px] lg:max-h-[420px]">
-                  {/* Screen reflection */}
+                  {/* Static screen reflection */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                  
+                  {/* Animated shine effect */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+                    <div className="absolute -inset-full animate-screen-shine" style={{
+                      background: 'linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.12) 55%, transparent 60%)',
+                      transform: 'translateX(-100%)',
+                    }} />
+                  </div>
 
                   {/* Fade overlay - top */}
                   <div className="absolute top-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none" style={{
