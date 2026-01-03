@@ -89,70 +89,65 @@ const Welcome = () => {
           </h1>
         </div>
 
-        {/* Marketplace Preview */}
+        {/* Marketplace Preview - Computer Frame */}
         {products.length > 0 && (
-          <div className="w-full max-w-md flex-1 relative mb-6">
-            {/* Fade overlay - top */}
-            <div 
-              className="absolute top-0 left-0 right-0 h-16 z-10 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to bottom, #11001e 0%, transparent 100%)'
-              }}
-            />
-            
-            {/* Fade overlay - bottom */}
-            <div 
-              className="absolute bottom-0 left-0 right-0 h-16 z-10 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to top, #9900f8 0%, transparent 100%)'
-              }}
-            />
-            
-            {/* Fade overlay - left */}
-            <div 
-              className="absolute top-0 bottom-0 left-0 w-8 z-10 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to right, rgba(17,0,30,0.8) 0%, transparent 100%)'
-              }}
-            />
-            
-            {/* Fade overlay - right */}
-            <div 
-              className="absolute top-0 bottom-0 right-0 w-8 z-10 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to left, rgba(17,0,30,0.8) 0%, transparent 100%)'
-              }}
-            />
-
-            {/* Products grid */}
-            <div className="h-full overflow-hidden py-4">
-              <div className="grid grid-cols-2 gap-3 animate-fade-in">
-                {products.map((product, index) => (
+          <div className="w-full max-w-xs mx-auto mb-4">
+            {/* Computer Frame */}
+            <div className="relative">
+              {/* Screen bezel */}
+              <div className="bg-gray-800 rounded-t-xl p-2 pt-3">
+                {/* Camera dot */}
+                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-gray-600 rounded-full" />
+                
+                {/* Screen */}
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg overflow-hidden relative h-40">
+                  {/* Fade overlay - top */}
                   <div 
-                    key={product.id}
-                    className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10 transition-all duration-300 hover:bg-white/15"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="aspect-square rounded-lg overflow-hidden mb-2 bg-white/5">
-                      {product.imagens?.[0] ? (
-                        <img 
-                          src={product.imagens[0]} 
-                          alt={product.nome}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/30">
-                          <span className="text-2xl">📦</span>
+                    className="absolute top-0 left-0 right-0 h-6 z-10 pointer-events-none"
+                    style={{ background: 'linear-gradient(to bottom, rgba(17,24,39,1) 0%, transparent 100%)' }}
+                  />
+                  
+                  {/* Fade overlay - bottom */}
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 h-6 z-10 pointer-events-none"
+                    style={{ background: 'linear-gradient(to top, rgba(17,24,39,1) 0%, transparent 100%)' }}
+                  />
+
+                  {/* Scrolling Products */}
+                  <div className="animate-scroll-up">
+                    <div className="grid grid-cols-3 gap-2 p-2">
+                      {[...products, ...products].map((product, index) => (
+                        <div 
+                          key={`${product.id}-${index}`}
+                          className="bg-white/10 backdrop-blur-sm rounded-lg p-1.5 border border-white/5"
+                        >
+                          <div className="aspect-square rounded overflow-hidden mb-1 bg-white/5">
+                            {product.imagens?.[0] ? (
+                              <img 
+                                src={product.imagens[0]} 
+                                alt={product.nome}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-white/30 text-xs">
+                                📦
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-white/80 text-[8px] truncate">{product.nome}</p>
+                          <p className="text-emerald-400/80 text-[7px]">
+                            R$ {product.preco.toFixed(2).replace('.', ',')}
+                          </p>
                         </div>
-                      )}
+                      ))}
                     </div>
-                    <p className="text-white/90 text-xs font-medium truncate">{product.nome}</p>
-                    <p className="text-white/60 text-xs">
-                      R$ {product.preco.toFixed(2).replace('.', ',')}
-                    </p>
                   </div>
-                ))}
+                </div>
               </div>
+              
+              {/* Keyboard base */}
+              <div className="bg-gray-700 h-2 rounded-b-sm mx-4" />
+              <div className="bg-gray-600 h-1 rounded-b-lg mx-8" />
             </div>
           </div>
         )}
