@@ -8,6 +8,7 @@ import logo from '@/assets/logo.png';
 import { Loader2 } from 'lucide-react';
 import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -116,13 +117,29 @@ const Auth = () => {
     setTimeout(() => setLogoClickCount(0), 2000);
   };
 
-  const handleAdminAccess = () => {
-    if (adminPassword === 'admin123') {
+  const handleAdminAccess = async () => {
+    try {
+      if (!adminPassword) {
+        toast.error('Digite a senha de administrador.');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-grant-role', {
+        body: { password: adminPassword },
+      });
+
+      if (error || !data?.ok) {
+        toast.error('Senha incorreta ou acesso negado.');
+        return;
+      }
+
+      toast.success('Acesso admin liberado!');
       setShowAdminDialog(false);
       setAdminPassword('');
       navigate('/admin');
-    } else {
-      alert('Senha incorreta!');
+    } catch (e: any) {
+      console.error('Admin access error:', e);
+      toast.error('Erro ao validar acesso admin.');
     }
   };
 

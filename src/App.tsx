@@ -181,7 +181,14 @@ const App = () => {
             </Route>
 
             {/* Admin Panel */}
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requireType="admin">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<Suspense fallback={<PageSkeleton />}><AdminDashboard /></Suspense>} />
               <Route path="dashboard" element={<Suspense fallback={<PageSkeleton />}><AdminDashboard /></Suspense>} />
               <Route path="indicadores" element={<Suspense fallback={<PageSkeleton />}><AdminIndicadores /></Suspense>} />

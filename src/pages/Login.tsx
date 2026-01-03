@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,13 +31,28 @@ const Login = () => {
     }
   };
 
-  const handleAdminLogin = () => {
-    if (adminPassword === "natandavi22$") {
+  const handleAdminLogin = async () => {
+    try {
+      if (!adminPassword) {
+        toast.error("Digite a senha!");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-grant-role', {
+        body: { password: adminPassword },
+      });
+
+      if (error || !data?.ok) {
+        toast.error("Senha incorreta!");
+        setAdminPassword("");
+        return;
+      }
+
       toast.success("Acesso admin autorizado!");
       navigate("/admin");
-    } else {
-      toast.error("Senha incorreta!");
-      setAdminPassword("");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao validar acesso admin");
     }
   };
 
