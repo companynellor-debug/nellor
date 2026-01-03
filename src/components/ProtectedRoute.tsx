@@ -67,13 +67,14 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+  // SPECIAL CASE: Admin via sessionStorage (password access) - allow without authentication
+  if (requireType === 'admin' && hasAdminRole) {
+    return <>{children}</>;
   }
 
-  if (requireType === 'admin') {
-    if (!hasAdminRole) return <Navigate to="/auth" replace />;
-    return <>{children}</>;
+  // For non-admin routes, require authentication
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
   }
 
   if (requireType && profile?.tipo !== requireType) {
