@@ -14,6 +14,14 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
   const [roleLoading, setRoleLoading] = useState(false);
   const [hasAdminRole, setHasAdminRole] = useState(false);
 
+  // PRIMEIRO: Checar sessionStorage para admin - SE TIVER, LIBERA IMEDIATAMENTE
+  if (requireType === 'admin') {
+    const adminAccess = sessionStorage.getItem('nellor_admin_access');
+    if (adminAccess === 'true') {
+      return <>{children}</>;
+    }
+  }
+
   useEffect(() => {
     const checkAccess = async () => {
       if (requireType !== 'admin') {
@@ -24,20 +32,16 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
 
       setRoleLoading(true);
       
-      // Check sessionStorage for admin access (set via password login)
+      // Check sessionStorage first
       const adminAccess = sessionStorage.getItem('nellor_admin_access');
-      console.log('Checking admin access:', adminAccess);
-      
       if (adminAccess === 'true') {
-        console.log('Admin access granted via sessionStorage');
         setHasAdminRole(true);
         setRoleLoading(false);
         return;
       }
 
-      // Also check database role if user is authenticated
+      // Check database role if user is authenticated
       if (!user?.id) {
-        console.log('No user and no sessionStorage admin access');
         setHasAdminRole(false);
         setRoleLoading(false);
         return;
@@ -55,7 +59,6 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
           return;
         }
 
-        console.log('Has admin role from DB:', Boolean(data));
         setHasAdminRole(Boolean(data));
       } finally {
         setRoleLoading(false);
@@ -65,8 +68,6 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
     void checkAccess();
   }, [requireType, user?.id]);
 
-  console.log('ProtectedRoute check:', { requireType, isAuthenticated, hasAdminRole, roleLoading, loading });
-
   if (loading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -75,13 +76,11 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
     );
   }
 
-  // SPECIAL CASE: Admin via sessionStorage (password access) - allow without authentication
+  // Admin check
   if (requireType === 'admin') {
     if (!hasAdminRole) {
-      console.log('Admin required but not granted, redirecting to /auth');
       return <Navigate to="/auth" replace />;
     }
-    console.log('Admin access granted, rendering children');
     return <>{children}</>;
   }
 
