@@ -25,53 +25,66 @@ const Welcome = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9]">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="h-8 w-8 animate-spin text-[#4F46E5]" />
       </div>
     );
   }
 
   if (isAuthenticated && profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9]">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="h-8 w-8 animate-spin text-[#4F46E5]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9] px-4">
-      {/* Confetti dots decorativos */}
-      <div className="fixed top-[10%] left-[8%] w-3 h-3 rounded-full bg-white/30 animate-pulse" />
-      <div className="fixed top-[15%] right-[12%] w-2.5 h-2.5 rounded-full bg-yellow-300/80" />
-      <div className="fixed top-[25%] left-[15%] w-2 h-2 rounded-full bg-pink-400/70" />
-      <div className="fixed bottom-[20%] right-[10%] w-3 h-3 rounded-full bg-white/25" />
-      <div className="fixed bottom-[30%] left-[5%] w-2 h-2 rounded-full bg-blue-300/60" />
-      <div className="fixed top-[40%] right-[5%] w-2 h-2 rounded-full bg-pink-300/50" />
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Background gradient - blue/purple at top fading to white at bottom */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(180deg, #4F6AF5 0%, #6366F1 30%, #818CF8 50%, #C7D2FE 70%, #EEF2FF 85%, #FFFFFF 100%)'
+        }}
+      />
+      
+      {/* Subtle glow effect at top */}
+      <div 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] opacity-40"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.4) 0%, transparent 70%)'
+        }}
+      />
 
-      <div className="w-full max-w-sm text-center space-y-8">
-        {/* Logo */}
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-28 h-28 rounded-3xl bg-white/95 flex items-center justify-center shadow-2xl">
-            <img src={logo} alt="Nellor" className="w-16 h-16 object-contain" />
+      {/* Content */}
+      <div className="relative flex-1 flex flex-col items-center justify-center px-6">
+        {/* Logo area - centered in upper portion */}
+        <div className="flex flex-col items-center mb-auto mt-[25vh]">
+          {/* Logo icon */}
+          <div className="w-20 h-20 rounded-2xl bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg mb-5">
+            <img src={logo} alt="Nellor" className="w-12 h-12 object-contain" />
           </div>
           
-          {/* Nome da plataforma */}
-          <h1 className="text-4xl font-bold text-white tracking-tight">
+          {/* Platform name */}
+          <h1 className="text-3xl font-semibold text-white tracking-tight">
             Nellor
           </h1>
-          
-          {/* Frase curta e neutra */}
-          <p className="text-white/90 text-lg">
-            Sua plataforma de compras simplificada
-          </p>
         </div>
+      </div>
 
-        {/* Botões */}
-        <div className="space-y-4 pt-8">
+      {/* Bottom section with tagline and buttons */}
+      <div className="relative px-6 pb-12 pt-8">
+        {/* Tagline */}
+        <p className="text-center text-gray-600 text-base mb-8">
+          Conectando você aos melhores fornecedores.
+        </p>
+
+        {/* Buttons */}
+        <div className="max-w-sm mx-auto space-y-3">
           <Button 
             onClick={() => navigate('/auth?modo=login')}
-            className="w-full h-14 bg-white text-[#7C3AED] hover:bg-white/90 font-semibold text-lg rounded-full shadow-lg"
+            className="w-full h-12 bg-[#4F6AF5] hover:bg-[#4338CA] text-white font-medium text-base rounded-xl shadow-sm transition-all duration-200"
           >
             Entrar
           </Button>
@@ -79,7 +92,7 @@ const Welcome = () => {
           <Button 
             onClick={() => navigate('/auth?modo=cadastro')}
             variant="outline"
-            className="w-full h-14 bg-transparent border-2 border-white text-white hover:bg-white/10 font-semibold text-lg rounded-full"
+            className="w-full h-12 bg-transparent border-2 border-[#4F6AF5] text-[#4F6AF5] hover:bg-[#4F6AF5]/5 font-medium text-base rounded-xl transition-all duration-200"
           >
             Criar conta
           </Button>
