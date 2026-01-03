@@ -15,16 +15,30 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { useCart } from "@/hooks/useCart";
 import { usePWA } from "@/hooks/usePWA";
-
 const ClienteHome = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { favorites } = useFavorites();
-  const { products } = useProducts();
-  const { banners } = useSupabaseBanners();
-  const { categories } = useSupabaseCategories();
-  const { cartItems } = useCart();
-  const { canInstall, isInstalled, isIOS, installApp } = usePWA();
+  const {
+    favorites
+  } = useFavorites();
+  const {
+    products
+  } = useProducts();
+  const {
+    banners
+  } = useSupabaseBanners();
+  const {
+    categories
+  } = useSupabaseCategories();
+  const {
+    cartItems
+  } = useCart();
+  const {
+    canInstall,
+    isInstalled,
+    isIOS,
+    installApp
+  } = usePWA();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showStripeReturnBanner, setShowStripeReturnBanner] = useState(false);
@@ -36,20 +50,17 @@ const ClienteHome = () => {
       // Remove o parâmetro da URL
       searchParams.delete("stripe_return");
       searchParams.delete("session_id");
-      setSearchParams(searchParams, { replace: true });
+      setSearchParams(searchParams, {
+        replace: true
+      });
     }
   }, [searchParams, setSearchParams]);
-
   const mainBanners = banners.slice(0, 3);
   const sideBanners = banners.slice(3, 5);
 
   // Filter products by selected category
-  const filteredProducts = selectedCategory
-    ? products.filter(product => product.category === selectedCategory)
-    : products;
-
-  return (
-    <div className="min-h-screen bg-muted/30 pb-20 lg:pb-0">
+  const filteredProducts = selectedCategory ? products.filter(product => product.category === selectedCategory) : products;
+  return <div className="min-h-screen bg-muted/30 pb-20 lg:pb-0">
       <ParticlesBackground />
       
       {/* Desktop Header */}
@@ -72,21 +83,12 @@ const ClienteHome = () => {
 
           {/* Main header */}
           <div className="flex items-center justify-between gap-4 py-4">
-            <img 
-              src={logo} 
-              alt="Nellor" 
-              className="h-10 lg:h-12 w-auto cursor-pointer" 
-              onClick={() => navigate("/cliente")}
-            />
+            <img src={logo} alt="Nellor" className="h-10 lg:h-12 w-auto cursor-pointer" onClick={() => navigate("/cliente")} />
             
             {/* Search bar - expands on desktop */}
             <div className="flex-1 max-w-2xl hidden md:block">
               <div className="relative" onClick={() => navigate("/cliente/produtos")}>
-                <Input 
-                  placeholder="Buscar produtos, marcas e muito mais..." 
-                  className="pl-4 pr-12 py-6 bg-muted border-input focus:border-primary cursor-pointer text-base" 
-                  readOnly 
-                />
+                <Input placeholder="Buscar produtos, marcas e muito mais..." className="pl-4 pr-12 py-6 bg-muted border-input focus:border-primary cursor-pointer text-base" readOnly />
                 <button className="absolute right-0 top-0 h-full px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-r-md">
                   <Search className="h-5 w-5" />
                 </button>
@@ -103,33 +105,20 @@ const ClienteHome = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-2 lg:gap-4">
-              <button 
-                onClick={() => navigate("/cliente/notificacoes")}
-                className="p-2 hover:bg-muted rounded-full transition-colors"
-              >
+              <button onClick={() => navigate("/cliente/notificacoes")} className="p-2 hover:bg-muted rounded-full transition-colors">
                 <Bell className="h-6 w-6 text-foreground" />
               </button>
-              <button 
-                onClick={() => navigate("/cliente/carrinho")} 
-                className="relative p-2 hover:bg-muted rounded-full transition-colors"
-              >
+              <button onClick={() => navigate("/cliente/carrinho")} className="relative p-2 hover:bg-muted rounded-full transition-colors">
                 <ShoppingCart className="h-6 w-6 text-foreground" />
-                {cartItems.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {cartItems.length > 0 && <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {cartItems.length}
-                  </span>
-                )}
+                  </span>}
               </button>
-              <button 
-                onClick={() => navigate("/cliente/favoritos")} 
-                className="relative p-2 hover:bg-muted rounded-full transition-colors"
-              >
+              <button onClick={() => navigate("/cliente/favoritos")} className="relative p-2 hover:bg-muted rounded-full transition-colors">
                 <Heart className="h-6 w-6 text-foreground" />
-                {favorites.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {favorites.length > 0 && <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {favorites.length}
-                  </span>
-                )}
+                  </span>}
               </button>
             </div>
           </div>
@@ -137,8 +126,7 @@ const ClienteHome = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
-        {showStripeReturnBanner && (
-          <div className="mb-6">
+        {showStripeReturnBanner && <div className="mb-6">
             <Card className="border-primary/20 bg-primary/5">
               <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
@@ -161,43 +149,29 @@ const ClienteHome = () => {
                 </div>
               </div>
             </Card>
-          </div>
-        )}
+          </div>}
 
         {/* Banners Section - Desktop: main + side layout */}
-        {banners.length > 0 && (
-          <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {banners.length > 0 && <div className="mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 px-[19px]">
               {/* Main Banner Carousel */}
               <div className="lg:col-span-2">
-                <Carousel 
-                  opts={{ align: "start", loop: true }} 
-                  plugins={[Autoplay({ delay: 4000 })]} 
-                  className="w-full"
-                >
+                <Carousel opts={{
+              align: "start",
+              loop: true
+            }} plugins={[Autoplay({
+              delay: 4000
+            })]} className="w-full">
                   <CarouselContent>
-                    {mainBanners.map(banner => (
-                      <CarouselItem key={banner.id}>
-                        <div 
-                          className="relative overflow-hidden rounded-xl cursor-pointer"
-                          onClick={() => banner.link_url && navigate(banner.link_url)}
-                        >
-                          <img 
-                            src={banner.image_url} 
-                            alt={banner.title || "Banner"} 
-                            className="w-full h-48 md:h-64 lg:h-80 object-cover" 
-                          />
-                          {banner.title && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                    {mainBanners.map(banner => <CarouselItem key={banner.id}>
+                        <div className="relative overflow-hidden rounded-xl cursor-pointer" onClick={() => banner.link_url && navigate(banner.link_url)}>
+                          <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-48 md:h-64 lg:h-80 object-cover" />
+                          {banner.title && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
                               <h3 className="text-white font-bold text-lg">{banner.title}</h3>
-                              {banner.subtitle && (
-                                <p className="text-white/90 text-sm">{banner.subtitle}</p>
-                              )}
-                            </div>
-                          )}
+                              {banner.subtitle && <p className="text-white/90 text-sm">{banner.subtitle}</p>}
+                            </div>}
                         </div>
-                      </CarouselItem>
-                    ))}
+                      </CarouselItem>)}
                   </CarouselContent>
                   <CarouselPrevious className="left-2" />
                   <CarouselNext className="right-2" />
@@ -205,85 +179,32 @@ const ClienteHome = () => {
               </div>
 
               {/* Side Banners - Desktop only */}
-              <div className="hidden lg:flex flex-col gap-4">
-                {sideBanners.length > 0 ? (
-                  sideBanners.map(banner => (
-                    <div 
-                      key={banner.id}
-                      className="relative overflow-hidden rounded-xl cursor-pointer flex-1"
-                      onClick={() => banner.link_url && navigate(banner.link_url)}
-                    >
-                      <img 
-                        src={banner.image_url} 
-                        alt={banner.title || "Banner"} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <>
-                    <div className="flex-1 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <p className="text-muted-foreground">Espaço para banner</p>
-                    </div>
-                    <div className="flex-1 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center">
-                      <p className="text-muted-foreground">Espaço para banner</p>
-                    </div>
-                  </>
-                )}
-              </div>
+              
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Categories - Icon style row */}
-        {categories.length > 0 && (
-          <section className="mb-8">
+        {categories.length > 0 && <section className="mb-8">
             <div className="bg-background rounded-xl p-4 shadow-sm border">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-muted-foreground">Categorias</h3>
-                {selectedCategory && (
-                  <button
-                    onClick={() => setSelectedCategory(null)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors"
-                  >
+                {selectedCategory && <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors">
                     <X className="w-4 h-4" />
                     Limpar filtro
-                  </button>
-                )}
+                  </button>}
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide justify-start lg:justify-center">
-                {categories.map(category => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(selectedCategory === category.slug ? null : category.slug)}
-                    className={`flex flex-col items-center gap-2 min-w-[80px] p-3 rounded-xl transition-colors group ${
-                      selectedCategory === category.slug 
-                        ? 'bg-primary/20 ring-2 ring-primary' 
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                      selectedCategory === category.slug 
-                        ? 'bg-primary/30' 
-                        : 'bg-primary/10 group-hover:bg-primary/20'
-                    }`}>
-                      {category.imagem_url ? (
-                        <img src={category.imagem_url} alt={category.nome} className="w-8 h-8 object-contain" />
-                      ) : (
-                        <span className="text-2xl">🛍️</span>
-                      )}
+                {categories.map(category => <button key={category.id} onClick={() => setSelectedCategory(selectedCategory === category.slug ? null : category.slug)} className={`flex flex-col items-center gap-2 min-w-[80px] p-3 rounded-xl transition-colors group ${selectedCategory === category.slug ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-muted'}`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${selectedCategory === category.slug ? 'bg-primary/30' : 'bg-primary/10 group-hover:bg-primary/20'}`}>
+                      {category.imagem_url ? <img src={category.imagem_url} alt={category.nome} className="w-8 h-8 object-contain" /> : <span className="text-2xl">🛍️</span>}
                     </div>
-                    <span className={`text-xs text-center font-medium whitespace-nowrap ${
-                      selectedCategory === category.slug ? 'text-primary' : 'text-foreground'
-                    }`}>
+                    <span className={`text-xs text-center font-medium whitespace-nowrap ${selectedCategory === category.slug ? 'text-primary' : 'text-foreground'}`}>
                       {category.nome}
                     </span>
-                  </button>
-                ))}
+                  </button>)}
               </div>
             </div>
-          </section>
-        )}
+          </section>}
 
         {/* Flash Deals Section */}
         <section className="mb-8">
@@ -291,16 +212,12 @@ const ClienteHome = () => {
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-foreground">⚡ Ofertas Relâmpago</h2>
             </div>
-            <button 
-              onClick={() => navigate("/cliente/produtos")}
-              className="flex items-center gap-1 text-primary hover:underline text-sm font-medium"
-            >
+            <button onClick={() => navigate("/cliente/produtos")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
               Ver Tudo <ChevronRight className="h-4 w-4" />
             </button>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {filteredProducts.slice(0, 8).map(product => (
-              <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-44 lg:w-52">
+            {filteredProducts.slice(0, 8).map(product => <Link key={product.id} to={`/cliente/produto/${product.id}`} className="flex-shrink-0 w-44 lg:w-52">
                 <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group">
                   <div className="aspect-square overflow-hidden relative">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
@@ -317,8 +234,7 @@ const ClienteHome = () => {
                     </div>
                   </div>
                 </Card>
-              </Link>
-            ))}
+              </Link>)}
           </div>
         </section>
 
@@ -328,16 +244,12 @@ const ClienteHome = () => {
             <h2 className="text-xl font-bold text-foreground">
               {selectedCategory ? `Produtos em ${selectedCategory}` : 'Recomendados para Você'}
             </h2>
-            <button 
-              onClick={() => navigate("/cliente/produtos")}
-              className="flex items-center gap-1 text-primary hover:underline text-sm font-medium"
-            >
+            <button onClick={() => navigate("/cliente/produtos")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
               Ver Mais <ChevronRight className="h-4 w-4" />
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {filteredProducts.map(product => (
-              <Link key={product.id} to={`/cliente/produto/${product.id}`}>
+            {filteredProducts.map(product => <Link key={product.id} to={`/cliente/produto/${product.id}`}>
                 <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group h-full">
                   <div className="aspect-square overflow-hidden">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
@@ -354,20 +266,15 @@ const ClienteHome = () => {
                     </div>
                   </div>
                 </Card>
-              </Link>
-            ))}
+              </Link>)}
           </div>
         </section>
       </main>
 
       {/* Floating Install Banner */}
-      {showInstallBanner && canInstall && !isInstalled && (
-        <div className="fixed bottom-20 left-4 right-4 z-50 lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm animate-in slide-in-from-bottom-4 duration-500">
+      {showInstallBanner && canInstall && !isInstalled && <div className="fixed bottom-20 left-4 right-4 z-50 lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm animate-in slide-in-from-bottom-4 duration-500">
           <Card className="bg-gradient-to-r from-primary to-purple-600 text-white p-4 shadow-2xl border-0">
-            <button 
-              onClick={() => setShowInstallBanner(false)}
-              className="absolute top-2 right-2 p-1 hover:bg-white/20 rounded-full transition-colors"
-            >
+            <button onClick={() => setShowInstallBanner(false)} className="absolute top-2 right-2 p-1 hover:bg-white/20 rounded-full transition-colors">
               <X className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-4">
@@ -377,34 +284,24 @@ const ClienteHome = () => {
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-sm mb-0.5">Instale o Nellor!</h4>
                 <p className="text-xs text-white/80 mb-2">
-                  {isIOS 
-                    ? "Adicione à tela inicial para acesso rápido" 
-                    : "Acesso rápido e notificações em tempo real"
-                  }
+                  {isIOS ? "Adicione à tela inicial para acesso rápido" : "Acesso rápido e notificações em tempo real"}
                 </p>
-                <Button 
-                  size="sm" 
-                  className="bg-white text-primary hover:bg-white/90 h-8 text-xs font-semibold"
-                  onClick={() => {
-                    if (isIOS) {
-                      navigate("/cliente/instalar");
-                    } else {
-                      installApp();
-                    }
-                  }}
-                >
+                <Button size="sm" className="bg-white text-primary hover:bg-white/90 h-8 text-xs font-semibold" onClick={() => {
+              if (isIOS) {
+                navigate("/cliente/instalar");
+              } else {
+                installApp();
+              }
+            }}>
                   <Download className="h-3.5 w-3.5 mr-1.5" />
                   {isIOS ? "Ver instruções" : "Instalar agora"}
                 </Button>
               </div>
             </div>
           </Card>
-        </div>
-      )}
+        </div>}
 
       <BottomNav />
-    </div>
-  );
+    </div>;
 };
-
 export default ClienteHome;
