@@ -41,19 +41,19 @@ const Welcome = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background gradient - blue/purple at top fading to white at bottom */}
+      {/* Background gradient - dark purple to bright purple */}
       <div 
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(180deg, #4F6AF5 0%, #6366F1 30%, #818CF8 50%, #C7D2FE 70%, #EEF2FF 85%, #FFFFFF 100%)'
+          background: 'linear-gradient(180deg, #11001e 0%, #9900f8 100%)'
         }}
       />
       
-      {/* Subtle glow effect at top */}
+      {/* Subtle glow effect */}
       <div 
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] opacity-40"
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] opacity-30"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.4) 0%, transparent 70%)'
+          background: 'radial-gradient(ellipse at center, rgba(153,0,248,0.5) 0%, transparent 70%)'
         }}
       />
 
@@ -74,7 +74,7 @@ const Welcome = () => {
       {/* Bottom section with tagline and buttons */}
       <div className="relative px-6 pb-12 pt-8">
         {/* Tagline */}
-        <p className="text-center text-gray-600 text-base mb-8">
+        <p className="text-center text-white/70 text-base mb-8">
           Conectando você aos melhores fornecedores.
         </p>
 
@@ -82,7 +82,7 @@ const Welcome = () => {
         <div className="max-w-sm mx-auto space-y-3">
           <Button 
             onClick={() => navigate('/auth?modo=login')}
-            className="w-full h-12 bg-[#4F6AF5] hover:bg-[#4338CA] text-white font-medium text-base rounded-xl shadow-sm transition-all duration-200"
+            className="w-full h-12 bg-white hover:bg-white/90 text-[#11001e] font-medium text-base rounded-xl shadow-sm transition-all duration-200"
           >
             Entrar
           </Button>
@@ -90,7 +90,7 @@ const Welcome = () => {
           <Button 
             onClick={() => navigate('/auth?modo=cadastro')}
             variant="outline"
-            className="w-full h-12 bg-transparent border-2 border-[#4F6AF5] text-[#4F6AF5] hover:bg-[#4F6AF5]/5 font-medium text-base rounded-xl transition-all duration-200"
+            className="w-full h-12 bg-transparent border-2 border-white/50 text-white hover:bg-white/10 font-medium text-base rounded-xl transition-all duration-200"
           >
             Criar conta
           </Button>
