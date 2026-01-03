@@ -114,52 +114,66 @@ const Welcome = () => {
 
         {/* Center section - Computer Preview */}
         <div className="w-full max-w-sm sm:max-w-lg lg:max-w-2xl mx-auto flex flex-1 items-center justify-center min-h-0 py-1 sm:py-4 -mt-2 sm:mt-0">
-          {/* Computer Frame */}
+          {/* Laptop Frame */}
           <div className="relative w-full">
-            {/* Screen bezel */}
-            <div className="bg-gradient-to-b from-gray-700 to-gray-800 rounded-t-xl sm:rounded-t-3xl p-1.5 sm:p-3 pt-2.5 sm:pt-4 shadow-2xl">
-              {/* Camera dot */}
-              <div className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 w-1 sm:w-2 h-1 sm:h-2 bg-gray-500 rounded-full" />
+            {/* Screen lid */}
+            <div className="relative bg-gradient-to-b from-[#2a2a2a] via-[#1f1f1f] to-[#1a1a1a] rounded-t-2xl sm:rounded-t-3xl p-2 sm:p-4 shadow-2xl border border-[#3a3a3a]/50">
+              {/* Inner bezel */}
+              <div className="bg-gradient-to-b from-[#0d0d0d] to-[#1a1a1a] rounded-lg sm:rounded-xl p-1 sm:p-1.5 border border-[#333]/60">
+                {/* Camera notch */}
+                <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                  <div className="w-1.5 sm:w-2.5 h-1.5 sm:h-2.5 bg-[#1a1a1a] rounded-full border border-[#333] flex items-center justify-center">
+                    <div className="w-0.5 sm:w-1 h-0.5 sm:h-1 bg-[#222] rounded-full" />
+                  </div>
+                </div>
 
-              {/* Screen */}
-              <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[44vh] sm:h-[35vh] lg:h-[45vh] max-h-[320px] sm:max-h-[350px] lg:max-h-[420px]">
-                {/* Screen reflection */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                {/* Screen */}
+                <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-md sm:rounded-lg overflow-hidden relative h-[44vh] sm:h-[35vh] lg:h-[45vh] max-h-[320px] sm:max-h-[350px] lg:max-h-[420px]">
+                  {/* Screen reflection */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
-                {/* Fade overlay - top */}
-                <div className="absolute top-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none" style={{
-                background: 'linear-gradient(to bottom, rgba(26,26,46,1) 0%, transparent 100%)'
-              }} />
+                  {/* Fade overlay - top */}
+                  <div className="absolute top-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none" style={{
+                    background: 'linear-gradient(to bottom, rgba(26,26,46,1) 0%, transparent 100%)'
+                  }} />
 
-                {/* Fade overlay - bottom */}
-                <div className="absolute bottom-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none" style={{
-                background: 'linear-gradient(to top, rgba(22,33,62,1) 0%, transparent 100%)'
-              }} />
+                  {/* Fade overlay - bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none" style={{
+                    background: 'linear-gradient(to top, rgba(22,33,62,1) 0%, transparent 100%)'
+                  }} />
 
-                {/* Scrolling Products */}
-                <div className="animate-scroll-up">
-                  <div className="grid grid-cols-3 gap-1.5 sm:gap-3 p-2 sm:p-4">
-                    {[...previewProducts, ...previewProducts, ...previewProducts].map((product, index) => <div key={`${product.id}-${index}`} className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 border border-white/10">
-                          <div className="aspect-square rounded-md sm:rounded-lg overflow-hidden mb-1 sm:mb-2 bg-white/5">
-                            {product.imagens?.[0] ? <img src={product.imagens[0]} alt={product.nome} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center text-white/30 text-xs sm:text-base">
-                                📦
-                              </div>}
-                          </div>
-                          <p className="text-white/90 text-[8px] sm:text-xs font-medium truncate">
-                            {product.nome}
-                          </p>
-                          <p className="text-emerald-400 text-[7px] sm:text-[11px] font-medium">
-                            R$ {product.preco.toFixed(2).replace('.', ',')}
-                          </p>
-                        </div>)}
+                  {/* Scrolling Products */}
+                  <div className="animate-scroll-up">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-3 p-2 sm:p-4">
+                      {[...previewProducts, ...previewProducts, ...previewProducts].map((product, index) => <div key={`${product.id}-${index}`} className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 border border-white/10">
+                            <div className="aspect-square rounded-md sm:rounded-lg overflow-hidden mb-1 sm:mb-2 bg-white/5">
+                              {product.imagens?.[0] ? <img src={product.imagens[0]} alt={product.nome} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center text-white/30 text-xs sm:text-base">
+                                  📦
+                                </div>}
+                            </div>
+                            <p className="text-white/90 text-[8px] sm:text-xs font-medium truncate">
+                              {product.nome}
+                            </p>
+                            <p className="text-emerald-400 text-[7px] sm:text-[11px] font-medium">
+                              R$ {product.preco.toFixed(2).replace('.', ',')}
+                            </p>
+                          </div>)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Hinge */}
+            <div className="relative h-2 sm:h-3 mx-4 sm:mx-10 lg:mx-20 bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] rounded-b-sm shadow-inner" />
+            
             {/* Keyboard base */}
-            <div className="bg-gradient-to-b from-gray-600 to-gray-700 h-1.5 sm:h-3 mx-3 sm:mx-8 lg:mx-16" />
-            <div className="bg-gray-700 h-0.5 sm:h-1.5 rounded-b-lg mx-6 sm:mx-16 lg:mx-32 shadow-lg" />
+            <div className="relative mx-2 sm:mx-6 lg:mx-12">
+              <div className="bg-gradient-to-b from-[#2a2a2a] to-[#1f1f1f] h-3 sm:h-5 rounded-b-xl shadow-lg border-x border-b border-[#3a3a3a]/30">
+                {/* Trackpad hint */}
+                <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-12 sm:w-20 h-0.5 sm:h-1 bg-[#333]/50 rounded-full" />
+              </div>
+            </div>
           </div>
         </div>
 
