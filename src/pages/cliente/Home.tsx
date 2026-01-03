@@ -153,7 +153,7 @@ const ClienteHome = () => {
 
         {/* Banners Section - Centered */}
         {banners.length > 0 && <div className="mb-8">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-6xl mx-auto">
               <Carousel opts={{
               align: "center",
               loop: true
@@ -163,7 +163,7 @@ const ClienteHome = () => {
                 <CarouselContent>
                   {mainBanners.map(banner => <CarouselItem key={banner.id}>
                       <div className="relative overflow-hidden rounded-xl cursor-pointer" onClick={() => banner.link_url && navigate(banner.link_url)}>
-                        <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-48 md:h-64 lg:h-80 object-cover" />
+                        <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-56 md:h-80 lg:h-[420px] object-cover" />
                         {banner.title && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
                             <h3 className="text-white font-bold text-lg">{banner.title}</h3>
                             {banner.subtitle && <p className="text-white/90 text-sm">{banner.subtitle}</p>}
