@@ -44,6 +44,7 @@ const ConfiguracoesNotificacoes = lazy(() => import("./pages/cliente/Configuraco
 const ProgramaAfiliados = lazy(() => import("./pages/cliente/ProgramaAfiliados"));
 const AfiliadoCadastro = lazy(() => import("./pages/cliente/AfiliadoCadastro"));
 const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
+const ClienteNellorDrop = lazy(() => import("./pages/cliente/NellorDrop"));
 
 // Lazy load fornecedor pages
 const Dashboard = lazy(() => import("./pages/fornecedor/Dashboard"));
@@ -152,6 +153,7 @@ const App = () => {
               <Route path="afiliados" element={<Suspense fallback={<PageSkeleton />}><ProgramaAfiliados /></Suspense>} />
               <Route path="afiliados/cadastro" element={<Suspense fallback={<PageSkeleton />}><AfiliadoCadastro /></Suspense>} />
               <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
+              <Route path="nellor-drop" element={<Suspense fallback={<PageSkeleton />}><ClienteNellorDrop /></Suspense>} />
             </Route>
 
             {/* Fornecedor Panel Routes */}
