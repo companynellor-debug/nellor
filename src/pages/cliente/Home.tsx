@@ -141,7 +141,7 @@ const ClienteHome = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex sm:items-center sm:justify-center">
                   <Button onClick={() => navigate("/cliente/meus-pedidos")}>Ir para Meus Pedidos</Button>
                   <Button variant="ghost" onClick={() => setShowStripeReturnBanner(false)}>
                     Fechar
