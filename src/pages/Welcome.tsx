@@ -18,6 +18,17 @@ const Welcome = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
 
+  const fallbackProducts: Product[] = [
+    { id: 'fallback-1', nome: 'Produto', preco: 59.9, imagens: null },
+    { id: 'fallback-2', nome: 'Oferta', preco: 49.0, imagens: null },
+    { id: 'fallback-3', nome: 'Novidade', preco: 99.9, imagens: null },
+    { id: 'fallback-4', nome: 'Mais vendido', preco: 37.9, imagens: null },
+    { id: 'fallback-5', nome: 'Seleção', preco: 48.0, imagens: null },
+    { id: 'fallback-6', nome: 'Destaque', preco: 5.9, imagens: null },
+  ];
+
+  const previewProducts = products.length > 0 ? products : fallbackProducts;
+
   useEffect(() => {
     const fetchProducts = async () => {
       const { data } = await supabase
@@ -80,9 +91,9 @@ const Welcome = () => {
       />
 
       {/* Content - compact layout */}
-      <div className="relative flex-1 flex flex-col items-center px-4 pt-4 pb-4 gap-2 sm:gap-0 sm:px-5 sm:pb-6 sm:pt-6 sm:justify-between">
+      <div className="relative flex-1 flex flex-col items-center px-4 pt-1 pb-3 gap-0 sm:px-5 sm:pb-6 sm:pt-6 justify-between">
         {/* Top section - Logo */}
-        <div className="flex flex-col items-center mt-2 sm:mt-6 mb-1 sm:mb-3">
+        <div className="flex flex-col items-center mt-0 sm:mt-6 mb-0 sm:mb-3">
           <img src={logo} alt="Nellor" className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-lg" />
           <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
             Nellor
@@ -90,46 +101,53 @@ const Welcome = () => {
         </div>
 
         {/* Center section - Computer Preview */}
-        {products.length > 0 && (
-          <div className="w-full max-w-sm sm:max-w-lg lg:max-w-2xl mx-auto flex items-center justify-center min-h-0 py-1 sm:flex-1 sm:py-4">
-            {/* Computer Frame */}
-            <div className="relative w-full">
-              {/* Screen bezel */}
-              <div className="bg-gradient-to-b from-gray-700 to-gray-800 rounded-t-xl sm:rounded-t-3xl p-1.5 sm:p-3 pt-2.5 sm:pt-4 shadow-2xl">
-                {/* Camera dot */}
-                <div className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 w-1 sm:w-2 h-1 sm:h-2 bg-gray-500 rounded-full" />
-                
-                {/* Screen */}
-                <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[44vh] sm:h-[35vh] lg:h-[45vh] max-h-[320px] sm:max-h-[350px] lg:max-h-[420px]">
-                  {/* Screen reflection */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                  
-                  {/* Fade overlay - top */}
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none"
-                    style={{ background: 'linear-gradient(to bottom, rgba(26,26,46,1) 0%, transparent 100%)' }}
-                  />
-                  
-                  {/* Fade overlay - bottom */}
-                  <div 
-                    className="absolute bottom-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none"
-                    style={{ background: 'linear-gradient(to top, rgba(22,33,62,1) 0%, transparent 100%)' }}
-                  />
+        <div className="w-full max-w-sm sm:max-w-lg lg:max-w-2xl mx-auto flex flex-1 items-center justify-center min-h-0 py-1 sm:py-4 -mt-2 sm:mt-0">
+          {/* Computer Frame */}
+          <div className="relative w-full">
+            {/* Screen bezel */}
+            <div className="bg-gradient-to-b from-gray-700 to-gray-800 rounded-t-xl sm:rounded-t-3xl p-1.5 sm:p-3 pt-2.5 sm:pt-4 shadow-2xl">
+              {/* Camera dot */}
+              <div className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 w-1 sm:w-2 h-1 sm:h-2 bg-gray-500 rounded-full" />
 
-                  {/* Scrolling Products */}
-                  <div className="animate-scroll-up">
-                    <div className="grid grid-cols-3 gap-1.5 sm:gap-3 p-2 sm:p-4">
-                      {[...products, ...products, ...products].map((product, index) => (
-                        <div 
+              {/* Screen */}
+              <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[44vh] sm:h-[35vh] lg:h-[45vh] max-h-[320px] sm:max-h-[350px] lg:max-h-[420px]">
+                {/* Screen reflection */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
+                {/* Fade overlay - top */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none"
+                  style={{
+                    background:
+                      'linear-gradient(to bottom, rgba(26,26,46,1) 0%, transparent 100%)',
+                  }}
+                />
+
+                {/* Fade overlay - bottom */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-6 sm:h-10 z-10 pointer-events-none"
+                  style={{
+                    background:
+                      'linear-gradient(to top, rgba(22,33,62,1) 0%, transparent 100%)',
+                  }}
+                />
+
+                {/* Scrolling Products */}
+                <div className="animate-scroll-up">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-3 p-2 sm:p-4">
+                    {[...previewProducts, ...previewProducts, ...previewProducts].map(
+                      (product, index) => (
+                        <div
                           key={`${product.id}-${index}`}
                           className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 border border-white/10"
                         >
                           <div className="aspect-square rounded-md sm:rounded-lg overflow-hidden mb-1 sm:mb-2 bg-white/5">
                             {product.imagens?.[0] ? (
-                              <img 
-                                src={product.imagens[0]} 
+                              <img
+                                src={product.imagens[0]}
                                 alt={product.nome}
                                 className="w-full h-full object-cover"
+                                loading="lazy"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-white/30 text-xs sm:text-base">
@@ -137,27 +155,29 @@ const Welcome = () => {
                               </div>
                             )}
                           </div>
-                          <p className="text-white/90 text-[8px] sm:text-xs font-medium truncate">{product.nome}</p>
+                          <p className="text-white/90 text-[8px] sm:text-xs font-medium truncate">
+                            {product.nome}
+                          </p>
                           <p className="text-emerald-400 text-[7px] sm:text-[11px] font-medium">
                             R$ {product.preco.toFixed(2).replace('.', ',')}
                           </p>
                         </div>
-                      ))}
-                    </div>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
-              
-              {/* Keyboard base */}
-              <div className="bg-gradient-to-b from-gray-600 to-gray-700 h-1.5 sm:h-3 mx-3 sm:mx-8 lg:mx-16" />
-              <div className="bg-gray-700 h-0.5 sm:h-1.5 rounded-b-lg mx-6 sm:mx-16 lg:mx-32 shadow-lg" />
             </div>
+
+            {/* Keyboard base */}
+            <div className="bg-gradient-to-b from-gray-600 to-gray-700 h-1.5 sm:h-3 mx-3 sm:mx-8 lg:mx-16" />
+            <div className="bg-gray-700 h-0.5 sm:h-1.5 rounded-b-lg mx-6 sm:mx-16 lg:mx-32 shadow-lg" />
           </div>
-        )}
+        </div>
 
         {/* Bottom section - Tagline and buttons (compact) */}
-        <div className="w-full mt-1 sm:-mt-6">
-          <p className="text-center text-white/60 text-xs sm:text-sm mb-3 sm:mb-4">
+        <div className="w-full mt-0 sm:-mt-6">
+          <p className="text-center text-white/60 text-xs sm:text-sm mb-2 sm:mb-4">
             Conectando você aos melhores fornecedores.
           </p>
 
