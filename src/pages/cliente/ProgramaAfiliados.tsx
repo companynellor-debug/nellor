@@ -92,7 +92,6 @@ const ProgramaAfiliados = () => {
     if (user) {
       void fetchAffiliateData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const fetchAffiliateData = async () => {
@@ -106,9 +105,18 @@ const ProgramaAfiliados = () => {
         .from("affiliates")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (affiliateData) {
+        // Check if registration is complete (has stripe_ready or step 4)
+        const registrationComplete = affiliateData.stripe_ready || (affiliateData as any).registration_step >= 4;
+        
+        if (!registrationComplete) {
+          // Redirect to registration flow to continue
+          navigate("/cliente/afiliados/cadastro");
+          return;
+        }
+        
         setAffiliate(affiliateData as any);
 
         // Fetch links with product info
@@ -474,17 +482,12 @@ const ProgramaAfiliados = () => {
               </li>
             </ul>
             <Button
-              onClick={activateAffiliate}
-              disabled={activatingAffiliate}
+              onClick={() => navigate("/cliente/afiliados/cadastro")}
               className="w-full"
               size="lg"
             >
-              {activatingAffiliate ? (
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              ) : (
-                <Sparkles className="h-5 w-5 mr-2" />
-              )}
-              Ativar Programa de Afiliados
+              <Sparkles className="h-5 w-5 mr-2" />
+              Começar Cadastro
             </Button>
           </Card>
         ) : (

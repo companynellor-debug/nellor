@@ -278,9 +278,14 @@ export type Database = {
       affiliates: {
         Row: {
           created_at: string | null
+          document_number: string | null
+          document_type: string | null
+          email: string | null
+          full_name: string | null
           id: string
           pending_earnings: number | null
           pix_key: string | null
+          registration_step: number | null
           status: Database["public"]["Enums"]["affiliate_status"]
           stripe_account_id: string | null
           stripe_ready: boolean | null
@@ -291,9 +296,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          document_number?: string | null
+          document_type?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
           pending_earnings?: number | null
           pix_key?: string | null
+          registration_step?: number | null
           status?: Database["public"]["Enums"]["affiliate_status"]
           stripe_account_id?: string | null
           stripe_ready?: boolean | null
@@ -304,9 +314,14 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          document_number?: string | null
+          document_type?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
           pending_earnings?: number | null
           pix_key?: string | null
+          registration_step?: number | null
           status?: Database["public"]["Enums"]["affiliate_status"]
           stripe_account_id?: string | null
           stripe_ready?: boolean | null
@@ -1185,6 +1200,59 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_provider_contract_requests: {
+        Row: {
+          contract_type: string
+          created_at: string
+          id: string
+          monthly_value: number | null
+          notes: string | null
+          rejected_reason: string | null
+          requested_at: string
+          responded_at: string | null
+          service_provider_id: string
+          status: string
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          contract_type: string
+          created_at?: string
+          id?: string
+          monthly_value?: number | null
+          notes?: string | null
+          rejected_reason?: string | null
+          requested_at?: string
+          responded_at?: string | null
+          service_provider_id: string
+          status?: string
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          contract_type?: string
+          created_at?: string
+          id?: string
+          monthly_value?: number | null
+          notes?: string | null
+          rejected_reason?: string | null
+          requested_at?: string
+          responded_at?: string | null
+          service_provider_id?: string
+          status?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_contract_requests_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
         ]

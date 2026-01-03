@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { ServiceProviderCodePanel } from "@/components/fornecedor/ServiceProviderCodePanel";
 import { ServiceProviderRequestsPanel } from "@/components/fornecedor/ServiceProviderRequestsPanel";
+import { ContractApprovalPanel } from "@/components/fornecedor/ContractApprovalPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
@@ -278,6 +279,9 @@ const Permissoes = () => {
         </TabsContent>
 
         <TabsContent value="service-providers" className="mt-6 space-y-6">
+          {/* Contract Approval Panel */}
+          <ContractApprovalPanel />
+          
           {/* Code Generation Panel */}
           <ServiceProviderCodePanel />
           
