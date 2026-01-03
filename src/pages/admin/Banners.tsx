@@ -71,13 +71,14 @@ const Banners = () => {
   const fetchBanners = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('banners')
-        .select('*')
-        .order('order_index', { ascending: true });
+      const { data, error } = await supabase.functions.invoke('admin-banners', {
+        body: { action: 'list' }
+      });
 
       if (error) throw error;
-      setBanners(data || []);
+      if (!data?.ok) throw new Error(data?.error || 'Erro ao carregar');
+      
+      setBanners(data.data || []);
     } catch (error) {
       console.error('Error fetching banners:', error);
       toast.error('Erro ao carregar banners');
@@ -94,38 +95,47 @@ const Banners = () => {
 
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from('banners')
-          .update({
-            title: formData.title,
-            subtitle: formData.subtitle || null,
-            image_url: formData.imageUrl,
-            link_url: formData.link || null,
-            order_index: formData.order,
-            ativo: formData.active
-          })
-          .eq('id', editingId);
+        const { data, error } = await supabase.functions.invoke('admin-banners', {
+          body: {
+            action: 'update',
+            id: editingId,
+            data: {
+              title: formData.title,
+              subtitle: formData.subtitle || null,
+              image_url: formData.imageUrl,
+              link_url: formData.link || null,
+              order_index: formData.order,
+              ativo: formData.active
+            }
+          }
+        });
 
         if (error) throw error;
+        if (!data?.ok) throw new Error(data?.error || 'Erro ao atualizar');
         toast.success("Banner atualizado!");
       } else {
-        const { error } = await supabase
-          .from('banners')
-          .insert({
-            title: formData.title,
-            subtitle: formData.subtitle || null,
-            image_url: formData.imageUrl,
-            link_url: formData.link || null,
-            order_index: formData.order,
-            ativo: formData.active
-          });
+        const { data, error } = await supabase.functions.invoke('admin-banners', {
+          body: {
+            action: 'create',
+            data: {
+              title: formData.title,
+              subtitle: formData.subtitle || null,
+              image_url: formData.imageUrl,
+              link_url: formData.link || null,
+              order_index: formData.order,
+              ativo: formData.active
+            }
+          }
+        });
 
         if (error) throw error;
+        if (!data?.ok) throw new Error(data?.error || 'Erro ao criar');
         toast.success("Banner criado!");
       }
 
       setOpen(false);
       resetForm();
+      fetchBanners();
     } catch (error) {
       console.error('Error saving banner:', error);
       toast.error('Erro ao salvar banner');
@@ -168,13 +178,14 @@ const Banners = () => {
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este banner?")) {
       try {
-        const { error } = await supabase
-          .from('banners')
-          .delete()
-          .eq('id', id);
+        const { data, error } = await supabase.functions.invoke('admin-banners', {
+          body: { action: 'delete', id }
+        });
 
         if (error) throw error;
+        if (!data?.ok) throw new Error(data?.error || 'Erro ao excluir');
         toast.success("Banner excluído!");
+        fetchBanners();
       } catch (error) {
         console.error('Error deleting banner:', error);
         toast.error('Erro ao excluir banner');
@@ -187,13 +198,18 @@ const Banners = () => {
     if (!banner) return;
 
     try {
-      const { error } = await supabase
-        .from('banners')
-        .update({ ativo: !banner.ativo })
-        .eq('id', id);
+      const { data, error } = await supabase.functions.invoke('admin-banners', {
+        body: {
+          action: 'update',
+          id,
+          data: { ativo: !banner.ativo }
+        }
+      });
 
       if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || 'Erro ao alterar');
       toast.success(banner.ativo ? "Banner desativado" : "Banner ativado");
+      fetchBanners();
     } catch (error) {
       console.error('Error toggling banner:', error);
       toast.error('Erro ao alterar status');

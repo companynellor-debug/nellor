@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.admin-grant-role]
 verify_jwt = false
+
+[functions.admin-banners]
+verify_jwt = false
