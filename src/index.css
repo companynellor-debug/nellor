@@ -290,4 +290,18 @@ All colors MUST be HSL.
   .animate-scroll-up {
     animation: scroll-up 15s linear infinite;
   }
+
+  @keyframes screen-shine {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
+    }
+    100% {
+      transform: translateX(200%) skewX(-15deg);
+    }
+  }
+  
+  .animate-screen-shine {
+    animation: screen-shine 4s ease-in-out infinite;
+    animation-delay: 1s;
+  }
 }
