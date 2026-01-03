@@ -1694,6 +1694,61 @@ export type Database = {
           expires_at: string
         }[]
       }
+      get_admin_affiliates: {
+        Args: never
+        Returns: {
+          clicks_count: number
+          conversions_count: number
+          created_at: string
+          document_number: string
+          document_type: string
+          email: string
+          full_name: string
+          id: string
+          links_count: number
+          pending_earnings: number
+          registration_step: number
+          status: string
+          stripe_ready: boolean
+          total_earnings: number
+          user_email: string
+          user_id: string
+          user_name: string
+        }[]
+      }
+      get_admin_commissions: {
+        Args: never
+        Returns: {
+          affiliate_id: string
+          affiliate_name: string
+          amount: number
+          commission_percent: number
+          created_at: string
+          id: string
+          order_id: string
+          order_number: string
+          order_total: number
+          paid_at: string
+          status: string
+        }[]
+      }
+      get_admin_contract_requests: {
+        Args: never
+        Returns: {
+          contract_type: string
+          id: string
+          monthly_value: number
+          notes: string
+          rejected_reason: string
+          requested_at: string
+          responded_at: string
+          service_provider_id: string
+          sp_name: string
+          status: string
+          supplier_id: string
+          supplier_name: string
+        }[]
+      }
       get_admin_orders: {
         Args: never
         Returns: {
@@ -1730,6 +1785,24 @@ export type Database = {
           stripe_account_id: string
           telefone: string
           tipo: string
+        }[]
+      }
+      get_admin_service_providers: {
+        Args: never
+        Returns: {
+          business_name: string
+          created_at: string
+          crm_clients_count: number
+          description: string
+          id: string
+          pending_contracts: number
+          service_type: string
+          status: string
+          suppliers_count: number
+          user_email: string
+          user_id: string
+          user_name: string
+          user_photo: string
         }[]
       }
       get_admin_stats: {
