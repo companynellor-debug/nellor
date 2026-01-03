@@ -80,18 +80,18 @@ const Welcome = () => {
       />
 
       {/* Content - compact layout */}
-      <div className="relative flex-1 flex flex-col items-center px-4 pt-2 pb-3 sm:px-5 sm:py-6">
-        {/* Top section - Logo (compact) */}
-        <div className="flex flex-col items-center mb-1 sm:mb-4">
-          <img src={logo} alt="Nellor" className="w-12 h-12 sm:w-20 sm:h-20 object-contain drop-shadow-lg" />
-          <h1 className="text-lg sm:text-2xl font-semibold text-white tracking-tight">
+      <div className="relative flex-1 flex flex-col items-center px-4 pt-4 pb-3 sm:px-5 sm:py-6">
+        {/* Top section - Logo */}
+        <div className="flex flex-col items-center">
+          <img src={logo} alt="Nellor" className="w-14 h-14 sm:w-20 sm:h-20 object-contain drop-shadow-lg" />
+          <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
             Nellor
           </h1>
         </div>
 
-        {/* Center section - Computer Preview (takes available space) */}
+        {/* Center section - Computer Preview */}
         {products.length > 0 && (
-          <div className="w-full max-w-md lg:max-w-lg mx-auto flex-1 flex items-start sm:items-center justify-center min-h-0">
+          <div className="w-full max-w-sm sm:max-w-lg lg:max-w-2xl mx-auto flex-1 flex items-center justify-center min-h-0 py-3 sm:py-4">
             {/* Computer Frame */}
             <div className="relative w-full">
               {/* Screen bezel */}
@@ -99,8 +99,8 @@ const Welcome = () => {
                 {/* Camera dot */}
                 <div className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 w-1 sm:w-2 h-1 sm:h-2 bg-gray-500 rounded-full" />
                 
-                {/* Screen - taller on mobile */}
-                <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[55vh] max-h-[400px] sm:h-[45vw] sm:max-h-[320px]">
+                {/* Screen */}
+                <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-lg sm:rounded-xl overflow-hidden relative h-[42vh] sm:h-[35vh] lg:h-[45vh] max-h-[300px] sm:max-h-[350px] lg:max-h-[420px]">
                   {/* Screen reflection */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
                   
@@ -149,8 +149,8 @@ const Welcome = () => {
               </div>
               
               {/* Keyboard base */}
-              <div className="bg-gradient-to-b from-gray-600 to-gray-700 h-1.5 sm:h-3 mx-3 sm:mx-8" />
-              <div className="bg-gray-700 h-0.5 sm:h-1.5 rounded-b-lg mx-6 sm:mx-16 shadow-lg" />
+              <div className="bg-gradient-to-b from-gray-600 to-gray-700 h-1.5 sm:h-3 mx-3 sm:mx-8 lg:mx-16" />
+              <div className="bg-gray-700 h-0.5 sm:h-1.5 rounded-b-lg mx-6 sm:mx-16 lg:mx-32 shadow-lg" />
             </div>
           </div>
         )}
