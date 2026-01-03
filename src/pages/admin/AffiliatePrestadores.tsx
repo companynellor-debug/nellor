@@ -120,157 +120,63 @@ const AffiliatePrestadores = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch affiliates with complete data
-      const { data: affiliatesData } = await supabase
-        .from("affiliates")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      const affiliatesWithDetails = await Promise.all(
-        (affiliatesData || []).map(async (aff) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("nome, email")
-            .eq("id", aff.user_id)
-            .maybeSingle();
-
-          const { data: links } = await supabase
-            .from("affiliate_links")
-            .select("id, clicks, conversions")
-            .eq("affiliate_id", aff.id);
-
-          const linksCount = links?.length || 0;
-          const clicksCount = links?.reduce((sum, l) => sum + (l.clicks || 0), 0) || 0;
-          const conversionsCount = links?.reduce((sum, l) => sum + (l.conversions || 0), 0) || 0;
-
-          return {
-            ...aff,
-            user_name: aff.full_name || profile?.nome || "N/A",
-            user_email: aff.email || profile?.email || "N/A",
-            links_count: linksCount,
-            clicks_count: clicksCount,
-            conversions_count: conversionsCount,
-          };
-        })
-      );
-
+      // Fetch affiliates using RPC function
+      const { data: affiliatesData, error: affError } = await supabase.rpc("get_admin_affiliates");
+      if (affError) {
+        console.error("Error fetching affiliates:", affError);
+      }
+      const affiliatesWithDetails = (affiliatesData || []).map((aff: any) => ({
+        ...aff,
+        links_count: Number(aff.links_count) || 0,
+        clicks_count: Number(aff.clicks_count) || 0,
+        conversions_count: Number(aff.conversions_count) || 0,
+      }));
       setAffiliates(affiliatesWithDetails);
 
-      // Fetch service providers
-      const { data: spData } = await supabase
-        .from("service_providers")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      const spWithDetails = await Promise.all(
-        (spData || []).map(async (sp) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("nome, email, foto_perfil_url")
-            .eq("id", sp.user_id)
-            .maybeSingle();
-
-          const { count: suppliersCount } = await supabase
-            .from("service_provider_suppliers")
-            .select("*", { count: "exact", head: true })
-            .eq("service_provider_id", sp.id);
-
-          const { count: crmCount } = await supabase
-            .from("service_provider_crm")
-            .select("*", { count: "exact", head: true })
-            .eq("service_provider_id", sp.id);
-
-          const { count: pendingContracts } = await supabase
-            .from("service_provider_contract_requests")
-            .select("*", { count: "exact", head: true })
-            .eq("service_provider_id", sp.id)
-            .eq("status", "pending");
-
-          return {
-            ...sp,
-            user_name: profile?.nome || "N/A",
-            user_email: profile?.email || "N/A",
-            user_photo: profile?.foto_perfil_url,
-            suppliers_count: suppliersCount || 0,
-            crm_clients_count: crmCount || 0,
-            pending_contracts: pendingContracts || 0,
-          };
-        })
-      );
-
+      // Fetch service providers using RPC function
+      const { data: spData, error: spError } = await supabase.rpc("get_admin_service_providers");
+      if (spError) {
+        console.error("Error fetching service providers:", spError);
+      }
+      const spWithDetails = (spData || []).map((sp: any) => ({
+        ...sp,
+        suppliers_count: Number(sp.suppliers_count) || 0,
+        crm_clients_count: Number(sp.crm_clients_count) || 0,
+        pending_contracts: Number(sp.pending_contracts) || 0,
+      }));
       setServiceProviders(spWithDetails);
 
-      // Fetch commissions
-      const { data: commissionsData } = await supabase
-        .from("affiliate_commissions")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100);
+      // Fetch commissions using RPC function
+      const { data: commissionsData, error: commError } = await supabase.rpc("get_admin_commissions");
+      if (commError) {
+        console.error("Error fetching commissions:", commError);
+      }
+      setCommissions(commissionsData || []);
 
-      const commissionsWithDetails = await Promise.all(
-        (commissionsData || []).map(async (comm) => {
-          const aff = affiliatesWithDetails.find((a) => a.id === comm.affiliate_id);
-
-          const { data: order } = await supabase
-            .from("orders")
-            .select("order_number")
-            .eq("id", comm.order_id)
-            .maybeSingle();
-
-          return {
-            ...comm,
-            affiliate_name: aff?.user_name || "N/A",
-            order_number: order?.order_number || "N/A",
-          };
-        })
-      );
-
-      setCommissions(commissionsWithDetails);
-
-      // Fetch contract requests
-      const { data: contractsData } = await supabase
-        .from("service_provider_contract_requests")
-        .select("*")
-        .order("requested_at", { ascending: false })
-        .limit(50);
-
-      const contractsWithDetails = await Promise.all(
-        (contractsData || []).map(async (contract) => {
-          const sp = spWithDetails.find((s) => s.id === contract.service_provider_id);
-
-          const { data: supplier } = await supabase
-            .from("profiles")
-            .select("nome")
-            .eq("id", contract.supplier_id)
-            .maybeSingle();
-
-          return {
-            ...contract,
-            sp_name: sp?.business_name || "N/A",
-            supplier_name: supplier?.nome || "N/A",
-          };
-        })
-      );
-
-      setContractRequests(contractsWithDetails);
+      // Fetch contract requests using RPC function
+      const { data: contractsData, error: contractError } = await supabase.rpc("get_admin_contract_requests");
+      if (contractError) {
+        console.error("Error fetching contract requests:", contractError);
+      }
+      setContractRequests(contractsData || []);
 
       // Calculate stats
       const totalAffiliates = affiliatesWithDetails.length;
       const activeAffiliates = affiliatesWithDetails.filter(
-        (a) => a.status === "active" && a.stripe_ready
+        (a: any) => a.status === "active" && a.stripe_ready
       ).length;
       const pendingAffiliates = affiliatesWithDetails.filter(
-        (a) => a.status === "pending" || !a.stripe_ready
+        (a: any) => a.status === "pending" || !a.stripe_ready
       ).length;
       const totalServiceProviders = spWithDetails.length;
-      const pendingContracts = contractsWithDetails.filter((c) => c.status === "pending").length;
-      const totalCommissionsValue = commissionsWithDetails.reduce(
-        (sum, c) => sum + Number(c.amount),
+      const pendingContracts = (contractsData || []).filter((c: any) => c.status === "pending").length;
+      const totalCommissionsValue = (commissionsData || []).reduce(
+        (sum: number, c: any) => sum + Number(c.amount),
         0
       );
-      const pendingCommissionsValue = commissionsWithDetails
-        .filter((c) => c.status === "pending")
-        .reduce((sum, c) => sum + Number(c.amount), 0);
+      const pendingCommissionsValue = (commissionsData || [])
+        .filter((c: any) => c.status === "pending")
+        .reduce((sum: number, c: any) => sum + Number(c.amount), 0);
 
       setStats({
         totalAffiliates,
