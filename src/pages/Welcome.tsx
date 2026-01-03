@@ -60,14 +60,12 @@ const Welcome = () => {
       {/* Content */}
       <div className="relative flex-1 flex flex-col items-center justify-center px-6">
         {/* Logo area - centered in upper portion */}
-        <div className="flex flex-col items-center mb-auto mt-[25vh]">
-          {/* Logo icon */}
-          <div className="w-20 h-20 rounded-2xl bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg mb-5">
-            <img src={logo} alt="Nellor" className="w-12 h-12 object-contain" />
-          </div>
+        <div className="flex flex-col items-center mb-auto mt-[18vh]">
+          {/* Logo - large, no background */}
+          <img src={logo} alt="Nellor" className="w-40 h-40 object-contain mb-6 drop-shadow-lg" />
           
           {/* Platform name */}
-          <h1 className="text-3xl font-semibold text-white tracking-tight">
+          <h1 className="text-4xl font-semibold text-white tracking-tight">
             Nellor
           </h1>
         </div>
