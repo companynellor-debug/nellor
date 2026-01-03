@@ -19,6 +19,7 @@ import {
   Store,
   CreditCard,
   ExternalLink,
+  Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -431,407 +432,337 @@ const ProgramaAfiliados = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ParticlesBackground />
-
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
+      {/* Header - Shopee style */}
+      <header className="sticky top-0 z-40 bg-gradient-to-r from-primary to-primary/80">
+        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/cliente/perfil")}
-            aria-label="Voltar para perfil"
+            className="text-primary-foreground hover:bg-white/20"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Programa de Afiliados</h1>
-            <p className="text-sm text-muted-foreground">
-              Ganhe comissões indicando produtos
-            </p>
+          <div className="flex-1">
+            <h1 className="text-lg font-bold text-primary-foreground">Central do Afiliado</h1>
           </div>
+          {affiliate && (
+            <Badge className="bg-white/20 text-primary-foreground border-0">
+              {affiliate.stripe_ready ? "Ativo" : "Pendente"}
+            </Badge>
+          )}
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 relative z-10">
+      <main className="relative z-10">
         {!affiliate ? (
-          <Card className="p-6 text-center">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-10 w-10 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Seja um Afiliado</h2>
-            <p className="text-muted-foreground mb-6">
-              Ganhe comissões indicando produtos para seus amigos e seguidores. A cada
-              venda feita através do seu link, você recebe uma porcentagem.
-            </p>
-            <ul className="text-left space-y-3 mb-6">
-              <li className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Comissões de até 50% por venda</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Links personalizados para cada produto</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Receba direto na sua conta via Stripe</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Comissão recorrente por 4 meses</span>
-              </li>
-            </ul>
-            <Button
-              onClick={() => navigate("/cliente/afiliados/cadastro")}
-              className="w-full"
-              size="lg"
-            >
-              <Sparkles className="h-5 w-5 mr-2" />
-              Começar Cadastro
-            </Button>
-          </Card>
+          <div className="container mx-auto px-4 py-6">
+            <Card className="p-6 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                <Sparkles className="h-10 w-10 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Seja um Afiliado</h2>
+              <p className="text-muted-foreground mb-6">
+                Ganhe comissões indicando produtos para seus amigos e seguidores.
+              </p>
+              <ul className="text-left space-y-3 mb-6 max-w-sm mx-auto">
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>Comissões de até 50% por venda</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>Links personalizados</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>Pagamento automático via Stripe</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>Comissão recorrente por 4 meses</span>
+                </li>
+              </ul>
+              <Button
+                onClick={() => navigate("/cliente/afiliados/cadastro")}
+                className="w-full max-w-sm"
+                size="lg"
+              >
+                <Sparkles className="h-5 w-5 mr-2" />
+                Começar Agora
+              </Button>
+            </Card>
+          </div>
         ) : (
-          <div className="space-y-6">
-            {/* Stripe Connect Banner */}
-            {!affiliate.stripe_ready && (
-              <Card className="p-4 border-amber-500/50 bg-amber-500/10">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="h-6 w-6 text-amber-600" />
-                    <div>
-                      <p className="font-medium text-foreground">Conecte seu Stripe</p>
-                      <p className="text-sm text-muted-foreground">
-                        Para receber suas comissões automaticamente
-                      </p>
+          <>
+            {/* Stats Banner - Shopee style */}
+            <div className="bg-gradient-to-r from-primary to-primary/80 pb-16 pt-4">
+              <div className="container mx-auto px-4">
+                {/* Stripe Warning */}
+                {!affiliate.stripe_ready && (
+                  <div className="mb-4 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-5 w-5 text-white" />
+                        <span className="text-sm text-white font-medium">Conecte seu Stripe para receber</span>
+                      </div>
+                      <Button 
+                        onClick={connectStripe} 
+                        disabled={connectingStripe} 
+                        size="sm"
+                        variant="secondary"
+                        className="h-8"
+                      >
+                        {connectingStripe ? <Loader2 className="h-4 w-4 animate-spin" /> : "Conectar"}
+                      </Button>
                     </div>
                   </div>
-                  <Button onClick={connectStripe} disabled={connectingStripe} size="sm">
-                    {connectingStripe ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Conectar
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </Card>
-            )}
+                )}
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                    <DollarSign className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Ganhos Totais</p>
-                    <p className="text-xl font-bold">
+                {/* Main Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <p className="text-xs text-white/70 mb-1">Ganhos Totais</p>
+                    <p className="text-2xl font-bold text-white">
                       R$ {Number(affiliate.total_earnings ?? 0).toFixed(2)}
                     </p>
                   </div>
-                </div>
-              </Card>
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pendente</p>
-                    <p className="text-xl font-bold">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <p className="text-xs text-white/70 mb-1">A Receber</p>
+                    <p className="text-2xl font-bold text-white">
                       R$ {Number(affiliate.pending_earnings ?? 0).toFixed(2)}
                     </p>
                   </div>
                 </div>
-              </Card>
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <ShoppingBag className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+
+            {/* Stats Cards - Overlapping */}
+            <div className="container mx-auto px-4 -mt-10">
+              <Card className="p-4 shadow-lg">
+                <div className="grid grid-cols-3 divide-x divide-border">
+                  <div className="text-center px-2">
+                    <p className="text-2xl font-bold text-foreground">{totalConversions}</p>
+                    <p className="text-xs text-muted-foreground">Vendas</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Vendas</p>
-                    <p className="text-xl font-bold">{totalConversions}</p>
+                  <div className="text-center px-2">
+                    <p className="text-2xl font-bold text-foreground">{totalClicks}</p>
+                    <p className="text-xs text-muted-foreground">Cliques</p>
                   </div>
-                </div>
-              </Card>
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                    <LinkIcon className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Cliques</p>
-                    <p className="text-xl font-bold">{totalClicks}</p>
+                  <div className="text-center px-2">
+                    <p className="text-2xl font-bold text-foreground">{links.length}</p>
+                    <p className="text-xs text-muted-foreground">Links</p>
                   </div>
                 </div>
               </Card>
             </div>
 
-            <Tabs defaultValue="products" className="w-full">
-              <TabsList className="w-full grid grid-cols-4">
-                <TabsTrigger value="products">
-                  <ShoppingBag className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Produtos</span>
-                </TabsTrigger>
-                <TabsTrigger value="links">
-                  <LinkIcon className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Links</span>
-                </TabsTrigger>
-                <TabsTrigger value="history">
-                  <History className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Histórico</span>
-                </TabsTrigger>
-                <TabsTrigger value="suppliers">
-                  <Store className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Lojas</span>
-                </TabsTrigger>
-              </TabsList>
+            {/* Tabs - Shopee style horizontal scroll */}
+            <div className="container mx-auto px-4 mt-6">
+              <Tabs defaultValue="products" className="w-full">
+                <TabsList className="w-full h-auto p-1 bg-muted/50 rounded-xl grid grid-cols-4">
+                  <TabsTrigger 
+                    value="products" 
+                    className="flex flex-col items-center gap-1 py-2 px-1 data-[state=active]:bg-background rounded-lg"
+                  >
+                    <ShoppingBag className="h-5 w-5" />
+                    <span className="text-xs">Produtos</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="links" 
+                    className="flex flex-col items-center gap-1 py-2 px-1 data-[state=active]:bg-background rounded-lg"
+                  >
+                    <LinkIcon className="h-5 w-5" />
+                    <span className="text-xs">Meus Links</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="history" 
+                    className="flex flex-col items-center gap-1 py-2 px-1 data-[state=active]:bg-background rounded-lg"
+                  >
+                    <DollarSign className="h-5 w-5" />
+                    <span className="text-xs">Comissões</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="suppliers" 
+                    className="flex flex-col items-center gap-1 py-2 px-1 data-[state=active]:bg-background rounded-lg"
+                  >
+                    <Store className="h-5 w-5" />
+                    <span className="text-xs">Lojas</span>
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="products" className="mt-4">
-                {products.length === 0 ? (
-                  <Card className="p-8 text-center">
-                    <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      Nenhum produto disponível para afiliação no momento
-                    </p>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {products.map((product) => {
+                {/* Products Tab */}
+                <TabsContent value="products" className="mt-4 space-y-3">
+                  {products.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">Nenhum produto disponível</p>
+                    </Card>
+                  ) : (
+                    products.map((product) => {
                       const commissionPercent = getCommission(product);
-                      const simulatedOrderValue = 100;
-                      const commissionAmount = getCommissionAmount(product, simulatedOrderValue);
+                      const hasLink = hasLinkForProduct(product.id);
                       
                       return (
-                        <Card key={product.id} className="p-4">
-                          <div className="flex gap-4">
+                        <Card key={product.id} className="overflow-hidden">
+                          <div className="flex">
                             <img
                               src={product.imagens?.[0] || "/placeholder.svg"}
                               alt={product.nome}
                               loading="lazy"
-                              className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
+                              className="w-28 h-28 object-cover flex-shrink-0"
                             />
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold line-clamp-2 text-foreground">{product.nome}</h3>
-                              <p className="text-sm text-muted-foreground mt-0.5">
-                                {product.supplierName}
-                              </p>
-                              <p className="text-lg font-bold text-primary mt-1">
-                                R$ {Number(product.preco ?? 0).toFixed(2)}
-                              </p>
-                              
-                              {/* Commission details */}
-                              <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-muted-foreground">Comissão:</span>
-                                  <Badge variant="secondary" className="text-xs">
-                                    {commissionPercent}%
+                            <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                              <div>
+                                <h3 className="font-medium text-sm line-clamp-2 text-foreground">{product.nome}</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">{product.supplierName}</p>
+                              </div>
+                              <div className="flex items-end justify-between gap-2">
+                                <div>
+                                  <p className="text-lg font-bold text-primary">
+                                    R$ {Number(product.preco ?? 0).toFixed(2)}
+                                  </p>
+                                  <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-0 text-xs">
+                                    {commissionPercent}% comissão
                                   </Badge>
                                 </div>
-                                <div className="mt-1.5 pt-1.5 border-t border-border/50">
-                                  <p className="text-xs text-muted-foreground">
-                                    Simulação: pedido de R$ {simulatedOrderValue.toFixed(2)}
-                                  </p>
-                                  <p className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1 mt-0.5">
-                                    <DollarSign className="h-3.5 w-3.5" />
-                                    Você ganha: R$ {commissionAmount.toFixed(2)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex flex-col justify-center flex-shrink-0">
-                              {hasLinkForProduct(product.id) ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    const link = links.find(
-                                      (l) => l.product_id === product.id
-                                    );
-                                    if (link) copyLink(link.code, product.id);
-                                  }}
-                                  aria-label="Copiar link"
-                                >
-                                  {copiedLink ===
-                                  links.find((l) => l.product_id === product.id)?.code ? (
-                                    <Check className="h-4 w-4" />
-                                  ) : (
-                                    <Copy className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  disabled={creatingLink === product.id}
-                                  onClick={() =>
-                                    createAffiliateLink(product.id, product.supplier_id)
-                                  }
-                                  aria-label="Criar link"
-                                >
-                                  {creatingLink === product.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <LinkIcon className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="links" className="mt-4">
-                {links.length === 0 ? (
-                  <Card className="p-8 text-center">
-                    <LinkIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      Você ainda não criou nenhum link de afiliado
-                    </p>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {links.map((link) => {
-                      const commissionPercent = link.product?.affiliate_commission_percent ?? link.defaultCommissionPercent ?? 5;
-                      const simulatedOrderValue = 100;
-                      const commissionAmount = (simulatedOrderValue * commissionPercent) / 100;
-
-                      return (
-                        <Card key={link.id} className="p-4">
-                          <div className="flex gap-4">
-                            <img
-                              src={link.product?.imagens?.[0] || "/placeholder.svg"}
-                              alt={link.product?.nome || "Produto"}
-                              loading="lazy"
-                              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium line-clamp-1">
-                                {link.product?.nome || "Link do Produto"}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">
-                                {link.supplierName}
-                              </p>
-                              <div className="flex gap-4 mt-1 text-sm">
-                                <span className="text-muted-foreground">
-                                  {link.clicks ?? 0} cliques
-                                </span>
-                                <span className="text-muted-foreground">
-                                  {link.conversions ?? 0} vendas
-                                </span>
-                              </div>
-                              
-                              {/* Commission details */}
-                              <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-muted-foreground">Comissão:</span>
-                                  <Badge variant="secondary" className="text-xs">
-                                    {commissionPercent}%
-                                  </Badge>
-                                </div>
-                                <div className="mt-1.5 pt-1.5 border-t border-border/50">
-                                  <p className="text-xs text-muted-foreground">
-                                    Pedido de R$ {simulatedOrderValue.toFixed(2)} →
-                                  </p>
-                                  <p className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
-                                    <DollarSign className="h-3.5 w-3.5" />
-                                    Você ganha: R$ {commissionAmount.toFixed(2)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex flex-col justify-center gap-2 flex-shrink-0">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => copyLink(link.code, link.product_id)}
-                              >
-                                {copiedLink === link.code ? (
-                                  <Check className="h-4 w-4" />
+                                {hasLink ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const link = links.find((l) => l.product_id === product.id);
+                                      if (link) copyLink(link.code, product.id);
+                                    }}
+                                    className="h-8"
+                                  >
+                                    {copiedLink === links.find((l) => l.product_id === product.id)?.code ? (
+                                      <Check className="h-4 w-4" />
+                                    ) : (
+                                      <>
+                                        <Copy className="h-4 w-4 mr-1" />
+                                        <span className="text-xs">Copiar</span>
+                                      </>
+                                    )}
+                                  </Button>
                                 ) : (
-                                  <Copy className="h-4 w-4" />
+                                  <Button
+                                    size="sm"
+                                    disabled={creatingLink === product.id}
+                                    onClick={() => createAffiliateLink(product.id, product.supplier_id)}
+                                    className="h-8"
+                                  >
+                                    {creatingLink === product.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <LinkIcon className="h-4 w-4 mr-1" />
+                                        <span className="text-xs">Criar Link</span>
+                                      </>
+                                    )}
+                                  </Button>
                                 )}
-                              </Button>
+                              </div>
                             </div>
                           </div>
                         </Card>
                       );
-                    })}
-                  </div>
-                )}
-              </TabsContent>
+                    })
+                  )}
+                </TabsContent>
 
-              {/* Histórico de Comissões */}
-              <TabsContent value="history" className="mt-4">
-                {commissions.length === 0 ? (
-                  <Card className="p-8 text-center">
-                    <History className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      Nenhuma comissão registrada ainda
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Suas comissões aparecerão aqui quando houver vendas pelos seus links
-                    </p>
-                  </Card>
-                ) : (
-                  <div className="space-y-3">
-                    {commissions.map((commission) => (
-                      <Card key={commission.id} className="p-4">
+                {/* Links Tab */}
+                <TabsContent value="links" className="mt-4 space-y-3">
+                  {links.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <LinkIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">Nenhum link criado ainda</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Vá em Produtos e crie seu primeiro link
+                      </p>
+                    </Card>
+                  ) : (
+                    links.map((link) => (
+                      <Card key={link.id} className="p-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={link.product?.imagens?.[0] || "/placeholder.svg"}
+                            alt={link.product?.nome || "Produto"}
+                            loading="lazy"
+                            className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm line-clamp-1">{link.product?.nome || "Produto"}</h3>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Eye className="h-3 w-3" /> {link.clicks ?? 0}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <ShoppingBag className="h-3 w-3" /> {link.conversions ?? 0}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9"
+                            onClick={() => copyLink(link.code, link.product_id)}
+                          >
+                            {copiedLink === link.code ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </TabsContent>
+
+                {/* Commissions Tab */}
+                <TabsContent value="history" className="mt-4 space-y-3">
+                  {commissions.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">Nenhuma comissão ainda</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Compartilhe seus links para começar a ganhar
+                      </p>
+                    </Card>
+                  ) : (
+                    commissions.map((commission) => (
+                      <Card key={commission.id} className="p-3">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium">
-                              Pedido #{commission.order?.order_number || "..."}
+                            <p className="font-medium text-sm">Pedido #{commission.order?.order_number || "..."}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(commission.created_at).toLocaleDateString("pt-BR")}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(commission.created_at).toLocaleDateString("pt-BR", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </p>
-                            {commission.order?.total && (
-                              <p className="text-xs text-muted-foreground">
-                                Valor do pedido: R$ {Number(commission.order.total).toFixed(2)}
-                              </p>
-                            )}
                           </div>
                           <div className="text-right">
-                            <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                              + R$ {Number(commission.amount).toFixed(2)}
+                            <p className="font-bold text-green-600 dark:text-green-400">
+                              +R$ {Number(commission.amount).toFixed(2)}
                             </p>
                             {getStatusBadge(commission.status)}
                           </div>
                         </div>
                       </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
+                    ))
+                  )}
+                </TabsContent>
 
-              {/* Fornecedores Ativos */}
-              <TabsContent value="suppliers" className="mt-4">
-                {activeSuppliers.length === 0 ? (
-                  <Card className="p-8 text-center">
-                    <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      Nenhum fornecedor ativo
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Crie links de produtos para ver os fornecedores aqui
-                    </p>
-                  </Card>
-                ) : (
-                  <div className="space-y-3">
-                    {activeSuppliers.map((supplier) => (
-                      <Card key={supplier.id} className="p-4">
-                        <div className="flex items-center gap-4">
+                {/* Suppliers Tab */}
+                <TabsContent value="suppliers" className="mt-4 space-y-3">
+                  {activeSuppliers.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <Store className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">Nenhuma loja vinculada</p>
+                    </Card>
+                  ) : (
+                    activeSuppliers.map((supplier) => (
+                      <Card key={supplier.id} className="p-3">
+                        <div className="flex items-center gap-3">
                           {supplier.foto_perfil_url ? (
                             <img
                               src={supplier.foto_perfil_url}
@@ -844,27 +775,28 @@ const ProgramaAfiliados = () => {
                             </div>
                           )}
                           <div className="flex-1">
-                            <h3 className="font-medium">{supplier.nome}</h3>
-                            <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
+                            <h3 className="font-medium text-sm">{supplier.nome}</h3>
+                            <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
                               <span>{supplier.linkCount} links</span>
                               <span>{supplier.conversions} vendas</span>
                             </div>
                           </div>
                           <Button
                             variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/loja/${supplier.id}`)}
+                            size="icon"
+                            className="h-9 w-9"
+                            onClick={() => navigate(`/cliente/loja/${supplier.id}`)}
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
                         </div>
                       </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
+                    ))
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </>
         )}
       </main>
 
