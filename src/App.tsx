@@ -44,7 +44,9 @@ const ConfiguracoesNotificacoes = lazy(() => import("./pages/cliente/Configuraco
 const ProgramaAfiliados = lazy(() => import("./pages/cliente/ProgramaAfiliados"));
 const AfiliadoCadastro = lazy(() => import("./pages/cliente/AfiliadoCadastro"));
 const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
-const ClienteNellorDrop = lazy(() => import("./pages/cliente/NellorDrop"));
+const DropLayout = lazy(() => import("./pages/cliente/drop/DropLayout"));
+const DropHome = lazy(() => import("./pages/cliente/drop/DropHome"));
+const DropProduto = lazy(() => import("./pages/cliente/drop/DropProduto"));
 
 // Lazy load fornecedor pages
 const Dashboard = lazy(() => import("./pages/fornecedor/Dashboard"));
@@ -154,7 +156,21 @@ const App = () => {
               <Route path="afiliados" element={<Suspense fallback={<PageSkeleton />}><ProgramaAfiliados /></Suspense>} />
               <Route path="afiliados/cadastro" element={<Suspense fallback={<PageSkeleton />}><AfiliadoCadastro /></Suspense>} />
               <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
-              <Route path="nellor-drop" element={<Suspense fallback={<PageSkeleton />}><ClienteNellorDrop /></Suspense>} />
+            </Route>
+
+            {/* Nellor Drop - Marketplace Próprio */}
+            <Route
+              path="/cliente/drop"
+              element={
+                <ProtectedRoute requireType="cliente">
+                  <Suspense fallback={<PageSkeleton />}>
+                    <DropLayout />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageSkeleton />}><DropHome /></Suspense>} />
+              <Route path="produto/:id" element={<Suspense fallback={<PageSkeleton />}><DropProduto /></Suspense>} />
             </Route>
 
             {/* Fornecedor Panel Routes */}
