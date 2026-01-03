@@ -62,7 +62,7 @@ const Welcome = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="h-screen flex flex-col relative overflow-hidden">
       {/* Background gradient - dark purple to bright purple */}
       <div 
         className="absolute inset-0"
@@ -79,49 +79,49 @@ const Welcome = () => {
         }}
       />
 
-      {/* Content */}
-      <div className="relative flex-1 flex flex-col items-center px-6 pt-12">
-        {/* Logo area */}
-        <div className="flex flex-col items-center mb-6">
-          <img src={logo} alt="Nellor" className="w-28 h-28 object-contain mb-3 drop-shadow-lg" />
-          <h1 className="text-3xl font-semibold text-white tracking-tight">
+      {/* Content - all in one view */}
+      <div className="relative flex-1 flex flex-col items-center justify-between px-6 py-6">
+        {/* Top section - Logo */}
+        <div className="flex flex-col items-center">
+          <img src={logo} alt="Nellor" className="w-20 h-20 object-contain mb-2 drop-shadow-lg" />
+          <h1 className="text-2xl font-semibold text-white tracking-tight">
             Nellor
           </h1>
         </div>
 
-        {/* Marketplace Preview - Computer Frame */}
+        {/* Center section - Computer Preview */}
         {products.length > 0 && (
-          <div className="w-full max-w-xs mx-auto mb-4">
+          <div className="w-full max-w-sm mx-auto flex-1 flex items-center justify-center py-4">
             {/* Computer Frame */}
-            <div className="relative">
+            <div className="relative w-full">
               {/* Screen bezel */}
-              <div className="bg-gray-800 rounded-t-xl p-2 pt-3">
+              <div className="bg-gray-800 rounded-t-2xl p-3 pt-4">
                 {/* Camera dot */}
-                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-gray-600 rounded-full" />
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-600 rounded-full" />
                 
                 {/* Screen */}
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg overflow-hidden relative h-40">
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl overflow-hidden relative h-48">
                   {/* Fade overlay - top */}
                   <div 
-                    className="absolute top-0 left-0 right-0 h-6 z-10 pointer-events-none"
+                    className="absolute top-0 left-0 right-0 h-8 z-10 pointer-events-none"
                     style={{ background: 'linear-gradient(to bottom, rgba(17,24,39,1) 0%, transparent 100%)' }}
                   />
                   
                   {/* Fade overlay - bottom */}
                   <div 
-                    className="absolute bottom-0 left-0 right-0 h-6 z-10 pointer-events-none"
+                    className="absolute bottom-0 left-0 right-0 h-8 z-10 pointer-events-none"
                     style={{ background: 'linear-gradient(to top, rgba(17,24,39,1) 0%, transparent 100%)' }}
                   />
 
                   {/* Scrolling Products */}
                   <div className="animate-scroll-up">
-                    <div className="grid grid-cols-3 gap-2 p-2">
+                    <div className="grid grid-cols-3 gap-2 p-3">
                       {[...products, ...products].map((product, index) => (
                         <div 
                           key={`${product.id}-${index}`}
-                          className="bg-white/10 backdrop-blur-sm rounded-lg p-1.5 border border-white/5"
+                          className="bg-white/10 backdrop-blur-sm rounded-lg p-2 border border-white/5"
                         >
-                          <div className="aspect-square rounded overflow-hidden mb-1 bg-white/5">
+                          <div className="aspect-square rounded-md overflow-hidden mb-1.5 bg-white/5">
                             {product.imagens?.[0] ? (
                               <img 
                                 src={product.imagens[0]} 
@@ -129,13 +129,13 @@ const Welcome = () => {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-white/30 text-xs">
+                              <div className="w-full h-full flex items-center justify-center text-white/30 text-sm">
                                 📦
                               </div>
                             )}
                           </div>
-                          <p className="text-white/80 text-[8px] truncate">{product.nome}</p>
-                          <p className="text-emerald-400/80 text-[7px]">
+                          <p className="text-white/80 text-[9px] truncate">{product.nome}</p>
+                          <p className="text-emerald-400/80 text-[8px]">
                             R$ {product.preco.toFixed(2).replace('.', ',')}
                           </p>
                         </div>
@@ -146,36 +146,34 @@ const Welcome = () => {
               </div>
               
               {/* Keyboard base */}
-              <div className="bg-gray-700 h-2 rounded-b-sm mx-4" />
-              <div className="bg-gray-600 h-1 rounded-b-lg mx-8" />
+              <div className="bg-gray-700 h-3 rounded-b-sm mx-6" />
+              <div className="bg-gray-600 h-1.5 rounded-b-xl mx-12" />
             </div>
           </div>
         )}
-      </div>
 
-      {/* Bottom section with tagline and buttons */}
-      <div className="relative px-6 pb-10 pt-4">
-        {/* Tagline */}
-        <p className="text-center text-white/70 text-sm mb-6">
-          Conectando você aos melhores fornecedores.
-        </p>
+        {/* Bottom section - Tagline and buttons */}
+        <div className="w-full">
+          <p className="text-center text-white/70 text-sm mb-4">
+            Conectando você aos melhores fornecedores.
+          </p>
 
-        {/* Buttons */}
-        <div className="max-w-sm mx-auto space-y-3">
-          <Button 
-            onClick={() => navigate('/auth?modo=login')}
-            className="w-full h-12 bg-white hover:bg-white/90 text-[#11001e] font-medium text-base rounded-xl shadow-sm transition-all duration-200"
-          >
-            Entrar
-          </Button>
-          
-          <Button 
-            onClick={() => navigate('/auth?modo=cadastro')}
-            variant="outline"
-            className="w-full h-12 bg-transparent border-2 border-white/50 text-white hover:bg-white/10 font-medium text-base rounded-xl transition-all duration-200"
-          >
-            Criar conta
-          </Button>
+          <div className="max-w-sm mx-auto space-y-3">
+            <Button 
+              onClick={() => navigate('/auth?modo=login')}
+              className="w-full h-11 bg-white hover:bg-white/90 text-[#11001e] font-medium text-base rounded-xl shadow-sm transition-all duration-200"
+            >
+              Entrar
+            </Button>
+            
+            <Button 
+              onClick={() => navigate('/auth?modo=cadastro')}
+              variant="outline"
+              className="w-full h-11 bg-transparent border-2 border-white/50 text-white hover:bg-white/10 font-medium text-base rounded-xl transition-all duration-200"
+            >
+              Criar conta
+            </Button>
+          </div>
         </div>
       </div>
     </div>
