@@ -28,7 +28,7 @@ const Perfil = () => {
     { icon: CreditCard, label: "Métodos de Pagamento", action: () => navigate("/cliente/metodos-pagamento") },
     { icon: Bell, label: "Notificações", action: () => navigate("/cliente/notificacoes") },
     { icon: Users, label: "Programa de Afiliados", action: () => navigate("/cliente/afiliados"), highlight: true },
-    { icon: Zap, label: "Nellor Drop", action: () => navigate("/cliente/drop"), highlight: true, description: "Marketplace Drop" },
+    { icon: Zap, label: "Nellor Drop", action: () => navigate("/drop"), highlight: true, description: "Revenda produtos" },
     { icon: Briefcase, label: "Prestador de Serviços", action: () => navigate("/cliente/prestador-servicos") },
     ...(canInstall && !isInstalled ? [{ icon: Smartphone, label: "Instalar App", action: () => navigate("/cliente/instalar") }] : []),
     { icon: MessageCircle, label: "Suporte", action: () => navigate("/cliente/suporte") },
