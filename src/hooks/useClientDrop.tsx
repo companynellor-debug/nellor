@@ -104,7 +104,7 @@ export function useClientDrop() {
     enabled: !!user?.id && !!dropProfile?.drop_enabled,
   });
 
-  // Fetch drop catalog
+  // Fetch drop catalog - sempre disponível para qualquer usuário logado
   const { data: dropCatalog, isLoading: loadingCatalog } = useQuery({
     queryKey: ['drop-catalog'],
     queryFn: async () => {
@@ -114,7 +114,7 @@ export function useClientDrop() {
       if (error) throw error;
       return (data || []) as DropCatalogItem[];
     },
-    enabled: !!dropProfile?.drop_enabled,
+    enabled: !!user?.id, // Sempre buscar se usuário logado
   });
 
   // Fetch client's drop products
