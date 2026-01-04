@@ -55,6 +55,7 @@ const DropMarketplaces = lazy(() => import("./pages/drop/DropMarketplaces"));
 const DropFinanceiro = lazy(() => import("./pages/drop/DropFinanceiro"));
 const DropNotificacoes = lazy(() => import("./pages/drop/DropNotificacoes"));
 const DropConfiguracoes = lazy(() => import("./pages/drop/DropConfiguracoes"));
+const DropMeusProdutos = lazy(() => import("./pages/drop/DropMeusProdutos"));
 
 // Lazy load fornecedor pages
 const Dashboard = lazy(() => import("./pages/fornecedor/Dashboard"));
@@ -146,6 +147,7 @@ const App = () => {
                 <Route index element={<Suspense fallback={<PageSkeleton />}><DropDashboard /></Suspense>} />
                 <Route path="pedidos" element={<Suspense fallback={<PageSkeleton />}><DropPedidos /></Suspense>} />
                 <Route path="catalogo" element={<Suspense fallback={<PageSkeleton />}><DropCatalogo /></Suspense>} />
+                <Route path="meus-produtos" element={<Suspense fallback={<PageSkeleton />}><DropMeusProdutos /></Suspense>} />
                 <Route path="marketplaces" element={<Suspense fallback={<PageSkeleton />}><DropMarketplaces /></Suspense>} />
                 <Route path="financeiro" element={<Suspense fallback={<PageSkeleton />}><DropFinanceiro /></Suspense>} />
                 <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><DropNotificacoes /></Suspense>} />

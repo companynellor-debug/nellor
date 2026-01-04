@@ -38,7 +38,13 @@ const navItems = [
     title: "Catálogo", 
     path: "/drop/catalogo", 
     icon: ShoppingBag,
-    description: "Seus produtos"
+    description: "Produtos disponíveis"
+  },
+  { 
+    title: "Meus Produtos", 
+    path: "/drop/meus-produtos", 
+    icon: Boxes,
+    description: "Gerenciar e publicar"
   },
   { 
     title: "Marketplaces", 
