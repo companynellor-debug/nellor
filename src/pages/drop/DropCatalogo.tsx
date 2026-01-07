@@ -87,8 +87,8 @@ const DropCatalogo = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-drop-text">Catálogo Drop</h1>
-          <p className="text-drop-text-muted mt-1">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Catálogo Drop</h1>
+          <p className="text-muted-foreground mt-1">
             Explore produtos disponíveis para revenda • {filteredProducts.length} produtos
           </p>
         </div>
@@ -96,12 +96,12 @@ const DropCatalogo = () => {
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-drop-text-muted" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar produtos..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 bg-drop-surface border-drop-border text-drop-text placeholder:text-drop-text-muted focus:border-drop-accent"
+          className="pl-10"
         />
       </div>
 
@@ -109,23 +109,23 @@ const DropCatalogo = () => {
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="bg-drop-card border border-drop-border rounded-2xl overflow-hidden animate-pulse">
-              <div className="aspect-square bg-drop-surface" />
+            <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
+              <div className="aspect-square bg-muted" />
               <div className="p-4 space-y-3">
-                <div className="h-4 bg-drop-surface rounded w-3/4" />
-                <div className="h-3 bg-drop-surface rounded w-1/2" />
-                <div className="h-6 bg-drop-surface rounded w-1/3" />
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
+                <div className="h-6 bg-muted rounded w-1/3" />
               </div>
             </div>
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="bg-drop-card border border-drop-border rounded-2xl p-12 text-center">
-          <ShoppingBag className="h-16 w-16 text-drop-text-muted mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-drop-text mb-2">
+        <div className="bg-card border border-border rounded-2xl p-12 text-center">
+          <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-foreground mb-2">
             {search ? "Nenhum produto encontrado" : "Nenhum produto disponível"}
           </h3>
-          <p className="text-drop-text-muted max-w-md mx-auto">
+          <p className="text-muted-foreground max-w-md mx-auto">
             {search 
               ? "Tente buscar com outros termos"
               : "Aguarde novos fornecedores disponibilizarem produtos para o Drop"
@@ -141,11 +141,11 @@ const DropCatalogo = () => {
             return (
               <div 
                 key={product.product_id}
-                className="bg-drop-card border border-drop-border rounded-2xl overflow-hidden group hover:border-drop-accent/50 transition-all duration-300 cursor-pointer"
+                className="bg-card border border-border rounded-2xl overflow-hidden group hover:border-primary/50 transition-all duration-300 cursor-pointer"
                 onClick={() => handleSelectProduct(product)}
               >
                 {/* Image */}
-                <div className="relative aspect-square bg-drop-surface">
+                <div className="relative aspect-square bg-muted">
                   {product.product_images?.[0] ? (
                     <img 
                       src={product.product_images[0]} 
@@ -154,13 +154,13 @@ const DropCatalogo = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Package className="h-12 w-12 text-drop-text-muted" />
+                      <Package className="h-12 w-12 text-muted-foreground" />
                     </div>
                   )}
                   
                   {/* Commission Badge */}
                   <div className="absolute top-2 right-2">
-                    <Badge className="bg-drop-success text-white text-xs font-medium">
+                    <Badge className="bg-green-500 text-white text-xs font-medium">
                       {product.commission_percent}% margem
                     </Badge>
                   </div>
@@ -168,7 +168,7 @@ const DropCatalogo = () => {
                   {/* Stock Badge */}
                   {product.stock < 10 && product.stock > 0 && (
                     <div className="absolute top-2 left-2">
-                      <Badge variant="outline" className="bg-drop-warning/20 text-drop-warning border-drop-warning/30 text-xs">
+                      <Badge variant="outline" className="bg-amber-500/20 text-amber-600 border-amber-500/30 text-xs">
                         Últimas unidades
                       </Badge>
                     </div>
@@ -176,10 +176,7 @@ const DropCatalogo = () => {
 
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-                    <Button 
-                      size="sm"
-                      className="bg-drop-accent hover:bg-drop-accent/90 text-white"
-                    >
+                    <Button size="sm">
                       <Plus className="h-4 w-4 mr-1" />
                       Adicionar
                     </Button>
@@ -189,32 +186,32 @@ const DropCatalogo = () => {
                 {/* Info */}
                 <div className="p-3">
                   {/* Supplier */}
-                  <div className="flex items-center gap-1 text-xs text-drop-text-muted mb-1">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                     <Store className="h-3 w-3" />
                     <span className="truncate">{product.supplier_name}</span>
                   </div>
 
                   {/* Name */}
-                  <h3 className="text-drop-text font-medium text-sm line-clamp-2 min-h-[2.5rem] mb-2">
+                  <h3 className="text-foreground font-medium text-sm line-clamp-2 min-h-[2.5rem] mb-2">
                     {product.product_name}
                   </h3>
                   
                   {/* Prices */}
                   <div className="space-y-1">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-drop-text">
+                      <span className="text-lg font-bold text-foreground">
                         R$ {product.base_price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-1 text-xs text-drop-success">
+                    <div className="flex items-center gap-1 text-xs text-green-600">
                       <TrendingUp className="h-3 w-3" />
                       <span>Ganhe até R$ {suggestedMargin.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                   </div>
 
                   {/* Stock */}
-                  <div className="mt-2 flex items-center gap-1 text-xs text-drop-text-muted">
+                  <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                     <Package className="h-3 w-3" />
                     <span>{product.stock} disponíveis</span>
                   </div>
@@ -227,10 +224,10 @@ const DropCatalogo = () => {
 
       {/* Add Product Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="bg-drop-bg border-drop-border max-w-lg">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-drop-text">Adicionar ao Seu Catálogo</DialogTitle>
-            <DialogDescription className="text-drop-text-muted">
+            <DialogTitle>Adicionar ao Seu Catálogo</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Defina seu preço de venda para este produto
             </DialogDescription>
           </DialogHeader>
@@ -238,8 +235,8 @@ const DropCatalogo = () => {
           {selectedProduct && (
             <div className="space-y-6">
               {/* Product Preview */}
-              <div className="flex gap-4 p-4 bg-drop-surface rounded-xl">
-                <div className="h-20 w-20 rounded-lg bg-drop-card overflow-hidden flex-shrink-0">
+              <div className="flex gap-4 p-4 bg-muted rounded-xl">
+                <div className="h-20 w-20 rounded-lg bg-card overflow-hidden flex-shrink-0">
                   {selectedProduct.product_images?.[0] ? (
                     <img 
                       src={selectedProduct.product_images[0]} 
@@ -248,16 +245,16 @@ const DropCatalogo = () => {
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
-                      <Package className="h-6 w-6 text-drop-text-muted" />
+                      <Package className="h-6 w-6 text-muted-foreground" />
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-drop-text font-medium truncate">{selectedProduct.product_name}</h4>
-                  <p className="text-drop-text-muted text-sm">{selectedProduct.supplier_name}</p>
+                  <h4 className="text-foreground font-medium truncate">{selectedProduct.product_name}</h4>
+                  <p className="text-muted-foreground text-sm">{selectedProduct.supplier_name}</p>
                   <div className="mt-2 text-sm">
-                    <span className="text-drop-text-muted">Custo: </span>
-                    <span className="text-drop-text font-medium">
+                    <span className="text-muted-foreground">Custo: </span>
+                    <span className="text-foreground font-medium">
                       R$ {selectedProduct.base_price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -266,37 +263,37 @@ const DropCatalogo = () => {
 
               {/* Price Input */}
               <div>
-                <label className="text-drop-text text-sm font-medium block mb-2">
+                <label className="text-foreground text-sm font-medium block mb-2">
                   Seu Preço de Venda
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-drop-text-muted font-medium">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">R$</span>
                   <Input
                     type="number"
                     step="0.01"
                     value={customPrice}
                     onChange={(e) => setCustomPrice(e.target.value)}
-                    className="pl-10 text-lg font-semibold bg-drop-surface border-drop-border text-drop-text h-12"
+                    className="pl-10 text-lg font-semibold h-12"
                   />
                 </div>
               </div>
 
               {/* Margin Display */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-drop-surface rounded-xl text-center">
-                  <p className="text-drop-text-muted text-sm mb-1">Sua Margem</p>
+                <div className="p-4 bg-muted rounded-xl text-center">
+                  <p className="text-muted-foreground text-sm mb-1">Sua Margem</p>
                   <p className={cn(
                     "text-2xl font-bold",
-                    margin > 0 ? "text-drop-success" : "text-destructive"
+                    margin > 0 ? "text-green-600" : "text-destructive"
                   )}>
                     R$ {margin.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <div className="p-4 bg-drop-surface rounded-xl text-center">
-                  <p className="text-drop-text-muted text-sm mb-1">Percentual</p>
+                <div className="p-4 bg-muted rounded-xl text-center">
+                  <p className="text-muted-foreground text-sm mb-1">Percentual</p>
                   <p className={cn(
                     "text-2xl font-bold",
-                    margin > 0 ? "text-drop-success" : "text-destructive"
+                    margin > 0 ? "text-green-600" : "text-destructive"
                   )}>
                     {marginPercent}%
                   </p>
@@ -312,7 +309,7 @@ const DropCatalogo = () => {
               <Button 
                 onClick={handleAddProduct}
                 disabled={addProductToDrop.isPending || margin <= 0}
-                className="w-full bg-drop-accent hover:bg-drop-accent/90 text-white h-12 text-base"
+                className="w-full h-12 text-base"
               >
                 {addProductToDrop.isPending ? (
                   "Adicionando..."
