@@ -65,21 +65,15 @@ const DropFinanceiro = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-drop-text">Financeiro</h1>
-          <p className="text-drop-text-muted mt-1">Acompanhe seus ganhos e movimentações</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Financeiro</h1>
+          <p className="text-muted-foreground mt-1">Acompanhe seus ganhos e movimentações</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            className="border-drop-border text-drop-text hover:bg-drop-surface-hover"
-          >
+          <Button variant="outline">
             <Calendar className="h-4 w-4 mr-2" />
             Período
           </Button>
-          <Button 
-            variant="outline"
-            className="border-drop-border text-drop-text hover:bg-drop-surface-hover"
-          >
+          <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
@@ -89,57 +83,51 @@ const DropFinanceiro = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {financialStats.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-drop-card border border-drop-border rounded-2xl p-4 lg:p-6"
-          >
+          <div key={index} className="bg-card border border-border rounded-2xl p-4 lg:p-6">
             <div className={cn(
               "inline-flex p-2 lg:p-3 rounded-xl mb-4",
-              stat.color === "drop-accent" && "bg-drop-accent/10",
-              stat.color === "drop-success" && "bg-drop-success/10",
-              stat.color === "drop-warning" && "bg-drop-warning/10"
+              stat.color === "drop-accent" && "bg-primary/10",
+              stat.color === "drop-success" && "bg-green-500/10",
+              stat.color === "drop-warning" && "bg-amber-500/10"
             )}>
               <stat.icon className={cn(
                 "h-5 w-5 lg:h-6 lg:w-6",
-                stat.color === "drop-accent" && "text-drop-accent",
-                stat.color === "drop-success" && "text-drop-success",
-                stat.color === "drop-warning" && "text-drop-warning"
+                stat.color === "drop-accent" && "text-primary",
+                stat.color === "drop-success" && "text-green-600",
+                stat.color === "drop-warning" && "text-amber-500"
               )} />
             </div>
-            <p className="text-drop-text-muted text-xs lg:text-sm">{stat.title}</p>
+            <p className="text-muted-foreground text-xs lg:text-sm">{stat.title}</p>
             <p className={cn(
               "text-xl lg:text-2xl font-bold mt-1",
-              stat.color === "drop-success" ? "text-drop-success" : "text-drop-text"
+              stat.color === "drop-success" ? "text-green-600" : "text-foreground"
             )}>
               {stat.isPercent 
                 ? `${stat.value.toFixed(1)}%`
                 : `R$ ${stat.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
               }
             </p>
-            <p className="text-drop-text-muted text-xs mt-1">{stat.description}</p>
+            <p className="text-muted-foreground text-xs mt-1">{stat.description}</p>
           </div>
         ))}
       </div>
 
       {/* Balance Card */}
-      <div className="bg-gradient-to-br from-drop-accent/20 to-drop-accent/5 border border-drop-accent/30 rounded-2xl p-6 lg:p-8">
+      <div className="bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 rounded-2xl p-6 lg:p-8">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Wallet className="h-6 w-6 text-drop-accent" />
-              <h2 className="text-drop-text font-semibold text-lg">Saldo Disponível</h2>
+              <Wallet className="h-6 w-6 text-primary" />
+              <h2 className="text-foreground font-semibold text-lg">Saldo Disponível</h2>
             </div>
-            <p className="text-4xl lg:text-5xl font-bold text-drop-text">
+            <p className="text-4xl lg:text-5xl font-bold text-foreground">
               R$ {(dropStats?.total_profit || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-drop-text-muted text-sm mt-2">
+            <p className="text-muted-foreground text-sm mt-2">
               Lucro acumulado das suas vendas
             </p>
           </div>
-          <Button 
-            size="lg"
-            className="bg-drop-accent hover:bg-drop-accent/90 text-white"
-          >
+          <Button size="lg">
             <ArrowUpRight className="h-5 w-5 mr-2" />
             Solicitar Saque
           </Button>
@@ -147,45 +135,45 @@ const DropFinanceiro = () => {
       </div>
 
       {/* Transactions */}
-      <div className="bg-drop-card border border-drop-border rounded-2xl overflow-hidden">
-        <div className="p-4 lg:p-6 border-b border-drop-border">
-          <h2 className="text-lg font-semibold text-drop-text">Movimentações</h2>
-          <p className="text-drop-text-muted text-sm">Histórico de vendas e ganhos</p>
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+        <div className="p-4 lg:p-6 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">Movimentações</h2>
+          <p className="text-muted-foreground text-sm">Histórico de vendas e ganhos</p>
         </div>
         
         {transactions.length === 0 ? (
           <div className="p-8 text-center">
-            <DollarSign className="h-12 w-12 text-drop-text-muted mx-auto mb-4" />
-            <p className="text-drop-text-muted">Nenhuma movimentação ainda</p>
+            <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">Nenhuma movimentação ainda</p>
           </div>
         ) : (
-          <div className="divide-y divide-drop-border">
+          <div className="divide-y divide-border">
             {transactions.map((tx: any) => (
-              <div key={tx.id} className="p-4 lg:p-5 hover:bg-drop-surface-hover transition-colors">
+              <div key={tx.id} className="p-4 lg:p-5 hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className={cn(
                       "p-2 rounded-lg",
-                      tx.type === 'sale' ? "bg-drop-success/10" : "bg-drop-warning/10"
+                      tx.type === 'sale' ? "bg-green-500/10" : "bg-amber-500/10"
                     )}>
                       {tx.type === 'sale' ? (
-                        <TrendingUp className="h-4 w-4 text-drop-success" />
+                        <TrendingUp className="h-4 w-4 text-green-600" />
                       ) : (
-                        <TrendingDown className="h-4 w-4 text-drop-warning" />
+                        <TrendingDown className="h-4 w-4 text-amber-500" />
                       )}
                     </div>
                     <div>
-                      <p className="text-drop-text font-medium">{tx.description}</p>
-                      <p className="text-drop-text-muted text-sm">
+                      <p className="text-foreground font-medium">{tx.description}</p>
+                      <p className="text-muted-foreground text-sm">
                         {new Date(tx.date).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-drop-text font-semibold">
+                    <p className="text-foreground font-semibold">
                       R$ {tx.amount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
-                    <p className="text-drop-success text-sm">
+                    <p className="text-green-600 text-sm">
                       +R$ {tx.profit?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
                   </div>

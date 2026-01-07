@@ -34,17 +34,17 @@ const DropPedidos = () => {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'pending':
-        return { icon: Clock, label: 'Pendente', color: 'bg-drop-warning/10 text-drop-warning border-drop-warning/20' };
+        return { icon: Clock, label: 'Pendente', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
       case 'paid':
-        return { icon: CheckCircle, label: 'Pago', color: 'bg-drop-success/10 text-drop-success border-drop-success/20' };
+        return { icon: CheckCircle, label: 'Pago', color: 'bg-green-500/10 text-green-600 border-green-500/20' };
       case 'shipped':
-        return { icon: Truck, label: 'Enviado', color: 'bg-drop-accent/10 text-drop-accent border-drop-accent/20' };
+        return { icon: Truck, label: 'Enviado', color: 'bg-primary/10 text-primary border-primary/20' };
       case 'delivered':
-        return { icon: CheckCircle, label: 'Entregue', color: 'bg-drop-success/10 text-drop-success border-drop-success/20' };
+        return { icon: CheckCircle, label: 'Entregue', color: 'bg-green-500/10 text-green-600 border-green-500/20' };
       case 'cancelled':
         return { icon: XCircle, label: 'Cancelado', color: 'bg-destructive/10 text-destructive border-destructive/20' };
       default:
-        return { icon: Clock, label: status, color: 'bg-drop-surface text-drop-text-muted border-drop-border' };
+        return { icon: Clock, label: status, color: 'bg-muted text-muted-foreground border-border' };
     }
   };
 
@@ -63,19 +63,19 @@ const DropPedidos = () => {
     <div className="p-4 lg:p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-drop-text">Pedidos</h1>
-        <p className="text-drop-text-muted mt-1">Gerencie suas vendas Nellor Drop</p>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Pedidos</h1>
+        <p className="text-muted-foreground mt-1">Gerencie suas vendas Nellor Drop</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-drop-text-muted" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por número, cliente ou produto..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-drop-surface border-drop-border text-drop-text placeholder:text-drop-text-muted focus:border-drop-accent"
+            className="pl-10"
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
@@ -86,14 +86,14 @@ const DropPedidos = () => {
               className={cn(
                 "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all",
                 statusFilter === option.value
-                  ? "bg-drop-accent text-white"
-                  : "bg-drop-surface text-drop-text-muted hover:bg-drop-surface-hover hover:text-drop-text"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               )}
             >
               {option.label}
               <span className={cn(
                 "ml-2 text-xs",
-                statusFilter === option.value ? "text-white/70" : "text-drop-text-muted"
+                statusFilter === option.value ? "text-primary-foreground/70" : "text-muted-foreground"
               )}>
                 {option.count}
               </span>
@@ -104,10 +104,10 @@ const DropPedidos = () => {
 
       {/* Orders List */}
       {filteredOrders.length === 0 ? (
-        <div className="bg-drop-card border border-drop-border rounded-2xl p-12 text-center">
-          <Package className="h-16 w-16 text-drop-text-muted mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-drop-text mb-2">Nenhum pedido encontrado</h3>
-          <p className="text-drop-text-muted max-w-md mx-auto">
+        <div className="bg-card border border-border rounded-2xl p-12 text-center">
+          <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-foreground mb-2">Nenhum pedido encontrado</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
             {search || statusFilter 
               ? "Tente ajustar os filtros de busca"
               : "Quando clientes comprarem seus produtos, os pedidos aparecerão aqui automaticamente"
@@ -123,12 +123,12 @@ const DropPedidos = () => {
             return (
               <div 
                 key={order.id}
-                className="bg-drop-card border border-drop-border rounded-2xl p-4 lg:p-6 hover:border-drop-accent/30 transition-all"
+                className="bg-card border border-border rounded-2xl p-4 lg:p-6 hover:border-primary/30 transition-all"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                   {/* Product Image */}
                   <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="h-16 w-16 lg:h-20 lg:w-20 rounded-xl bg-drop-surface overflow-hidden flex-shrink-0">
+                    <div className="h-16 w-16 lg:h-20 lg:w-20 rounded-xl bg-muted overflow-hidden flex-shrink-0">
                       {order.product?.imagens?.[0] ? (
                         <img 
                           src={order.product.imagens[0]} 
@@ -137,7 +137,7 @@ const DropPedidos = () => {
                         />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
-                          <Package className="h-6 w-6 text-drop-text-muted" />
+                          <Package className="h-6 w-6 text-muted-foreground" />
                         </div>
                       )}
                     </div>
@@ -145,20 +145,20 @@ const DropPedidos = () => {
                     {/* Order Info */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-drop-accent font-mono text-sm">#{order.order_number}</span>
+                        <span className="text-primary font-mono text-sm">#{order.order_number}</span>
                         {order.external_marketplace && (
-                          <Badge variant="outline" className="border-drop-border text-drop-text-muted text-[10px]">
+                          <Badge variant="outline" className="text-[10px]">
                             {order.external_marketplace}
                           </Badge>
                         )}
                       </div>
-                      <h3 className="text-drop-text font-semibold truncate">
+                      <h3 className="text-foreground font-semibold truncate">
                         {order.product?.nome || 'Produto'}
                       </h3>
-                      <p className="text-drop-text-muted text-sm">
+                      <p className="text-muted-foreground text-sm">
                         {order.buyer_name} • {order.quantity}x
                       </p>
-                      <p className="text-drop-text-muted text-xs mt-1">
+                      <p className="text-muted-foreground text-xs mt-1">
                         {orderDate}
                       </p>
                     </div>
@@ -167,10 +167,10 @@ const DropPedidos = () => {
                   {/* Price & Status */}
                   <div className="flex items-center justify-between lg:flex-col lg:items-end gap-4">
                     <div className="text-right">
-                      <p className="text-drop-text font-bold text-lg">
+                      <p className="text-foreground font-bold text-lg">
                         R$ {order.total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
-                      <p className="text-drop-success text-sm">
+                      <p className="text-green-600 text-sm">
                         Lucro: R$ {order.client_margin?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
@@ -187,10 +187,10 @@ const DropPedidos = () => {
 
                 {/* Tracking Info */}
                 {order.tracking_code && (
-                  <div className="mt-4 pt-4 border-t border-drop-border flex items-center gap-2">
-                    <Truck className="h-4 w-4 text-drop-text-muted" />
-                    <span className="text-drop-text-muted text-sm">Rastreio:</span>
-                    <code className="text-drop-accent font-mono text-sm">{order.tracking_code}</code>
+                  <div className="mt-4 pt-4 border-t border-border flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground text-sm">Rastreio:</span>
+                    <code className="text-primary font-mono text-sm">{order.tracking_code}</code>
                   </div>
                 )}
               </div>

@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { useClientDrop } from "@/hooks/useClientDrop";
 import { useAppMode } from "@/hooks/useAppMode";
 import { cn } from "@/lib/utils";
@@ -61,8 +62,8 @@ const DropConfiguracoes = () => {
     <div className="p-4 lg:p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-drop-text">Configurações</h1>
-        <p className="text-drop-text-muted mt-1">Gerencie as preferências do seu Nellor Drop</p>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Configurações</h1>
+        <p className="text-muted-foreground mt-1">Gerencie as preferências do seu Nellor Drop</p>
       </div>
 
       <div className="grid lg:grid-cols-4 gap-6">
@@ -75,8 +76,8 @@ const DropConfiguracoes = () => {
               className={cn(
                 "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
                 activeSection === section.id
-                  ? "bg-drop-accent text-white"
-                  : "text-drop-text-muted hover:bg-drop-surface-hover hover:text-drop-text"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               <section.icon className="h-5 w-5" />
@@ -84,14 +85,14 @@ const DropConfiguracoes = () => {
                 <p className="font-medium text-sm">{section.title}</p>
                 <p className={cn(
                   "text-xs truncate",
-                  activeSection === section.id ? "text-white/70" : "text-drop-text-muted"
+                  activeSection === section.id ? "text-primary-foreground/70" : "text-muted-foreground"
                 )}>
                   {section.description}
                 </p>
               </div>
               <ChevronRight className={cn(
                 "h-4 w-4",
-                activeSection === section.id ? "text-white/50" : "text-drop-text-muted"
+                activeSection === section.id ? "text-primary-foreground/50" : "text-muted-foreground"
               )} />
             </button>
           ))}
@@ -112,40 +113,40 @@ const DropConfiguracoes = () => {
         {/* Content */}
         <div className="lg:col-span-3">
           {activeSection === 'profile' && (
-            <div className="bg-drop-card border border-drop-border rounded-2xl p-5 lg:p-6 space-y-6">
+            <Card className="p-5 lg:p-6 space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-drop-text">Perfil do Negócio</h2>
-                <p className="text-drop-text-muted text-sm">
+                <h2 className="text-lg font-semibold text-foreground">Perfil do Negócio</h2>
+                <p className="text-muted-foreground text-sm">
                   Informações exibidas aos fornecedores
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-drop-text text-sm font-medium">Nome do Negócio</label>
+                  <label className="text-foreground text-sm font-medium">Nome do Negócio</label>
                   <Input
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Ex: Loja do João"
-                    className="mt-1.5 bg-drop-surface border-drop-border text-drop-text placeholder:text-drop-text-muted"
+                    className="mt-1.5"
                   />
-                  <p className="text-drop-text-muted text-xs mt-1">
+                  <p className="text-muted-foreground text-xs mt-1">
                     Este nome será usado nas comunicações com fornecedores
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-drop-border">
+                <div className="pt-4 border-t border-border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-drop-text font-medium">Status Nellor Drop</p>
-                      <p className="text-drop-text-muted text-sm">
+                      <p className="text-foreground font-medium">Status Nellor Drop</p>
+                      <p className="text-muted-foreground text-sm">
                         {dropProfile?.drop_enabled ? 'Ativo' : 'Inativo'}
                       </p>
                     </div>
                     <Badge className={cn(
                       dropProfile?.drop_enabled 
-                        ? "bg-drop-success/10 text-drop-success border-drop-success/20"
-                        : "bg-drop-surface text-drop-text-muted"
+                        ? "bg-green-500/10 text-green-600 border-green-500/20"
+                        : "bg-muted text-muted-foreground"
                     )}>
                       {dropProfile?.drop_enabled ? 'Ativo' : 'Inativo'}
                     </Badge>
@@ -156,19 +157,18 @@ const DropConfiguracoes = () => {
               <Button 
                 onClick={handleSaveProfile}
                 disabled={activateDropMode.isPending}
-                className="bg-drop-accent hover:bg-drop-accent/90 text-white"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {activateDropMode.isPending ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
-            </div>
+            </Card>
           )}
 
           {activeSection === 'notifications' && (
-            <div className="bg-drop-card border border-drop-border rounded-2xl p-5 lg:p-6 space-y-6">
+            <Card className="p-5 lg:p-6 space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-drop-text">Notificações</h2>
-                <p className="text-drop-text-muted text-sm">
+                <h2 className="text-lg font-semibold text-foreground">Notificações</h2>
+                <p className="text-muted-foreground text-sm">
                   Configure quais alertas deseja receber
                 </p>
               </div>
@@ -180,52 +180,49 @@ const DropConfiguracoes = () => {
                   { key: 'shipping', label: 'Envios', description: 'Atualizações de entrega' },
                   { key: 'stock', label: 'Estoque baixo', description: 'Quando produtos estiverem acabando' },
                 ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between py-3 border-b border-drop-border last:border-0">
+                  <div key={item.key} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                     <div>
-                      <p className="text-drop-text font-medium">{item.label}</p>
-                      <p className="text-drop-text-muted text-sm">{item.description}</p>
+                      <p className="text-foreground font-medium">{item.label}</p>
+                      <p className="text-muted-foreground text-sm">{item.description}</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {activeSection === 'payments' && (
-            <div className="bg-drop-card border border-drop-border rounded-2xl p-5 lg:p-6 space-y-6">
+            <Card className="p-5 lg:p-6 space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-drop-text">Pagamentos</h2>
-                <p className="text-drop-text-muted text-sm">
+                <h2 className="text-lg font-semibold text-foreground">Pagamentos</h2>
+                <p className="text-muted-foreground text-sm">
                   Configure como deseja receber seus lucros
                 </p>
               </div>
 
-              <div className="bg-drop-surface rounded-xl p-4 border border-drop-border">
+              <div className="bg-muted rounded-xl p-4 border border-border">
                 <div className="flex items-center gap-3 mb-4">
-                  <CreditCard className="h-5 w-5 text-drop-accent" />
-                  <span className="text-drop-text font-medium">Método de Recebimento</span>
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <span className="text-foreground font-medium">Método de Recebimento</span>
                 </div>
-                <p className="text-drop-text-muted text-sm">
+                <p className="text-muted-foreground text-sm">
                   Os lucros das suas vendas são creditados automaticamente após a confirmação 
                   do pagamento do cliente final.
                 </p>
               </div>
 
-              <Button 
-                variant="outline"
-                className="border-drop-border text-drop-text hover:bg-drop-surface-hover"
-              >
+              <Button variant="outline">
                 Configurar método de saque
               </Button>
-            </div>
+            </Card>
           )}
 
           {activeSection === 'security' && (
-            <div className="bg-drop-card border border-drop-border rounded-2xl p-5 lg:p-6 space-y-6">
+            <Card className="p-5 lg:p-6 space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-drop-text">Segurança</h2>
-                <p className="text-drop-text-muted text-sm">
+                <h2 className="text-lg font-semibold text-foreground">Segurança</h2>
+                <p className="text-muted-foreground text-sm">
                   Proteja sua conta
                 </p>
               </div>
@@ -233,20 +230,20 @@ const DropConfiguracoes = () => {
               <div className="space-y-4">
                 <Button 
                   variant="outline"
-                  className="w-full justify-start border-drop-border text-drop-text hover:bg-drop-surface-hover"
+                  className="w-full justify-start"
                 >
                   <Shield className="h-4 w-4 mr-3" />
                   Alterar senha
                 </Button>
                 <Button 
                   variant="outline"
-                  className="w-full justify-start border-drop-border text-drop-text hover:bg-drop-surface-hover"
+                  className="w-full justify-start"
                 >
                   <HelpCircle className="h-4 w-4 mr-3" />
                   Suporte
                 </Button>
               </div>
-            </div>
+            </Card>
           )}
         </div>
       </div>
