@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   LayoutDashboard, 
   Package, 
@@ -52,6 +52,20 @@ const DropModeLayout = () => {
     return saved ? JSON.parse(saved) : true;
   });
 
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // Save preference
+  useEffect(() => {
+    localStorage.setItem("drop-dark-mode", JSON.stringify(darkMode));
+  }, [darkMode]);
+
   const isActive = (path: string) => {
     if (path === "/drop") {
       return location.pathname === "/drop";
@@ -63,12 +77,6 @@ const DropModeLayout = () => {
     await signOut();
     toast.success("Logout realizado com sucesso!");
     navigate("/");
-  };
-
-  const toggleDarkMode = () => {
-    const newValue = !darkMode;
-    setDarkMode(newValue);
-    localStorage.setItem("drop-dark-mode", JSON.stringify(newValue));
   };
 
   // Sidebar content (desktop)
@@ -255,17 +263,21 @@ const DropModeLayout = () => {
           {/* Right side - Theme, Notifications and Logout */}
           <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
             <div className="hidden sm:flex items-center gap-2 mr-2">
-              <Sun className="h-4 w-4 text-cyan-400" />
-              <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
-              <Moon className="h-4 w-4 text-cyan-400" />
+              <Sun className="h-4 w-4 text-purple-400" />
+              <Switch 
+                checked={darkMode} 
+                onCheckedChange={() => setDarkMode(!darkMode)} 
+                className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-purple-300"
+              />
+              <Moon className="h-4 w-4 text-purple-400" />
             </div>
             
             {/* Mobile theme toggle */}
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={toggleDarkMode} 
-              className="h-8 w-8 sm:hidden text-cyan-300 hover:text-white hover:bg-slate-800"
+              onClick={() => setDarkMode(!darkMode)} 
+              className="h-8 w-8 sm:hidden text-purple-300 hover:text-white hover:bg-slate-800"
             >
               {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
