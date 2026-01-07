@@ -18,7 +18,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useClientDrop } from "@/hooks/useClientDrop";
 import { ModeSwitcher } from "@/components/drop/ModeSwitcher";
-import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -39,7 +38,7 @@ const navItems = [
 
 /**
  * Layout completo do Modo Nellor Drop
- * Estilo similar ao fornecedor mas com cores ciano/teal
+ * Estilo igual ao fornecedor com cores roxas
  */
 const DropModeLayout = () => {
   const navigate = useNavigate();
@@ -49,7 +48,7 @@ const DropModeLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("drop-dark-mode");
-    return saved ? JSON.parse(saved) : true;
+    return saved ? JSON.parse(saved) : false; // Light mode by default
   });
 
   // Apply dark mode class to document
@@ -59,10 +58,6 @@ const DropModeLayout = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [darkMode]);
-
-  // Save preference
-  useEffect(() => {
     localStorage.setItem("drop-dark-mode", JSON.stringify(darkMode));
   }, [darkMode]);
 
@@ -79,17 +74,17 @@ const DropModeLayout = () => {
     navigate("/");
   };
 
-  // Sidebar content (desktop)
+  // Sidebar content (desktop) - Purple theme like supplier
   const DesktopSidebar = () => (
-    <aside className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-b from-slate-900 via-slate-900 to-cyan-950 text-white shadow-2xl border-r border-cyan-800/30">
-      <div className="p-6 border-b border-cyan-800/30">
+    <aside className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-b from-purple-900 via-purple-900 to-purple-950 text-white shadow-2xl border-r border-purple-700/30">
+      <div className="p-6 border-b border-purple-700/30">
         <div className="flex items-center gap-3">
           <img src={logo} alt="Nellor" className="h-8 w-auto brightness-0 invert" />
           <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-200 to-teal-200 bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
               NELLOR
             </h1>
-            <p className="text-xs text-cyan-300 flex items-center gap-1">
+            <p className="text-xs text-purple-300 flex items-center gap-1">
               <Boxes className="h-3 w-3" />
               Modo Drop
             </p>
@@ -98,10 +93,10 @@ const DropModeLayout = () => {
       </div>
 
       {/* Mini Stats */}
-      <div className="p-4 border-b border-cyan-800/30">
+      <div className="p-4 border-b border-purple-700/30">
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-slate-800/50 rounded-lg p-3 border border-cyan-800/20">
-            <div className="flex items-center gap-1 text-cyan-300 text-xs">
+          <div className="bg-purple-800/50 rounded-lg p-3 border border-purple-600/20">
+            <div className="flex items-center gap-1 text-purple-300 text-xs">
               <TrendingUp className="h-3 w-3" />
               Vendas
             </div>
@@ -109,7 +104,7 @@ const DropModeLayout = () => {
               R$ {(dropStats?.total_sales || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-3 border border-cyan-800/20">
+          <div className="bg-purple-800/50 rounded-lg p-3 border border-purple-600/20">
             <div className="flex items-center gap-1 text-emerald-300 text-xs">
               <DollarSign className="h-3 w-3" />
               Lucro
@@ -129,8 +124,8 @@ const DropModeLayout = () => {
             className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm relative",
               isActive(item.path)
-                ? "bg-cyan-600/40 text-white shadow-lg shadow-cyan-500/20 border border-cyan-500/30"
-                : "text-cyan-200 hover:bg-slate-800/50 hover:text-white"
+                ? "bg-purple-600/40 text-white shadow-lg shadow-purple-500/20 border border-purple-500/30"
+                : "text-purple-200 hover:bg-purple-800/50 hover:text-white"
             )}
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -145,24 +140,24 @@ const DropModeLayout = () => {
       </nav>
 
       {/* Mode Switcher - Bottom */}
-      <div className="p-4 border-t border-cyan-800/30">
+      <div className="p-4 border-t border-purple-700/30">
         <ModeSwitcher variant="mobile" />
       </div>
     </aside>
   );
 
-  // Mobile nav content
+  // Mobile nav content - Purple theme
   const MobileNavContent = () => (
-    <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 via-slate-900 to-cyan-950">
+    <div className="flex flex-col h-full bg-gradient-to-b from-purple-900 via-purple-900 to-purple-950">
       {/* Logo */}
-      <div className="p-6 border-b border-cyan-800/30">
+      <div className="p-6 border-b border-purple-700/30">
         <div className="flex items-center gap-3">
           <img src={logo} alt="Nellor" className="h-8 w-auto brightness-0 invert" />
           <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-200 to-teal-200 bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
               NELLOR
             </h1>
-            <p className="text-xs text-cyan-300 flex items-center gap-1">
+            <p className="text-xs text-purple-300 flex items-center gap-1">
               <Boxes className="h-3 w-3" />
               Modo Drop
             </p>
@@ -171,10 +166,10 @@ const DropModeLayout = () => {
       </div>
 
       {/* Stats */}
-      <div className="p-4 border-b border-cyan-800/30">
+      <div className="p-4 border-b border-purple-700/30">
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-slate-800/50 rounded-lg p-3 border border-cyan-800/20">
-            <div className="flex items-center gap-1 text-cyan-300 text-xs">
+          <div className="bg-purple-800/50 rounded-lg p-3 border border-purple-600/20">
+            <div className="flex items-center gap-1 text-purple-300 text-xs">
               <TrendingUp className="h-3 w-3" />
               Vendas
             </div>
@@ -182,7 +177,7 @@ const DropModeLayout = () => {
               R$ {(dropStats?.total_sales || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-3 border border-cyan-800/20">
+          <div className="bg-purple-800/50 rounded-lg p-3 border border-purple-600/20">
             <div className="flex items-center gap-1 text-emerald-300 text-xs">
               <DollarSign className="h-3 w-3" />
               Lucro
@@ -206,8 +201,8 @@ const DropModeLayout = () => {
             className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm",
               isActive(item.path)
-                ? "bg-cyan-600/40 text-white shadow-lg shadow-cyan-500/20 border border-cyan-500/30"
-                : "text-cyan-200 hover:bg-slate-800/50 hover:text-white"
+                ? "bg-purple-600/40 text-white shadow-lg shadow-purple-500/20 border border-purple-500/30"
+                : "text-purple-200 hover:bg-purple-800/50 hover:text-white"
             )}
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -222,98 +217,100 @@ const DropModeLayout = () => {
       </nav>
 
       {/* Mode Switcher */}
-      <div className="p-4 border-t border-cyan-800/30">
+      <div className="p-4 border-t border-purple-700/30">
         <ModeSwitcher variant="mobile" />
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:block">
-        <DesktopSidebar />
-      </div>
+    <div className={`${darkMode ? 'dark' : ''}`}>
+      <div className="min-h-screen bg-background">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <DesktopSidebar />
+        </div>
 
-      {/* Main Area */}
-      <div className="md:ml-64">
-        {/* Header */}
-        <header className="h-14 border-b border-cyan-900/30 bg-slate-900/95 backdrop-blur-sm flex items-center justify-between px-4 sticky top-0 z-40 shadow-sm">
-          {/* Mobile menu + Logo */}
-          <div className="flex items-center gap-3 md:hidden">
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <button className="p-2 text-cyan-300 hover:text-white">
-                  <Menu className="h-5 w-5" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-80 p-0 border-cyan-800/30">
-                <MobileNavContent />
-              </SheetContent>
-            </Sheet>
-            <div className="flex items-center gap-2">
-              <Boxes className="h-5 w-5 text-cyan-400" />
-              <span className="font-bold text-white">Nellor Drop</span>
+        {/* Main Area */}
+        <div className="md:ml-64">
+          {/* Header */}
+          <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 sticky top-0 z-40 shadow-sm">
+            {/* Mobile menu + Logo */}
+            <div className="flex items-center gap-3 md:hidden">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <button className="p-2 text-foreground hover:text-primary">
+                    <Menu className="h-5 w-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80 p-0 border-purple-700/30">
+                  <MobileNavContent />
+                </SheetContent>
+              </Sheet>
+              <div className="flex items-center gap-2">
+                <Boxes className="h-5 w-5 text-primary" />
+                <span className="font-bold text-foreground">Nellor Drop</span>
+              </div>
             </div>
-          </div>
 
-          {/* Desktop - Empty left side */}
-          <div className="hidden md:block" />
+            {/* Desktop - Empty left side */}
+            <div className="hidden md:block" />
 
-          {/* Right side - Theme, Notifications and Logout */}
-          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
-            <div className="hidden sm:flex items-center gap-2 mr-2">
-              <Sun className="h-4 w-4 text-purple-400" />
-              <Switch 
-                checked={darkMode} 
-                onCheckedChange={() => setDarkMode(!darkMode)} 
-                className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-purple-300"
-              />
-              <Moon className="h-4 w-4 text-purple-400" />
+            {/* Right side - Theme, Notifications and Logout */}
+            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+              <div className="hidden sm:flex items-center gap-2 mr-2">
+                <Sun className="h-4 w-4 text-purple-400" />
+                <Switch 
+                  checked={darkMode} 
+                  onCheckedChange={setDarkMode} 
+                  className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-purple-300"
+                />
+                <Moon className="h-4 w-4 text-purple-400" />
+              </div>
+              
+              {/* Mobile theme toggle */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setDarkMode(!darkMode)} 
+                className="h-8 w-8 sm:hidden"
+              >
+                {darkMode ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/drop/notificacoes')} 
+                className="h-8 w-8 sm:h-9 sm:w-9 relative"
+              >
+                <Bell className="h-4 w-4 text-foreground" />
+                {(dropStats?.pending_orders || 0) > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {dropStats?.pending_orders}
+                  </span>
+                )}
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                onClick={handleLogout} 
+                size="icon" 
+                className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3"
+              >
+                <LogOut className="h-4 w-4 text-foreground" />
+                <span className="hidden sm:inline ml-2 text-foreground">Sair</span>
+              </Button>
             </div>
-            
-            {/* Mobile theme toggle */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setDarkMode(!darkMode)} 
-              className="h-8 w-8 sm:hidden text-purple-300 hover:text-white hover:bg-slate-800"
-            >
-              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate('/drop/notificacoes')} 
-              className="h-8 w-8 sm:h-9 sm:w-9 relative text-cyan-300 hover:text-white hover:bg-slate-800"
-            >
-              <Bell className="h-4 w-4" />
-              {(dropStats?.pending_orders || 0) > 0 && (
-                <span className="absolute -top-1 -right-1 bg-amber-500 text-black text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                  {dropStats?.pending_orders}
-                </span>
-              )}
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              onClick={handleLogout} 
-              size="icon" 
-              className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-cyan-300 hover:text-white hover:bg-slate-800"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Sair</span>
-            </Button>
-          </div>
-        </header>
+          </header>
 
-        {/* Main Content */}
-        <main className="p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
-          <div className="w-full max-w-full overflow-x-hidden">
-            <Outlet />
-          </div>
-        </main>
+          {/* Main Content */}
+          <main className="p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
+            <div className="w-full max-w-full overflow-x-hidden">
+              <Outlet />
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );
