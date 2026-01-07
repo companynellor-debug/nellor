@@ -59,10 +59,10 @@ const DropConfiguracoes = () => {
   };
 
   return (
-    <div className="p-4 lg:p-8 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Configurações</h1>
+        <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
         <p className="text-muted-foreground mt-1">Gerencie as preferências do seu Nellor Drop</p>
       </div>
 
@@ -113,7 +113,7 @@ const DropConfiguracoes = () => {
         {/* Content */}
         <div className="lg:col-span-3">
           {activeSection === 'profile' && (
-            <Card className="p-5 lg:p-6 space-y-6">
+            <Card className="bg-card border-border p-5 lg:p-6 space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Perfil do Negócio</h2>
                 <p className="text-muted-foreground text-sm">
@@ -128,7 +128,7 @@ const DropConfiguracoes = () => {
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Ex: Loja do João"
-                    className="mt-1.5"
+                    className="mt-1.5 bg-background border-border"
                   />
                   <p className="text-muted-foreground text-xs mt-1">
                     Este nome será usado nas comunicações com fornecedores
@@ -165,7 +165,7 @@ const DropConfiguracoes = () => {
           )}
 
           {activeSection === 'notifications' && (
-            <Card className="p-5 lg:p-6 space-y-6">
+            <Card className="bg-card border-border p-5 lg:p-6 space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Notificações</h2>
                 <p className="text-muted-foreground text-sm">
@@ -193,7 +193,7 @@ const DropConfiguracoes = () => {
           )}
 
           {activeSection === 'payments' && (
-            <Card className="p-5 lg:p-6 space-y-6">
+            <Card className="bg-card border-border p-5 lg:p-6 space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Pagamentos</h2>
                 <p className="text-muted-foreground text-sm">
@@ -201,7 +201,7 @@ const DropConfiguracoes = () => {
                 </p>
               </div>
 
-              <div className="bg-muted rounded-xl p-4 border border-border">
+              <div className="bg-muted/50 rounded-xl p-4 border border-border">
                 <div className="flex items-center gap-3 mb-4">
                   <CreditCard className="h-5 w-5 text-primary" />
                   <span className="text-foreground font-medium">Método de Recebimento</span>
@@ -219,7 +219,7 @@ const DropConfiguracoes = () => {
           )}
 
           {activeSection === 'security' && (
-            <Card className="p-5 lg:p-6 space-y-6">
+            <Card className="bg-card border-border p-5 lg:p-6 space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Segurança</h2>
                 <p className="text-muted-foreground text-sm">
