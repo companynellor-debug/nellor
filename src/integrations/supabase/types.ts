@@ -2178,6 +2178,8 @@ export type Database = {
           allow_service_providers: boolean
           base_price: number
           commission_percent: number
+          max_commission_percent: number
+          min_resale_price: number
           product_description: string
           product_id: string
           product_images: string[]
