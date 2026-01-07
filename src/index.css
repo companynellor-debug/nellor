@@ -62,22 +62,22 @@ All colors MUST be HSL.
     --cliente-text: 0 0% 100%;
     --cliente-text-muted: 0 0% 70%;
     
-    /* Nellor Drop Theme - Premium Dark Purple SaaS */
-    --drop-bg: 270 30% 6%;
-    --drop-surface: 270 25% 10%;
-    --drop-surface-hover: 270 25% 14%;
-    --drop-card: 270 20% 12%;
-    --drop-card-hover: 270 20% 16%;
-    --drop-border: 270 20% 18%;
-    --drop-accent: 280 100% 65%;
-    --drop-accent-soft: 280 60% 25%;
+    /* Nellor Drop Theme - Premium Light Purple SaaS */
+    --drop-bg: 270 100% 99%;
+    --drop-surface: 270 50% 97%;
+    --drop-surface-hover: 270 40% 94%;
+    --drop-card: 0 0% 100%;
+    --drop-card-hover: 270 30% 98%;
+    --drop-border: 270 30% 90%;
+    --drop-accent: 280 100% 50%;
+    --drop-accent-soft: 280 60% 95%;
     --drop-success: 142 76% 36%;
     --drop-warning: 38 92% 50%;
-    --drop-text: 0 0% 98%;
-    --drop-text-muted: 270 10% 60%;
-    --drop-gradient: linear-gradient(135deg, hsl(270 30% 8%), hsl(280 25% 12%));
-    --drop-gradient-card: linear-gradient(145deg, hsl(280 30% 15% / 0.6), hsl(270 20% 10% / 0.9));
-    --drop-glow: 0 0 60px hsla(280 100% 50% / 0.15);
+    --drop-text: 280 100% 15%;
+    --drop-text-muted: 270 20% 45%;
+    --drop-gradient: linear-gradient(135deg, hsl(270 100% 99%), hsl(280 50% 97%));
+    --drop-gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(270 30% 98%));
+    --drop-glow: 0 0 60px hsla(280 100% 50% / 0.1);
   }
 
   .dark {
@@ -125,22 +125,22 @@ All colors MUST be HSL.
     --cliente-text: 0 0% 100%;
     --cliente-text-muted: 0 0% 70%;
     
-    /* Nellor Drop Theme - Premium Dark Purple SaaS */
-    --drop-bg: 270 30% 6%;
-    --drop-surface: 270 25% 10%;
-    --drop-surface-hover: 270 25% 14%;
-    --drop-card: 270 20% 12%;
-    --drop-card-hover: 270 20% 16%;
-    --drop-border: 270 20% 18%;
-    --drop-accent: 280 100% 65%;
-    --drop-accent-soft: 280 60% 25%;
+    /* Nellor Drop Theme - Premium Light Purple SaaS (same in dark mode) */
+    --drop-bg: 270 100% 99%;
+    --drop-surface: 270 50% 97%;
+    --drop-surface-hover: 270 40% 94%;
+    --drop-card: 0 0% 100%;
+    --drop-card-hover: 270 30% 98%;
+    --drop-border: 270 30% 90%;
+    --drop-accent: 280 100% 50%;
+    --drop-accent-soft: 280 60% 95%;
     --drop-success: 142 76% 36%;
     --drop-warning: 38 92% 50%;
-    --drop-text: 0 0% 98%;
-    --drop-text-muted: 270 10% 60%;
-    --drop-gradient: linear-gradient(135deg, hsl(270 30% 8%), hsl(280 25% 12%));
-    --drop-gradient-card: linear-gradient(145deg, hsl(280 30% 15% / 0.6), hsl(270 20% 10% / 0.9));
-    --drop-glow: 0 0 60px hsla(280 100% 50% / 0.15);
+    --drop-text: 280 100% 15%;
+    --drop-text-muted: 270 20% 45%;
+    --drop-gradient: linear-gradient(135deg, hsl(270 100% 99%), hsl(280 50% 97%));
+    --drop-gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(270 30% 98%));
+    --drop-glow: 0 0 60px hsla(280 100% 50% / 0.1);
   }
 }
 

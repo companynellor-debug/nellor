@@ -95,7 +95,7 @@ const DropModeLayout = () => {
       <div className="p-6 border-b border-drop-border">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <img src={logo} alt="Nellor" className="h-8 w-auto brightness-0 invert" />
+            <img src={logo} alt="Nellor" className="h-8 w-auto" />
           </div>
           <div>
             <span className="text-drop-text font-bold text-lg">Nellor</span>
