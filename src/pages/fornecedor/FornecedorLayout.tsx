@@ -52,7 +52,13 @@ const FornecedorLayoutContent = () => {
     }
   }, [profile, navigate, location.pathname]);
 
+  // Apply dark mode class to document
   useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     localStorage.setItem("fornecedor-dark-mode", JSON.stringify(darkMode));
   }, [darkMode]);
 
@@ -82,9 +88,13 @@ const FornecedorLayoutContent = () => {
               {/* Right side - Theme, Notifications and Logout */}
               <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
                 <div className="hidden sm:flex items-center gap-2 mr-2">
-                  <Sun className="h-4 w-4 text-muted-foreground" />
-                  <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-                  <Moon className="h-4 w-4 text-muted-foreground" />
+                  <Sun className="h-4 w-4 text-purple-400" />
+                  <Switch 
+                    checked={darkMode} 
+                    onCheckedChange={setDarkMode} 
+                    className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-purple-300"
+                  />
+                  <Moon className="h-4 w-4 text-purple-400" />
                 </div>
                 
                 {/* Mobile theme toggle - icon only */}
