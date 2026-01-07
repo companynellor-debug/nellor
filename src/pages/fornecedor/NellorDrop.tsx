@@ -6,8 +6,9 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Package, TrendingUp, Users, ShoppingCart, Settings, Percent, Clock, Check, X } from 'lucide-react';
+import { Loader2, Package, TrendingUp, Users, ShoppingCart, Settings, Percent, Clock, Check, X, Eye } from 'lucide-react';
 import { useSupplierDrop } from '@/hooks/useSupplierDrop';
+import { SupplierProductDropModal } from '@/components/fornecedor/SupplierProductDropModal';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -38,23 +39,8 @@ const NellorDrop = () => {
     min_order_value: dropSettings?.min_order_value || 0,
   });
 
-  const [selectedProduct, setSelectedProduct] = useState<{
-    id: string;
-    nome: string;
-    dropSetting: {
-      commission_percent: number;
-      allow_affiliates: boolean;
-      allow_service_providers: boolean;
-      shipping_days_estimate: number;
-    } | null;
-  } | null>(null);
-
-  const [productSettings, setProductSettings] = useState({
-    commission_percent: 10,
-    allow_affiliates: true,
-    allow_service_providers: true,
-    shipping_days_estimate: 7,
-  });
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showProductModal, setShowProductModal] = useState(false);
 
   const [trackingModal, setTrackingModal] = useState<{ orderId: string; isOpen: boolean }>({ orderId: '', isOpen: false });
   const [trackingCode, setTrackingCode] = useState('');
@@ -77,15 +63,8 @@ const NellorDrop = () => {
     await updateDropSettings.mutateAsync(settingsForm);
   };
 
-  const handleProductSettingsSave = async () => {
-    if (!selectedProduct) return;
-    
-    await updateProductDropSettings.mutateAsync({
-      productId: selectedProduct.id,
-      settings: productSettings,
-    });
-    
-    setSelectedProduct(null);
+  const handleSaveProductDropSettings = async (productId: string, settings: Record<string, unknown>) => {
+    await updateProductDropSettings.mutateAsync({ productId, settings });
   };
 
   const handleShipOrder = async () => {
@@ -324,23 +303,15 @@ const NellorDrop = () => {
                       
                       <div className="flex items-center gap-4">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => {
-                            setSelectedProduct({
-                              id: product.id,
-                              nome: product.nome,
-                              dropSetting: product.dropSetting,
-                            });
-                            setProductSettings({
-                              commission_percent: product.dropSetting?.commission_percent || dropSettings?.default_commission_percent || 10,
-                              allow_affiliates: product.dropSetting?.allow_affiliates ?? true,
-                              allow_service_providers: product.dropSetting?.allow_service_providers ?? true,
-                              shipping_days_estimate: product.dropSetting?.shipping_days_estimate || 7,
-                            });
+                            setSelectedProduct(product);
+                            setShowProductModal(true);
                           }}
                         >
-                          <Settings className="h-4 w-4" />
+                          <Eye className="h-4 w-4 mr-1" />
+                          Configurar
                         </Button>
                         <Switch
                           checked={product.dropSetting?.drop_enabled ?? false}
@@ -575,80 +546,13 @@ const NellorDrop = () => {
       )}
 
       {/* Product Settings Modal */}
-      <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Configurações do Produto</DialogTitle>
-            <DialogDescription>
-              {selectedProduct?.nome}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Comissão (%)</Label>
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                value={productSettings.commission_percent}
-                onChange={(e) => setProductSettings(prev => ({
-                  ...prev,
-                  commission_percent: Number(e.target.value),
-                }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Prazo de Envio (dias)</Label>
-              <Input
-                type="number"
-                min={1}
-                value={productSettings.shipping_days_estimate}
-                onChange={(e) => setProductSettings(prev => ({
-                  ...prev,
-                  shipping_days_estimate: Number(e.target.value),
-                }))}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label>Permitir Afiliados</Label>
-              <Switch
-                checked={productSettings.allow_affiliates}
-                onCheckedChange={(checked) => setProductSettings(prev => ({
-                  ...prev,
-                  allow_affiliates: checked,
-                }))}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label>Permitir Prestadores</Label>
-              <Switch
-                checked={productSettings.allow_service_providers}
-                onCheckedChange={(checked) => setProductSettings(prev => ({
-                  ...prev,
-                  allow_service_providers: checked,
-                }))}
-              />
-            </div>
-          </div>
-          
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setSelectedProduct(null)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleProductSettingsSave}
-              disabled={updateProductDropSettings.isPending}
-            >
-              {updateProductDropSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <SupplierProductDropModal
+        product={selectedProduct}
+        open={showProductModal}
+        onOpenChange={setShowProductModal}
+        onSave={handleSaveProductDropSettings}
+        isSaving={updateProductDropSettings.isPending}
+      />
 
       {/* Tracking Code Modal */}
       <Dialog open={trackingModal.isOpen} onOpenChange={(open) => !open && setTrackingModal({ orderId: '', isOpen: false })}>

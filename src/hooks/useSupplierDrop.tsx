@@ -21,6 +21,8 @@ interface ProductDropSetting {
   supplier_id: string;
   drop_enabled: boolean;
   commission_percent: number;
+  min_resale_price: number | null;
+  max_commission_percent: number | null;
   allow_affiliates: boolean;
   allow_service_providers: boolean;
   shipping_days_estimate: number;

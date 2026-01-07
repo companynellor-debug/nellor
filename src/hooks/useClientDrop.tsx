@@ -43,6 +43,8 @@ interface DropCatalogItem {
   product_images: string[] | null;
   product_description: string | null;
   base_price: number;
+  min_resale_price: number | null;
+  max_commission_percent: number | null;
   commission_percent: number;
   shipping_days: number;
   supplier_id: string;

@@ -4,22 +4,17 @@ import {
   Search, 
   Plus,
   Package,
-  Star,
   TrendingUp,
   Store,
-  Check
+  Filter,
+  SlidersHorizontal
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription 
-} from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 import { useClientDrop } from "@/hooks/useClientDrop";
+import { ProductDetailModal } from "@/components/drop/ProductDetailModal";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -33,8 +28,7 @@ const DropCatalogo = () => {
   
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [customPrice, setCustomPrice] = useState("");
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Filter available products (not already added)
   const availableProducts = (dropCatalog || []).filter((catalogItem: any) => 
@@ -45,49 +39,35 @@ const DropCatalogo = () => {
     !search || p.product_name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Products already in my catalog
-  const alreadyAdded = (productId: string) => 
-    myDropProducts?.some((myP: any) => myP.product_id === productId);
-
   const handleSelectProduct = (product: any) => {
     setSelectedProduct(product);
-    setCustomPrice(String((product.base_price * 1.3).toFixed(2))); // Default 30% margin
-    setShowAddDialog(true);
+    setShowDetailModal(true);
   };
 
-  const handleAddProduct = async () => {
-    if (!selectedProduct || !customPrice) {
-      toast.error('Preencha o preço de venda');
-      return;
-    }
+  const handleAddProduct = async (customPrice: number) => {
+    if (!selectedProduct) return;
     
     try {
       await addProductToDrop.mutateAsync({
         productId: selectedProduct.product_id,
-        customPrice: parseFloat(customPrice),
+        customPrice: customPrice,
         marginType: 'fixed',
-        marginValue: parseFloat(customPrice) - selectedProduct.base_price
+        marginValue: customPrice - selectedProduct.base_price
       });
-      setShowAddDialog(false);
+      setShowDetailModal(false);
       setSelectedProduct(null);
-      setCustomPrice("");
       toast.success('Produto adicionado ao seu catálogo!');
     } catch (error) {
       // Error handled by hook
     }
   };
 
-  const margin = selectedProduct ? parseFloat(customPrice || "0") - selectedProduct.base_price : 0;
-  const marginPercent = selectedProduct?.base_price > 0 
-    ? ((margin / selectedProduct.base_price) * 100).toFixed(1) 
-    : 0;
-
   return (
-    <div className="p-4 lg:p-8 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Catálogo Drop</h1>
+          <h1 className="text-2xl font-bold text-foreground">Catálogo Drop</h1>
           <p className="text-muted-foreground mt-1">
             Explore produtos disponíveis para revenda • {filteredProducts.length} produtos
           </p>
@@ -95,53 +75,57 @@ const DropCatalogo = () => {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar produtos..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar produtos..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
-      {/* Products Grid - Visual de Marketplace */}
+      {/* Products Grid */}
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
+            <Card key={i} className="bg-card border-border overflow-hidden animate-pulse">
               <div className="aspect-square bg-muted" />
-              <div className="p-4 space-y-3">
+              <CardContent className="p-4 space-y-3">
                 <div className="h-4 bg-muted rounded w-3/4" />
                 <div className="h-3 bg-muted rounded w-1/2" />
                 <div className="h-6 bg-muted rounded w-1/3" />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="bg-card border border-border rounded-2xl p-12 text-center">
-          <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-foreground mb-2">
-            {search ? "Nenhum produto encontrado" : "Nenhum produto disponível"}
-          </h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            {search 
-              ? "Tente buscar com outros termos"
-              : "Aguarde novos fornecedores disponibilizarem produtos para o Drop"
-            }
-          </p>
-        </div>
+        <Card className="bg-card border-border">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <ShoppingBag className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              {search ? "Nenhum produto encontrado" : "Nenhum produto disponível"}
+            </h3>
+            <p className="text-muted-foreground max-w-md text-center">
+              {search 
+                ? "Tente buscar com outros termos"
+                : "Aguarde novos fornecedores disponibilizarem produtos para o Drop"
+              }
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredProducts.map((product: any) => {
-            const suggestedPrice = product.base_price * 1.3;
+            const suggestedPrice = product.min_resale_price || product.base_price * 1.3;
             const suggestedMargin = suggestedPrice - product.base_price;
             
             return (
-              <div 
+              <Card 
                 key={product.product_id}
-                className="bg-card border border-border rounded-2xl overflow-hidden group hover:border-primary/50 transition-all duration-300 cursor-pointer"
+                className="bg-card border-border overflow-hidden group hover:border-primary/50 hover:shadow-lg transition-all duration-300 cursor-pointer"
                 onClick={() => handleSelectProduct(product)}
               >
                 {/* Image */}
@@ -161,7 +145,7 @@ const DropCatalogo = () => {
                   {/* Commission Badge */}
                   <div className="absolute top-2 right-2">
                     <Badge className="bg-green-500 text-white text-xs font-medium">
-                      {product.commission_percent}% margem
+                      até {product.max_commission_percent || product.commission_percent}% margem
                     </Badge>
                   </div>
 
@@ -176,15 +160,15 @@ const DropCatalogo = () => {
 
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-                    <Button size="sm">
+                    <Button size="sm" className="shadow-lg">
                       <Plus className="h-4 w-4 mr-1" />
-                      Adicionar
+                      Ver Detalhes
                     </Button>
                   </div>
                 </div>
 
                 {/* Info */}
-                <div className="p-3">
+                <CardContent className="p-3">
                   {/* Supplier */}
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                     <Store className="h-3 w-3" />
@@ -215,115 +199,21 @@ const DropCatalogo = () => {
                     <Package className="h-3 w-3" />
                     <span>{product.stock} disponíveis</span>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
       )}
 
-      {/* Add Product Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Adicionar ao Seu Catálogo</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Defina seu preço de venda para este produto
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedProduct && (
-            <div className="space-y-6">
-              {/* Product Preview */}
-              <div className="flex gap-4 p-4 bg-muted rounded-xl">
-                <div className="h-20 w-20 rounded-lg bg-card overflow-hidden flex-shrink-0">
-                  {selectedProduct.product_images?.[0] ? (
-                    <img 
-                      src={selectedProduct.product_images[0]} 
-                      alt="" 
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center">
-                      <Package className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-foreground font-medium truncate">{selectedProduct.product_name}</h4>
-                  <p className="text-muted-foreground text-sm">{selectedProduct.supplier_name}</p>
-                  <div className="mt-2 text-sm">
-                    <span className="text-muted-foreground">Custo: </span>
-                    <span className="text-foreground font-medium">
-                      R$ {selectedProduct.base_price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price Input */}
-              <div>
-                <label className="text-foreground text-sm font-medium block mb-2">
-                  Seu Preço de Venda
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">R$</span>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={customPrice}
-                    onChange={(e) => setCustomPrice(e.target.value)}
-                    className="pl-10 text-lg font-semibold h-12"
-                  />
-                </div>
-              </div>
-
-              {/* Margin Display */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-muted rounded-xl text-center">
-                  <p className="text-muted-foreground text-sm mb-1">Sua Margem</p>
-                  <p className={cn(
-                    "text-2xl font-bold",
-                    margin > 0 ? "text-green-600" : "text-destructive"
-                  )}>
-                    R$ {margin.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <div className="p-4 bg-muted rounded-xl text-center">
-                  <p className="text-muted-foreground text-sm mb-1">Percentual</p>
-                  <p className={cn(
-                    "text-2xl font-bold",
-                    margin > 0 ? "text-green-600" : "text-destructive"
-                  )}>
-                    {marginPercent}%
-                  </p>
-                </div>
-              </div>
-
-              {margin <= 0 && (
-                <p className="text-destructive text-sm text-center">
-                  Defina um preço maior que o custo para ter lucro
-                </p>
-              )}
-              
-              <Button 
-                onClick={handleAddProduct}
-                disabled={addProductToDrop.isPending || margin <= 0}
-                className="w-full h-12 text-base"
-              >
-                {addProductToDrop.isPending ? (
-                  "Adicionando..."
-                ) : (
-                  <>
-                    <Check className="h-5 w-5 mr-2" />
-                    Adicionar ao Meu Catálogo
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        product={selectedProduct}
+        open={showDetailModal}
+        onOpenChange={setShowDetailModal}
+        onAddProduct={handleAddProduct}
+        isAdding={addProductToDrop.isPending}
+      />
     </div>
   );
 };
