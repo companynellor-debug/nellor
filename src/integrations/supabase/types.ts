@@ -1134,6 +1134,8 @@ export type Database = {
           created_at: string | null
           drop_enabled: boolean | null
           id: string
+          max_commission_percent: number | null
+          min_resale_price: number | null
           product_id: string
           shipping_days_estimate: number | null
           supplier_id: string
@@ -1146,6 +1148,8 @@ export type Database = {
           created_at?: string | null
           drop_enabled?: boolean | null
           id?: string
+          max_commission_percent?: number | null
+          min_resale_price?: number | null
           product_id: string
           shipping_days_estimate?: number | null
           supplier_id: string
@@ -1158,6 +1162,8 @@ export type Database = {
           created_at?: string | null
           drop_enabled?: boolean | null
           id?: string
+          max_commission_percent?: number | null
+          min_resale_price?: number | null
           product_id?: string
           shipping_days_estimate?: number | null
           supplier_id?: string
