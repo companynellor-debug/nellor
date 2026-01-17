@@ -17,7 +17,7 @@ export const BottomNav = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 border-t shadow-lg z-50 backdrop-blur-lg">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background/95 border-t shadow-lg z-50 backdrop-blur-lg lg:hidden">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-4">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -34,7 +34,7 @@ export const BottomNav = () => {
               <div className="relative inline-flex">
                 <Icon className={`h-5 w-5 ${isActive ? "scale-110" : ""}`} />
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-medium rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                  <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[10px] font-medium rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
                 )}
