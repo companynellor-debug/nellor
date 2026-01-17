@@ -1,7 +1,9 @@
+import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
+import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Minus, Plus, Trash2, ShoppingCart, AlertCircle } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "@/hooks/use-toast";
@@ -35,29 +37,35 @@ const Carrinho = () => {
   const shipping = cartItems.length > 0 ? 15.00 : 0;
 
   return (
-    <div className="min-h-full pb-20 lg:pb-6">
-      <div className="container mx-auto px-4 py-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-background pb-20">
+      <ParticlesBackground />
+
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Meu Carrinho</h1>
+            <h1 className="text-2xl font-bold text-primary">Meu Carrinho</h1>
             <p className="text-sm text-muted-foreground">{itemCount} {itemCount === 1 ? 'item' : 'itens'}</p>
           </div>
           <ShoppingCart className="h-6 w-6 text-primary" />
         </div>
+      </header>
 
+      <main className="container mx-auto px-4 py-6 relative z-10">
         {cartItems.length === 0 ? (
-          <Card className="p-12 text-center shadow-sm">
+          <Card className="bg-white border shadow-sm p-12 text-center">
             <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground text-lg mb-4">Seu carrinho está vazio</p>
-            <Button onClick={() => navigate("/cliente/produtos")}>
+            <Button 
+              onClick={() => navigate("/cliente/produtos")}
+              className="bg-primary hover:bg-primary/90 text-white"
+            >
               Continuar Comprando
             </Button>
           </Card>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-4">
+          <>
+            <div className="space-y-4 mb-6">
               {cartItems.map((item) => {
                 const itemTotal = item.price * item.quantity;
                 const hasMinQuantity = item.minQuantity && item.minQuantity > 0;
@@ -67,9 +75,9 @@ const Carrinho = () => {
                 const hasLimits = hasMinQuantity || hasMinValue;
                 
                 return (
-                  <Card key={item.id} className="p-4 shadow-sm">
+                  <Card key={item.id} className="bg-white border shadow-sm p-4">
                     <div className="flex gap-4">
-                      <div className="w-24 h-24 rounded-xl overflow-hidden bg-muted flex-shrink-0">
+                      <div className="w-24 h-24 rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -111,7 +119,7 @@ const Carrinho = () => {
                       </div>
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="p-2 hover:bg-destructive/10 text-destructive rounded-full transition-colors"
+                        className="p-2 hover:bg-red-500/10 text-red-500 rounded-full transition-colors"
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -121,68 +129,68 @@ const Carrinho = () => {
               })}
             </div>
 
-            {/* Order Summary */}
-            <div className="space-y-4">
-              <Card className="p-6 shadow-sm sticky top-24">
-                <h2 className="text-xl font-bold text-foreground mb-4">Resumo do Pedido</h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium">R$ {total.toFixed(2).replace('.', ',')}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Frete</span>
-                    <span className="font-medium">R$ {shipping.toFixed(2).replace('.', ',')}</span>
-                  </div>
-                  <div className="border-t pt-3 flex justify-between items-center">
-                    <span className="text-xl font-bold">Total</span>
-                    <span className="text-2xl font-bold text-primary">
-                      R$ {(total + shipping).toFixed(2).replace('.', ',')}
-                    </span>
-                  </div>
+            {/* Resumo */}
+            <Card className="bg-white border shadow-sm p-6 mb-6">
+              <h2 className="text-xl font-bold text-primary mb-4">Resumo do Pedido</h2>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium">R$ {total.toFixed(2).replace('.', ',')}</span>
                 </div>
-
-                {/* Validation Warnings */}
-                {(() => {
-                  const validation = validateMinimumLimits();
-                  if (!validation.isValid) {
-                    return (
-                      <Alert variant="destructive" className="mt-4">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          <p className="font-medium mb-2">Limites mínimos não atendidos:</p>
-                          <ul className="space-y-1 text-sm">
-                            {validation.errors.map((error, index) => (
-                              <li key={index}>• {error}</li>
-                            ))}
-                          </ul>
-                        </AlertDescription>
-                      </Alert>
-                    );
-                  }
-                })()}
-
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-2 mt-6">
-                  <Button 
-                    onClick={handleCheckout}
-                    className="w-full h-14 text-lg font-bold"
-                  >
-                    Finalizar Pedido
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => clearCart()}
-                  >
-                    Limpar Carrinho
-                  </Button>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Frete</span>
+                  <span className="font-medium">R$ {shipping.toFixed(2).replace('.', ',')}</span>
                 </div>
-              </Card>
+                <div className="border-t pt-3 flex justify-between items-center">
+                  <span className="text-xl font-bold">Total</span>
+                  <span className="text-2xl font-bold text-primary">
+                    R$ {(total + shipping).toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Avisos de validação */}
+            {(() => {
+              const validation = validateMinimumLimits();
+              if (!validation.isValid) {
+                return (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <p className="font-medium mb-2">Atenção! Limites mínimos não atendidos:</p>
+                      <ul className="space-y-1 text-sm">
+                        {validation.errors.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                );
+              }
+            })()}
+
+            {/* Botões de Ação */}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => clearCart()}
+              >
+                Limpar Carrinho
+              </Button>
+              <Button 
+                onClick={handleCheckout}
+                className="flex-1 bg-primary hover:bg-primary/90 text-white h-14 text-lg font-bold"
+              >
+                Finalizar Pedido
+              </Button>
             </div>
-          </div>
+          </>
         )}
-      </div>
+      </main>
+
+      <BottomNav />
     </div>
   );
 };

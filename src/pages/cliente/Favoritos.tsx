@@ -1,5 +1,7 @@
+import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
+import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
-import { Heart, Store } from "lucide-react";
+import { ArrowLeft, Heart, Store } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
@@ -18,11 +20,20 @@ const Favoritos = () => {
   const favoriteStoresList = stores.filter((store) => favoriteStores.includes(store.id));
 
   return (
-    <div className="min-h-full pb-20 lg:pb-6">
-      <div className="container mx-auto px-4 py-6">
-        {/* Page Header */}
-        <h1 className="text-2xl font-bold text-foreground mb-6">Meus Favoritos</h1>
+    <div className="min-h-screen bg-background pb-20">
+      <ParticlesBackground />
 
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-xl font-bold">Meus Favoritos</h1>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-6 relative z-10">
         <Tabs defaultValue="produtos" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="produtos">Produtos ({favoriteProducts.length})</TabsTrigger>
@@ -39,20 +50,20 @@ const Favoritos = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {favoriteProducts.map((product) => (
-                  <Card key={product.id} className="overflow-hidden relative group shadow-sm hover:shadow-md transition-all">
+                  <Card key={product.id} className="bg-white border shadow-sm overflow-hidden relative group">
                     <div
                       className="aspect-square overflow-hidden cursor-pointer"
                       onClick={() => navigate(`/cliente/produto/${product.id}`)}
                     >
-                      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                     </div>
                     <button
                       onClick={() => removeFavorite(product.id)}
-                      className="absolute top-2 right-2 p-2 bg-background/90 backdrop-blur-sm rounded-full hover:bg-background transition-colors shadow-sm"
+                      className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
                     >
-                      <Heart className="h-5 w-5 fill-destructive text-destructive" />
+                      <Heart className="h-5 w-5 fill-red-500 text-red-500" />
                     </button>
                     <div className="p-3">
                       <h3 className="font-medium text-sm mb-2 line-clamp-2">{product.name}</h3>
@@ -60,7 +71,7 @@ const Favoritos = () => {
                         <p className="text-primary font-bold">{product.price}</p>
                         <div className="flex items-center gap-1 text-xs">
                           <span className="text-yellow-500">⭐</span>
-                          <span className="text-muted-foreground">{product.rating}</span>
+                          <span>{product.rating}</span>
                         </div>
                       </div>
                     </div>
@@ -84,14 +95,14 @@ const Favoritos = () => {
                 {favoriteStoresList.map((store) => (
                   <Card
                     key={store.id}
-                    className="overflow-hidden cursor-pointer hover:shadow-md transition-all shadow-sm"
+                    className="bg-white border shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all"
                     onClick={() => navigate(`/cliente/loja/${store.id}`)}
                   >
                     <div className="flex items-center gap-4 p-4 relative">
                       <img 
                         src={store.foto_perfil_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store'} 
                         alt={store.nome} 
-                        className="w-16 h-16 rounded-full object-cover flex-shrink-0 ring-2 ring-primary/20"
+                        className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-lg mb-1">{store.nome}</h3>
@@ -104,7 +115,7 @@ const Favoritos = () => {
                         }}
                         className="p-2 hover:bg-muted rounded-full transition-colors flex-shrink-0"
                       >
-                        <Heart className="h-5 w-5 fill-destructive text-destructive" />
+                        <Heart className="h-5 w-5 fill-red-500 text-red-500" />
                       </button>
                     </div>
                   </Card>
@@ -113,7 +124,9 @@ const Favoritos = () => {
             )}
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
+
+      <BottomNav />
     </div>
   );
 };
