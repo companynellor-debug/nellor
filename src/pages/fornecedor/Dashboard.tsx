@@ -1,28 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, DollarSign, ShoppingCart, CreditCard, CheckCircle2, AlertTriangle, Loader2, Wallet, Percent, Bell } from "lucide-react";
+import { Package, TrendingUp, DollarSign, ShoppingCart, Loader2, Wallet, Percent, Bell, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
-import { useStripeConnect } from "@/hooks/useStripeConnect";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { StripeConnectModal } from "@/components/fornecedor/StripeConnectModal";
 import { showPushNotification, getNotificationPermission, requestNotificationPermission } from "@/utils/pushNotifications";
 import { useToast } from "@/hooks/use-toast";
+import { useIdentityVerification } from "@/hooks/useIdentityVerification";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useSupabaseAuth();
   const { products } = useSupplierProducts();
-  const { accountStatus, checkAccountStatus, startOnboarding, loading: stripeLoading } = useStripeConnect();
+  const { statusLabel, canSell } = useIdentityVerification();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('today');
   const { orders } = useSupabaseOrders();
 const [analytics, setAnalytics] = useState<any>(null);
-  const [showStripeModal, setShowStripeModal] = useState(false);
-  const [checkingStripe, setCheckingStripe] = useState(true);
   const [testingNotification, setTestingNotification] = useState(false);
   const { toast } = useToast();
 
@@ -68,12 +65,6 @@ const [analytics, setAnalytics] = useState<any>(null);
       setTestingNotification(false);
     }
   };
-
-  // Check Stripe status on mount
-  useEffect(() => {
-    setCheckingStripe(true);
-    checkAccountStatus().finally(() => setCheckingStripe(false));
-  }, []);
 
   // Buscar analytics do mês atual (pedidos já vêm do hook com realtime)
   useEffect(() => {
@@ -202,50 +193,26 @@ const [analytics, setAnalytics] = useState<any>(null);
         </div>
       </div>
 
-      {/* Stripe Status Card */}
-      <Card className={`relative overflow-hidden border-2 ${
-        checkingStripe 
-          ? 'border-muted' 
-          : accountStatus?.connected && accountStatus?.chargesEnabled && accountStatus?.payoutsEnabled
-            ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10'
-            : 'border-red-500 bg-red-50/50 dark:bg-red-900/10'
-      }`}>
+      {/* Status de Verificação */}
+      <Card className={`relative overflow-hidden border-2 ${canSell ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10' : 'border-red-500 bg-red-50/50 dark:bg-red-900/10'}`}>
         <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Status do Stripe
+            <ShieldCheck className="h-5 w-5" />
+            Status da conta
           </CardTitle>
-          {checkingStripe ? (
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          ) : accountStatus?.connected && accountStatus?.chargesEnabled && accountStatus?.payoutsEnabled ? (
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-          ) : (
-            <AlertTriangle className="h-5 w-5 text-red-600" />
-          )}
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          {checkingStripe ? (
-            <p className="text-sm text-muted-foreground">Verificando...</p>
-          ) : accountStatus?.connected && accountStatus?.chargesEnabled && accountStatus?.payoutsEnabled ? (
-            <div>
-              <p className="text-lg font-semibold text-green-700 dark:text-green-400">Conectado</p>
-              <p className="text-xs text-muted-foreground mt-1">Você pode receber pagamentos</p>
-            </div>
-          ) : (
-            <div>
-              <p className="text-lg font-semibold text-red-700 dark:text-red-400">Não conectado</p>
-              <p className="text-xs text-muted-foreground mt-1 mb-3">Conecte para receber pedidos</p>
-              <Button 
-                size="sm" 
-                className="w-full"
-                onClick={() => setShowStripeModal(true)}
-                disabled={stripeLoading}
-              >
-                {stripeLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
-                Conectar Stripe
-              </Button>
-            </div>
-          )}
+          <div>
+            <p className={`text-lg font-semibold ${canSell ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>{statusLabel}</p>
+            {!canSell ? (
+              <div className="mt-2">
+                <p className="text-xs text-muted-foreground mb-3">Para vender e solicitar saque, é obrigatório verificar a identidade.</p>
+                <Button size="sm" className="w-full" onClick={() => navigate('/fornecedor/financeiro')}>Verificar agora</Button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">Você está liberado para vender e sacar.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -445,8 +412,6 @@ const [analytics, setAnalytics] = useState<any>(null);
         </CardContent>
       </Card>
 
-      {/* Stripe Connect Modal */}
-      <StripeConnectModal open={showStripeModal} onOpenChange={setShowStripeModal} />
     </div>;
 };
 export default Dashboard;
