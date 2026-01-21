@@ -70,9 +70,8 @@ const Checkout = () => {
     setCurrentStep(2);
   };
 
-  const handlePaymentSuccess = (orderNumber: string) => {
-    // This will be handled by the success page
-    navigate(`/cliente/checkout/sucesso?order_id=${orderNumber}`);
+  const handlePaymentSuccess = (orderId: string) => {
+    navigate(`/cliente/checkout/sucesso?order_id=${orderId}`);
   };
 
   const getStepTitle = () => {
