@@ -12,7 +12,6 @@ const menuItems = [
   { title: "Cupons", url: "/fornecedor/cupons", icon: Ticket },
   { title: "Estatísticas", url: "/fornecedor/estatisticas", icon: BarChart3 },
   { title: "Financeiro", url: "/fornecedor/financeiro", icon: DollarSign },
-  { title: "Recebimentos", url: "/fornecedor/recebimentos", icon: Wallet },
   { title: "Permissões", url: "/fornecedor/permissoes", icon: Shield },
   { title: "Planos", url: "/fornecedor/planos", icon: Crown },
   { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },

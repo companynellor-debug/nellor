@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
-import { StripeStatusBanner } from "@/components/fornecedor/StripeStatusBanner";
 import { NotificationPermissionBanner } from "@/components/fornecedor/NotificationPermissionBanner";
+import { VerificationStatusBanner } from "@/components/fornecedor/VerificationStatusBanner";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -126,8 +126,8 @@ const FornecedorLayoutContent = () => {
             {/* Notification Permission Banner */}
             <NotificationPermissionBanner />
 
-            {/* Stripe Status Banner */}
-            <StripeStatusBanner />
+            {/* Verificação de identidade */}
+            <VerificationStatusBanner />
 
             {/* Main Content */}
             <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
