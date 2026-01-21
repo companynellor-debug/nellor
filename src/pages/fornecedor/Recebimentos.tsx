@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +16,6 @@ import {
   XCircle,
   Loader2
 } from "lucide-react";
-import { StripeConnectModal } from "@/components/fornecedor/StripeConnectModal";
-import { StripeBanner } from "@/components/fornecedor/StripeBanner";
 import { FeeTransparency } from "@/components/fornecedor/FeeTransparency";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
@@ -26,9 +24,8 @@ import { format, subDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const Recebimentos = () => {
-  const { profile, user } = useSupabaseAuth();
+  const { profile } = useSupabaseAuth();
   const { orders, loading: ordersLoading } = useSupabaseOrders();
-  const [showConnectModal, setShowConnectModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [dateFilter, setDateFilter] = useState<'7days' | '30days' | '90days' | 'all'>('30days');
   
@@ -92,9 +89,6 @@ const Recebimentos = () => {
 
   return (
     <div className="space-y-6">
-      {/* Banner de conexão Stripe */}
-      <StripeBanner isStripeConnected={isStripeConnected} />
-
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Pagamentos & Recebimentos</h1>
@@ -142,8 +136,8 @@ const Recebimentos = () => {
             </div>
           </div>
           {!isStripeConnected && (
-            <Button onClick={() => setShowConnectModal(true)}>
-              Conectar conta Stripe
+            <Button disabled>
+              Conta de recebimento indisponível
             </Button>
           )}
         </CardContent>
@@ -305,8 +299,8 @@ const Recebimentos = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={() => setShowConnectModal(true)}>
-              Conectar Stripe
+            <Button disabled>
+              Verificar conta
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </CardContent>
@@ -367,9 +361,6 @@ const Recebimentos = () => {
 
       {/* Transparência de Taxas */}
       <FeeTransparency />
-
-      {/* Modal de Conexão Stripe */}
-      <StripeConnectModal open={showConnectModal} onOpenChange={setShowConnectModal} />
 
       {/* Modal de Ajuda */}
       <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>

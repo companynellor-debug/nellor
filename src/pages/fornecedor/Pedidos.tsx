@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info, DollarSign, AlertTriangle, CreditCard, Loader2, Banknote } from "lucide-react";
+import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info, DollarSign, Banknote } from "lucide-react";
 import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,15 +13,11 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useStripeConnect } from "@/hooks/useStripeConnect";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { StripeConnectModal } from "@/components/fornecedor/StripeConnectModal";
 import { useNavigate } from "react-router-dom";
 
 const Pedidos = () => {
   const navigate = useNavigate();
   const { orders, loading, updateOrderStatus, updateTrackingCode } = useSupabaseOrders();
-  const { accountStatus, checkAccountStatus, loading: stripeLoading } = useStripeConnect();
   const printRef = useRef<HTMLDivElement>(null);
   
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -30,14 +26,6 @@ const Pedidos = () => {
   const [trackingCode, setTrackingCode] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [showStripeModal, setShowStripeModal] = useState(false);
-  const [checkingStripe, setCheckingStripe] = useState(true);
-
-  // Check Stripe status on mount
-  useEffect(() => {
-    setCheckingStripe(true);
-    checkAccountStatus().finally(() => setCheckingStripe(false));
-  }, []);
 
   // Etiquetas pré-definidas
   const predefinedTags = [
@@ -189,25 +177,6 @@ const Pedidos = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Alerta de Stripe não conectado */}
-      {!checkingStripe && (!accountStatus?.connected || !accountStatus?.chargesEnabled || !accountStatus?.payoutsEnabled) && (
-        <Alert variant="destructive" className="border-red-500 bg-red-50 dark:bg-red-900/20">
-          <AlertTriangle className="h-5 w-5" />
-          <AlertTitle className="font-semibold">Stripe não conectado</AlertTitle>
-          <AlertDescription className="mt-2">
-            <p className="mb-3">Você precisa conectar sua conta Stripe para receber pagamentos e repasses automáticos.</p>
-            <Button 
-              size="sm" 
-              onClick={() => setShowStripeModal(true)}
-              disabled={stripeLoading}
-            >
-              {stripeLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
-              Conectar Stripe
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Pedidos</h1>
         
@@ -565,11 +534,6 @@ const Pedidos = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Stripe Connect */}
-      <StripeConnectModal 
-        open={showStripeModal} 
-        onOpenChange={setShowStripeModal} 
-      />
     </div>
   );
 };
