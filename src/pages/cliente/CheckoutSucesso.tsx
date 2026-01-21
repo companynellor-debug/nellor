@@ -12,8 +12,8 @@ import confetti from "canvas-confetti";
 
 // Processing steps for visual feedback
 const PROCESSING_STEPS = [
-  { id: 1, label: "Conectando ao Stripe", icon: CreditCard },
-  { id: 2, label: "Verificando pagamento", icon: Shield },
+  { id: 1, label: "Processando pedido", icon: CreditCard },
+  { id: 2, label: "Validando informações", icon: Shield },
   { id: 3, label: "Confirmando pedido", icon: Package },
   { id: 4, label: "Finalizando", icon: CheckCircle },
 ];
@@ -50,19 +50,10 @@ const CheckoutSucesso = () => {
         // Step 1: Conectando
         setCurrentStep(1);
         setProgress(10);
-        
-        // 1) Se vier session_id no retorno do Stripe, confirma imediatamente (sem depender do webhook)
-        if (sessionIdFromQuery) {
-          setCurrentStep(2);
-          setProgress(30);
-          try {
-            await supabase.functions.invoke("stripe-verify-payment", {
-              body: { sessionId: sessionIdFromQuery },
-            });
-          } catch (verifyErr) {
-            console.warn("stripe-verify-payment failed:", verifyErr);
-          }
-        }
+
+        // Pagamento removido: não há verificação de gateway aqui
+        setCurrentStep(2);
+        setProgress(30);
 
         // Step 3: Confirmando
         setCurrentStep(3);
@@ -71,7 +62,7 @@ const CheckoutSucesso = () => {
         // 2) Busca pedido para exibir o número e checar status
         const { data: order, error: orderError } = await supabase
           .from("orders")
-          .select("id, order_number, payment_status, stripe_session_id")
+          .select("id, order_number, payment_status")
           .eq("id", orderIdFromQuery)
           .maybeSingle();
 
@@ -87,44 +78,11 @@ const CheckoutSucesso = () => {
         setOrderNumber(order.order_number);
         setProgress(60);
 
-        // 3) Se ainda estiver pendente, tenta fallback com stripe_session_id salvo no banco
-        if (order.payment_status !== "paid" && order.stripe_session_id) {
-          try {
-            await supabase.functions.invoke("stripe-verify-payment", {
-              body: { sessionId: order.stripe_session_id },
-            });
-          } catch (verifyErr) {
-            console.warn("stripe-verify-payment failed:", verifyErr);
-          }
-        }
-
         // Step 4: Finalizando
         setCurrentStep(4);
         setProgress(80);
 
-        // 4) Poll curto para refletir o banco (realtime pode não estar ativo nesta página)
-        const maxAttempts = 6;
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const { data: statusRow } = await supabase
-            .from("orders")
-            .select("payment_status")
-            .eq("id", orderIdFromQuery)
-            .maybeSingle();
-
-          if (statusRow?.payment_status === "paid") {
-            setProgress(100);
-            await new Promise((resolve) => setTimeout(resolve, 300));
-            setIsProcessing(false);
-            setShowAnimation(true);
-            triggerConfetti();
-            return;
-          }
-
-          setProgress(80 + (attempt * 3));
-          await new Promise((resolve) => setTimeout(resolve, 800));
-        }
-
-        // Mesmo se continuar pendente, não bloqueia a página (o webhook pode confirmar depois)
+        // Não bloqueia a página; pedido pode seguir pendente
         setProgress(100);
         await new Promise((resolve) => setTimeout(resolve, 300));
         setIsProcessing(false);
@@ -173,11 +131,11 @@ const CheckoutSucesso = () => {
     }, 250);
   };
 
-  const steps = [
+   const steps = [
     {
       icon: CheckCircle,
       title: "Pedido Aprovado",
-      description: "Pagamento confirmado via Stripe",
+       description: "Pedido registrado com sucesso",
       status: "done",
     },
     {
@@ -359,12 +317,12 @@ const CheckoutSucesso = () => {
               </div>
 
               {/* Payment Confirmation */}
-              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+       <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
                 <div>
                   <p className="font-semibold text-green-800">Pagamento Aprovado</p>
                   <p className="text-sm text-green-600">
-                    Pagamento via cartão de crédito processado pelo Stripe
+             Seu pedido foi criado e está em acompanhamento.
                   </p>
                 </div>
               </div>

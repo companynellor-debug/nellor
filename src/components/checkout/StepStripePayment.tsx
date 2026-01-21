@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
-import { useStripeConnect } from "@/hooks/useStripeConnect";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { toast } from "@/hooks/use-toast";
@@ -52,7 +51,6 @@ export const StepStripePayment = ({
   const [supplierError, setSupplierError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   
-  const { createPayment } = useStripeConnect();
   const { createOrder } = useSupabaseOrders();
   const { loading: couponLoading, appliedCoupon, validateCoupon, removeCoupon } = useCoupons();
 
@@ -64,54 +62,10 @@ export const StepStripePayment = ({
   const supplierId = cartItems[0]?.storeId?.toString() || "";
   const storeName = cartItems[0]?.storeName || "Fornecedor";
 
-  // Check if supplier has completed Stripe setup
-  useEffect(() => {
-    const checkSupplierStatus = async () => {
-      if (!supplierId) {
-        setSupplierError("Fornecedor não encontrado");
-        setIsCheckingSupplier(false);
-        return;
-      }
-
-      setIsCheckingSupplier(true);
-      try {
-        // Import supabase client and get session properly
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.access_token) {
-          setSupplierReady(true);
-          setIsCheckingSupplier(false);
-          return;
-        }
-
-        const response = await supabase.functions.invoke('stripe-check-account', {
-          body: { supplierId },
-        });
-
-        if (response.error) {
-          console.log("Supplier check response:", response.error);
-          // Don't block, let the payment attempt handle it
-          setSupplierReady(true);
-        } else if (response.data) {
-          setSupplierReady(response.data.chargesEnabled === true);
-          if (!response.data.chargesEnabled) {
-            setSupplierError("O fornecedor ainda não finalizou o cadastro no sistema de pagamentos.");
-          }
-        } else {
-          setSupplierReady(true);
-        }
-      } catch (error) {
-        console.error("Error checking supplier status:", error);
-        // Don't block, let the payment attempt handle it
-        setSupplierReady(true);
-      } finally {
-        setIsCheckingSupplier(false);
-      }
-    };
-
-    checkSupplierStatus();
-  }, [supplierId]);
+  // Stripe removido: não bloqueia a etapa por status de gateway
+  // Mantemos o layout e criamos o pedido como pendente.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _unused = { supplierReady, supplierError };
 
   // Handle coupon application
   const handleApplyCoupon = async () => {
@@ -144,10 +98,10 @@ export const StepStripePayment = ({
     setIsProcessing(true);
 
     try {
-      // CRÍTICO: cria o pedido PENDENTE antes do Stripe
+      // Gateway de pagamento removido: cria o pedido PENDENTE e finaliza o fluxo no app
       const pendingOrder = await createOrder({
         supplier_id: supplierId,
-        payment_method: "cartao" as const,
+        payment_method: "pix" as const,
         payment_status: "pending",
         order_status: "pending",
         status_label: "AGUARDANDO_PAGAMENTO",
@@ -178,7 +132,6 @@ export const StepStripePayment = ({
         proof_url: null,
         shipping_company: null,
         estimated_delivery: null,
-        stripe_payment_amount: total,
         platform_fee: platformFee,
         supplier_amount: supplierAmount,
       });
@@ -187,35 +140,12 @@ export const StepStripePayment = ({
       // Notificação de pedido pendente agora é gerada via INSERT na tabela `notifications`
       // (trigger do banco + edge function cuidam do push mesmo fora do app)
 
-      const description = `Pedido Nellor - ${cartItems.length} item(s)`;
-
-      const baseUrl = window.location.origin;
-      // Stripe adiciona automaticamente o session_id quando usamos o placeholder {CHECKOUT_SESSION_ID}
-      // Ao voltar, mostramos modal pedindo para ir em Meus Pedidos
-      const successUrl = `${baseUrl}/cliente?stripe_return=1&session_id={CHECKOUT_SESSION_ID}`;
-      const cancelUrl = `${baseUrl}/cliente/checkout?cancelled=true`;
-
-      const result = await createPayment(
-        pendingOrder.id,
-        supplierId,
-        total,
-        description,
-        successUrl,
-        cancelUrl
-      );
-
-      if (!result?.url) {
-        throw new Error("URL de pagamento não gerada");
-      }
-
       // Salva contexto local para a página de sucesso (fallback visual apenas)
-      // IMPORTANTE: O status do pedido é atualizado APENAS pelo webhook Stripe
       localStorage.setItem(
         "pendingOrder",
         JSON.stringify({
           orderId: pendingOrder.id,
           orderNumber: pendingOrder.order_number,
-          stripeSessionId: result.sessionId,
           supplierId,
           subtotal,
           shipping,
@@ -229,29 +159,15 @@ export const StepStripePayment = ({
         })
       );
 
-      // stripe_session_id já foi salvo pela edge function stripe-create-payment
-      // Redireciona para Stripe Checkout
-      window.location.href = result.url;
+      onSuccess(pendingOrder.id);
     } catch (error: any) {
       console.error("Payment error:", error);
 
-      const errorMessage = error?.message || "";
-      if (
-        errorMessage.includes("não completou") ||
-        errorMessage.includes("não está habilitada") ||
-        errorMessage.includes("missing the required capabilities")
-      ) {
-        setSupplierReady(false);
-        setSupplierError(
-          "O fornecedor ainda não finalizou o cadastro no sistema de pagamentos. Não é possível concluir a compra no momento."
-        );
-      } else {
-        toast({
-          title: "Erro no pagamento",
-          description: "Não foi possível iniciar o pagamento. Tente novamente.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Erro",
+        description: "Não foi possível concluir o pedido. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -383,10 +299,10 @@ export const StepStripePayment = ({
             <div className="p-2 bg-primary rounded-lg">
               <CreditCard className="h-6 w-6 text-primary-foreground" />
             </div>
-            Pagamento Seguro
+            Pagamento
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-2">
-            Você será redirecionado para o checkout seguro do Stripe
+            Pagamentos estão em atualização. Seu pedido será criado como pendente.
           </p>
         </CardHeader>
         
@@ -399,7 +315,7 @@ export const StepStripePayment = ({
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1">
               <ShieldCheck className="h-3 w-3" />
-              Stripe Checkout
+              Checkout seguro
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1">
               <CreditCard className="h-3 w-3" />
@@ -463,23 +379,15 @@ export const StepStripePayment = ({
             </div>
           </div>
 
-          {/* Test Mode Notice */}
-          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-yellow-800">Modo de Teste Ativo</p>
-                <p className="text-xs text-yellow-700">
-                  Ao clicar em "Pagar", você será redirecionado ao checkout seguro do Stripe onde poderá inserir os dados do cartão.
-                </p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  <strong>Para testar:</strong> Use 4242 4242 4242 4242, qualquer data futura (ex: 12/28) e CVC 123.
-                </p>
-              </div>
-            </div>
-          </div>
+          <Alert>
+            <AlertTriangle className="h-5 w-5" />
+            <AlertTitle>Pagamento em atualização</AlertTitle>
+            <AlertDescription>
+              Você pode finalizar agora e acompanhar o status em <strong>Meus Pedidos</strong>.
+            </AlertDescription>
+          </Alert>
 
-          {/* Pay Button */}
+          {/* Finalize Button */}
           <Button
             onClick={handleStripePayment}
             disabled={isProcessing}
@@ -489,12 +397,12 @@ export const StepStripePayment = ({
             {isProcessing ? (
               <>
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                Redirecionando...
+                Finalizando...
               </>
             ) : (
               <>
                 <Lock className="h-5 w-5 mr-2" />
-                Pagar R$ {total.toFixed(2).replace(".", ",")}
+                Finalizar Pedido (R$ {total.toFixed(2).replace(".", ",")})
               </>
             )}
           </Button>
@@ -509,12 +417,10 @@ export const StepStripePayment = ({
             Voltar ao Resumo
           </Button>
 
-          {/* Security Footer */}
+          {/* Footer */}
           <div className="text-center text-xs text-muted-foreground pt-4 border-t">
             <Lock className="h-4 w-4 inline mr-1" />
-            Pagamento processado com segurança pelo Stripe.
-            <br />
-            Seus dados estão protegidos com criptografia de ponta a ponta.
+            Seus dados estão protegidos com criptografia.
           </div>
         </CardContent>
       </Card>
