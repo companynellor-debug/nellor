@@ -23,8 +23,6 @@ import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { StripeConnectModal } from "@/components/fornecedor/StripeConnectModal";
-import { StripeBanner } from "@/components/fornecedor/StripeBanner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -53,7 +51,6 @@ const Financeiro = () => {
   const { orders } = useSupabaseOrders();
   const { profile } = useSupabaseAuth();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showConnectModal, setShowConnectModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [stripeBalance, setStripeBalance] = useState<StripeBalance | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
@@ -126,9 +123,6 @@ const Financeiro = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Banner de conexão Stripe */}
-      <StripeBanner isStripeConnected={isStripeConnected} />
-
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl sm:text-3xl font-bold">Financeiro</h1>
         <div className="flex gap-2">
@@ -225,7 +219,7 @@ const Financeiro = () => {
           </div>
         </Card>
 
-        {/* 3. Disponível para Saque - Stripe available */}
+        {/* 3. Disponível para Saque */}
         <Card className="p-4 relative overflow-hidden border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10">
           <div className="flex flex-col h-full">
             <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
@@ -254,13 +248,7 @@ const Financeiro = () => {
                 )}
               </>
             ) : (
-              <Button 
-                variant="link" 
-                className="text-amber-600 p-0 h-auto text-sm"
-                onClick={() => setShowConnectModal(true)}
-              >
-                Conectar Stripe
-              </Button>
+              <p className="text-lg text-muted-foreground">---</p>
             )}
           </div>
         </Card>
@@ -336,32 +324,6 @@ const Financeiro = () => {
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Aviso de conexão Stripe */}
-      {!isStripeConnected && (
-        <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20">
-          <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <AlertTriangle className="h-8 w-8 text-amber-600 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-amber-800 dark:text-amber-200">
-                  Conecte sua conta Stripe
-                </h3>
-                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                  Para receber seus pagamentos automaticamente, conecte sua conta Stripe.
-                </p>
-              </div>
-            </div>
-            <Button 
-              onClick={() => setShowConnectModal(true)}
-              className="w-full sm:w-auto"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Conectar Stripe
-            </Button>
           </CardContent>
         </Card>
       )}
@@ -570,9 +532,6 @@ const Financeiro = () => {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Modal de Conexão Stripe */}
-      <StripeConnectModal open={showConnectModal} onOpenChange={setShowConnectModal} />
 
       {/* Modal de Ajuda */}
       <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>
