@@ -20,7 +20,6 @@ serve(async (req) => {
     const now = new Date();
     const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
-    // Fetch active coupons with expiration or usage limits
     const { data: coupons, error: couponsError } = await supabase
       .from("coupons")
       .select("id, codigo, supplier_id, expira_em, uso_maximo, uso_atual")
@@ -39,7 +38,6 @@ serve(async (req) => {
     }> = [];
 
     for (const coupon of coupons || []) {
-      // Check expiration (within 3 days)
       if (coupon.expira_em) {
         const expirationDate = new Date(coupon.expira_em);
         if (expirationDate > now && expirationDate <= threeDaysFromNow) {
@@ -54,7 +52,6 @@ serve(async (req) => {
         }
       }
 
-      // Check usage limit (80% or more used)
       if (coupon.uso_maximo && coupon.uso_atual) {
         const usagePercentage = (coupon.uso_atual / coupon.uso_maximo) * 100;
         if (usagePercentage >= 80 && usagePercentage < 100) {
@@ -70,10 +67,8 @@ serve(async (req) => {
       }
     }
 
-    // Insert notifications (avoid duplicates by checking recent notifications)
     let inserted = 0;
     for (const notification of notifications) {
-      // Check if similar notification was sent in the last 24 hours
       const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
       
       const { data: existing } = await supabase
@@ -110,10 +105,11 @@ serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error checking coupon alerts:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
