@@ -34,7 +34,6 @@ export type AdminProfile = {
   ativo: boolean;
   created_at: string;
   onboarding_completed: boolean;
-  stripe_account_id: string | null;
 };
 
 export type AdminStats = {

@@ -89,7 +89,7 @@ const AdminSuporteAdmin = lazy(() => import("./pages/admin/SuporteAdmin"));
 const AdminCategorias = lazy(() => import("./pages/admin/Categorias"));
 const AdminBanners = lazy(() => import("./pages/admin/Banners"));
 const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
-const AdminReconciliacao = lazy(() => import("./pages/admin/Reconciliacao"));
+// Reconciliacao removido - era dependente do Stripe
 const AdminAffiliatePrestadores = lazy(() => import("./pages/admin/AffiliatePrestadores"));
 const AdminNellorDrop = lazy(() => import("./pages/admin/NellorDrop"));
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
@@ -243,7 +243,7 @@ const App = () => {
                 <Route path="categorias" element={<Suspense fallback={<PageSkeleton />}><AdminCategorias /></Suspense>} />
                 <Route path="banners" element={<Suspense fallback={<PageSkeleton />}><AdminBanners /></Suspense>} />
                 <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
-                <Route path="reconciliacao" element={<Suspense fallback={<PageSkeleton />}><AdminReconciliacao /></Suspense>} />
+                {/* Rota de reconciliação removida - era dependente do Stripe */}
                 <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
                 <Route path="nellor-drop" element={<Suspense fallback={<PageSkeleton />}><AdminNellorDrop /></Suspense>} />
               </Route>

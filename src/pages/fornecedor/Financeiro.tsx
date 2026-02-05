@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   DollarSign, 
   TrendingUp, 
@@ -12,95 +15,46 @@ import {
   AlertTriangle,
   ArrowRight,
   Info,
-  ExternalLink,
-  RefreshCw,
-  Loader2,
   CheckCircle,
   Clock,
-  Banknote
+  Banknote,
+  Wallet,
+  ArrowDownToLine,
+  Shield,
+  FileText
 } from "lucide-react";
 import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface StripeBalance {
-  connected: boolean;
-  stripe_ready?: boolean;
-  available: number;
-  pending: number;
-  inTransit?: number;
-  currency: string;
-  recentPayouts?: Array<{
-    id: string;
-    amount: number;
-    currency: string;
-    status: string;
-    arrival_date: number;
-    created: number;
-  }>;
-  lastUpdated?: string;
-  error?: string;
-}
+import { useIdentityVerification } from "@/hooks/useIdentityVerification";
 
 const Financeiro = () => {
   const navigate = useNavigate();
   const { orders } = useSupabaseOrders();
-  const { profile } = useSupabaseAuth();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
-  const [stripeBalance, setStripeBalance] = useState<StripeBalance | null>(null);
-  const [loadingBalance, setLoadingBalance] = useState(false);
-
-  const isStripeConnected = !!(profile as any)?.stripe_account_id;
-
-  // Fetch Stripe balance
-  const fetchStripeBalance = async () => {
-    if (!isStripeConnected) return;
-    
-    setLoadingBalance(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Sessão expirada");
-        return;
-      }
-
-      const response = await supabase.functions.invoke("stripe-get-balance", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.error) {
-        console.error("Error fetching balance:", response.error);
-        toast.error("Erro ao buscar saldo");
-        return;
-      }
-
-      setStripeBalance(response.data);
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Erro ao conectar com Stripe");
-    } finally {
-      setLoadingBalance(false);
-    }
-  };
-
-  // Fetch balance on mount and when stripe connection changes
-  useEffect(() => {
-    if (isStripeConnected) {
-      fetchStripeBalance();
-    }
-  }, [isStripeConnected]);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  
+  const { data: verificationData, statusLabel, canWithdraw, save: saveVerification, lastError } = useIdentityVerification();
 
   // Cálculos de valores baseados nos pedidos
   const totalVendido = orders
     .filter(o => o.order_status !== 'cancelled' && o.payment_status === 'paid')
     .reduce((sum, o) => sum + Number(o.total), 0);
+
+  // Comissão Nellor: 7,5%
+  const comissaoNellor = totalVendido * 0.075;
+  // Taxa processador: ~3,49%
+  const taxaProcessador = totalVendido * 0.0349;
+  // Valor líquido
+  const valorLiquido = totalVendido - comissaoNellor - taxaProcessador;
+
+  // Simulação de saldo (placeholder - será real com backend)
+  const saldoDisponivel = valorLiquido * 0.7; // 70% disponível
+  const saldoPendente = valorLiquido * 0.3; // 30% pendente
 
   // Pedidos pendentes (aguardando pagamento)
   const pendingOrders = orders.filter(o => o.payment_status === 'pending' && o.order_status !== 'cancelled');
@@ -121,26 +75,44 @@ const Financeiro = () => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
+  const handleWithdraw = () => {
+    if (!canWithdraw) {
+      toast.error("Você precisa verificar sua conta antes de solicitar saques");
+      return;
+    }
+    
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Informe um valor válido");
+      return;
+    }
+    
+    if (amount > saldoDisponivel) {
+      toast.error("Valor maior que o saldo disponível");
+      return;
+    }
+
+    // Placeholder: Na integração real, chamar API do Asaas
+    toast.success(`Saque de ${formatCurrency(amount)} solicitado com sucesso!`);
+    setShowWithdrawModal(false);
+    setWithdrawAmount("");
+  };
+
+  const getVerificationBadge = () => {
+    if (verificationData.status === 'verified') {
+      return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="h-3 w-3 mr-1" />Verificado</Badge>;
+    }
+    if (verificationData.status === 'review') {
+      return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><Clock className="h-3 w-3 mr-1" />Em Análise</Badge>;
+    }
+    return <Badge className="bg-red-100 text-red-800 border-red-200"><AlertTriangle className="h-3 w-3 mr-1" />Não Verificado</Badge>;
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl sm:text-3xl font-bold">Financeiro</h1>
         <div className="flex gap-2">
-          {isStripeConnected && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={fetchStripeBalance}
-              disabled={loadingBalance}
-            >
-              {loadingBalance ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              <span className="ml-1 hidden sm:inline">Atualizar</span>
-            </Button>
-          )}
           <Button 
             variant="outline" 
             size="sm"
@@ -159,24 +131,99 @@ const Financeiro = () => {
         </div>
       </div>
 
-      {/* Cards de Resumo - 4 estados do fluxo financeiro */}
+      {/* Status de Verificação */}
+      <Card className={`border ${verificationData.status === 'verified' ? 'border-green-200 bg-green-50/50' : verificationData.status === 'review' ? 'border-yellow-200 bg-yellow-50/50' : 'border-red-200 bg-red-50/50'}`}>
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Shield className={`h-6 w-6 ${verificationData.status === 'verified' ? 'text-green-600' : verificationData.status === 'review' ? 'text-yellow-600' : 'text-red-600'}`} />
+            <div>
+              <p className="font-semibold flex items-center gap-2">
+                Status da conta: {getVerificationBadge()}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {verificationData.status === 'verified' 
+                  ? "Sua conta está verificada. Você pode vender e sacar normalmente." 
+                  : verificationData.status === 'review'
+                  ? "Seus documentos estão em análise. Aguarde a aprovação."
+                  : "Verifique sua conta para poder vender e sacar."}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Cards de Resumo Financeiro */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* 1. Aguardando Pagamento - Pedidos que o cliente ainda não pagou */}
+        {/* Saldo Disponível */}
+        <Card className="p-4 relative overflow-hidden border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10">
+          <div className="flex flex-col h-full">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+              <Wallet className="h-3 w-3 text-green-600" />
+              Saldo Disponível
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Valor disponível para saque imediato
+                </TooltipContent>
+              </Tooltip>
+            </p>
+            <p className="text-xl sm:text-2xl font-bold text-green-600">
+              {formatCurrency(saldoDisponivel)}
+            </p>
+            <Button 
+              size="sm" 
+              className="mt-2 w-full"
+              disabled={!canWithdraw || saldoDisponivel <= 0}
+              onClick={() => setShowWithdrawModal(true)}
+            >
+              <ArrowDownToLine className="h-4 w-4 mr-1" />
+              Solicitar Saque
+            </Button>
+          </div>
+        </Card>
+
+        {/* Saldo Pendente */}
         <Card className="p-4 relative overflow-hidden border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-900/10">
           <div className="flex flex-col h-full">
             <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
               <Clock className="h-3 w-3 text-yellow-600" />
+              Saldo Pendente
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Valores a serem liberados em até 14 dias
+                </TooltipContent>
+              </Tooltip>
+            </p>
+            <p className="text-xl sm:text-2xl font-bold text-yellow-600">
+              {formatCurrency(saldoPendente)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Libera em até 14 dias
+            </p>
+          </div>
+        </Card>
+
+        {/* Aguardando Pagamento */}
+        <Card className="p-4 relative overflow-hidden border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-900/10">
+          <div className="flex flex-col h-full">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+              <Banknote className="h-3 w-3 text-orange-600" />
               Aguardando Pagamento
               <Tooltip>
                 <TooltipTrigger>
                   <Info className="h-3 w-3" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  Pedidos criados mas cliente ainda não finalizou pagamento no Stripe
+                  Pedidos que o cliente ainda não pagou
                 </TooltipContent>
               </Tooltip>
             </p>
-            <p className="text-xl sm:text-2xl font-bold text-yellow-600">
+            <p className="text-xl sm:text-2xl font-bold text-orange-600">
               {formatCurrency(totalPendente)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -185,75 +232,7 @@ const Financeiro = () => {
           </div>
         </Card>
 
-        {/* 2. Em Processamento - Stripe pending (já pagos, aguardando liberação) */}
-        <Card className="p-4 relative overflow-hidden border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-900/10">
-          <div className="flex flex-col h-full">
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-              <RefreshCw className="h-3 w-3 text-orange-600" />
-              Em Processamento
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-3 w-3" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  Pagamentos confirmados mas Stripe ainda retendo (2-14 dias)
-                </TooltipContent>
-              </Tooltip>
-            </p>
-            {loadingBalance ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : isStripeConnected && stripeBalance?.connected ? (
-              <>
-                <p className="text-xl sm:text-2xl font-bold text-orange-600">
-                  {formatCurrency(stripeBalance.pending)}
-                </p>
-                {stripeBalance.inTransit && stripeBalance.inTransit > 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    + {formatCurrency(stripeBalance.inTransit)} em trânsito
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="text-lg text-muted-foreground">---</p>
-            )}
-          </div>
-        </Card>
-
-        {/* 3. Disponível para Saque */}
-        <Card className="p-4 relative overflow-hidden border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10">
-          <div className="flex flex-col h-full">
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-              <CheckCircle className="h-3 w-3 text-green-600" />
-              Disponível p/ Saque
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-3 w-3" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  Valor liberado pelo Stripe, transferido automaticamente para sua conta
-                </TooltipContent>
-              </Tooltip>
-            </p>
-            {loadingBalance ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : isStripeConnected && stripeBalance?.connected ? (
-              <>
-                <p className="text-xl sm:text-2xl font-bold text-green-600">
-                  {formatCurrency(stripeBalance.available)}
-                </p>
-                {stripeBalance.lastUpdated && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Atualizado {format(new Date(stripeBalance.lastUpdated), "HH:mm", { locale: ptBR })}
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="text-lg text-muted-foreground">---</p>
-            )}
-          </div>
-        </Card>
-
-        {/* 4. Total Recebido - Soma de todas vendas pagas */}
+        {/* Total Recebido */}
         <Card className="p-4 relative overflow-hidden border-primary/20 bg-primary/5">
           <div className="flex flex-col h-full">
             <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
@@ -264,7 +243,7 @@ const Financeiro = () => {
                   <Info className="h-3 w-3" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  Soma total de todas as vendas com pagamento confirmado
+                  Soma total de todas as vendas pagas
                 </TooltipContent>
               </Tooltip>
             </p>
@@ -278,87 +257,29 @@ const Financeiro = () => {
         </Card>
       </div>
 
-      {/* Resumo visual do fluxo */}
+      {/* Resumo de Taxas */}
       <Card className="bg-muted/20">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-yellow-500" />
-              <span>Aguardando</span>
-              <span className="font-semibold">{formatCurrency(totalPendente)}</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground text-xs">Total Bruto</p>
+              <p className="font-semibold">{formatCurrency(totalVendido)}</p>
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-orange-500" />
-              <span>Processando</span>
-              <span className="font-semibold">{formatCurrency(stripeBalance?.pending || 0)}</span>
+            <div>
+              <p className="text-muted-foreground text-xs">Comissão Nellor (7,5%)</p>
+              <p className="font-semibold text-purple-600">- {formatCurrency(comissaoNellor)}</p>
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-green-500" />
-              <span>Disponível</span>
-              <span className="font-semibold">{formatCurrency(stripeBalance?.available || 0)}</span>
+            <div>
+              <p className="text-muted-foreground text-xs">Taxa Processador (~3,49%)</p>
+              <p className="font-semibold text-orange-600">- {formatCurrency(taxaProcessador)}</p>
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-primary" />
-              <span>Total Recebido</span>
-              <span className="font-semibold">{formatCurrency(totalVendido)}</span>
+            <div>
+              <p className="text-muted-foreground text-xs">Valor Líquido</p>
+              <p className="font-semibold text-green-600">{formatCurrency(valorLiquido)}</p>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Alerta de pedidos pendentes (se houver muitos) */}
-      {pendingOrders.length > 0 && (
-        <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-900/20">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <Banknote className="h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm">
-                  {pendingOrders.length} pedido(s) aguardando pagamento do cliente
-                </h3>
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                  O status será atualizado automaticamente quando o cliente finalizar o pagamento no Stripe.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Últimos Payouts do Stripe */}
-      {isStripeConnected && stripeBalance?.recentPayouts && stripeBalance.recentPayouts.length > 0 && (
-        <Card>
-          <CardHeader className="p-4 sm:p-6 border-b">
-            <CardTitle className="text-base sm:text-xl font-bold flex items-center gap-2">
-              <Banknote className="h-5 w-5" />
-              Últimos Repasses Automáticos
-            </CardTitle>
-          </CardHeader>
-          <div className="divide-y">
-            {stripeBalance.recentPayouts.map((payout) => (
-              <div key={payout.id} className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{formatCurrency(payout.amount)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(payout.created * 1000), "dd/MM/yyyy", { locale: ptBR })}
-                  </p>
-                </div>
-                <Badge 
-                  variant={payout.status === 'paid' ? 'default' : 'secondary'}
-                  className={payout.status === 'paid' ? 'bg-green-100 text-green-800' : ''}
-                >
-                  {payout.status === 'paid' ? 'Pago' : 
-                   payout.status === 'pending' ? 'Processando' : 
-                   payout.status === 'in_transit' ? 'Em trânsito' : payout.status}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
 
       {/* Histórico de Vendas */}
       <Card className="overflow-hidden">
@@ -436,141 +357,140 @@ const Financeiro = () => {
         </div>
       </Card>
 
-      {/* Explicação do cálculo */}
-      <Card className="bg-muted/30">
-        <CardContent className="p-4 text-xs text-muted-foreground">
-          <strong>Como é calculado o valor líquido:</strong>
-          <p className="mt-1">
-            Valor Líquido = Valor Bruto − Comissão Plataforma (7,5% no plano Grátis, 0% no Premium) − Taxa Stripe (~3,4%)
-          </p>
-          <p className="mt-2">
-            <strong>Repasses automáticos:</strong> O Stripe transfere automaticamente seu saldo disponível para sua conta bancária semanalmente.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Modal de Detalhes do Pedido */}
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl">
+      {/* Modal de Ajuda */}
+      <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Detalhes do Pedido #{selectedOrder?.order_number}</DialogTitle>
-            <DialogDescription>
-              Informações completas do pedido
-            </DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="h-5 w-5" />
+              Como funciona o financeiro
+            </DialogTitle>
           </DialogHeader>
-
-          {selectedOrder && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Cliente</p>
-                  <p className="font-medium">{(selectedOrder.endereco_entrega as any)?.name || 'Cliente'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Valor Bruto</p>
-                  <p className="font-medium text-lg">{formatCurrency(Number(selectedOrder.total))}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Data</p>
-                  <p className="font-medium">{format(new Date(selectedOrder.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="font-medium">{getStatusLabel(selectedOrder.order_status)}</p>
-                </div>
+          <DialogDescription asChild>
+            <div className="space-y-4 text-sm">
+              <p>
+                Todos os pagamentos dos clientes são processados de forma segura. 
+                Após a confirmação do pagamento, o valor fica retido por um período de segurança.
+              </p>
+              
+              <div className="bg-muted p-3 rounded-lg">
+                <h4 className="font-medium mb-2">Taxas aplicadas:</h4>
+                <ul className="space-y-1 text-xs">
+                  <li>• Comissão Nellor: 7,5% (Plano Grátis) ou 0% (Premium)</li>
+                  <li>• Taxa do processador: ~3,49%</li>
+                </ul>
               </div>
 
-              {/* Valores reais se disponíveis */}
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h4 className="font-medium text-sm mb-3">Detalhamento do Pagamento</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Valor bruto:</span>
-                    <span>{formatCurrency(Number(selectedOrder.total))}</span>
-                  </div>
-                  {selectedOrder.platform_fee ? (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Comissão plataforma (7,5%):</span>
-                        <span className="text-red-600">- {formatCurrency(Number(selectedOrder.platform_fee))}</span>
-                      </div>
-                      <div className="flex justify-between pt-2 border-t font-medium">
-                        <span>Valor líquido:</span>
-                        <span className="text-green-600">
-                          {formatCurrency(Number(selectedOrder.supplier_amount || (Number(selectedOrder.total) - Number(selectedOrder.platform_fee))))}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Comissão plataforma (7,5%):</span>
-                        <span className="text-red-600">- {formatCurrency(Number(selectedOrder.total) * 0.075)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Taxa Stripe (estimada ~3,4%):</span>
-                        <span className="text-red-600">- {formatCurrency(Number(selectedOrder.total) * 0.034)}</span>
-                      </div>
-                      <div className="flex justify-between pt-2 border-t font-medium">
-                        <span>Valor líquido (estimado):</span>
-                        <span className="text-green-600">
-                          {formatCurrency(Number(selectedOrder.total) * 0.891)}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
+              <div className="bg-muted p-3 rounded-lg">
+                <h4 className="font-medium mb-2">Exemplo de venda R$ 100:</h4>
+                <ul className="space-y-1 text-xs">
+                  <li>• Valor bruto: R$ 100,00</li>
+                  <li>• Comissão (7,5%): - R$ 7,50</li>
+                  <li>• Taxa processador: - R$ 3,49</li>
+                  <li className="font-bold pt-1 border-t">• Você recebe: R$ 89,01</li>
+                </ul>
               </div>
 
-              {selectedOrder.paid_at && (
-                <div className="flex items-center gap-2 text-sm text-green-600">
-                  <CheckCircle className="h-4 w-4" />
-                  <span>Pago em {format(new Date(selectedOrder.paid_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
-                </div>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Os saques são liberados em até 14 dias após a confirmação do pagamento. 
+                Para solicitar saques, é necessário ter a conta verificada.
+              </p>
             </div>
-          )}
+          </DialogDescription>
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Ajuda */}
-      <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>
-        <DialogContent>
+      {/* Modal de Saque */}
+      <Dialog open={showWithdrawModal} onOpenChange={setShowWithdrawModal}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Como funcionam os pagamentos</DialogTitle>
-            <DialogDescription>
-              Entenda o fluxo de recebimentos
-            </DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowDownToLine className="h-5 w-5" />
+              Solicitar Saque
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 text-sm">
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-              <div>
-                <p className="font-medium">Pagamento automático</p>
-                <p className="text-muted-foreground">
-                  Quando o cliente paga, o Stripe confirma automaticamente via webhook. Não há confirmação manual.
-                </p>
-              </div>
+          <div className="space-y-4">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <p className="text-sm text-muted-foreground">Saldo disponível</p>
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(saldoDisponivel)}</p>
             </div>
-            <div className="flex items-start gap-3">
-              <Clock className="h-5 w-5 text-orange-600 mt-0.5" />
-              <div>
-                <p className="font-medium">Saldo pendente</p>
-                <p className="text-muted-foreground">
-                  Após o pagamento, o valor fica pendente por 2-14 dias (período de segurança do Stripe).
-                </p>
-              </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="amount">Valor do saque</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0,00"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+              />
             </div>
-            <div className="flex items-start gap-3">
-              <Banknote className="h-5 w-5 text-green-600 mt-0.5" />
-              <div>
-                <p className="font-medium">Repasses semanais automáticos</p>
-                <p className="text-muted-foreground">
-                  O Stripe transfere automaticamente seu saldo disponível para sua conta bancária. Não há saque manual.
-                </p>
-              </div>
+
+            <div className="bg-muted/50 p-3 rounded-lg text-xs text-muted-foreground">
+              <p className="flex items-center gap-1 mb-1">
+                <Info className="h-3 w-3" />
+                O valor será transferido para sua chave Pix cadastrada
+              </p>
+              <p className="font-medium">Chave Pix: {verificationData.pixKey || 'Não cadastrada'}</p>
             </div>
+
+            <Button 
+              className="w-full" 
+              onClick={handleWithdraw}
+              disabled={!canWithdraw || saldoDisponivel <= 0}
+            >
+              Confirmar Saque
+            </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalhes do Pedido */}
+      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Pedido #{selectedOrder?.order_number}</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Data</p>
+                  <p className="font-medium">
+                    {format(new Date(selectedOrder.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Status Pagamento</p>
+                  <Badge variant={selectedOrder.payment_status === 'paid' ? 'default' : 'secondary'}>
+                    {selectedOrder.payment_status === 'paid' ? 'Pago' : 'Pendente'}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Status Pedido</p>
+                  <p className="font-medium">{getStatusLabel(selectedOrder.order_status)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Total</p>
+                  <p className="font-bold text-lg text-primary">
+                    {formatCurrency(Number(selectedOrder.total))}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-muted-foreground text-sm mb-2">Itens do pedido:</p>
+                <div className="space-y-2">
+                  {(selectedOrder.itens as any[])?.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span>{item.quantity}x {item.name}</span>
+                      <span>{formatCurrency(Number(item.price) * item.quantity)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
