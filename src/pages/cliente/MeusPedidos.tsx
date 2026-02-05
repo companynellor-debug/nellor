@@ -14,7 +14,6 @@ import {
   XCircle,
   MessageSquare,
   Star,
-  Download,
   ExternalLink,
   CreditCard,
   MapPin,
@@ -27,7 +26,6 @@ import { useReviews } from "@/hooks/useReviews";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
 
 const ORDER_STEPS = [
   { key: 'pending', label: 'Pedido Recebido', icon: Package },
@@ -45,20 +43,12 @@ const MeusPedidos = () => {
   const [trackingDialog, setTrackingDialog] = useState(false);
   const [detailsDialog, setDetailsDialog] = useState(false);
 
-  // Fluxo pós-Stripe: abre "Meus Pedidos" por 6s e volta automaticamente.
-  // Também dispara 1 verificação imediata do pagamento (fallback do webhook).
+  // Fluxo pós-pagamento: abre "Meus Pedidos" por 6s e volta automaticamente.
   useEffect(() => {
     if (searchParams.get("autoclose") !== "1") return;
 
-    const sessionId = searchParams.get("session_id");
-    if (sessionId) {
-      // Não bloqueia UI; apenas tenta confirmar no backend e refetch em seguida.
-      supabase.functions
-        .invoke("stripe-verify-payment", { body: { sessionId } })
-        .finally(() => {
-          refetch();
-        });
-    }
+    // Refetch para pegar atualizações
+    refetch();
 
     const returnTo = searchParams.get("return_to") || "/cliente";
     const t = window.setTimeout(() => {
@@ -67,11 +57,6 @@ const MeusPedidos = () => {
 
     return () => window.clearTimeout(t);
   }, [searchParams, navigate, refetch]);
-
-  // Polling/Realtime de pagamento é gerenciado globalmente pelo ClientePrefetchProvider
-
-  // Realtime agora é gerenciado pelo ClientePrefetchProvider (auth-aware)
-  // Não precisa de listener duplicado aqui
 
   // Separar pedidos ativos e histórico
   const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.order_status));
@@ -247,9 +232,6 @@ const MeusPedidos = () => {
             </div>
           )}
 
-
-          {/* Pagamento é atualizado automaticamente via webhook (sem ação manual do cliente) */}
-
           {/* Botões de ação */}
           <div className="flex gap-2">
             <Button 
@@ -409,59 +391,61 @@ const MeusPedidos = () => {
                 </h4>
                 <div className="space-y-2">
                   {Array.isArray(selectedOrder.itens) && selectedOrder.itens.map((item: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                    <div key={idx} className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg">
                       {(item.image || item.imagem) && (
                         <img 
                           src={item.image || item.imagem} 
                           alt={item.name} 
-                          className="w-12 h-12 rounded-lg object-cover"
+                          className="w-12 h-12 object-cover rounded-md"
                         />
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">Qtd: {item.quantity}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.quantity}x R$ {Number(item.price).toFixed(2)}
+                        </p>
                       </div>
-                      <p className="font-semibold text-sm">
-                        R$ {(Number(item.price) * Number(item.quantity)).toFixed(2).replace('.', ',')}
+                      <p className="font-bold text-sm">
+                        R$ {(Number(item.price) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Resumo de valores */}
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>R$ {Number(selectedOrder.subtotal).toFixed(2).replace('.', ',')}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Frete</span>
-                  <span>R$ {Number(selectedOrder.frete || 0).toFixed(2).replace('.', ',')}</span>
-                </div>
-                {selectedOrder.desconto > 0 && (
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span>Desconto</span>
-                    <span>- R$ {Number(selectedOrder.desconto).toFixed(2).replace('.', ',')}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                  <span>Total</span>
-                  <span className="text-primary">R$ {Number(selectedOrder.total).toFixed(2).replace('.', ',')}</span>
+              {/* Total */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Total</span>
+                  <span className="text-xl font-bold text-primary">
+                    R$ {Number(selectedOrder.total).toFixed(2).replace('.', ',')}
+                  </span>
                 </div>
               </div>
 
-              {/* Rastreio */}
-              {selectedOrder.tracking_code && (
+              {/* Ações */}
+              <div className="flex gap-2">
                 <Button 
-                  className="w-full gap-2" 
-                  onClick={() => window.open(`https://rastreamento.correios.com.br/app/index.php?codigo=${selectedOrder.tracking_code}`, '_blank')}
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate('/cliente/chat', { state: { supplierId: selectedOrder.supplier_id } })}
                 >
-                  <Truck className="h-4 w-4" />
-                  Rastrear Pedido
-                  <ExternalLink className="h-4 w-4" />
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Falar com Vendedor
                 </Button>
-              )}
+                {selectedOrder.order_status === 'delivered' && !hasReviewedOrder(selectedOrder.id) && (
+                  <Button 
+                    className="flex-1"
+                    onClick={() => {
+                      setDetailsDialog(false);
+                      navigate(`/cliente/avaliar-pedido/${selectedOrder.id}`);
+                    }}
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Avaliar
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>

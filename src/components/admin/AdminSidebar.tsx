@@ -12,7 +12,6 @@ import {
   Package,
   Image,
   PieChart,
-  RefreshCw,
   UserCheck,
   Layers
 } from "lucide-react";
@@ -27,7 +26,6 @@ const menuItems = [
   { icon: UserCheck, label: "Afiliados & Prestadores", path: "/admin/afiliados-prestadores" },
   { icon: ShoppingCart, label: "Vendas & Pedidos", path: "/admin/vendas" },
   { icon: DollarSign, label: "Financeiro", path: "/admin/financeiro" },
-  { icon: RefreshCw, label: "Reconciliação", path: "/admin/reconciliacao" },
   { icon: BarChart3, label: "Relatórios", path: "/admin/relatorios" },
   { icon: Bell, label: "Notificações", path: "/admin/notificacoes" },
   { icon: MessageCircle, label: "Suporte", path: "/admin/suporte" },

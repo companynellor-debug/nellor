@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info, Percent, CreditCard, Zap, Ban } from "lucide-react";
+import { Info, Percent, CreditCard, Zap, ArrowDownToLine } from "lucide-react";
 
 export function FeeTransparency() {
   return (
@@ -25,9 +25,9 @@ export function FeeTransparency() {
           <div className="flex items-start gap-3 p-3 bg-white/60 dark:bg-white/10 rounded-lg">
             <CreditCard className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-sm">Taxa Stripe</p>
+              <p className="font-medium text-sm">Taxa do Processador</p>
               <p className="text-xs text-muted-foreground">
-                Variável (~3,4% + R$0,60 por transação) - cobrada pelo processador de pagamentos
+                Variável (~3,49% por transação) - cobrada pelo processador de pagamentos
               </p>
             </div>
           </div>
@@ -35,19 +35,19 @@ export function FeeTransparency() {
           <div className="flex items-start gap-3 p-3 bg-white/60 dark:bg-white/10 rounded-lg">
             <Zap className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-sm">Pagamentos automáticos</p>
+              <p className="font-medium text-sm">Saques sob demanda</p>
               <p className="text-xs text-muted-foreground">
-                Você recebe semanalmente direto na conta bancária cadastrada no Stripe
+                Solicite saques a qualquer momento via Pix após o período de carência
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-3 p-3 bg-white/60 dark:bg-white/10 rounded-lg">
-            <Ban className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <ArrowDownToLine className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-sm">Sem saque manual</p>
+              <p className="font-medium text-sm">Prazo de liberação</p>
               <p className="text-xs text-muted-foreground">
-                A Nellor não retém saldo. Tudo é processado automaticamente pelo Stripe.
+                Valores ficam disponíveis para saque em até 14 dias após o pagamento
               </p>
             </div>
           </div>
@@ -56,7 +56,7 @@ export function FeeTransparency() {
         <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-lg">
           <p className="text-xs text-blue-800 dark:text-blue-200">
             <strong>Exemplo:</strong> Venda de R$100 → Comissão Nellor (7,5%): R$7,50 → 
-            Taxa Stripe (~3,4%): R$3,40 → <strong>Você recebe: R$89,10</strong>
+            Taxa processador (~3,49%): R$3,49 → <strong>Você recebe: R$89,01</strong>
           </p>
         </div>
       </CardContent>

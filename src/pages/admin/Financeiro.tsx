@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingDown, Percent, Loader2, Users, HelpCircle, Calendar } from "lucide-react";
+import { DollarSign, TrendingDown, Percent, Users, HelpCircle, Calendar, Shield } from "lucide-react";
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format, subMonths, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { fetchAdminOrders, fetchAdminProfiles } from "@/lib/adminRpc";
+
 const Financeiro = () => {
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<'7days' | '30days' | '90days' | 'all'>('30days');
@@ -23,16 +24,18 @@ const Financeiro = () => {
   const [planosStats, setPlanosStats] = useState({
     free: 0,
     premium: 0,
-    stripeConnected: 0
+    verified: 0
   });
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [periodSummary, setPeriodSummary] = useState({
     daily: 0,
     monthly: 0
   });
+
   useEffect(() => {
     fetchData();
   }, [dateFilter]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -64,8 +67,8 @@ const Financeiro = () => {
       setComissoes(comissao);
 
       // Pago aos fornecedores
-      const taxaStripeEstimada = ordersList.reduce((sum: number, o: any) => sum + Number(o.total) * 0.034, 0);
-      const pago = receita - comissao - taxaStripeEstimada;
+      const taxaProcessadorEstimada = ordersList.reduce((sum: number, o: any) => sum + Number(o.total) * 0.0349, 0);
+      const pago = receita - comissao - taxaProcessadorEstimada;
       setPagoFornecedores(pago);
 
       // Ticket médio
@@ -74,12 +77,12 @@ const Financeiro = () => {
 
       // Stats de planos dos fornecedores
       const fornecedores = (allProfiles || []).filter((p: any) => p.tipo === 'fornecedor');
-      const stripeConnected = fornecedores.filter((f: any) => f.stripe_account_id).length;
+      // Contar verificados - placeholder, seria baseado em um campo real
+      const verified = fornecedores.length; // Placeholder
       setPlanosStats({
         free: fornecedores.length,
         premium: 0,
-        // TODO: implementar plano premium
-        stripeConnected
+        verified
       });
 
       // Resumo por período
@@ -107,7 +110,7 @@ const Financeiro = () => {
           return orderDate.getMonth() === date.getMonth() && orderDate.getFullYear() === date.getFullYear();
         });
         const entrada = monthOrders.reduce((sum: number, o: any) => sum + Number(o.total), 0);
-        const saida = monthOrders.reduce((sum: number, o: any) => sum + (Number(o.total) - Number(o.total) * 0.075 - Number(o.total) * 0.034), 0);
+        const saida = monthOrders.reduce((sum: number, o: any) => sum + (Number(o.total) - Number(o.total) * 0.075 - Number(o.total) * 0.0349), 0);
         cashflow.push({
           month: meses[date.getMonth()],
           entrada: Math.round(entrada),
@@ -121,16 +124,18 @@ const Financeiro = () => {
       setLoading(false);
     }
   };
+
   const filteredTransactions = transactions.filter(tx => {
     if (statusFilter === "all") return true;
     return tx.order_status === statusFilter;
   });
+
   const statsCards = [{
     title: "💰 Total Arrecadado (GMV)",
     value: `R$ ${receitaTotal.toLocaleString('pt-BR', {
       minimumFractionDigits: 2
     })}`,
-    subtitle: "Total movimentado via Stripe",
+    subtitle: "Total movimentado na plataforma",
     icon: DollarSign,
     color: "from-green-500 to-green-600"
   }, {
@@ -150,12 +155,13 @@ const Financeiro = () => {
     icon: Percent,
     color: "from-purple-500 to-purple-600"
   }, {
-    title: "👥 Fornecedores com Stripe",
-    value: `${planosStats.stripeConnected} / ${planosStats.free}`,
-    subtitle: `${planosStats.free > 0 ? (planosStats.stripeConnected / planosStats.free * 100).toFixed(0) : 0}% conectados`,
-    icon: Users,
+    title: "👥 Fornecedores Verificados",
+    value: `${planosStats.verified} / ${planosStats.free}`,
+    subtitle: `${planosStats.free > 0 ? (planosStats.verified / planosStats.free * 100).toFixed(0) : 0}% verificados`,
+    icon: Shield,
     color: "from-orange-500 to-orange-600"
   }];
+
   const distributionData = [{
     name: "Fornecedores",
     value: pagoFornecedores,
@@ -165,17 +171,19 @@ const Financeiro = () => {
     value: comissoes,
     color: "#8B5CF6"
   }, {
-    name: "Taxa Stripe (est.)",
-    value: receitaTotal * 0.034,
+    name: "Taxa Processador (est.)",
+    value: receitaTotal * 0.0349,
     color: "#F59E0B"
   }];
-  return <div className="space-y-8">
+
+  return (
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
             💸 Financeiro
           </h1>
-          <p className="text-muted-foreground">Movimentação geral da plataforma - Stripe Connect</p>
+          <p className="text-muted-foreground">Movimentação geral da plataforma</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={dateFilter} onValueChange={(v: any) => setDateFilter(v)}>
@@ -198,7 +206,8 @@ const Financeiro = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsCards.map(stat => <Card key={stat.title} className="border-purple-100 hover:shadow-lg transition-all">
+        {statsCards.map(stat => (
+          <Card key={stat.title} className="border-purple-100 hover:shadow-lg transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
@@ -209,7 +218,8 @@ const Financeiro = () => {
               <div className="text-2xl font-bold">{stat.value}</div>
               {stat.subtitle && <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>}
             </CardContent>
-          </Card>)}
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -249,11 +259,18 @@ const Financeiro = () => {
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
-                <Pie data={distributionData} cx="50%" cy="50%" labelLine={false} label={({
-                name,
-                value
-              }) => value > 0 ? `${name}: R$ ${value.toFixed(0)}` : ''} outerRadius={120} dataKey="value">
-                  {distributionData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                <Pie 
+                  data={distributionData} 
+                  cx="50%" 
+                  cy="50%" 
+                  labelLine={false} 
+                  label={({ name, value }) => value > 0 ? `${name}: R$ ${value.toFixed(0)}` : ''} 
+                  outerRadius={120} 
+                  dataKey="value"
+                >
+                  {distributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
               </PieChart>
@@ -265,7 +282,7 @@ const Financeiro = () => {
       {/* Tabela de Transações */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>📋 Transações Recentes (Stripe)</CardTitle>
+          <CardTitle>📋 Transações Recentes</CardTitle>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Filtrar" />
@@ -289,35 +306,39 @@ const Financeiro = () => {
                   <th className="text-left py-3 px-2 font-medium text-muted-foreground">Vendedor</th>
                   <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor Bruto</th>
                   <th className="text-right py-3 px-2 font-medium text-muted-foreground">Comissão (7,5%)</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Taxa Stripe</th>
+                  <th className="text-right py-3 px-2 font-medium text-muted-foreground">Taxa Proc.</th>
                   <th className="text-right py-3 px-2 font-medium text-muted-foreground">Repassado</th>
                   <th className="text-center py-3 px-2 font-medium text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredTransactions.length > 0 ? filteredTransactions.map(tx => {
-                const comissao = Number(tx.total) * 0.075;
-                const taxaStripe = Number(tx.total) * 0.034;
-                const repassado = Number(tx.total) - comissao - taxaStripe;
-                return <tr key={tx.id} className="border-b hover:bg-muted/20">
-                        <td className="py-3 px-2">{format(new Date(tx.created_at), "dd/MM/yyyy")}</td>
-                        <td className="py-3 px-2 font-medium">#{tx.order_number}</td>
-                        <td className="py-3 px-2">{tx.supplier_name || "---"}</td>
-                        <td className="py-3 px-2 text-right">R$ {Number(tx.total).toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-purple-600">R$ {comissao.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-orange-600">R$ {taxaStripe.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-green-600 font-medium">R$ {repassado.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-center">
-                          <Badge variant="outline" className="text-xs">
-                            {tx.order_status}
-                          </Badge>
-                        </td>
-                      </tr>;
-              }) : <tr>
+                  const comissao = Number(tx.total) * 0.075;
+                  const taxaProc = Number(tx.total) * 0.0349;
+                  const repassado = Number(tx.total) - comissao - taxaProc;
+                  return (
+                    <tr key={tx.id} className="border-b hover:bg-muted/20">
+                      <td className="py-3 px-2">{format(new Date(tx.created_at), "dd/MM/yyyy")}</td>
+                      <td className="py-3 px-2 font-medium">#{tx.order_number}</td>
+                      <td className="py-3 px-2">{tx.supplier_name || "---"}</td>
+                      <td className="py-3 px-2 text-right">R$ {Number(tx.total).toFixed(2)}</td>
+                      <td className="py-3 px-2 text-right text-purple-600">R$ {comissao.toFixed(2)}</td>
+                      <td className="py-3 px-2 text-right text-orange-600">R$ {taxaProc.toFixed(2)}</td>
+                      <td className="py-3 px-2 text-right text-green-600 font-medium">R$ {repassado.toFixed(2)}</td>
+                      <td className="py-3 px-2 text-center">
+                        <Badge variant="outline" className="text-xs">
+                          {tx.order_status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr>
                     <td colSpan={8} className="py-8 text-center text-muted-foreground">
                       Nenhuma transação encontrada
                     </td>
-                  </tr>}
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -368,8 +389,8 @@ const Financeiro = () => {
               <span className="font-bold text-lg">R$ 79/mês</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Taxa Stripe (est.):</span>
-              <span className="font-bold text-lg">~3,4%</span>
+              <span className="text-muted-foreground">Taxa Processador (est.):</span>
+              <span className="font-bold text-lg">~3,49%</span>
             </div>
           </CardContent>
         </Card>
@@ -381,34 +402,32 @@ const Financeiro = () => {
           <DialogHeader>
             <DialogTitle>Como funciona o sistema financeiro</DialogTitle>
             <DialogDescription>
-              Entenda o fluxo de pagamentos com Stripe Connect
+              Entenda o fluxo de pagamentos da plataforma
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 text-sm">
             <p>
-              Todos os pagamentos são processados via <strong>Stripe Connect</strong>. 
-              Quando um cliente realiza uma compra, o valor é automaticamente dividido:
+              A Nellor cobra uma comissão de <strong>7,5%</strong> sobre cada venda (plano Grátis). 
+              Fornecedores Premium pagam R$79/mês e têm 0% de comissão.
             </p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Vendedor:</strong> Recebe o valor líquido diretamente na conta Stripe</li>
-              <li><strong>Plataforma:</strong> Retém a comissão (7,5% ou 0% dependendo do plano)</li>
-              <li><strong>Stripe:</strong> Cobra suas taxas de processamento (~3,4%)</li>
-            </ul>
             <p>
-              Os vendedores recebem <strong>payouts automáticos semanais</strong> diretamente 
-              em suas contas bancárias, sem necessidade de saque manual.
+              Os fornecedores podem solicitar saques a qualquer momento após o período de carência.
+              Os valores são transferidos via Pix para a conta bancária cadastrada.
             </p>
             <div className="bg-muted p-3 rounded-lg">
-              <strong>Exemplo para venda de R$ 100:</strong>
-              <ul className="text-xs mt-1 space-y-0.5">
-                <li>• Fornecedor recebe: R$ 89,10</li>
-                <li>• Nellor recebe: R$ 7,50</li>
-                <li>• Stripe recebe: ~R$ 3,40</li>
+              <h4 className="font-medium mb-2">Exemplo de transação:</h4>
+              <ul className="space-y-1 text-xs">
+                <li>• Valor da venda: R$ 100,00</li>
+                <li>• Comissão Nellor (7,5%): R$ 7,50</li>
+                <li>• Taxa processador (~3,49%): R$ 3,49</li>
+                <li>• <strong>Fornecedor recebe: R$ 89,01</strong></li>
               </ul>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 };
+
 export default Financeiro;

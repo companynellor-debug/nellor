@@ -28,9 +28,8 @@ const Planos = () => {
   };
 
   const handleSubscribe = () => {
-    // TODO: Integração real com Stripe para assinatura
-    // Aqui será chamado: create-checkout-session endpoint para subscription
-    console.log("TODO: Chamar endpoint create-checkout-session para subscription Premium");
+    // TODO: Integração com gateway de pagamento para assinatura
+    console.log("TODO: Chamar endpoint de pagamento para subscription Premium");
     toast.info("Funcionalidade em desenvolvimento. Em breve você poderá assinar o plano Premium.");
     setShowPaymentModal(false);
   };
@@ -63,7 +62,7 @@ const Planos = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Sem mensalidade. Comissão de 7,5% por venda + taxa Stripe por transação. Ideal para testar.
+              Sem mensalidade. Comissão de 7,5% por venda + taxa do processador por transação. Ideal para testar.
             </p>
             
             <ul className="space-y-3">
@@ -73,7 +72,7 @@ const Planos = () => {
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Recebimento automático via Stripe
+                Recebimento via Pix
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -120,7 +119,7 @@ const Planos = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              R$79/mês. Sem comissão da plataforma. Apenas taxa Stripe por transação. Ideal para alto volume.
+              R$79/mês. Sem comissão da plataforma. Apenas taxa do processador por transação. Ideal para alto volume.
             </p>
             
             <ul className="space-y-3">
@@ -167,16 +166,15 @@ const Planos = () => {
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <p>
-            Todos os pagamentos são processados pela Stripe. Assim que o cliente paga pelo pedido, 
-            o valor é dividido automaticamente entre a plataforma (comissão), o vendedor e a taxa Stripe. 
+            Todos os pagamentos são processados de forma segura. Assim que o cliente paga pelo pedido, 
+            o valor é dividido automaticamente entre a plataforma (comissão), o vendedor e a taxa do processador. 
           </p>
           <p>
-            Os vendedores recebem <strong className="text-foreground">pagamentos semanais automáticos</strong>. 
-            Não existe saque manual.
+            Os vendedores podem <strong className="text-foreground">solicitar saques a qualquer momento</strong> após o período de carência. 
+            O valor é transferido via Pix para a conta cadastrada.
           </p>
           <p>
-            Caso o fornecedor ainda não tenha conectado a Stripe, o valor permanece pendente 
-            até a conexão ser realizada.
+            Para receber pagamentos, é necessário verificar sua conta com documentos válidos.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
@@ -185,8 +183,8 @@ const Planos = () => {
               <ul className="space-y-1 text-xs">
                 <li>Venda: R$ 100,00</li>
                 <li>Comissão plataforma (7,5%): - R$ 7,50</li>
-                <li>Taxa Stripe (~3,4%): - R$ 3,40</li>
-                <li className="font-bold text-foreground pt-1 border-t">Você recebe: R$ 89,10</li>
+                <li>Taxa processador (~3,49%): - R$ 3,49</li>
+                <li className="font-bold text-foreground pt-1 border-t">Você recebe: R$ 89,01</li>
               </ul>
             </div>
             <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
@@ -194,8 +192,8 @@ const Planos = () => {
               <ul className="space-y-1 text-xs">
                 <li>Venda: R$ 100,00</li>
                 <li>Comissão plataforma (0%): - R$ 0,00</li>
-                <li>Taxa Stripe (~3,4%): - R$ 3,40</li>
-                <li className="font-bold text-purple-600 pt-1 border-t border-purple-300">Você recebe: R$ 96,60</li>
+                <li>Taxa processador (~3,49%): - R$ 3,49</li>
+                <li className="font-bold text-purple-600 pt-1 border-t border-purple-300">Você recebe: R$ 96,51</li>
               </ul>
             </div>
           </div>
@@ -235,7 +233,7 @@ const Planos = () => {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              O pagamento será processado via Stripe. Você pode cancelar sua assinatura a qualquer momento.
+              O pagamento será processado de forma segura. Você pode cancelar sua assinatura a qualquer momento.
             </p>
 
             <Button 

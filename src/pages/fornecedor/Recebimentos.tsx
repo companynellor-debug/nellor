@@ -14,22 +14,25 @@ import {
   Info,
   CheckCircle2,
   XCircle,
-  Loader2
+  Loader2,
+  Shield
 } from "lucide-react";
 import { FeeTransparency } from "@/components/fornecedor/FeeTransparency";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
+import { useIdentityVerification } from "@/hooks/useIdentityVerification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { format, subDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 const Recebimentos = () => {
-  const { profile } = useSupabaseAuth();
+  const navigate = useNavigate();
   const { orders, loading: ordersLoading } = useSupabaseOrders();
+  const { data: verificationData, statusLabel, canWithdraw } = useIdentityVerification();
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [dateFilter, setDateFilter] = useState<'7days' | '30days' | '90days' | 'all'>('30days');
   
-  const isStripeConnected = !!(profile as any)?.stripe_account_id;
+  const isVerified = verificationData.status === 'verified';
 
   // Filtrar pedidos pagos (não cancelados) do fornecedor
   const getFilteredOrders = () => {
@@ -53,8 +56,8 @@ const Recebimentos = () => {
   // Cálculos financeiros
   const totalBruto = filteredOrders.reduce((sum, o) => sum + Number(o.total), 0);
   const comissaoNellor = totalBruto * 0.075;
-  const taxaStripeEstimada = totalBruto * 0.034;
-  const valorLiquido = totalBruto - comissaoNellor - taxaStripeEstimada;
+  const taxaProcessador = totalBruto * 0.0349;
+  const valorLiquido = totalBruto - comissaoNellor - taxaProcessador;
 
   // Transações (baseado em pedidos reais)
   const transactions = filteredOrders.map(order => ({
@@ -63,8 +66,8 @@ const Recebimentos = () => {
     order: `#${order.order_number}`,
     gross: Number(order.total),
     platformFee: Number(order.total) * 0.075,
-    stripeFee: Number(order.total) * 0.034,
-    net: Number(order.total) - (Number(order.total) * 0.075) - (Number(order.total) * 0.034),
+    processorFee: Number(order.total) * 0.0349,
+    net: Number(order.total) - (Number(order.total) * 0.075) - (Number(order.total) * 0.0349),
     status: order.order_status
   }));
 
@@ -115,29 +118,30 @@ const Recebimentos = () => {
         </div>
       </div>
 
-      {/* Status da Conta Stripe */}
-      <Card className={isStripeConnected ? "border-green-200 bg-green-50/50 dark:bg-green-900/20" : "border-red-200 bg-red-50/50 dark:bg-red-900/20"}>
+      {/* Status de Verificação */}
+      <Card className={isVerified ? "border-green-200 bg-green-50/50 dark:bg-green-900/20" : "border-red-200 bg-red-50/50 dark:bg-red-900/20"}>
         <CardContent className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {isStripeConnected ? (
+            {isVerified ? (
               <CheckCircle2 className="h-6 w-6 text-green-600" />
             ) : (
               <XCircle className="h-6 w-6 text-red-600" />
             )}
             <div>
               <p className="font-semibold">
-                {isStripeConnected ? "🟢 Conta Stripe conectada" : "🔴 Conta Stripe não conectada"}
+                {isVerified ? "🟢 Conta verificada" : "🔴 Conta não verificada"}
               </p>
               <p className="text-sm text-muted-foreground">
-                {isStripeConnected 
-                  ? "Você receberá pagamentos automaticamente" 
-                  : "Conecte para receber pagamentos das suas vendas"}
+                {isVerified 
+                  ? "Você pode receber pagamentos e solicitar saques" 
+                  : "Verifique sua conta para receber pagamentos"}
               </p>
             </div>
           </div>
-          {!isStripeConnected && (
-            <Button disabled>
-              Conta de recebimento indisponível
+          {!isVerified && (
+            <Button onClick={() => navigate('/fornecedor/financeiro')}>
+              <Shield className="h-4 w-4 mr-2" />
+              Verificar conta
             </Button>
           )}
         </CardContent>
@@ -147,8 +151,8 @@ const Recebimentos = () => {
       <Card className="bg-muted/30 border-border">
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground">
-            Os pagamentos são feitos automaticamente via Stripe.
-            A Nellor não retém saldo e não realiza pagamentos manuais.
+            Os pagamentos são processados de forma segura.
+            Após a confirmação, o valor fica disponível para saque em até 14 dias.
           </p>
         </CardContent>
       </Card>
@@ -193,16 +197,16 @@ const Recebimentos = () => {
         <Card className="relative overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              Taxas Stripe (est.)
+              Taxa Processador (est.)
               <Tooltip>
                 <TooltipTrigger><Info className="h-3 w-3" /></TooltipTrigger>
-                <TooltipContent>Taxa estimada do processador (~3,4%)</TooltipContent>
+                <TooltipContent>Taxa estimada do processador (~3,49%)</TooltipContent>
               </Tooltip>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-orange-600">
-              - R$ {taxaStripeEstimada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              - R$ {taxaProcessador.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
@@ -230,17 +234,17 @@ const Recebimentos = () => {
         <Card className="relative overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Próximo Pagamento
+              Próximo Saque
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isStripeConnected ? (
+            {isVerified ? (
               <>
-                <p className="text-lg font-bold text-primary">Toda segunda-feira</p>
-                <p className="text-xs text-muted-foreground">Payout automático via Stripe</p>
+                <p className="text-lg font-bold text-primary">Disponível para saque</p>
+                <p className="text-xs text-muted-foreground">Solicite quando quiser</p>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">Conecte Stripe para ativar</p>
+              <p className="text-sm text-muted-foreground">Verifique sua conta para ativar</p>
             )}
           </CardContent>
           <Calendar className="absolute right-4 top-4 h-8 w-8 text-primary/20" />
@@ -254,9 +258,9 @@ const Recebimentos = () => {
           </CardHeader>
           <CardContent>
             <p className="text-lg font-bold text-orange-600">
-              {isStripeConnected ? "R$ 0,00" : "---"}
+              {isVerified ? `R$ ${(valorLiquido * 0.3).toFixed(2)}` : "---"}
             </p>
-            <p className="text-xs text-muted-foreground">Em processamento (até 7 dias)</p>
+            <p className="text-xs text-muted-foreground">Em processamento (até 14 dias)</p>
           </CardContent>
           <Clock className="absolute right-4 top-4 h-8 w-8 text-orange-600/20" />
         </Card>
@@ -284,22 +288,22 @@ const Recebimentos = () => {
         </Card>
       </div>
 
-      {/* Aviso se não conectou */}
-      {!isStripeConnected && (
+      {/* Aviso se não verificou */}
+      {!isVerified && (
         <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20">
           <CardContent className="p-6 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <AlertTriangle className="h-10 w-10 text-amber-600 flex-shrink-0" />
               <div>
                 <h3 className="font-semibold text-amber-800 dark:text-amber-200">
-                  ⚠️ Para receber pagamentos, é obrigatório conectar sua conta Stripe.
+                  ⚠️ Para receber pagamentos, é obrigatório verificar sua conta.
                 </h3>
                 <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                  Sem a conexão, você não poderá receber o dinheiro das suas vendas.
+                  Sem a verificação, você não poderá receber o dinheiro das suas vendas.
                 </p>
               </div>
             </div>
-            <Button disabled>
+            <Button onClick={() => navigate('/fornecedor/financeiro')}>
               Verificar conta
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
@@ -324,7 +328,7 @@ const Recebimentos = () => {
                     <th className="text-left py-3 px-2 font-medium text-muted-foreground">Pedido</th>
                     <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor Bruto</th>
                     <th className="text-right py-3 px-2 font-medium text-muted-foreground">Comissão</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">Taxa Stripe</th>
+                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">Taxa Proc.</th>
                     <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor Líquido</th>
                     <th className="text-center py-3 px-2 font-medium text-muted-foreground">Status</th>
                   </tr>
@@ -338,7 +342,7 @@ const Recebimentos = () => {
                         <td className="py-3 px-2 font-medium">{tx.order}</td>
                         <td className="py-3 px-2 text-right">R$ {tx.gross.toFixed(2)}</td>
                         <td className="py-3 px-2 text-right text-purple-600">- R$ {tx.platformFee.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-orange-600">- R$ {tx.stripeFee.toFixed(2)}</td>
+                        <td className="py-3 px-2 text-right text-orange-600">- R$ {tx.processorFee.toFixed(2)}</td>
                         <td className="py-3 px-2 text-right text-green-600 font-medium">R$ {tx.net.toFixed(2)}</td>
                         <td className="py-3 px-2 text-center">
                           <Badge variant={badge.variant} className="text-xs">
@@ -373,16 +377,15 @@ const Recebimentos = () => {
           </DialogHeader>
           <div className="space-y-4 text-sm">
             <p>
-              Todos os pagamentos são processados pela Stripe. Assim que o cliente paga pelo pedido, 
-              o valor é dividido automaticamente entre a plataforma (comissão), o vendedor e a taxa Stripe.
+              Todos os pagamentos são processados de forma segura. Assim que o cliente paga pelo pedido, 
+              o valor é dividido automaticamente entre a plataforma (comissão), o vendedor e as taxas do processador.
             </p>
             <p>
-              Os vendedores recebem <strong>pagamentos semanais automáticos</strong>. 
-              Não existe saque manual.
+              Os vendedores podem <strong>solicitar saques a qualquer momento</strong> após o período de carência. 
+              O valor é transferido via Pix para a conta cadastrada.
             </p>
             <p>
-              Caso o fornecedor ainda não tenha conectado a Stripe, o valor permanece pendente 
-              até a conexão ser realizada.
+              Para receber pagamentos, é necessário ter a conta verificada com documentos válidos.
             </p>
             
             <div className="bg-muted p-3 rounded-lg">
@@ -390,8 +393,8 @@ const Recebimentos = () => {
               <ul className="space-y-1 text-xs">
                 <li>• Valor da venda: R$ 100,00</li>
                 <li>• Comissão plataforma (7,5%): - R$ 7,50</li>
-                <li>• Taxa Stripe (~3,4%): - R$ 3,40</li>
-                <li>• <strong>Valor líquido: R$ 89,10</strong></li>
+                <li>• Taxa processador (~3,49%): - R$ 3,49</li>
+                <li>• <strong>Valor líquido: R$ 89,01</strong></li>
               </ul>
             </div>
           </div>

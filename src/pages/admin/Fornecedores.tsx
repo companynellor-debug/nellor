@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Store, TrendingUp, Loader2, CreditCard, RefreshCw, UserX, Star } from "lucide-react";
+import { Store, TrendingUp, Loader2, Shield, UserX, Star } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ const Fornecedores = () => {
   const { profiles, loading: profilesLoading, refetch } = useAdminProfiles();
   const loading = ordersLoading || profilesLoading;
   const [selectedFornecedor, setSelectedFornecedor] = useState<any>(null);
-  const [showReconnectModal, setShowReconnectModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // ✅ Calcular dados derivados com useMemo
   const { fornecedores, topSuppliers, topSupplier, novosNoMes } = useMemo(() => {
@@ -47,8 +47,7 @@ const Fornecedores = () => {
         revenue: receita,
         vendas: receita,
         plano: "Grátis",
-        stripeConnected: !!fornecedor.stripe_account_id,
-        stripeAccountId: fornecedor.stripe_account_id,
+        verified: true, // Placeholder - será baseado em verificação real
         lastPayout: null,
         ativo: fornecedor.ativo !== false,
       };
@@ -68,9 +67,9 @@ const Fornecedores = () => {
     };
   }, [orders, profiles]);
 
-  const handleForceReconnect = (fornecedor: any) => {
+  const handleViewDetails = (fornecedor: any) => {
     setSelectedFornecedor(fornecedor);
-    setShowReconnectModal(true);
+    setShowDetailsModal(true);
   };
 
   const handleDeactivate = async (fornecedor: any) => {
@@ -122,9 +121,9 @@ const Fornecedores = () => {
       color: "from-green-500 to-green-600"
     },
     {
-      title: "Com Stripe Conectado",
-      value: fornecedores.filter(f => f.stripeConnected).length.toString(),
-      icon: CreditCard,
+      title: "Contas Verificadas",
+      value: fornecedores.filter(f => f.verified).length.toString(),
+      icon: Shield,
       color: "from-blue-500 to-blue-600"
     },
     {
@@ -154,7 +153,7 @@ const Fornecedores = () => {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
             🏢 Fornecedores
           </h1>
-          <p className="text-muted-foreground">Acompanhamento de lojas e integração Stripe Connect</p>
+          <p className="text-muted-foreground">Acompanhamento de lojas e verificação de contas</p>
         </div>
         {loading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
       </div>
@@ -187,10 +186,9 @@ const Fornecedores = () => {
                   <TableRow>
                     <TableHead>Loja</TableHead>
                     <TableHead>Plano</TableHead>
-                    <TableHead>Stripe</TableHead>
+                    <TableHead>Verificação</TableHead>
                     <TableHead>Pedidos</TableHead>
                     <TableHead>Total Vendido</TableHead>
-                    <TableHead>Último Payout</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
@@ -210,8 +208,8 @@ const Fornecedores = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {supplier.stripeConnected ? (
-                          <Badge className="bg-green-100 text-green-800">Conectado</Badge>
+                        {supplier.verified ? (
+                          <Badge className="bg-green-100 text-green-800">Verificado</Badge>
                         ) : (
                           <Badge variant="outline" className="text-amber-600 border-amber-600">
                             Pendente
@@ -220,9 +218,6 @@ const Fornecedores = () => {
                       </TableCell>
                       <TableCell>{supplier.orders}</TableCell>
                       <TableCell>R$ {supplier.revenue.toFixed(2)}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {supplier.lastPayout || '---'}
-                      </TableCell>
                       <TableCell>
                         {supplier.ativo ? (
                           <Badge className="bg-green-100 text-green-800">Ativo</Badge>
@@ -235,10 +230,10 @@ const Fornecedores = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleForceReconnect(supplier)}
-                            title="Forçar reconexão Stripe"
+                            onClick={() => handleViewDetails(supplier)}
+                            title="Ver detalhes"
                           >
-                            <RefreshCw className="h-4 w-4" />
+                            <Shield className="h-4 w-4" />
                           </Button>
                           {supplier.ativo ? (
                             <Button
@@ -266,7 +261,7 @@ const Fornecedores = () => {
                     </TableRow>
                   )) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">
                         Nenhum fornecedor cadastrado
                       </TableCell>
                     </TableRow>
@@ -319,13 +314,13 @@ const Fornecedores = () => {
         </div>
       </div>
 
-      {/* Modal de Forçar Reconexão */}
-      <Dialog open={showReconnectModal} onOpenChange={setShowReconnectModal}>
+      {/* Modal de Detalhes */}
+      <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Forçar Reconexão Stripe</DialogTitle>
+            <DialogTitle>Detalhes do Fornecedor</DialogTitle>
             <DialogDescription>
-              Instruções para reconectar a conta Stripe do fornecedor
+              Informações da conta e verificação
             </DialogDescription>
           </DialogHeader>
           {selectedFornecedor && (
@@ -339,30 +334,27 @@ const Fornecedores = () => {
                 <p className="font-medium">{selectedFornecedor.email}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Status Stripe</p>
-                <p className="font-medium">
-                  {selectedFornecedor.stripeConnected ? 'Conectado' : 'Não conectado'}
-                </p>
+                <p className="text-sm text-muted-foreground">Status da Verificação</p>
+                <Badge className={selectedFornecedor.verified ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
+                  {selectedFornecedor.verified ? 'Verificado' : 'Pendente'}
+                </Badge>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Vendido</p>
+                <p className="font-medium">R$ {selectedFornecedor.revenue.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Pedidos</p>
+                <p className="font-medium">{selectedFornecedor.orders}</p>
               </div>
               
               <div className="bg-muted p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Instruções:</h4>
-                <ol className="text-sm space-y-2 list-decimal list-inside">
-                  <li>Entre em contato com o fornecedor</li>
-                  <li>Solicite que ele acesse o painel e clique em "Conectar Stripe"</li>
-                  <li>Caso haja problemas, ele pode desconectar e reconectar via Stripe Dashboard</li>
-                </ol>
+                <h4 className="font-medium mb-2">Notas:</h4>
+                <p className="text-sm text-muted-foreground">
+                  A verificação de identidade e dados bancários é feita internamente.
+                  Fornecedores precisam completar o KYC para poder vender e sacar.
+                </p>
               </div>
-
-              <Button 
-                className="w-full"
-                onClick={() => {
-                  toast.info("Funcionalidade de envio de link será implementada após integração Stripe");
-                  setShowReconnectModal(false);
-                }}
-              >
-                Enviar Link de Reconexão (em breve)
-              </Button>
             </div>
           )}
         </DialogContent>
