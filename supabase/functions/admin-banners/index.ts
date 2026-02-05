@@ -1,8 +1,5 @@
-// Supabase Edge Function: admin-banners
-// CRUD operations for banners - validates admin password from sessionStorage
-
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.80.0";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -130,8 +127,9 @@ serve(async (req) => {
       default:
         return json(400, { error: "INVALID_ACTION" });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in admin-banners:", error);
-    return json(500, { error: error.message || "INTERNAL_ERROR" });
+    const message = error instanceof Error ? error.message : "INTERNAL_ERROR";
+    return json(500, { error: message });
   }
 });
