@@ -1,6 +1,7 @@
 import { ArrowLeftRight, Store, Boxes } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppMode } from '@/hooks/useAppMode';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface ModeSwitcherProps {
@@ -10,13 +11,19 @@ interface ModeSwitcherProps {
 
 export function ModeSwitcher({ variant = 'default', className }: ModeSwitcherProps) {
   const { mode, toggleMode, isDropMode } = useAppMode();
+  const navigate = useNavigate();
+
+  const handleToggle = () => {
+    toggleMode();
+    navigate(isDropMode ? '/cliente' : '/drop');
+  };
 
   if (variant === 'compact') {
     return (
       <Button
         variant="ghost"
         size="sm"
-        onClick={toggleMode}
+        onClick={handleToggle}
         className={cn(
           "gap-2 transition-all duration-300",
           isDropMode 
@@ -36,7 +43,7 @@ export function ModeSwitcher({ variant = 'default', className }: ModeSwitcherPro
   if (variant === 'mobile') {
     return (
       <button
-        onClick={toggleMode}
+        onClick={handleToggle}
         className={cn(
           "flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-all duration-300",
           isDropMode 
@@ -70,7 +77,7 @@ export function ModeSwitcher({ variant = 'default', className }: ModeSwitcherPro
   return (
     <div className={cn("flex items-center gap-2 p-1 rounded-xl bg-muted/50", className)}>
       <button
-        onClick={() => !isDropMode && toggleMode()}
+        onClick={() => !isDropMode && handleToggle()}
         className={cn(
           "flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 text-sm font-medium",
           !isDropMode 
@@ -82,7 +89,7 @@ export function ModeSwitcher({ variant = 'default', className }: ModeSwitcherPro
         Cliente
       </button>
       <button
-        onClick={() => isDropMode && toggleMode()}
+        onClick={() => isDropMode && handleToggle()}
         className={cn(
           "flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 text-sm font-medium",
           isDropMode 

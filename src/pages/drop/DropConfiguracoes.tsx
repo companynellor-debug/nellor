@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Settings, 
   User, 
@@ -51,6 +52,7 @@ const settingsSections = [
 const DropConfiguracoes = () => {
   const { dropProfile, activateDropMode } = useClientDrop();
   const { setMode } = useAppMode();
+  const navigate = useNavigate();
   const [businessName, setBusinessName] = useState(dropProfile?.business_name || '');
   const [activeSection, setActiveSection] = useState('profile');
 
@@ -99,7 +101,7 @@ const DropConfiguracoes = () => {
           
           {/* Exit Drop Mode */}
           <button
-            onClick={() => setMode('cliente')}
+            onClick={() => { setMode('cliente'); navigate('/cliente'); }}
             className="w-full flex items-center gap-3 p-3 rounded-xl text-left text-destructive hover:bg-destructive/10 transition-all mt-4"
           >
             <LogOut className="h-5 w-5" />
