@@ -1,5 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 export type AppMode = 'cliente' | 'drop';
 
@@ -20,44 +19,35 @@ export function AppModeProvider({ children }: { children: ReactNode }) {
     return (stored === 'drop' ? 'drop' : 'cliente') as AppMode;
   });
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
   useEffect(() => {
     sessionStorage.setItem(STORAGE_KEY, mode);
   }, [mode]);
 
-  const setMode = (newMode: AppMode) => {
+  const setMode = useCallback((newMode: AppMode) => {
     setModeState(newMode);
-    
-    // Navigate to the appropriate root when switching modes
-    if (newMode === 'drop') {
-      navigate('/drop');
-    } else {
-      navigate('/cliente');
-    }
-  };
+  }, []);
 
-  const toggleMode = () => {
-    setMode(mode === 'cliente' ? 'drop' : 'cliente');
-  };
+  const toggleMode = useCallback(() => {
+    setModeState((prev) => (prev === 'cliente' ? 'drop' : 'cliente'));
+  }, []);
 
-  // Sync mode with current route
+  // Sync mode with current URL path
   useEffect(() => {
-    if (location.pathname.startsWith('/drop')) {
+    const path = window.location.pathname;
+    if (path.startsWith('/drop')) {
       setModeState('drop');
-    } else if (location.pathname.startsWith('/cliente')) {
+    } else if (path.startsWith('/cliente')) {
       setModeState('cliente');
     }
-  }, [location.pathname]);
+  }, []);
 
   return (
-    <AppModeContext.Provider 
-      value={{ 
-        mode, 
-        setMode, 
-        toggleMode, 
-        isDropMode: mode === 'drop' 
+    <AppModeContext.Provider
+      value={{
+        mode,
+        setMode,
+        toggleMode,
+        isDropMode: mode === 'drop',
       }}
     >
       {children}
