@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Heart, MessageCircle, Star } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Star, Share2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
 import { useProducts } from "@/hooks/useProducts";
@@ -16,6 +16,8 @@ import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
+import { formatCurrencyFromDecimal } from "@/utils/currency";
+import ReportButton from "@/components/ReportButton";
 
 const PerfilLoja = () => {
   const navigate = useNavigate();
@@ -151,35 +153,54 @@ const PerfilLoja = () => {
               </div>
 
               {/* Action Buttons */}
-              {user && (
-                <div className="flex gap-3">
+              <div className="flex gap-3">
+                {user ? (
+                  <>
+                    <Button
+                      onClick={() => {
+                        navigate("/cliente/chat", { 
+                          state: { 
+                            supplierId: id,
+                            message: `Olá! Tenho interesse em seus produtos.`
+                          } 
+                        });
+                      }}
+                      className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Chat
+                    </Button>
+                    <Button
+                      onClick={handleToggleFavorite}
+                      variant="outline"
+                      className={`px-4 ${isStoreFavorite ? "border-red-500 text-red-500" : "border-primary text-primary"}`}
+                    >
+                      <Heart className={`h-5 w-5 ${isStoreFavorite ? "fill-red-500" : ""}`} />
+                    </Button>
+                  </>
+                ) : (
                   <Button
-                    onClick={() => {
-                      if (!user) {
-                        navigate("/login");
-                        return;
-                      }
-                      navigate("/cliente/chat", { 
-                        state: { 
-                          supplierId: id,
-                          message: `Olá! Tenho interesse em seus produtos.`
-                        } 
-                      });
-                    }}
+                    onClick={() => navigate("/auth")}
                     className="flex-1 bg-primary hover:bg-primary/90 text-white"
                   >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Chat
+                    Fazer login para interagir
                   </Button>
-                  <Button
-                    onClick={handleToggleFavorite}
-                    variant="outline"
-                    className={`px-4 ${isStoreFavorite ? "border-red-500 text-red-500" : "border-primary text-primary"}`}
-                  >
-                    <Heart className={`h-5 w-5 ${isStoreFavorite ? "fill-red-500" : ""}`} />
-                  </Button>
-                </div>
-              )}
+                )}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const url = `${window.location.origin}/loja/${id}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Link da loja copiado!");
+                  }}
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-end mt-2">
+                {id && <ReportButton targetType="supplier" targetId={id} />}
+              </div>
             </Card>
           </div>
 
@@ -211,7 +232,7 @@ const PerfilLoja = () => {
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                         <span className="text-xs text-muted-foreground">{product.rating_medio || 0}</span>
                       </div>
-                      <p className="text-primary font-bold">R$ {product.preco?.toFixed(2).replace('.', ',')}</p>
+                      <p className="text-primary font-bold">{formatCurrencyFromDecimal(product.preco)}</p>
                     </div>
                   </Card>
                 ))}

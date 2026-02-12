@@ -1184,6 +1184,7 @@ export type Database = {
           affiliate_commission_percent: number | null
           ativo: boolean | null
           categoria_id: string | null
+          cores: Json | null
           created_at: string | null
           descricao_curta: string | null
           descricao_longa: string | null
@@ -1191,11 +1192,15 @@ export type Database = {
           estoque: number
           id: string
           imagens: string[] | null
+          is_kit: boolean | null
+          kit_items: Json | null
           nome: string
+          origin: string | null
           peso: number | null
           preco: number
           rating_medio: number | null
           supplier_id: string
+          tamanhos: Json | null
           total_reviews: number | null
           updated_at: string | null
           variacoes: Json | null
@@ -1205,6 +1210,7 @@ export type Database = {
           affiliate_commission_percent?: number | null
           ativo?: boolean | null
           categoria_id?: string | null
+          cores?: Json | null
           created_at?: string | null
           descricao_curta?: string | null
           descricao_longa?: string | null
@@ -1212,11 +1218,15 @@ export type Database = {
           estoque?: number
           id?: string
           imagens?: string[] | null
+          is_kit?: boolean | null
+          kit_items?: Json | null
           nome: string
+          origin?: string | null
           peso?: number | null
           preco: number
           rating_medio?: number | null
           supplier_id: string
+          tamanhos?: Json | null
           total_reviews?: number | null
           updated_at?: string | null
           variacoes?: Json | null
@@ -1226,6 +1236,7 @@ export type Database = {
           affiliate_commission_percent?: number | null
           ativo?: boolean | null
           categoria_id?: string | null
+          cores?: Json | null
           created_at?: string | null
           descricao_curta?: string | null
           descricao_longa?: string | null
@@ -1233,11 +1244,15 @@ export type Database = {
           estoque?: number
           id?: string
           imagens?: string[] | null
+          is_kit?: boolean | null
+          kit_items?: Json | null
           nome?: string
+          origin?: string | null
           peso?: number | null
           preco?: number
           rating_medio?: number | null
           supplier_id?: string
+          tamanhos?: Json | null
           total_reviews?: number | null
           updated_at?: string | null
           variacoes?: Json | null
@@ -1428,6 +1443,83 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      refund_requests: {
+        Row: {
+          buyer_id: string
+          confirmed_at: string | null
+          created_at: string
+          id: string
+          order_id: string
+          reason: string
+          resolved_at: string | null
+          status: string
+          supplier_id: string
+        }
+        Insert: {
+          buyer_id: string
+          confirmed_at?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          reason?: string
+          resolved_at?: string | null
+          status?: string
+          supplier_id: string
+        }
+        Update: {
+          buyer_id?: string
+          confirmed_at?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          reason?: string
+          resolved_at?: string | null
+          status?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
       }
       reviews: {
         Row: {
@@ -1715,6 +1807,50 @@ export type Database = {
         }
         Relationships: []
       }
+      sponsored_products: {
+        Row: {
+          approved_at: string | null
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          product_id: string
+          status: string
+          supplier_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          product_id: string
+          status?: string
+          supplier_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          product_id?: string
+          status?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_affiliate_settings: {
         Row: {
           allow_affiliates: boolean | null
@@ -1748,6 +1884,30 @@ export type Database = {
           recurring_duration_months?: number | null
           supplier_id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      supplier_categories: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          slug: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          slug: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          slug?: string
+          supplier_id?: string
         }
         Relationships: []
       }
@@ -1922,6 +2082,41 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trend_requests: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          id: string
+          product_id: string
+          status: string
+          supplier_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          status?: string
+          supplier_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          status?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trend_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]

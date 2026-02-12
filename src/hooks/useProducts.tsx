@@ -3,6 +3,7 @@ import { Product as BaseProduct } from '@/data/products';
 import { useSupabaseProducts } from './useSupabaseProducts';
 import { useSupabaseCategories, Category } from './useSupabaseCategories';
 import { supabase } from '@/integrations/supabase/client';
+import { formatCurrencyFromDecimal } from '@/utils/currency';
 
 export interface Product extends BaseProduct {}
 
@@ -72,7 +73,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
       return {
         id: hashCode(sp.id),
         name: sp.nome,
-        price: `R$ ${sp.preco.toFixed(2).replace('.', ',')}`,
+        price: formatCurrencyFromDecimal(sp.preco),
         priceNumber: sp.preco,
         rating: sp.rating_medio || 0,
         reviews: sp.total_reviews || 0,

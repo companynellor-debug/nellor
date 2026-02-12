@@ -9,12 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
+import { useSupplierCategories } from "@/hooks/useSupplierCategories";
 import { toast } from "sonner";
 import { formatCurrencyFromDecimal, CurrencyInput, centsToDecimal, decimalToCents } from "@/utils/currency";
 
 const Produtos = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useSupplierProducts();
   const { categories } = useSupabaseCategories();
+  const { categories: customCategories } = useSupplierCategories('current'); // hook will handle current user
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SupplierProduct | null>(null);
   const [formData, setFormData] = useState({
@@ -194,11 +196,22 @@ const Produtos = () => {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border shadow-lg z-50">
+                  <SelectItem value="" disabled>Categorias do Sistema</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.nome}
                     </SelectItem>
                   ))}
+                  {customCategories.length > 0 && (
+                    <>
+                      <SelectItem value="" disabled>Minhas Categorias</SelectItem>
+                      {customCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.nome}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
