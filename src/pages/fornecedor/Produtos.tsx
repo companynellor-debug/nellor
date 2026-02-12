@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { toast } from "sonner";
+import { formatCurrencyFromDecimal, CurrencyInput, centsToDecimal, decimalToCents } from "@/utils/currency";
 
 const Produtos = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useSupplierProducts();
@@ -20,10 +21,10 @@ const Produtos = () => {
     name: '',
     category: '',
     description: '',
-    price: '',
+    priceCents: 0,
     stock: '',
     minQuantity: '',
-    minValue: '',
+    minValueCents: 0,
   });
   const [imageFiles, setImageFiles] = useState<string[]>([]);
 
@@ -34,15 +35,15 @@ const Produtos = () => {
         name: product.name,
         category: product.category,
         description: product.description,
-        price: product.price.toString(),
+        priceCents: decimalToCents(product.price),
         stock: product.stock.toString(),
         minQuantity: product.minQuantity?.toString() || '',
-        minValue: product.minValue?.toString() || '',
+        minValueCents: product.minValue ? decimalToCents(product.minValue) : 0,
       });
       setImageFiles(product.images);
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', category: '', description: '', price: '', stock: '', minQuantity: '', minValue: '' });
+      setFormData({ name: '', category: '', description: '', priceCents: 0, stock: '', minQuantity: '', minValueCents: 0 });
       setImageFiles([]);
     }
     setIsModalOpen(true);
@@ -71,7 +72,7 @@ const Produtos = () => {
   };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.price || !formData.category) {
+    if (!formData.name || !formData.priceCents || !formData.category) {
       toast.error("Preencha os campos obrigatórios (Nome, Categoria e Preço)");
       return;
     }
@@ -85,10 +86,10 @@ const Produtos = () => {
       name: formData.name,
       category: formData.category,
       description: formData.description,
-      price: parseFloat(formData.price),
+      price: centsToDecimal(formData.priceCents),
       stock: parseInt(formData.stock) || 0,
       minQuantity: formData.minQuantity ? parseInt(formData.minQuantity) : undefined,
-      minValue: formData.minValue ? parseFloat(formData.minValue) : undefined,
+      minValue: formData.minValueCents ? centsToDecimal(formData.minValueCents) : undefined,
       images: imageFiles,
     };
 
@@ -137,7 +138,7 @@ const Produtos = () => {
               <p className="text-sm text-muted-foreground">{categoryName}</p>
               <p className="text-sm line-clamp-2">{product.description}</p>
               <div className="flex justify-between items-center pt-2">
-                <p className="text-lg font-bold text-primary">R$ {product.price.toFixed(2)}</p>
+                <p className="text-lg font-bold text-primary">{formatCurrencyFromDecimal(product.price)}</p>
                 <p className="text-sm text-muted-foreground">Estoque: {product.stock}</p>
               </div>
               <div className="flex gap-2 pt-2">
@@ -215,12 +216,10 @@ const Produtos = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Preço (R$) *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
+                <CurrencyInput
+                  value={formData.priceCents}
+                  onChange={(cents) => setFormData({ ...formData, priceCents: cents })}
+                  placeholder="R$ 0,00"
                 />
               </div>
               <div>
@@ -255,13 +254,10 @@ const Produtos = () => {
                 </div>
                 <div>
                   <Label>Valor Mínimo (R$)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.minValue}
-                    onChange={(e) => setFormData({ ...formData, minValue: e.target.value })}
-                    placeholder="Ex: 50.00"
+                  <CurrencyInput
+                    value={formData.minValueCents}
+                    onChange={(cents) => setFormData({ ...formData, minValueCents: cents })}
+                    placeholder="R$ 0,00"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Valor mínimo em compras deste produto

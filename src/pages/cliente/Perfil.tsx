@@ -1,7 +1,7 @@
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Zap, ShoppingBag, Truck, HeadphonesIcon, Store } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Truck, HeadphonesIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
@@ -152,9 +152,8 @@ const Perfil = () => {
           <h3 className="text-sm font-semibold text-muted-foreground mb-2 px-1">Serviços Nellor</h3>
           <Card className="border shadow-sm divide-y">
             {[
-              { icon: Zap, label: "Nellor Drop", desc: "Estoque compartilhado", route: "/drop" },
-              { icon: Store, label: "Revender Produtos", desc: "Lucre revendendo", route: "/drop" },
-              { icon: Briefcase, label: "Prestador de Serviços", desc: "Ofereça seus talentos", route: "/cliente/prestador-servicos" },
+              { icon: Users, label: "Programa de Afiliados", desc: "Ganhe comissões indicando", route: "/cliente/afiliados", badge: "Em breve" },
+              { icon: Briefcase, label: "Prestador de Serviços", desc: "Ofereça seus talentos", route: "/cliente/prestador-servicos", badge: "Em breve" },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -167,7 +166,12 @@ const Perfil = () => {
                     <Icon className="h-4.5 w-4.5 text-primary" />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">{item.label}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{item.label}</p>
+                      {item.badge && (
+                        <span className="text-[9px] font-semibold uppercase bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">{item.badge}</span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-muted-foreground">{item.desc}</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
