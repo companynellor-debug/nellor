@@ -12,7 +12,7 @@ import { AppModeProvider } from "@/hooks/useAppMode";
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const ClienteLayout = lazy(() => import("./pages/cliente/ClienteLayout"));
 const FornecedorLayout = lazy(() => import("./pages/fornecedor/FornecedorLayout"));
-const DropModeLayout = lazy(() => import("./pages/drop/DropModeLayout"));
+// DropModeLayout removido - Nellor Drop desativado temporariamente
 
 // Lazy load public pages (minimal - only welcome and auth)
 const Welcome = lazy(() => import("./pages/Welcome"));
@@ -47,15 +47,7 @@ const ProgramaAfiliados = lazy(() => import("./pages/cliente/ProgramaAfiliados")
 const AfiliadoCadastro = lazy(() => import("./pages/cliente/AfiliadoCadastro"));
 const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
 
-// Lazy load Drop Mode pages (novo sistema de modos)
-const DropDashboard = lazy(() => import("./pages/drop/DropDashboard"));
-const DropPedidos = lazy(() => import("./pages/drop/DropPedidos"));
-const DropCatalogo = lazy(() => import("./pages/drop/DropCatalogo"));
-const DropMarketplaces = lazy(() => import("./pages/drop/DropMarketplaces"));
-const DropFinanceiro = lazy(() => import("./pages/drop/DropFinanceiro"));
-const DropNotificacoes = lazy(() => import("./pages/drop/DropNotificacoes"));
-const DropConfiguracoes = lazy(() => import("./pages/drop/DropConfiguracoes"));
-const DropMeusProdutos = lazy(() => import("./pages/drop/DropMeusProdutos"));
+// Drop Mode pages removidos - Nellor Drop desativado temporariamente
 
 // Lazy load fornecedor pages
 const Dashboard = lazy(() => import("./pages/fornecedor/Dashboard"));
@@ -72,7 +64,7 @@ const CuponsFornecedor = lazy(() => import("./pages/fornecedor/Cupons"));
 const RelatorioCupons = lazy(() => import("./pages/fornecedor/RelatorioCupons"));
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
 const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
-const NellorDrop = lazy(() => import("./pages/fornecedor/NellorDrop"));
+// NellorDrop removido - desativado temporariamente
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -91,7 +83,7 @@ const AdminBanners = lazy(() => import("./pages/admin/Banners"));
 const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
 // Reconciliacao removido - era dependente do Stripe
 const AdminAffiliatePrestadores = lazy(() => import("./pages/admin/AffiliatePrestadores"));
-const AdminNellorDrop = lazy(() => import("./pages/admin/NellorDrop"));
+// AdminNellorDrop removido - desativado temporariamente
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 
 // Optimized QueryClient with aggressive caching
@@ -132,27 +124,6 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-
-              {/* ========================================= */}
-              {/* MODO NELLOR DROP - Sistema Completo */}
-              {/* ========================================= */}
-              <Route
-                path="/drop"
-                element={
-                  <ProtectedRoute requireType="cliente">
-                    <DropModeLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Suspense fallback={<PageSkeleton />}><DropDashboard /></Suspense>} />
-                <Route path="pedidos" element={<Suspense fallback={<PageSkeleton />}><DropPedidos /></Suspense>} />
-                <Route path="catalogo" element={<Suspense fallback={<PageSkeleton />}><DropCatalogo /></Suspense>} />
-                <Route path="meus-produtos" element={<Suspense fallback={<PageSkeleton />}><DropMeusProdutos /></Suspense>} />
-                <Route path="marketplaces" element={<Suspense fallback={<PageSkeleton />}><DropMarketplaces /></Suspense>} />
-                <Route path="financeiro" element={<Suspense fallback={<PageSkeleton />}><DropFinanceiro /></Suspense>} />
-                <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><DropNotificacoes /></Suspense>} />
-                <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><DropConfiguracoes /></Suspense>} />
-              </Route>
 
               {/* ========================================= */}
               {/* MODO CLIENTE - Marketplace Normal */}
@@ -216,7 +187,7 @@ const App = () => {
                 <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
                 <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
                 <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
-                <Route path="nellor-drop" element={<Suspense fallback={<PageSkeleton />}><NellorDrop /></Suspense>} />
+                {/* nellor-drop removido temporariamente */}
               </Route>
 
               {/* Admin Panel */}
@@ -245,7 +216,7 @@ const App = () => {
                 <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
                 {/* Rota de reconciliação removida - era dependente do Stripe */}
                 <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
-                <Route path="nellor-drop" element={<Suspense fallback={<PageSkeleton />}><AdminNellorDrop /></Suspense>} />
+                {/* admin nellor-drop removido temporariamente */}
               </Route>
 
               {/* Catch-all - redirect to welcome */}

@@ -7,6 +7,7 @@ import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Info } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "@/hooks/use-toast";
+import { formatCurrencyFromDecimal } from "@/utils/currency";
 
 const Carrinho = () => {
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ const Carrinho = () => {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium mb-2 line-clamp-2">{item.name}</h3>
                         <p className="text-primary font-bold text-lg">
-                          R$ {itemTotal.toFixed(2)}
+                          {formatCurrencyFromDecimal(itemTotal)}
                         </p>
                         {hasLimits && (
                           <div className="mt-2 space-y-1">
@@ -94,7 +95,7 @@ const Carrinho = () => {
                             )}
                             {hasMinValue && (
                               <div className={`flex items-center gap-1 text-xs ${meetsMinValue ? 'text-green-600' : 'text-red-600'}`}>
-                                {meetsMinValue ? '✓' : '✗'} Mín: R$ {item.minValue!.toFixed(2)}
+                                {meetsMinValue ? '✓' : '✗'} Mín: {formatCurrencyFromDecimal(item.minValue!)}
                               </div>
                             )}
                           </div>
@@ -135,16 +136,16 @@ const Carrinho = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">R$ {total.toFixed(2).replace('.', ',')}</span>
+                  <span className="font-medium">{formatCurrencyFromDecimal(total)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Frete</span>
-                  <span className="font-medium">R$ {shipping.toFixed(2).replace('.', ',')}</span>
+                  <span className="font-medium">{formatCurrencyFromDecimal(shipping)}</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between items-center">
                   <span className="text-xl font-bold">Total</span>
                   <span className="text-2xl font-bold text-primary">
-                    R$ {(total + shipping).toFixed(2).replace('.', ',')}
+                    {formatCurrencyFromDecimal(total + shipping)}
                   </span>
                 </div>
               </div>
