@@ -65,6 +65,7 @@ const RelatorioCupons = lazy(() => import("./pages/fornecedor/RelatorioCupons"))
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
 const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
 // NellorDrop removido - desativado temporariamente
+const Patrocinio = lazy(() => import("./pages/fornecedor/Patrocinio"));
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -114,6 +115,9 @@ const App = () => {
               
               {/* Public Product Share Route (mantido para links de compartilhamento) */}
               <Route path="/p/:id" element={<PublicProduto />} />
+
+              {/* Public Store Route - qualquer visitante pode ver */}
+              <Route path="/loja/:id" element={<PerfilLoja />} />
 
               {/* Fornecedor Onboarding */}
               <Route
@@ -187,6 +191,7 @@ const App = () => {
                 <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
                 <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
                 <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
+                <Route path="patrocinio" element={<Suspense fallback={<PageSkeleton />}><Patrocinio /></Suspense>} />
                 {/* nellor-drop removido temporariamente */}
               </Route>
 

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useStoreProfile } from "@/hooks/useStoreProfile";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
+import { useSupplierCategories } from "@/hooks/useSupplierCategories";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -13,8 +15,11 @@ import { Save, Upload, Star, Package, Plus, X, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 const EditarLoja = () => {
+  const { user } = useSupabaseAuth();
   const { storeProfile, updateStoreProfile } = useStoreProfile();
   const { products } = useSupplierProducts();
+  const { categories: customCategories, addCategory, deleteCategory } = useSupplierCategories(user?.id);
+  
   const [formData, setFormData] = useState({
     storeName: '',
     bio: '',
@@ -78,25 +83,17 @@ const EditarLoja = () => {
       return;
     }
 
-    if (formData.customCategories.includes(trimmedCategory)) {
+    if (customCategories.some(c => c.nome.toLowerCase() === trimmedCategory.toLowerCase())) {
       toast.error("Esta categoria já existe");
       return;
     }
 
-    setFormData({
-      ...formData,
-      customCategories: [...formData.customCategories, trimmedCategory]
-    });
+    addCategory(trimmedCategory);
     setNewCategory('');
-    toast.success("Categoria adicionada!");
   };
 
-  const handleRemoveCategory = (category: string) => {
-    setFormData({
-      ...formData,
-      customCategories: formData.customCategories.filter(cat => cat !== category)
-    });
-    toast.success("Categoria removida!");
+  const handleRemoveCategory = (categoryId: string) => {
+    deleteCategory(categoryId);
   };
 
   const handleImageUpload = (type: 'avatar' | 'banner') => {
@@ -294,17 +291,17 @@ const EditarLoja = () => {
               </div>
 
               {/* Lista de categorias customizadas */}
-              {formData.customCategories.length > 0 ? (
+              {customCategories.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {formData.customCategories.map((category) => (
+                  {customCategories.map((category) => (
                     <Badge
-                      key={category}
+                      key={category.id}
                       variant="secondary"
                       className="px-3 py-1.5 text-sm flex items-center gap-2"
                     >
-                      {category}
+                      {category.nome}
                       <button
-                        onClick={() => handleRemoveCategory(category)}
+                        onClick={() => handleRemoveCategory(category.id)}
                         className="hover:text-destructive transition-colors"
                         type="button"
                       >
@@ -423,38 +420,6 @@ const EditarLoja = () => {
                   <p className="text-xs text-muted-foreground">As avaliações dos clientes aparecerão aqui</p>
                 </div>
               )}
-            </Card>
-
-            {/* Produtos Preview */}
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Produtos da Loja
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                {products.length === 0 ? (
-                  <div className="col-span-2 text-center py-8 text-muted-foreground">
-                    <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>Nenhum produto cadastrado ainda</p>
-                    <p className="text-sm mt-1">Adicione produtos na aba "Produtos"</p>
-                  </div>
-                ) : (
-                  products.map((product) => (
-                    <Card
-                      key={product.id}
-                      className="overflow-hidden hover:shadow-md transition-all cursor-pointer"
-                    >
-                      <div className="aspect-square overflow-hidden">
-                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="p-3">
-                        <p className="text-sm mb-2 line-clamp-2">{product.name}</p>
-                        <p className="text-primary font-bold text-sm">R$ {product.price.toFixed(2)}</p>
-                      </div>
-                    </Card>
-                  ))
-                )}
-              </div>
             </Card>
           </div>
         </TabsContent>

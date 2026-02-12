@@ -18,6 +18,8 @@ import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrencyFromDecimal } from "@/utils/currency";
+import ReportButton from "@/components/ReportButton";
 
 const ProdutoDetalhes = () => {
   const navigate = useNavigate();
@@ -67,7 +69,7 @@ const ProdutoDetalhes = () => {
         name: supabaseProductById.nome,
         images: images.length ? images : [""],
         priceNumber: supabaseProductById.preco,
-        price: `R$ ${supabaseProductById.preco.toFixed(2).replace(".", ",")}`,
+        price: formatCurrencyFromDecimal(supabaseProductById.preco),
         description,
         specs: [] as Array<{ label: string; value: string }>,
         category: supabaseProductById.categoria_id ?? "",
@@ -325,12 +327,22 @@ const ProdutoDetalhes = () => {
                   {currentStock > 0 ? `${currentStock} em estoque` : 'Sem estoque'}
                 </Badge>
               </div>
+              {product.supplierUuid && (
+                <div className="mt-2">
+                  <ReportButton targetType="product" targetId={product.supplierUuid} />
+                </div>
+              )}
             </div>
 
             {/* Preço */}
             <div className="py-4 border-y border-border">
               <p className="text-3xl font-bold text-primary">{product.price}</p>
               <p className="text-xs text-muted-foreground mt-1">à vista no PIX</p>
+              {product.supplierUuid && (
+                <div className="mt-2">
+                  <ReportButton targetType="product" targetId={product.supplierUuid} />
+                </div>
+              )}
             </div>
 
             {/* Descrição */}
