@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Megaphone, Plus, Loader2, Image, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Megaphone, Plus, Loader2, Image, Clock, CheckCircle, XCircle, Upload, X } from "lucide-react";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ const Patrocinio = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [description, setDescription] = useState("");
+  const [bannerFile, setBannerFile] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -62,6 +63,15 @@ const Patrocinio = () => {
     }
   };
 
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setBannerFile(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedProduct) {
       toast.error("Selecione um produto");
@@ -79,7 +89,8 @@ const Patrocinio = () => {
           product_id: selectedProduct,
           supplier_id: user.id,
           description: description || null,
-        });
+          banner_url: bannerFile || null,
+        } as any);
 
       if (error) throw error;
 
@@ -87,6 +98,7 @@ const Patrocinio = () => {
       setModalOpen(false);
       setSelectedProduct("");
       setDescription("");
+      setBannerFile(null);
       fetchRequests();
     } catch (error: any) {
       console.error("Error creating sponsorship:", error);
@@ -192,6 +204,27 @@ const Patrocinio = () => {
                 placeholder="Descreva sua campanha..."
                 rows={3}
               />
+            </div>
+            <div>
+              <Label>Banner da campanha (opcional)</Label>
+              {bannerFile ? (
+                <div className="relative mt-2">
+                  <img src={bannerFile} alt="Banner preview" className="w-full h-32 object-cover rounded-md border" />
+                  <button
+                    type="button"
+                    onClick={() => setBannerFile(null)}
+                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="mt-2 flex flex-col items-center justify-center h-24 border-2 border-dashed border-muted-foreground/30 rounded-md cursor-pointer hover:border-primary/50 transition-colors">
+                  <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                  <span className="text-xs text-muted-foreground">Clique para enviar imagem</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
+                </label>
+              )}
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>

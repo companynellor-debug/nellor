@@ -45,12 +45,13 @@ const FornecedorLayoutContent = () => {
     return () => clearTimeout(timeout);
   }, [subscribe, isSubscribed]);
 
-  // Redirecionar para onboarding se não completou
+  // Redirecionar para onboarding se não completou (só após profile ser carregado)
+  const { loading: authLoading } = useSupabaseAuth();
   useEffect(() => {
-    if (profile?.tipo === 'fornecedor' && !profile?.onboarding_completed && location.pathname !== '/fornecedor/onboarding') {
+    if (!authLoading && profile && profile.tipo === 'fornecedor' && profile.onboarding_completed === false && location.pathname !== '/fornecedor/onboarding') {
       navigate('/fornecedor/onboarding');
     }
-  }, [profile, navigate, location.pathname]);
+  }, [profile, authLoading, navigate, location.pathname]);
 
   // Apply dark mode class to document
   useEffect(() => {

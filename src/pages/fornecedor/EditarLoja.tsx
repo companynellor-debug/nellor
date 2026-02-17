@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Save, Upload, Star, Package, Plus, X, Tag } from "lucide-react";
+import { Save, Upload, Star, Package, Plus, X, Tag, Copy, ExternalLink } from "lucide-react";
+import { CurrencyInput, decimalToCents, centsToDecimal } from "@/utils/currency";
 import { toast } from "sonner";
 
 const EditarLoja = () => {
@@ -27,9 +28,8 @@ const EditarLoja = () => {
     banner: '',
     whatsapp: '',
     address: '',
-    pixKey: '',
     minOrderQuantity: 0,
-    minOrderValue: 0,
+    minOrderValueCents: 0,
     customCategories: [] as string[],
   });
   const [newCategory, setNewCategory] = useState('');
@@ -43,12 +43,27 @@ const EditarLoja = () => {
       banner: storeProfile.banner || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8',
       whatsapp: storeProfile.whatsapp || '',
       address: storeProfile.address || '',
-      pixKey: storeProfile.pixKey || '',
       minOrderQuantity: storeProfile.minOrderQuantity || 0,
-      minOrderValue: storeProfile.minOrderValue || 0,
+      minOrderValueCents: decimalToCents(storeProfile.minOrderValue || 0),
       customCategories: storeProfile.customCategories || [],
     });
   }, [storeProfile]);
+
+  // Link público da loja
+  const storeLink = user?.id ? `${window.location.origin}/loja/${user.id}` : '';
+
+  const handleCopyLink = () => {
+    if (storeLink) {
+      navigator.clipboard.writeText(storeLink);
+      toast.success("Link copiado!");
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    if (storeLink) {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`Confira minha loja: ${storeLink}`)}`, '_blank');
+    }
+  };
 
   // Estatísticas reais da loja
   const storeStats = {
@@ -67,9 +82,8 @@ const EditarLoja = () => {
       banner: formData.banner,
       whatsapp: formData.whatsapp,
       address: formData.address,
-      pixKey: formData.pixKey,
       minOrderQuantity: formData.minOrderQuantity,
-      minOrderValue: formData.minOrderValue,
+      minOrderValue: centsToDecimal(formData.minOrderValueCents),
       customCategories: formData.customCategories
     });
     toast.success("Informações da loja salvas com sucesso!");
@@ -214,14 +228,6 @@ const EditarLoja = () => {
                 />
               </div>
 
-              <div>
-                <Label>Chave Pix</Label>
-                <Input
-                  value={formData.pixKey}
-                  onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
-                  placeholder="CPF, CNPJ, Email ou Telefone"
-                />
-              </div>
 
               <div className="border-t pt-4 mt-4">
                 <h3 className="font-semibold mb-3">Configurações de Pedido Mínimo</h3>
@@ -245,14 +251,11 @@ const EditarLoja = () => {
                   </div>
                   
                   <div>
-                    <Label>Valor Mínimo do Pedido (R$)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.minOrderValue}
-                      onChange={(e) => setFormData({ ...formData, minOrderValue: parseFloat(e.target.value) || 0 })}
-                      placeholder="0.00"
+                    <Label>Valor Mínimo do Pedido</Label>
+                    <CurrencyInput
+                      value={formData.minOrderValueCents}
+                      onChange={(cents) => setFormData({ ...formData, minOrderValueCents: cents })}
+                      placeholder="R$ 0,00"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Valor total mínimo
@@ -260,6 +263,33 @@ const EditarLoja = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </Card>
+
+          {/* Link da Loja */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <ExternalLink className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Link da Sua Loja</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Compartilhe este link com seus clientes para que eles possam acessar sua loja diretamente.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={storeLink}
+                readOnly
+                className="text-sm font-mono bg-muted"
+              />
+              <Button variant="outline" size="icon" onClick={handleCopyLink} title="Copiar link">
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="mt-3">
+              <Button variant="outline" onClick={handleShareWhatsApp} className="gap-2 text-green-700 border-green-300 hover:bg-green-50">
+                <ExternalLink className="h-4 w-4" />
+                Compartilhar no WhatsApp
+              </Button>
             </div>
           </Card>
 

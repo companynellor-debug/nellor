@@ -67,13 +67,15 @@ const ReportButton = ({ targetType, targetId, className }: ReportButtonProps) =>
 
   return (
     <>
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => setOpen(true)}
-        className={`flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors ${className || ""}`}
+        className={`flex items-center gap-2 text-muted-foreground hover:text-destructive hover:border-destructive transition-colors ${className || ""}`}
       >
-        <Flag className="h-3 w-3" />
+        <Flag className="h-4 w-4" />
         Denunciar
-      </button>
+      </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">

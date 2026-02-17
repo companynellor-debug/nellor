@@ -58,6 +58,18 @@ const MeusPedidos = () => {
     return () => window.clearTimeout(t);
   }, [searchParams, navigate, refetch]);
 
+  // Filtro por query param
+  const filtro = searchParams.get("filtro");
+
+  const getFilteredOrders = () => {
+    if (filtro === 'a-pagar') return orders.filter(o => o.payment_status === 'pending');
+    if (filtro === 'a-enviar') return orders.filter(o => o.order_status === 'preparing');
+    if (filtro === 'a-receber') return orders.filter(o => o.order_status === 'shipped');
+    return null;
+  };
+
+  const filteredOrders = getFilteredOrders();
+
   // Separar pedidos ativos e histórico
   const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.order_status));
   const historyOrders = orders.filter(o => ['delivered', 'cancelled'].includes(o.order_status));
@@ -284,6 +296,25 @@ const MeusPedidos = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
+        {filteredOrders ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm font-medium text-primary">
+                {filtro === 'a-pagar' ? '💳 A Pagar' : filtro === 'a-enviar' ? '📦 A Enviar' : '🚚 A Receber'}
+              </span>
+              <span className="text-xs text-muted-foreground">({filteredOrders.length} pedidos)</span>
+              <button onClick={() => navigate('/cliente/meus-pedidos')} className="ml-auto text-xs text-primary underline">Ver todos</button>
+            </div>
+            {filteredOrders.map(renderOrderCard)}
+            {filteredOrders.length === 0 && (
+              <Card className="bg-white border shadow-sm p-8 text-center">
+                <Package className="h-10 w-10 text-primary mx-auto mb-3" />
+                <h3 className="font-bold text-lg mb-2">Nenhum pedido encontrado</h3>
+                <p className="text-sm text-muted-foreground">Não há pedidos neste filtro</p>
+              </Card>
+            )}
+          </div>
+        ) : (
         <Tabs defaultValue="active" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6 bg-white border shadow-sm">
             <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
@@ -303,9 +334,7 @@ const MeusPedidos = () => {
                 </div>
                 <h3 className="font-bold text-lg mb-2">Nenhum pedido ativo</h3>
                 <p className="text-sm text-muted-foreground mb-4">Seus pedidos em andamento aparecerão aqui</p>
-                <Button onClick={() => navigate('/cliente/produtos')}>
-                  Explorar produtos
-                </Button>
+                <Button onClick={() => navigate('/cliente/produtos')}>Explorar produtos</Button>
               </Card>
             )}
           </TabsContent>
@@ -323,6 +352,7 @@ const MeusPedidos = () => {
             )}
           </TabsContent>
         </Tabs>
+        )}
       </main>
 
       {/* Dialog de Detalhes do Pedido */}

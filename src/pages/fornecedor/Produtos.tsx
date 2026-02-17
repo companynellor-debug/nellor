@@ -10,13 +10,15 @@ import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { useSupplierCategories } from "@/hooks/useSupplierCategories";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import { formatCurrencyFromDecimal, CurrencyInput, centsToDecimal, decimalToCents } from "@/utils/currency";
 
 const Produtos = () => {
+  const { user } = useSupabaseAuth();
   const { products, addProduct, updateProduct, deleteProduct } = useSupplierProducts();
   const { categories } = useSupabaseCategories();
-  const { categories: customCategories } = useSupplierCategories('current'); // hook will handle current user
+  const { categories: customCategories } = useSupplierCategories(user?.id);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SupplierProduct | null>(null);
   const [formData, setFormData] = useState({
@@ -169,7 +171,7 @@ const Produtos = () => {
 
       {/* Modal de Adicionar/Editar */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingProduct ? 'Editar Produto' : 'Adicionar Produto'}

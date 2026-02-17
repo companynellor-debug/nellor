@@ -9,7 +9,6 @@ export interface StoreProfile {
   banner: string;
   whatsapp: string;
   address: string;
-  pixKey: string;
   minOrderQuantity: number;
   minOrderValue: number;
   customCategories: string[];
@@ -22,7 +21,6 @@ const defaultStoreProfile: StoreProfile = {
   banner: "",
   whatsapp: "",
   address: "",
-  pixKey: "",
   minOrderQuantity: 0,
   minOrderValue: 0,
   customCategories: [],
@@ -76,9 +74,8 @@ export const useStoreProfile = () => {
           banner: profile.banner_loja_url || "",
           whatsapp: profile.telefone || "",
           address: profile.endereco_principal as any || "",
-          pixKey: profile.pix_key || "",
-          minOrderQuantity: 0,
-          minOrderValue: 0,
+          minOrderQuantity: (profile as any).min_order_quantity || 0,
+          minOrderValue: (profile as any).min_order_value || 0,
           customCategories: [],
         });
       }
@@ -99,8 +96,9 @@ export const useStoreProfile = () => {
           foto_perfil_url: newData.avatar,
           banner_loja_url: newData.banner,
           telefone: newData.whatsapp,
-          pix_key: newData.pixKey,
-        })
+          ...(newData.minOrderQuantity !== undefined && { min_order_quantity: newData.minOrderQuantity }),
+          ...(newData.minOrderValue !== undefined && { min_order_value: newData.minOrderValue }),
+        } as any)
         .eq('id', userId);
 
       if (error) throw error;
