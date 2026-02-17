@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +29,8 @@ const Pedidos = () => {
   const [trackingCode, setTrackingCode] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
   // Etiquetas pré-definidas
   const predefinedTags = [
@@ -53,7 +58,11 @@ const Pedidos = () => {
     const matchesTags = selectedTags.length === 0 || 
       selectedTags.every(tag => orderTags.includes(tag));
 
-    return matchesSearch && matchesStatus && matchesTags;
+    const orderDate = new Date(order.created_at);
+    const matchesDateFrom = !dateFrom || orderDate >= dateFrom;
+    const matchesDateTo = !dateTo || orderDate <= new Date(dateTo.getTime() + 86400000 - 1);
+
+    return matchesSearch && matchesStatus && matchesTags && matchesDateFrom && matchesDateTo;
   });
 
   const getStatusBadge = (status: Order['order_status']) => {
@@ -205,6 +214,64 @@ const Pedidos = () => {
               <SelectItem value="cancelled">Cancelado</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Filtro de Datas */}
+        <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn("h-9 text-sm justify-start font-normal", !dateFrom && "text-muted-foreground")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFrom ? format(dateFrom, "dd/MM/yyyy", { locale: ptBR }) : "Data início"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateFrom}
+                onSelect={setDateFrom}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn("h-9 text-sm justify-start font-normal", !dateTo && "text-muted-foreground")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateTo ? format(dateTo, "dd/MM/yyyy", { locale: ptBR }) : "Data fim"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateTo}
+                onSelect={setDateTo}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {(dateFrom || dateTo) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 text-sm text-muted-foreground"
+              onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}
+            >
+              Limpar datas
+            </Button>
+          )}
         </div>
 
         {/* Filtro de Tags */}

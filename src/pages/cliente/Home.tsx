@@ -11,7 +11,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useProducts } from "@/hooks/useProducts";
 import { useSupabaseBanners } from "@/hooks/useSupabaseBanners";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { useCart } from "@/hooks/useCart";
 import { usePWA } from "@/hooks/usePWA";
@@ -164,15 +164,9 @@ const ClienteHome = () => {
                   {mainBanners.map(banner => <CarouselItem key={banner.id}>
                       <div className="relative overflow-hidden rounded-xl cursor-pointer" onClick={() => banner.link_url && navigate(banner.link_url)}>
                         <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-56 md:h-80 lg:h-[420px] object-cover" />
-                        {banner.title && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                            <h3 className="text-white font-bold text-lg">{banner.title}</h3>
-                            {banner.subtitle && <p className="text-white/90 text-sm">{banner.subtitle}</p>}
-                          </div>}
                       </div>
                     </CarouselItem>)}
                 </CarouselContent>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
               </Carousel>
             </div>
           </div>}
