@@ -19,7 +19,7 @@ const Perfil = () => {
   };
 
   const pendingPayment = orders.filter((o: any) => o?.payment_status === "pending").length;
-  const toShip = orders.filter((o: any) => o?.order_status === "confirmed" || o?.order_status === "processing").length;
+  const toShip = orders.filter((o: any) => o?.order_status === "preparing").length;
   const toReceive = orders.filter((o: any) => o?.order_status === "shipped").length;
 
   return (
@@ -80,7 +80,7 @@ const Perfil = () => {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <button
-              onClick={() => navigate("/cliente/meus-pedidos")}
+              onClick={() => navigate("/cliente/meus-pedidos?filtro=a-pagar")}
               className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center relative">
@@ -94,7 +94,7 @@ const Perfil = () => {
               <span className="text-xs text-muted-foreground">A Pagar</span>
             </button>
             <button
-              onClick={() => navigate("/cliente/meus-pedidos")}
+              onClick={() => navigate("/cliente/meus-pedidos?filtro=a-enviar")}
               className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center relative">
@@ -108,7 +108,7 @@ const Perfil = () => {
               <span className="text-xs text-muted-foreground">A Enviar</span>
             </button>
             <button
-              onClick={() => navigate("/cliente/meus-pedidos")}
+              onClick={() => navigate("/cliente/meus-pedidos?filtro=a-receber")}
               className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center relative">

@@ -1293,6 +1293,8 @@ export type Database = {
           endereco_principal: Json | null
           foto_perfil_url: string | null
           id: string
+          min_order_quantity: number | null
+          min_order_value: number | null
           nome: string
           onboarding_completed: boolean | null
           pix_key: string | null
@@ -1313,6 +1315,8 @@ export type Database = {
           endereco_principal?: Json | null
           foto_perfil_url?: string | null
           id: string
+          min_order_quantity?: number | null
+          min_order_value?: number | null
           nome: string
           onboarding_completed?: boolean | null
           pix_key?: string | null
@@ -1333,6 +1337,8 @@ export type Database = {
           endereco_principal?: Json | null
           foto_perfil_url?: string | null
           id?: string
+          min_order_quantity?: number | null
+          min_order_value?: number | null
           nome?: string
           onboarding_completed?: boolean | null
           pix_key?: string | null
