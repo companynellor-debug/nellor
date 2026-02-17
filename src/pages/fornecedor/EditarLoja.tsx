@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { useStoreProfile } from "@/hooks/useStoreProfile";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { useSupplierCategories } from "@/hooks/useSupplierCategories";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,11 +16,13 @@ import { Save, Upload, Star, Package, Plus, X, Tag, Copy, ExternalLink } from "l
 import { CurrencyInput, decimalToCents, centsToDecimal } from "@/utils/currency";
 import { toast } from "sonner";
 
+
 const EditarLoja = () => {
   const { user } = useSupabaseAuth();
   const { storeProfile, updateStoreProfile } = useStoreProfile();
   const { products } = useSupplierProducts();
   const { categories: customCategories, addCategory, deleteCategory } = useSupplierCategories(user?.id);
+  const { reviews: allReviews } = useSupabaseReviews();
   
   const [formData, setFormData] = useState({
     storeName: '',
@@ -66,13 +69,21 @@ const EditarLoja = () => {
   };
 
   // Estatísticas reais da loja
-  const storeStats = {
-    rating: 0,
-    totalReviews: 0,
-    totalSales: 0,
-  };
+  const storeProductIds = useMemo(() => products.map(p => p.id), [products]);
+  const storeReviews = useMemo(
+    () => allReviews.filter(r => storeProductIds.includes(r.product_id)),
+    [allReviews, storeProductIds]
+  );
+  const storeStats = useMemo(() => {
+    const totalReviews = storeReviews.length;
+    const rating = totalReviews > 0
+      ? storeReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      : 0;
+    const totalSales = products.reduce((sum, p) => sum + ((p as any).vendas_count || 0), 0);
+    return { rating, totalReviews, totalSales };
+  }, [storeReviews, products]);
 
-  const reviews: any[] = [];
+  const reviews = storeReviews.slice(0, 5);
 
   const handleSave = () => {
     updateStoreProfile({
@@ -428,11 +439,13 @@ const EditarLoja = () => {
               <h3 className="text-lg font-bold text-primary mb-4">Avaliações Recentes</h3>
               {reviews.length > 0 ? (
                 <div className="space-y-4">
-                  {reviews.map((review, index) => (
-                    <div key={index} className="border-b pb-4 last:border-0">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="border-b pb-4 last:border-0">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="font-medium text-sm">{review.name}</p>
-                        <span className="text-xs text-muted-foreground">{review.date}</span>
+                        <p className="font-medium text-sm">{review.buyer_first_name || "Cliente"}</p>
+                        <span className="text-xs text-muted-foreground">
+                          {review.created_at ? new Date(review.created_at).toLocaleDateString('pt-BR') : ''}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 mb-2">
                         {[...Array(review.rating)].map((_, i) => (

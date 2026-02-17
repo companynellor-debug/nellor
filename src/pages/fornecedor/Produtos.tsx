@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
@@ -198,21 +198,23 @@ const Produtos = () => {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border shadow-lg z-50">
-                  <SelectItem value="" disabled>Categorias do Sistema</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.nome}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    <SelectLabel>Categorias do Sistema</SelectLabel>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                   {customCategories.length > 0 && (
-                    <>
-                      <SelectItem value="" disabled>Minhas Categorias</SelectItem>
+                    <SelectGroup>
+                      <SelectLabel>Minhas Categorias</SelectLabel>
                       {customCategories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.nome}
                         </SelectItem>
                       ))}
-                    </>
+                    </SelectGroup>
                   )}
                 </SelectContent>
               </Select>
