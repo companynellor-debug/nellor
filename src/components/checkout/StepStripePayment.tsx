@@ -4,22 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { 
-  ArrowLeft, 
-  CreditCard, 
-  Lock, 
-  ShieldCheck, 
+import {
+  ArrowLeft,
+  ShoppingBag,
+  Lock,
+  ShieldCheck,
   Loader2,
   CheckCircle,
-  AlertTriangle,
   Tag,
-  X
+  X,
+  TestTube,
+  Zap,
 } from "lucide-react";
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface StepStripePaymentProps {
@@ -39,41 +40,28 @@ export const StepStripePayment = ({
   subtotal,
   shipping,
   discount,
-  couponId,
   buyerData,
   onBack,
   onSuccess,
   onDiscountChange,
 }: StepStripePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isCheckingSupplier, setIsCheckingSupplier] = useState(true);
-  const [supplierReady, setSupplierReady] = useState(false);
-  const [supplierError, setSupplierError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
-  
+
   const { createOrder } = useSupabaseOrders();
   const { loading: couponLoading, appliedCoupon, validateCoupon, removeCoupon } = useCoupons();
 
   const total = subtotal + shipping - discount;
-  const platformFee = total * 0.075; // 7.5% Nellor commission
+  const platformFee = total * 0.075;
   const supplierAmount = total - platformFee;
 
-  // Get supplier info
   const supplierId = cartItems[0]?.storeId?.toString() || "";
   const storeName = cartItems[0]?.storeName || "Fornecedor";
 
-  // Stripe removido: não bloqueia a etapa por status de gateway
-  // Mantemos o layout e criamos o pedido como pendente.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _unused = { supplierReady, supplierError };
-
-  // Handle coupon application
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
-    
-    const productIds = cartItems.map(item => item.productId).filter(Boolean) as string[];
+    const productIds = cartItems.map((item) => item.productId).filter(Boolean) as string[];
     const result = await validateCoupon(couponCode, supplierId, subtotal, productIds);
-    
     if (result) {
       onDiscountChange(result.discount, result.coupon.id);
     }
@@ -85,27 +73,26 @@ export const StepStripePayment = ({
     onDiscountChange(0, undefined);
   };
 
-  const handleStripePayment = async () => {
+  const handleFinalizarPedido = async () => {
     if (!supplierId) {
-      toast({
-        title: "Erro",
-        description: "Fornecedor não encontrado",
-        variant: "destructive",
-      });
+      toast({ title: "Erro", description: "Fornecedor não encontrado", variant: "destructive" });
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Gateway de pagamento removido: cria o pedido PENDENTE e finaliza o fluxo no app
-      const pendingOrder = await createOrder({
+      // Simula breve delay de "processamento"
+      await new Promise((r) => setTimeout(r, 1200));
+
+      // Cria pedido como PAGO (simulação de teste sem gateway)
+      const newOrder = await createOrder({
         supplier_id: supplierId,
-        payment_method: "pix" as const,
-        payment_status: "pending",
+        payment_method: "cartao" as const,
+        payment_status: "paid",
         order_status: "pending",
-        status_label: "AGUARDANDO_PAGAMENTO",
-        payment_status_label: "PENDENTE",
+        status_label: "AGUARDANDO_PREPARACAO",
+        payment_status_label: "PAGO",
         subtotal,
         frete: shipping,
         desconto: discount,
@@ -136,16 +123,40 @@ export const StepStripePayment = ({
         supplier_amount: supplierAmount,
       });
 
+      // Dispara notificação push para o fornecedor via edge function
+      try {
+        await supabase.functions.invoke("send-push-notification", {
+          body: {
+            user_id: supplierId,
+            title: "🛍️ Novo Pedido Recebido!",
+            body: `Pedido ${newOrder.order_number} — R$ ${total.toFixed(2).replace(".", ",")} foi confirmado!`,
+            url: "/fornecedor/pedidos",
+            tag: `new-order-${newOrder.order_number}`,
+          },
+        });
+      } catch (pushErr) {
+        console.warn("Push notification failed (non-blocking):", pushErr);
+      }
 
-      // Notificação de pedido pendente agora é gerada via INSERT na tabela `notifications`
-      // (trigger do banco + edge function cuidam do push mesmo fora do app)
+      // Insere notificação no banco para o fornecedor ver no painel
+      try {
+        await supabase.from("notifications").insert({
+          user_id: supplierId,
+          title: "🛍️ Novo Pedido Recebido!",
+          body: `Pedido ${newOrder.order_number} de ${buyerData.nome} — R$ ${total.toFixed(2).replace(".", ",")}`,
+          type: "order_update" as const,
+          data: { order_id: newOrder.id, order_number: newOrder.order_number },
+        });
+      } catch (notifErr) {
+        console.warn("Notification insert failed (non-blocking):", notifErr);
+      }
 
-      // Salva contexto local para a página de sucesso (fallback visual apenas)
+      // Salva contexto local para a página de sucesso
       localStorage.setItem(
         "pendingOrder",
         JSON.stringify({
-          orderId: pendingOrder.id,
-          orderNumber: pendingOrder.order_number,
+          orderId: newOrder.id,
+          orderNumber: newOrder.order_number,
           supplierId,
           subtotal,
           shipping,
@@ -159,13 +170,12 @@ export const StepStripePayment = ({
         })
       );
 
-      onSuccess(pendingOrder.id);
+      onSuccess(newOrder.id);
     } catch (error: any) {
-      console.error("Payment error:", error);
-
+      console.error("Order creation error:", error);
       toast({
-        title: "Erro",
-        description: "Não foi possível concluir o pedido. Tente novamente.",
+        title: "Erro ao finalizar pedido",
+        description: error.message || "Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -173,73 +183,25 @@ export const StepStripePayment = ({
     }
   };
 
-  // Show loading state while checking supplier
-  if (isCheckingSupplier) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <Card className="border shadow-lg">
-          <CardContent className="p-12 text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-            <p className="text-lg font-medium">Verificando disponibilidade...</p>
-            <p className="text-sm text-muted-foreground">Aguarde enquanto verificamos o fornecedor</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Show alert if supplier is not ready
-  if (!supplierReady || supplierError) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <Alert variant="destructive" className="border-2">
-          <AlertTriangle className="h-5 w-5" />
-          <AlertTitle className="text-lg">Pagamento indisponível</AlertTitle>
-          <AlertDescription className="mt-2">
-            {supplierError || "O fornecedor ainda não finalizou o cadastro no sistema de pagamentos."}
-            <p className="mt-3 text-sm">
-              Infelizmente não é possível concluir a compra com este fornecedor no momento. 
-              Entre em contato com o fornecedor ou tente novamente mais tarde.
-            </p>
-          </AlertDescription>
-        </Alert>
-
-        <Card className="border shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-medium">{storeName}</p>
-                <p className="text-sm text-muted-foreground">Fornecedor</p>
-              </div>
-            </div>
-            
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-              <p className="text-sm text-amber-800">
-                <strong>Por que isso acontece?</strong><br/>
-                O fornecedor precisa completar o cadastro da conta de pagamentos para poder receber vendas. 
-                Isso inclui verificação de identidade e dados bancários.
-              </p>
-            </div>
-
-            <Button
-              variant="outline"
-              onClick={onBack}
-              className="w-full"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* Test Mode Banner */}
+      <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+        <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <TestTube className="h-5 w-5 text-yellow-700" />
+        </div>
+        <div>
+          <p className="font-semibold text-yellow-800 text-sm">Modo de Teste Ativo</p>
+          <p className="text-xs text-yellow-700">
+            Pedidos são criados como pagos instantaneamente. Notificações são enviadas normalmente.
+          </p>
+        </div>
+        <Badge variant="outline" className="border-yellow-400 text-yellow-800 ml-auto flex-shrink-0">
+          <Zap className="h-3 w-3 mr-1" />
+          Simulado
+        </Badge>
+      </div>
+
       {/* Coupon Section */}
       <Card className="border shadow-sm">
         <CardHeader className="pb-4">
@@ -256,10 +218,9 @@ export const StepStripePayment = ({
                 <div>
                   <p className="font-medium text-green-800">{appliedCoupon.coupon.codigo}</p>
                   <p className="text-sm text-green-600">
-                    {appliedCoupon.coupon.tipo === 'percentage' 
+                    {appliedCoupon.coupon.tipo === "percentage"
                       ? `${appliedCoupon.coupon.valor}% de desconto`
-                      : `R$ ${appliedCoupon.coupon.valor.toFixed(2).replace('.', ',')} de desconto`
-                    }
+                      : `R$ ${appliedCoupon.coupon.valor.toFixed(2).replace(".", ",")} de desconto`}
                   </p>
                 </div>
               </div>
@@ -274,52 +235,44 @@ export const StepStripePayment = ({
                 onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                 placeholder="Digite o código do cupom"
                 className="flex-1"
-                onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
               />
-              <Button 
-                onClick={handleApplyCoupon} 
-                disabled={couponLoading || !couponCode.trim()}
-                variant="outline"
-              >
-                {couponLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Aplicar"
-                )}
+              <Button onClick={handleApplyCoupon} disabled={couponLoading || !couponCode.trim()} variant="outline">
+                {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Aplicar"}
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Payment Card */}
+      {/* Order Summary Card */}
       <Card className="border shadow-lg overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 pb-6">
           <CardTitle className="flex items-center gap-3 text-xl">
             <div className="p-2 bg-primary rounded-lg">
-              <CreditCard className="h-6 w-6 text-primary-foreground" />
+              <ShoppingBag className="h-6 w-6 text-primary-foreground" />
             </div>
-            Pagamento
+            Confirmação do Pedido
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-2">
-            Pagamentos estão em atualização. Seu pedido será criado como pendente.
+            Revise os valores e clique em finalizar para criar o pedido.
           </p>
         </CardHeader>
-        
+
         <CardContent className="p-6 space-y-6">
           {/* Security Badges */}
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className="flex items-center gap-1">
               <Lock className="h-3 w-3" />
-              SSL Seguro
+              Dados Seguros
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1">
               <ShieldCheck className="h-3 w-3" />
-              Checkout seguro
+              Pedido Protegido
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1">
-              <CreditCard className="h-3 w-3" />
-              Cartão de Crédito
+              <CheckCircle className="h-3 w-3" />
+              Aprovação Imediata
             </Badge>
           </div>
 
@@ -328,7 +281,7 @@ export const StepStripePayment = ({
           {/* Order Summary */}
           <div className="space-y-4">
             <h3 className="font-semibold">Resumo do Pagamento</h3>
-            
+
             <div className="p-4 bg-muted/50 rounded-lg space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Fornecedor</span>
@@ -358,38 +311,15 @@ export const StepStripePayment = ({
               )}
               <Separator />
               <div className="flex items-center justify-between font-bold text-lg">
-                <span>Total a Pagar</span>
-                <span className="text-primary">
-                  R$ {total.toFixed(2).replace(".", ",")}
-                </span>
+                <span>Total</span>
+                <span className="text-primary">R$ {total.toFixed(2).replace(".", ",")}</span>
               </div>
             </div>
           </div>
-
-          {/* Card Brands */}
-          <div className="flex items-center justify-center gap-4 py-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="text-xs">Aceitamos:</span>
-              <div className="flex gap-1">
-                <div className="w-10 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[8px] font-bold">VISA</div>
-                <div className="w-10 h-6 bg-red-500 rounded flex items-center justify-center text-white text-[8px] font-bold">MC</div>
-                <div className="w-10 h-6 bg-blue-800 rounded flex items-center justify-center text-white text-[8px] font-bold">AMEX</div>
-                <div className="w-10 h-6 bg-orange-500 rounded flex items-center justify-center text-white text-[8px] font-bold">ELO</div>
-              </div>
-            </div>
-          </div>
-
-          <Alert>
-            <AlertTriangle className="h-5 w-5" />
-            <AlertTitle>Pagamento em atualização</AlertTitle>
-            <AlertDescription>
-              Você pode finalizar agora e acompanhar o status em <strong>Meus Pedidos</strong>.
-            </AlertDescription>
-          </Alert>
 
           {/* Finalize Button */}
           <Button
-            onClick={handleStripePayment}
+            onClick={handleFinalizarPedido}
             disabled={isProcessing}
             className="w-full h-14 text-lg font-semibold"
             size="lg"
@@ -397,30 +327,24 @@ export const StepStripePayment = ({
             {isProcessing ? (
               <>
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                Finalizando...
+                Processando pedido...
               </>
             ) : (
               <>
-                <Lock className="h-5 w-5 mr-2" />
-                Finalizar Pedido (R$ {total.toFixed(2).replace(".", ",")})
+                <CheckCircle className="h-5 w-5 mr-2" />
+                Finalizar Pedido — R$ {total.toFixed(2).replace(".", ",")}
               </>
             )}
           </Button>
 
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            disabled={isProcessing}
-            className="w-full"
-          >
+          <Button variant="ghost" onClick={onBack} disabled={isProcessing} className="w-full">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar ao Resumo
           </Button>
 
-          {/* Footer */}
           <div className="text-center text-xs text-muted-foreground pt-4 border-t">
             <Lock className="h-4 w-4 inline mr-1" />
-            Seus dados estão protegidos com criptografia.
+            Seus dados estão protegidos.
           </div>
         </CardContent>
       </Card>
