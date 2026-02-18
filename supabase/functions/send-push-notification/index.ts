@@ -158,7 +158,7 @@ serve(async (req) => {
       );
     }
 
-    const { user_id, title, body, url, order_number, type } = await req.json();
+    const { user_id, title, body, url, order_number, type, data } = await req.json();
 
     if (!user_id || !title || !body) {
       return new Response(
@@ -230,6 +230,25 @@ serve(async (req) => {
     const sent = results.filter((r) => r.success).length;
     const failed = results.filter((r) => !r.success).length;
     const expired = results.filter((r) => r.expired).length;
+
+    // Inserir notificação no banco usando service role (ignora RLS)
+    try {
+      const notifType = (type === "order_update" || type === "order_status_changed" || type === "payment_confirmed" || type === "new_message" || type === "promotion" || type === "general")
+        ? type
+        : "order_update";
+      await supabaseAdmin.from("notifications").insert({
+        user_id,
+        title,
+        body,
+        type: notifType,
+        data: data || null,
+        sound: true,
+        read: false,
+      });
+      console.log("✅ Notification inserted in DB for user:", user_id);
+    } catch (dbErr) {
+      console.error("❌ Failed to insert notification in DB:", dbErr);
+    }
 
     return new Response(
       JSON.stringify({ sent, failed, expired, total: subscriptions.length }),

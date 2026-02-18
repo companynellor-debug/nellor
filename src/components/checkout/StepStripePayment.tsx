@@ -123,32 +123,21 @@ export const StepStripePayment = ({
         supplier_amount: supplierAmount,
       });
 
-      // Dispara notificação push para o fornecedor via edge function
+      // Dispara notificação push + insere no banco (via edge function com service role)
       try {
         await supabase.functions.invoke("send-push-notification", {
           body: {
             user_id: supplierId,
             title: "🛍️ Novo Pedido Recebido!",
-            body: `Pedido ${newOrder.order_number} — R$ ${total.toFixed(2).replace(".", ",")} foi confirmado!`,
+            body: `Pedido ${newOrder.order_number} de ${buyerData.nome} — R$ ${total.toFixed(2).replace(".", ",")} confirmado!`,
             url: "/fornecedor/pedidos",
-            tag: `new-order-${newOrder.order_number}`,
+            type: "order_update",
+            order_number: newOrder.order_number,
+            data: { order_id: newOrder.id, order_number: newOrder.order_number },
           },
         });
       } catch (pushErr) {
         console.warn("Push notification failed (non-blocking):", pushErr);
-      }
-
-      // Insere notificação no banco para o fornecedor ver no painel
-      try {
-        await supabase.from("notifications").insert({
-          user_id: supplierId,
-          title: "🛍️ Novo Pedido Recebido!",
-          body: `Pedido ${newOrder.order_number} de ${buyerData.nome} — R$ ${total.toFixed(2).replace(".", ",")}`,
-          type: "order_update" as const,
-          data: { order_id: newOrder.id, order_number: newOrder.order_number },
-        });
-      } catch (notifErr) {
-        console.warn("Notification insert failed (non-blocking):", notifErr);
       }
 
       // Salva contexto local para a página de sucesso
