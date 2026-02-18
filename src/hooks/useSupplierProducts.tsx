@@ -32,6 +32,7 @@ export const useSupplierProducts = () => {
         .from('products')
         .select('*')
         .eq('supplier_id', user.id)
+        .eq('ativo', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -151,7 +152,7 @@ export const useSupplierProducts = () => {
     try {
       const { error } = await supabase
         .from('products')
-        .delete()
+        .update({ ativo: false })
         .eq('id', id);
 
       if (error) throw error;
@@ -160,6 +161,7 @@ export const useSupplierProducts = () => {
         title: 'Produto excluído',
         description: 'Produto removido com sucesso!',
       });
+
 
       fetchProducts();
     } catch (error: any) {
