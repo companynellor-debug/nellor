@@ -19,16 +19,44 @@ const Alertas = () => {
   }, []);
 
   const fetchAll = async () => {
-    try {
-      setLoading(true);
-      
-      const [notifRes, sponsorRes, reportRes] = await Promise.all([
-        supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(20),
-        supabase.from('sponsored_products').select('*, products(nome)').eq('status', 'pending').order('created_at', { ascending: false }),
-        supabase.from('reports').select('*').eq('status', 'pending').order('created_at', { ascending: false }).limit(20),
-      ]);
+    setLoading(true);
 
-      const notificationsList = notifRes.data || [];
+    // Fetch each independently so one failure doesn't block the others
+    try {
+      const { data, error } = await supabase
+        .from('sponsored_products')
+        .select('*, products(nome)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+      if (error) console.error('Error fetching sponsorships:', error);
+      else setSponsorships(data || []);
+    } catch (e) {
+      console.error('Sponsorship fetch failed:', e);
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) console.error('Error fetching reports:', error);
+      else setReports(data || []);
+    } catch (e) {
+      console.error('Reports fetch failed:', e);
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) console.error('Error fetching notifications:', error);
+      
+      const notificationsList = data || [];
       const formattedAlerts = notificationsList.map(notif => {
         let type = 'info';
         let icon = Star;
@@ -36,15 +64,11 @@ const Alertas = () => {
         let bg = "bg-blue-50";
 
         if (notif.type === 'order_update') {
-          type = 'success';
-          icon = CheckCircle;
-          color = "from-green-500 to-green-600";
-          bg = "bg-green-50";
+          type = 'success'; icon = CheckCircle;
+          color = "from-green-500 to-green-600"; bg = "bg-green-50";
         } else if (notif.type === 'payout') {
-          type = 'warning';
-          icon = AlertTriangle;
-          color = "from-yellow-500 to-yellow-600";
-          bg = "bg-yellow-50";
+          type = 'warning'; icon = AlertTriangle;
+          color = "from-yellow-500 to-yellow-600"; bg = "bg-yellow-50";
         }
 
         return {
@@ -55,15 +79,12 @@ const Alertas = () => {
           color, bg
         };
       });
-
       setAlerts(formattedAlerts);
-      setSponsorships(sponsorRes.data || []);
-      setReports(reportRes.data || []);
-    } catch (error) {
-      console.error('Error fetching alerts:', error);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error('Notifications fetch failed:', e);
     }
+
+    setLoading(false);
   };
 
   const handleSponsorshipAction = async (id: string, action: 'approved' | 'rejected') => {
@@ -124,12 +145,8 @@ const Alertas = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {sp.description && (
-                    <p className="text-sm text-muted-foreground">{sp.description}</p>
-                  )}
-                  {sp.banner_url && (
-                    <img src={sp.banner_url} alt="Banner" className="w-full h-24 object-cover rounded-md" />
-                  )}
+                  {sp.description && <p className="text-sm text-muted-foreground">{sp.description}</p>}
+                  {sp.banner_url && <img src={sp.banner_url} alt="Banner" className="w-full h-24 object-cover rounded-md" />}
                   <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(sp.created_at), { addSuffix: true, locale: ptBR })}
                   </p>
@@ -164,9 +181,7 @@ const Alertas = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {rep.description && (
-                    <p className="text-sm text-muted-foreground">{rep.description}</p>
-                  )}
+                  {rep.description && <p className="text-sm text-muted-foreground">{rep.description}</p>}
                   <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(rep.created_at), { addSuffix: true, locale: ptBR })}
                   </p>
@@ -200,9 +215,7 @@ const Alertas = () => {
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1">
-                        <CardTitle className="text-base font-semibold mb-1 text-stone-950">
-                          {alert.title}
-                        </CardTitle>
+                        <CardTitle className="text-base font-semibold mb-1 text-stone-950">{alert.title}</CardTitle>
                         <p className="text-sm text-muted-foreground">{alert.description}</p>
                       </div>
                     </div>

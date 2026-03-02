@@ -13,6 +13,10 @@ export interface SupplierProduct {
   minQuantity?: number;
   minValue?: number;
   variations?: { name: string; options: string[] }[];
+  sizes?: string[];
+  colors?: string[];
+  isKit?: boolean;
+  kitItems?: { name: string; quantity: number }[];
 }
 
 export const useSupplierProducts = () => {
@@ -23,10 +27,7 @@ export const useSupplierProducts = () => {
   const fetchProducts = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+      if (!user) { setLoading(false); return; }
 
       const { data, error } = await supabase
         .from('products')
@@ -37,7 +38,6 @@ export const useSupplierProducts = () => {
 
       if (error) throw error;
 
-      // Mapear dados do Supabase para o formato do SupplierProduct
       const mappedProducts = (data || []).map((product: any) => ({
         id: product.id,
         name: product.nome,
@@ -49,31 +49,29 @@ export const useSupplierProducts = () => {
         minQuantity: undefined,
         minValue: undefined,
         variations: product.variacoes || undefined,
+        sizes: product.tamanhos || undefined,
+        colors: product.cores || undefined,
+        isKit: product.is_kit || false,
+        kitItems: product.kit_items || undefined,
       }));
 
       setProducts(mappedProducts);
     } catch (error: any) {
       console.error('Error fetching products:', error);
-      toast({
-        title: 'Erro ao carregar produtos',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao carregar produtos', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  useEffect(() => { fetchProducts(); }, []);
 
   const addProduct = async (product: Omit<SupplierProduct, 'id'>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('products')
         .insert([{
           supplier_id: user.id,
@@ -85,6 +83,10 @@ export const useSupplierProducts = () => {
           preco: product.price,
           estoque: product.stock || 0,
           variacoes: product.variations || null,
+          tamanhos: product.sizes && product.sizes.length > 0 ? product.sizes : null,
+          cores: product.colors && product.colors.length > 0 ? product.colors : null,
+          is_kit: product.isKit || false,
+          kit_items: product.kitItems && product.kitItems.length > 0 ? product.kitItems : null,
           ativo: true,
           rating_medio: 0,
           total_reviews: 0
@@ -93,27 +95,17 @@ export const useSupplierProducts = () => {
         .single();
 
       if (error) throw error;
-
-      toast({
-        title: 'Produto adicionado',
-        description: 'Produto criado com sucesso!',
-      });
-
+      toast({ title: 'Produto adicionado', description: 'Produto criado com sucesso!' });
       fetchProducts();
     } catch (error: any) {
       console.error('Error adding product:', error);
-      toast({
-        title: 'Erro ao adicionar produto',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao adicionar produto', description: error.message, variant: 'destructive' });
     }
   };
 
   const updateProduct = async (id: string, updatedData: Partial<SupplierProduct>) => {
     try {
       const updatePayload: any = {};
-      
       if (updatedData.name) updatePayload.nome = updatedData.name;
       if (updatedData.category) updatePayload.categoria_id = updatedData.category;
       if (updatedData.description) {
@@ -124,62 +116,32 @@ export const useSupplierProducts = () => {
       if (updatedData.price !== undefined) updatePayload.preco = updatedData.price;
       if (updatedData.stock !== undefined) updatePayload.estoque = updatedData.stock;
       if (updatedData.variations) updatePayload.variacoes = updatedData.variations;
+      if (updatedData.sizes !== undefined) updatePayload.tamanhos = updatedData.sizes.length > 0 ? updatedData.sizes : null;
+      if (updatedData.colors !== undefined) updatePayload.cores = updatedData.colors.length > 0 ? updatedData.colors : null;
+      if (updatedData.isKit !== undefined) updatePayload.is_kit = updatedData.isKit;
+      if (updatedData.kitItems !== undefined) updatePayload.kit_items = updatedData.kitItems.length > 0 ? updatedData.kitItems : null;
 
-      const { error } = await supabase
-        .from('products')
-        .update(updatePayload)
-        .eq('id', id);
-
+      const { error } = await supabase.from('products').update(updatePayload).eq('id', id);
       if (error) throw error;
-
-      toast({
-        title: 'Produto atualizado',
-        description: 'Alterações salvas com sucesso!',
-      });
-
+      toast({ title: 'Produto atualizado', description: 'Alterações salvas com sucesso!' });
       fetchProducts();
     } catch (error: any) {
       console.error('Error updating product:', error);
-      toast({
-        title: 'Erro ao atualizar produto',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao atualizar produto', description: error.message, variant: 'destructive' });
     }
   };
 
   const deleteProduct = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({ ativo: false })
-        .eq('id', id);
-
+      const { error } = await supabase.from('products').update({ ativo: false }).eq('id', id);
       if (error) throw error;
-
-      toast({
-        title: 'Produto excluído',
-        description: 'Produto removido com sucesso!',
-      });
-
-
+      toast({ title: 'Produto excluído', description: 'Produto removido com sucesso!' });
       fetchProducts();
     } catch (error: any) {
       console.error('Error deleting product:', error);
-      toast({
-        title: 'Erro ao excluir produto',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao excluir produto', description: error.message, variant: 'destructive' });
     }
   };
 
-  return {
-    products,
-    loading,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    refetch: fetchProducts
-  };
+  return { products, loading, addProduct, updateProduct, deleteProduct, refetch: fetchProducts };
 };
