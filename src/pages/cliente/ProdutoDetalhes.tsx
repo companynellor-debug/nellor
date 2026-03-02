@@ -31,60 +31,46 @@ const ProdutoDetalhes = () => {
   const [currentStock, setCurrentStock] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [showQuantityDialog, setShowQuantityDialog] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | undefined>();
+  const [selectedColor, setSelectedColor] = useState<string | undefined>();
 
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { addToCart } = useCart();
   const { stores } = useStores();
   const { getProductById, getRelatedProducts } = useProducts();
-
   const { products: supabaseProducts } = useSupabaseProducts();
 
   const routeId = id ?? "";
-  const isUuid = useMemo(
-    () => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(routeId),
-    [routeId]
-  );
-
-  const supabaseProductById = useMemo(() => {
-    if (!isUuid) return null;
-    return supabaseProducts.find((p) => p.id === routeId) ?? null;
-  }, [isUuid, supabaseProducts, routeId]);
-
-  // Fallback legado (IDs numéricos) – mantém compatibilidade sem depender só do URL para UUID.
-  const legacyProductId = useMemo(() => {
-    const n = Number.parseInt(routeId, 10);
-    return Number.isFinite(n) ? n : null;
-  }, [routeId]);
+  const isUuid = useMemo(() => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(routeId), [routeId]);
+  const supabaseProductById = useMemo(() => isUuid ? supabaseProducts.find((p) => p.id === routeId) ?? null : null, [isUuid, supabaseProducts, routeId]);
+  const legacyProductId = useMemo(() => { const n = Number.parseInt(routeId, 10); return Number.isFinite(n) ? n : null; }, [routeId]);
   const legacyProduct = legacyProductId ? getProductById(legacyProductId) : undefined;
 
-  // Produto “fonte da verdade” para a UI desta tela
+  // Product sizes/colors/kit from DB
+  const productSizes: string[] = useMemo(() => (supabaseProductById?.tamanhos as string[]) || [], [supabaseProductById]);
+  const productColors: string[] = useMemo(() => (supabaseProductById?.cores as string[]) || [], [supabaseProductById]);
+  const productIsKit = supabaseProductById?.is_kit || false;
+  const productKitItems: { name: string; quantity: number }[] = useMemo(() => (supabaseProductById?.kit_items as any[]) || [], [supabaseProductById]);
+
   const product = useMemo(() => {
     if (supabaseProductById) {
       const images = (supabaseProductById.imagens ?? []).filter(Boolean);
       const description = supabaseProductById.descricao_longa || supabaseProductById.descricao_curta || "";
-
       return {
-        // Campos usados pela UI existente
-        id: 0,
-        name: supabaseProductById.nome,
+        id: 0, name: supabaseProductById.nome,
         images: images.length ? images : [""],
         priceNumber: supabaseProductById.preco,
         price: formatCurrencyFromDecimal(supabaseProductById.preco),
-        description,
-        specs: [] as Array<{ label: string; value: string }>,
+        description, specs: [] as Array<{ label: string; value: string }>,
         category: supabaseProductById.categoria_id ?? "",
-
-        // IDs reais do Supabase (importantes para carrinho/loja)
         supplierUuid: supabaseProductById.id,
         supplierProfileId: supabaseProductById.supplier_id,
         storeId: supabaseProductById.supplier_id,
       };
     }
-
     return legacyProduct;
   }, [supabaseProductById, legacyProduct]);
 
-  // Reviews sempre pelo product_id real (UUID quando existir)
   const { reviews, loading: reviewsLoading } = useSupabaseReviews(
     (supabaseProductById?.id ?? (legacyProduct as any)?.supplierUuid) || undefined
   );
@@ -92,106 +78,70 @@ const ProdutoDetalhes = () => {
   const store = product ? stores.find((s) => s.id === (product as any).storeId) : undefined;
   const productId = legacyProductId ?? 0;
   const isProductFavorite = isFavorite(productId);
-
-  // Usar dados reais do banco quando disponível
   const realRating = supabaseProductById?.rating_medio ?? (legacyProduct as any)?.rating ?? 0;
   const realReviewCount = supabaseProductById?.total_reviews ?? (legacyProduct as any)?.reviews ?? 0;
   const realSalesCount = supabaseProductById?.vendas_count ?? 0;
-  // Buscar perfil do fornecedor (via VIEW pública) e estoque atual
+
   useEffect(() => {
     const fetchSupplierData = async () => {
-      if (!product?.supplierProfileId) {
-        console.log('No supplierProfileId found for product:', product);
-        return;
-      }
-
+      if (!product?.supplierProfileId) return;
       try {
-        // Usar função RPC SECURITY DEFINER para garantir acesso público
-        const { data: profiles, error } = await supabase.rpc('get_public_store_profile', {
-          _id: product.supplierProfileId
-        });
-
+        const { data: profiles, error } = await supabase.rpc('get_public_store_profile', { _id: product.supplierProfileId });
         if (error) {
-          console.error('Error fetching supplier profile via RPC:', error);
-          // Fallback to view
-          const { data: viewProfile } = await supabase
-            .from('public_supplier_profiles')
-            .select('id, nome, foto_perfil_url, banner_loja_url, descricao_loja')
-            .eq('id', product.supplierProfileId)
-            .maybeSingle();
-          
-          if (viewProfile) {
-            setSupplierProfile(viewProfile);
-          }
+          const { data: viewProfile } = await supabase.from('public_supplier_profiles').select('id, nome, foto_perfil_url, banner_loja_url, descricao_loja').eq('id', product.supplierProfileId).maybeSingle();
+          if (viewProfile) setSupplierProfile(viewProfile);
           return;
         }
-
-        if (profiles && profiles.length > 0) {
-          setSupplierProfile(profiles[0]);
-        }
-
-        // Buscar estoque atual do produto
+        if (profiles && profiles.length > 0) setSupplierProfile(profiles[0]);
         if (product.supplierUuid) {
-          const supabaseProduct = supabaseProducts.find(p => p.id === product.supplierUuid);
-          if (supabaseProduct) {
-            setCurrentStock(supabaseProduct.estoque);
-          }
+          const sp = supabaseProducts.find(p => p.id === product.supplierUuid);
+          if (sp) setCurrentStock(sp.estoque);
         }
-      } catch (error) {
-        console.error('Error in fetchSupplierData:', error);
-      }
+      } catch (error) { console.error('Error in fetchSupplierData:', error); }
     };
-
     fetchSupplierData();
   }, [product, supabaseProducts]);
 
-  const handleToggleFavorite = () => {
-    if (isProductFavorite) {
-      removeFavorite(productId);
-    } else {
-      addFavorite(productId);
-    }
-  };
+  const handleToggleFavorite = () => { isProductFavorite ? removeFavorite(productId) : addFavorite(productId); };
 
   const handleShare = async () => {
     const envUrl = (import.meta as any).env?.VITE_PUBLIC_SITE_URL as string | undefined;
     const baseUrl = envUrl ? envUrl.replace(/\/$/, "") : window.location.origin;
     const productUrl = `${baseUrl}/p/${product?.supplierUuid || ""}`;
-
     const copyToClipboard = async () => {
-      try {
-        await navigator.clipboard.writeText(productUrl);
-      } catch {
-        const textArea = document.createElement("textarea");
-        textArea.value = productUrl;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
+      try { await navigator.clipboard.writeText(productUrl); } catch {
+        const t = document.createElement("textarea"); t.value = productUrl; t.style.position = "fixed"; t.style.left = "-999999px";
+        document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t);
       }
-
-      toast({
-        title: "Link copiado!",
-        description: "O link do produto foi copiado para a área de transferência.",
-      });
+      toast({ title: "Link copiado!", description: "O link do produto foi copiado para a área de transferência." });
     };
-
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product?.name || "Produto",
-          text: `Confira este produto: ${product?.name}`,
-          url: productUrl,
-        });
-        return;
-      } catch (error) {
-        if ((error as Error).name === "AbortError") return;
-      }
+      try { await navigator.share({ title: product?.name || "Produto", text: `Confira este produto: ${product?.name}`, url: productUrl }); return; }
+      catch (error) { if ((error as Error).name === "AbortError") return; }
     }
-
     await copyToClipboard();
+  };
+
+  const validateAndAddToCart = (qty: number, thenNavigate?: string) => {
+    if (!product?.supplierProfileId) {
+      toast({ title: 'Erro', description: 'Informações do fornecedor não encontradas.', variant: 'destructive' });
+      return;
+    }
+    if (productSizes.length > 0 && !selectedSize) {
+      toast({ title: 'Selecione o tamanho', description: 'Escolha um tamanho antes de continuar.', variant: 'destructive' });
+      return;
+    }
+    if (productColors.length > 0 && !selectedColor) {
+      toast({ title: 'Selecione a cor', description: 'Escolha uma cor antes de continuar.', variant: 'destructive' });
+      return;
+    }
+    addToCart({
+      productId: product.supplierUuid || '', name: product.name, price: product.priceNumber,
+      image: product.images[0], storeId: product.supplierProfileId || '',
+      storeName: supplierProfile?.nome || 'Loja',
+      selectedSize, selectedColor,
+    }, qty);
+    if (thenNavigate) navigate(thenNavigate);
   };
 
   if (!product) {
@@ -199,9 +149,7 @@ const ProdutoDetalhes = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Produto não encontrado</h1>
-          <Button onClick={() => navigate("/cliente")} className="bg-primary hover:bg-primary/90 text-white">
-            Voltar para Home
-          </Button>
+          <Button onClick={() => navigate("/cliente")} className="bg-primary hover:bg-primary/90 text-white">Voltar para Home</Button>
         </div>
       </div>
     );
@@ -213,74 +161,45 @@ const ProdutoDetalhes = () => {
     <div className="min-h-screen bg-background pb-20 lg:pb-6">
       <ParticlesBackground />
 
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors"><ArrowLeft className="h-6 w-6" /></button>
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => {
-                const envUrl = (import.meta as any).env?.VITE_PUBLIC_SITE_URL as string | undefined;
-                const baseUrl = (envUrl ? envUrl.replace(/\/$/, "") : window.location.origin);
-                const productUrl = `${baseUrl}/p/${product?.supplierUuid || ""}`;
-                const text = `Confira este produto: ${product?.name} - ${productUrl}`;
-                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-              }} 
-              className="p-2 hover:bg-muted rounded-full transition-colors"
-              title="Compartilhar no WhatsApp"
-            >
+            <button onClick={() => {
+              const envUrl = (import.meta as any).env?.VITE_PUBLIC_SITE_URL as string | undefined;
+              const baseUrl = (envUrl ? envUrl.replace(/\/$/, "") : window.location.origin);
+              const productUrl = `${baseUrl}/p/${product?.supplierUuid || ""}`;
+              window.open(`https://wa.me/?text=${encodeURIComponent(`Confira este produto: ${product?.name} - ${productUrl}`)}`, '_blank');
+            }} className="p-2 hover:bg-muted rounded-full transition-colors" title="Compartilhar no WhatsApp">
               <MessageCircle className="h-6 w-6 hover:text-primary transition-colors" />
             </button>
-            <button onClick={handleShare} className="p-2 hover:bg-muted rounded-full transition-colors" title="Copiar link">
-              <Share2 className="h-6 w-6 hover:text-primary transition-colors" />
-            </button>
-            <button onClick={handleToggleFavorite} className="p-2 hover:bg-muted rounded-full transition-colors">
-              <Heart className={`h-6 w-6 transition-colors ${isProductFavorite ? "fill-red-500 text-red-500" : "hover:text-primary"}`} />
-            </button>
+            <button onClick={handleShare} className="p-2 hover:bg-muted rounded-full transition-colors" title="Copiar link"><Share2 className="h-6 w-6 hover:text-primary transition-colors" /></button>
+            <button onClick={handleToggleFavorite} className="p-2 hover:bg-muted rounded-full transition-colors"><Heart className={`h-6 w-6 transition-colors ${isProductFavorite ? "fill-red-500 text-red-500" : "hover:text-primary"}`} /></button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10 max-w-7xl">
-        {/* Layout Desktop: Grid com imagens lado esquerdo e info lado direito */}
         <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
-          
-          {/* Coluna Esquerda: Thumbnails verticais + Imagem Principal */}
+          {/* Images */}
           <div className="lg:col-span-7 mb-6 lg:mb-0">
             <div className="lg:flex lg:gap-4">
-              {/* Thumbnails - Vertical em Desktop */}
               <div className="hidden lg:flex lg:flex-col gap-2 order-1">
                 {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
-                      selectedImage === index ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
-                    }`}
-                  >
+                  <button key={index} onClick={() => setSelectedImage(index)}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === index ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"}`}>
                     <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
-
-              {/* Imagem Principal */}
               <div className="flex-1 order-2">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-muted max-w-lg mx-auto lg:max-w-none">
                   <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
                 </div>
-                
-                {/* Thumbnails - Horizontal em Mobile */}
                 <div className="flex gap-2 justify-center mt-4 lg:hidden">
                   {product.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index ? "border-primary scale-105" : "border-border"
-                      }`}
-                    >
+                    <button key={index} onClick={() => setSelectedImage(index)}
+                      className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-primary scale-105" : "border-border"}`}>
                       <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
@@ -289,14 +208,10 @@ const ProdutoDetalhes = () => {
             </div>
           </div>
 
-          {/* Coluna Direita: Informações do Produto */}
+          {/* Info */}
           <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-5">
-            {/* Loja */}
             {supplierProfile && product.supplierProfileId && (
-              <div
-                onClick={() => navigate(`/cliente/loja/${product.supplierProfileId}`)}
-                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-              >
+              <div onClick={() => navigate(`/cliente/loja/${product.supplierProfileId}`)} className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
                 <Avatar className="h-10 w-10 border-2 border-primary/20">
                   <AvatarImage src={supplierProfile.foto_perfil_url} alt={supplierProfile.nome} />
                   <AvatarFallback className="bg-primary/10 text-primary">{supplierProfile.nome.charAt(0)}</AvatarFallback>
@@ -308,7 +223,6 @@ const ProdutoDetalhes = () => {
               </div>
             )}
 
-            {/* Nome e Avaliações */}
             <div>
               <h1 className="text-xl lg:text-2xl font-bold mb-3">{product.name}</h1>
               <div className="flex items-center gap-3 flex-wrap">
@@ -319,290 +233,150 @@ const ProdutoDetalhes = () => {
                   <span className="text-sm font-medium ml-1">{realRating.toFixed(1)}</span>
                 </div>
                 <span className="text-sm text-muted-foreground">({realReviewCount} avaliações)</span>
-                {realSalesCount > 0 && (
-                  <span className="text-sm text-orange-600 font-medium">{realSalesCount} vendidos</span>
-                )}
+                {realSalesCount > 0 && <span className="text-sm text-orange-600 font-medium">{realSalesCount} vendidos</span>}
                 <Badge variant={currentStock > 0 ? "outline" : "destructive"} className="flex items-center gap-1 text-xs">
-                  <Package className="h-3 w-3" />
-                  {currentStock > 0 ? `${currentStock} em estoque` : 'Sem estoque'}
+                  <Package className="h-3 w-3" />{currentStock > 0 ? `${currentStock} em estoque` : 'Sem estoque'}
                 </Badge>
               </div>
-              {product.supplierUuid && (
-                <div className="mt-2">
-                  <ReportButton targetType="product" targetId={product.supplierUuid} />
-                </div>
-              )}
+              {product.supplierUuid && <div className="mt-2"><ReportButton targetType="product" targetId={product.supplierUuid} /></div>}
             </div>
 
-            {/* Preço */}
             <div className="py-4 border-y border-border">
               <p className="text-3xl font-bold text-primary">{product.price}</p>
               <p className="text-xs text-muted-foreground mt-1">à vista no PIX</p>
-              {product.supplierUuid && (
-                <div className="mt-2">
-                  <ReportButton targetType="product" targetId={product.supplierUuid} />
-                </div>
-              )}
             </div>
 
-            {/* Descrição */}
             <div>
               <h3 className="text-sm font-semibold mb-2">Descrição</h3>
               <p className="text-muted-foreground leading-relaxed text-sm">{product.description}</p>
             </div>
 
-            {/* Especificações Resumidas */}
-            <div className="bg-muted/30 rounded-lg p-4">
-              <h3 className="text-sm font-semibold mb-3">Especificações</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {product.specs.slice(0, 4).map((spec) => (
-                  <div key={spec.label} className="text-sm">
-                    <span className="text-muted-foreground">{spec.label}: </span>
-                    <span className="font-medium">{spec.value}</span>
-                  </div>
-                ))}
+            {/* Tamanhos */}
+            {productSizes.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2">📏 Tamanho</h3>
+                <div className="flex flex-wrap gap-2">
+                  {productSizes.map(size => (
+                    <Badge key={size} variant={selectedSize === size ? "default" : "outline"}
+                      className="cursor-pointer select-none px-3 py-1" onClick={() => setSelectedSize(size)}>
+                      {size}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-              {product.specs.length > 4 && (
-                <p className="text-xs text-primary mt-2 cursor-pointer hover:underline">Ver todas as especificações</p>
-              )}
-            </div>
+            )}
 
-            {/* Botões de Ação - Desktop */}
+            {/* Cores */}
+            {productColors.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2">🎨 Cor</h3>
+                <div className="flex flex-wrap gap-2">
+                  {productColors.map(color => (
+                    <Badge key={color} variant={selectedColor === color ? "default" : "outline"}
+                      className="cursor-pointer select-none px-3 py-1" onClick={() => setSelectedColor(color)}>
+                      {color}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Kit */}
+            {productIsKit && productKitItems.length > 0 && (
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h3 className="text-sm font-semibold mb-2">📦 Itens do Kit</h3>
+                <ul className="space-y-1">
+                  {productKitItems.map((item, idx) => (
+                    <li key={idx} className="text-sm text-muted-foreground">• {item.quantity}x {item.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Specs */}
+            {product.specs.length > 0 && (
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h3 className="text-sm font-semibold mb-3">Especificações</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {product.specs.slice(0, 4).map((spec) => (
+                    <div key={spec.label} className="text-sm">
+                      <span className="text-muted-foreground">{spec.label}: </span><span className="font-medium">{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Desktop buttons */}
             <div className="hidden lg:flex gap-3 pt-2">
-              <Button 
-                variant="outline" 
-                className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12"
-                disabled={currentStock === 0}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (currentStock === 0 || !product.supplierProfileId) return;
-                  addToCart({
-                    productId: product.supplierUuid || '',
-                    name: product.name,
-                    price: product.priceNumber,
-                    image: product.images[0],
-                    storeId: product.supplierProfileId || '',
-                    storeName: supplierProfile?.nome || 'Loja'
-                  }, 1);
-                  navigate('/cliente/carrinho');
-                }}
-              >
-                <ShoppingCart className="h-5 w-5" />
-                Adicionar ao Carrinho
+              <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12" disabled={currentStock === 0}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) return; validateAndAddToCart(1, '/cliente/carrinho'); }}>
+                <ShoppingCart className="h-5 w-5" />Adicionar ao Carrinho
               </Button>
-              <Button 
-                className="flex-1 bg-primary hover:bg-primary/90 text-white h-12"
-                disabled={currentStock === 0}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentStock === 0 || !product.supplierProfileId) return;
-                  setQuantity(1);
-                  setShowQuantityDialog(true);
-                }}
-              >
+              <Button className="flex-1 bg-primary hover:bg-primary/90 text-white h-12" disabled={currentStock === 0}
+                onClick={(e) => { e.preventDefault(); if (currentStock === 0) return; setQuantity(1); setShowQuantityDialog(true); }}>
                 Comprar Agora
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Seção de Avaliações - Layout estilo e-commerce */}
+        {/* Reviews */}
         <div className="mt-10 lg:mt-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg lg:text-xl font-bold">Avaliações dos Clientes</h2>
             <div className="flex items-center gap-2 text-sm">
-              <div className="flex items-center gap-1">
-                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                <span className="font-bold text-lg">{realRating.toFixed(1)}</span>
-              </div>
+              <div className="flex items-center gap-1"><Star className="h-5 w-5 fill-yellow-400 text-yellow-400" /><span className="font-bold text-lg">{realRating.toFixed(1)}</span></div>
               <span className="text-muted-foreground">({realReviewCount} avaliações)</span>
             </div>
           </div>
-          <Card className="bg-white border shadow-sm p-5">
-            <ReviewsList reviews={reviews} loading={reviewsLoading} />
-          </Card>
+          <Card className="bg-white border shadow-sm p-5"><ReviewsList reviews={reviews} loading={reviewsLoading} /></Card>
         </div>
 
-        {/* Produtos Relacionados */}
+        {/* Related */}
         {relatedProducts.length > 0 && (
           <div className="mt-10 lg:mt-16">
             <h2 className="text-lg lg:text-xl font-bold mb-6">Você também pode gostar</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {relatedProducts.map((relatedProduct) => (
-                <Card
-                  key={relatedProduct.id}
-                  onClick={() => {
-                    setSelectedImage(0);
-                    navigate(`/cliente/produto/${relatedProduct.id}`);
-                  }}
-                  className="bg-white border shadow-sm overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <img 
-                      src={relatedProduct.images[0]} 
-                      alt={relatedProduct.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                    />
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">{relatedProduct.name}</p>
-                    <p className="text-primary font-bold">{relatedProduct.price}</p>
-                  </div>
+              {relatedProducts.map((rp) => (
+                <Card key={rp.id} onClick={() => { setSelectedImage(0); navigate(`/cliente/produto/${rp.id}`); }}
+                  className="bg-white border shadow-sm overflow-hidden hover:shadow-lg transition-all cursor-pointer group">
+                  <div className="aspect-square overflow-hidden"><img src={rp.images[0]} alt={rp.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>
+                  <div className="p-3"><p className="text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">{rp.name}</p><p className="text-primary font-bold">{rp.price}</p></div>
                 </Card>
               ))}
             </div>
           </div>
         )}
 
-        {/* Dialog de Quantidade */}
+        {/* Quantity Dialog */}
         <Dialog open={showQuantityDialog} onOpenChange={setShowQuantityDialog}>
           <DialogContent>
             <div className="space-y-4">
               <h2 className="text-xl font-bold">Selecione a quantidade</h2>
               <div className="flex items-center gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                >
-                  -
-                </Button>
-                <Input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (val > 0 && val <= currentStock) {
-                      setQuantity(val);
-                    }
-                  }}
-                  className="text-center w-20"
-                  min="1"
-                  max={currentStock}
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
-                >
-                  +
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Máximo: {currentStock}
-                </span>
+                <Button variant="outline" onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</Button>
+                <Input type="number" value={quantity} onChange={(e) => { const v = parseInt(e.target.value); if (v > 0 && v <= currentStock) setQuantity(v); }} className="text-center w-20" min="1" max={currentStock} />
+                <Button variant="outline" onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}>+</Button>
+                <span className="text-sm text-muted-foreground">Máximo: {currentStock}</span>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowQuantityDialog(false)}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (!product.supplierProfileId) {
-                      toast({
-                        title: 'Erro',
-                        description: 'Informações do fornecedor não encontradas.',
-                        variant: 'destructive',
-                      });
-                      return;
-                    }
-
-                    addToCart({
-                      productId: product.supplierUuid || '',
-                      name: product.name,
-                      price: product.priceNumber,
-                      image: product.images[0],
-                      storeId: product.supplierProfileId || '',
-                      storeName: supplierProfile?.nome || 'Loja'
-                    }, quantity);
-                    
-                    setShowQuantityDialog(false);
-                    navigate('/cliente/checkout');
-                  }}
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white"
-                >
-                  Confirmar
-                </Button>
+                <Button variant="outline" onClick={() => setShowQuantityDialog(false)} className="flex-1">Cancelar</Button>
+                <Button onClick={() => { validateAndAddToCart(quantity, '/cliente/checkout'); setShowQuantityDialog(false); }} className="flex-1 bg-primary hover:bg-primary/90 text-white">Confirmar</Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Botões de Ação - Mobile Only */}
+        {/* Mobile buttons */}
         <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30 lg:hidden">
           <div className="container mx-auto flex gap-3">
-            <Button 
-              variant="outline" 
-              className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2"
-              disabled={currentStock === 0}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                if (currentStock === 0) {
-                  toast({
-                    title: 'Produto sem estoque',
-                    description: 'Este produto não está disponível no momento.',
-                    variant: 'destructive',
-                  });
-                  return;
-                }
-                
-                if (!product.supplierProfileId) {
-                  toast({
-                    title: 'Erro',
-                    description: 'Informações do fornecedor não encontradas.',
-                    variant: 'destructive',
-                  });
-                  return;
-                }
-
-                addToCart({
-                  productId: product.supplierUuid || '',
-                  name: product.name,
-                  price: product.priceNumber,
-                  image: product.images[0],
-                  storeId: product.supplierProfileId || '',
-                  storeName: supplierProfile?.nome || 'Loja'
-                }, 1);
-                
-                navigate('/cliente/carrinho');
-              }}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              Adicionar
+            <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2" disabled={currentStock === 0}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } validateAndAddToCart(1, '/cliente/carrinho'); }}>
+              <ShoppingCart className="h-5 w-5" />Adicionar
             </Button>
-            <Button 
-              className="flex-1 bg-primary hover:bg-primary/90 text-white"
-              disabled={currentStock === 0}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                if (currentStock === 0) {
-                  toast({
-                    title: 'Produto sem estoque',
-                    description: 'Este produto não está disponível no momento.',
-                    variant: 'destructive',
-                  });
-                  return;
-                }
-                
-                if (!product.supplierProfileId) {
-                  toast({
-                    title: 'Erro',
-                    description: 'Informações do fornecedor não encontradas.',
-                    variant: 'destructive',
-                  });
-                  return;
-                }
-
-                setQuantity(1);
-                setShowQuantityDialog(true);
-              }}
-            >
+            <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" disabled={currentStock === 0}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } setQuantity(1); setShowQuantityDialog(true); }}>
               Comprar
             </Button>
           </div>

@@ -3,15 +3,17 @@ import { toast } from '@/hooks/use-toast';
 
 export interface CartItem {
   id: number;
-  productId: string; // UUID do produto
+  productId: string;
   name: string;
   price: number;
   quantity: number;
   image: string;
-  storeId: string; // UUID da loja
+  storeId: string;
   storeName: string;
   minQuantity?: number;
   minValue?: number;
+  selectedSize?: string;
+  selectedColor?: string;
 }
 
 export const useCart = () => {
@@ -24,16 +26,10 @@ export const useCart = () => {
 
   useEffect(() => {
     syncFromStorage();
-
-    // Mantém o carrinho sincronizado entre telas/abas
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'cart') syncFromStorage();
-    };
+    const handleStorage = (e: StorageEvent) => { if (e.key === 'cart') syncFromStorage(); };
     const handleCustom = () => syncFromStorage();
-
     window.addEventListener('storage', handleStorage);
     window.addEventListener('cart:updated', handleCustom as EventListener);
-
     return () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('cart:updated', handleCustom as EventListener);
@@ -48,38 +44,31 @@ export const useCart = () => {
 
   const addToCart = (item: Omit<CartItem, 'id' | 'quantity'>, requestedQuantity: number = 1) => {
     const currentStoreId = cartItems.length > 0 ? cartItems[0].storeId : null;
-    
     if (currentStoreId && currentStoreId !== item.storeId) {
-      toast({
-        title: "Atenção",
-        description: "Você só pode comprar produtos de um fornecedor por vez. Limpe o carrinho primeiro.",
-        variant: "destructive"
-      });
+      toast({ title: "Atenção", description: "Você só pode comprar produtos de um fornecedor por vez. Limpe o carrinho primeiro.", variant: "destructive" });
       return false;
     }
 
-    const existingItem = cartItems.find(i => i.productId === item.productId);
-    
+    // Match by productId + size + color combination
+    const existingItem = cartItems.find(i => 
+      i.productId === item.productId && 
+      i.selectedSize === item.selectedSize && 
+      i.selectedColor === item.selectedColor
+    );
+
     if (existingItem) {
-      const updated = cartItems.map(i => 
-        i.productId === item.productId 
+      const updated = cartItems.map(i =>
+        (i.productId === item.productId && i.selectedSize === item.selectedSize && i.selectedColor === item.selectedColor)
           ? { ...i, quantity: i.quantity + requestedQuantity }
           : i
       );
       saveCart(updated);
     } else {
-      const newItem: CartItem = {
-        ...item,
-        id: Date.now(),
-        quantity: requestedQuantity
-      };
+      const newItem: CartItem = { ...item, id: Date.now(), quantity: requestedQuantity };
       saveCart([...cartItems, newItem]);
     }
 
-    toast({
-      title: "Adicionado ao carrinho",
-      description: `${item.name} foi adicionado ao seu carrinho.`
-    });
+    toast({ title: "Adicionado ao carrinho", description: `${item.name} foi adicionado ao seu carrinho.` });
     return true;
   };
 
@@ -97,34 +86,21 @@ export const useCart = () => {
   const removeItem = (id: number) => {
     const updated = cartItems.filter(item => item.id !== id);
     saveCart(updated);
-    toast({
-      title: "Item removido",
-      description: "O item foi removido do carrinho."
-    });
+    toast({ title: "Item removido", description: "O item foi removido do carrinho." });
   };
 
-  const clearCart = () => {
-    saveCart([]);
-  };
+  const clearCart = () => { saveCart([]); };
 
-  const getTotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  };
+  const getTotal = () => cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  const getStoreId = () => {
-    return cartItems.length > 0 ? cartItems[0].storeId : null;
-  };
+  const getStoreId = () => cartItems.length > 0 ? cartItems[0].storeId : null;
 
   const validateMinimumLimits = () => {
     const errors: string[] = [];
-    
     cartItems.forEach(item => {
-      // Validar quantidade mínima
       if (item.minQuantity && item.quantity < item.minQuantity) {
         errors.push(`${item.name}: quantidade mínima de ${item.minQuantity} unidades`);
       }
-      
-      // Validar valor mínimo
       if (item.minValue) {
         const itemTotal = item.price * item.quantity;
         if (itemTotal < item.minValue) {
@@ -132,22 +108,11 @@ export const useCart = () => {
         }
       }
     });
-    
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    return { isValid: errors.length === 0, errors };
   };
 
   return {
-    cartItems,
-    addToCart,
-    updateQuantity,
-    removeItem,
-    clearCart,
-    getTotal,
-    getStoreId,
-    validateMinimumLimits,
+    cartItems, addToCart, updateQuantity, removeItem, clearCart, getTotal, getStoreId, validateMinimumLimits,
     itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0)
   };
 };

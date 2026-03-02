@@ -19,6 +19,10 @@ export interface Product {
   vendas_count: number;
   peso: number | null;
   dimensoes: any;
+  tamanhos: string[] | null;
+  cores: string[] | null;
+  is_kit: boolean | null;
+  kit_items: any[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -38,7 +42,7 @@ export const useSupabaseProducts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+      setProducts((data || []) as unknown as Product[]);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({

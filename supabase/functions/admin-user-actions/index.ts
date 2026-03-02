@@ -1,13 +1,13 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
@@ -27,7 +27,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "ban") {
-      // Ban: set ativo = false on profile + ban on auth.users
       const { error: profileError } = await supabaseAdmin
         .from("profiles")
         .update({ ativo: false })
@@ -35,9 +34,8 @@ Deno.serve(async (req) => {
 
       if (profileError) throw profileError;
 
-      // Ban via Supabase Auth admin API
       const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
-        ban_duration: "876600h", // ~100 years
+        ban_duration: "876600h",
       });
 
       if (banError) throw banError;
@@ -48,7 +46,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "unban") {
-      // Unban: restore ativo = true + unban auth
       const { error: profileError } = await supabaseAdmin
         .from("profiles")
         .update({ ativo: true })
@@ -68,7 +65,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "delete") {
-      // Soft-delete profile first (nullify sensitive data)
       const { error: profileError } = await supabaseAdmin
         .from("profiles")
         .update({ ativo: false })
@@ -76,7 +72,6 @@ Deno.serve(async (req) => {
 
       if (profileError) throw profileError;
 
-      // Permanently delete from auth.users (cascades to profile via FK if set)
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
 
       if (deleteError) throw deleteError;
