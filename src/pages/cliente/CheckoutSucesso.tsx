@@ -99,20 +99,27 @@ const CheckoutSucesso = () => {
   }, [searchParams, navigate, clearCart]);
 
   const triggerConfetti = () => {
+    // Two single bursts, max 150 particles total, auto-cleanup
     confetti({
-      particleCount: 80,
+      particleCount: 75,
       spread: 100,
       origin: { x: 0.2, y: 0.6 },
       colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD", "#22c55e"],
-      ticks: 200,
+      ticks: 150,
+      disableForReducedMotion: true,
     });
     confetti({
-      particleCount: 80,
+      particleCount: 75,
       spread: 100,
       origin: { x: 0.8, y: 0.6 },
       colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD", "#22c55e"],
-      ticks: 200,
+      ticks: 150,
+      disableForReducedMotion: true,
     });
+    // Remove confetti canvas after 3s
+    setTimeout(() => {
+      confetti.reset();
+    }, 3000);
   };
 
    const steps = [
