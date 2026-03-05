@@ -18,39 +18,25 @@ export const StepConcluido = ({ orderNumber, paymentMethod }: StepConcluidoProps
   useEffect(() => {
     setShowAnimation(true);
     
-    // Trigger confetti
-    const duration = 3 * 1000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-    function randomInRange(min: number, max: number) {
-      return Math.random() * (max - min) + min;
-    }
-
-    const interval: ReturnType<typeof setInterval> = setInterval(function () {
-      const timeLeft = animationEnd - Date.now();
-
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
-      }
-
-      const particleCount = 50 * (timeLeft / duration);
-
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-        colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD"],
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-        colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD"],
-      });
-    }, 250);
-
-    return () => clearInterval(interval);
+    // Two single bursts, max 150 particles, cleanup after 3s
+    confetti({
+      particleCount: 75,
+      spread: 120,
+      origin: { x: 0.25, y: 0.5 },
+      colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD"],
+      ticks: 150,
+      disableForReducedMotion: true,
+    });
+    confetti({
+      particleCount: 75,
+      spread: 120,
+      origin: { x: 0.75, y: 0.5 },
+      colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD"],
+      ticks: 150,
+      disableForReducedMotion: true,
+    });
+    const timer = setTimeout(() => confetti.reset(), 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   const steps = [

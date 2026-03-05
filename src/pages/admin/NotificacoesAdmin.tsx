@@ -209,6 +209,55 @@ const FilterButton = ({
   </button>
 );
 
+const PAGE_SIZE = 20;
+
+const PaginatedNotifications = ({ 
+  notifications, 
+  onMarkAsRead 
+}: { 
+  notifications: AdminNotification[]; 
+  onMarkAsRead: (id: string) => void;
+}) => {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(notifications.length / PAGE_SIZE);
+  const paginated = notifications.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  return (
+    <div className="space-y-3">
+      {paginated.map(notification => (
+        <NotificationCard
+          key={notification.id}
+          notification={notification}
+          onMarkAsRead={onMarkAsRead}
+        />
+      ))}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 1}
+            onClick={() => setPage(p => p - 1)}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {page} de {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === totalPages}
+            onClick={() => setPage(p => p + 1)}
+          >
+            Próxima
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const NotificacoesAdmin = () => {
   const { 
     notifications, 
@@ -276,7 +325,7 @@ const NotificacoesAdmin = () => {
         ))}
       </div>
 
-      {/* Notifications List */}
+      {/* Notifications List with pagination */}
       {filteredNotifications.length === 0 ? (
         <Card className="p-8 text-center bg-card border-border">
           <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -288,15 +337,10 @@ const NotificacoesAdmin = () => {
           </p>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {filteredNotifications.map(notification => (
-            <NotificationCard
-              key={notification.id}
-              notification={notification}
-              onMarkAsRead={markAsRead}
-            />
-          ))}
-        </div>
+        <PaginatedNotifications
+          notifications={filteredNotifications}
+          onMarkAsRead={markAsRead}
+        />
       )}
     </div>
   );
