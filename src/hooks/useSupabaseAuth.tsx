@@ -76,11 +76,17 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setProfile(null);
         }
+        setLoading(false);
       }
     );
 
-    // THEN check for existing session
+    // THEN check for existing session with timeout
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -88,9 +94,15 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         fetchProfile(session.user.id);
       }
       setLoading(false);
+    }).catch(() => {
+      clearTimeout(timeout);
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: {
