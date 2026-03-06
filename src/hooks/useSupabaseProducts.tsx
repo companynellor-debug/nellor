@@ -45,11 +45,6 @@ export const useSupabaseProducts = () => {
       setProducts((data || []) as unknown as Product[]);
     } catch (error: any) {
       console.error('Error fetching products:', error);
-      toast({
-        title: 'Erro ao carregar produtos',
-        description: error.message,
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }
@@ -57,26 +52,6 @@ export const useSupabaseProducts = () => {
 
   useEffect(() => {
     fetchProducts();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('products-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products'
-        },
-        () => {
-          fetchProducts();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const getProductById = (id: string) => {
