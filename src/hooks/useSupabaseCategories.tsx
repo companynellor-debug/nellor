@@ -53,11 +53,6 @@ export const useSupabaseCategories = () => {
       setCategories(categoriesWithCount);
     } catch (error: any) {
       console.error('Error fetching categories:', error);
-      toast({
-        title: 'Erro ao carregar categorias',
-        description: error.message,
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }
@@ -65,29 +60,6 @@ export const useSupabaseCategories = () => {
 
   useEffect(() => {
     fetchCategories();
-
-    // Subscribe to realtime changes para atualização automática em todos os painéis
-    const channel = supabase
-      .channel('categories-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'categories'
-        },
-        (payload) => {
-          console.log('[Categories] Realtime update:', payload.eventType);
-          fetchCategories();
-        }
-      )
-      .subscribe((status) => {
-        console.log('[Categories] Realtime subscription status:', status);
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const uploadCategoryImage = async (file: File): Promise<string | null> => {
