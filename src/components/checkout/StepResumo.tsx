@@ -14,6 +14,7 @@ interface StepResumoProps {
   buyerData: BuyerData;
   onBack: () => void;
   onNext: () => void;
+  isPickup?: boolean;
 }
 
 export const StepResumo = ({
