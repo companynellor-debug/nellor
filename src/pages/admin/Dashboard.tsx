@@ -182,6 +182,18 @@ const Dashboard = () => {
   // Skeleton loading apenas se não tiver dados cacheados
   const isInitialLoad = loading && allOrders.length === 0;
 
+  if (hasError && allOrders.length === 0 && !loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-3">
+          <AlertTriangle className="h-8 w-8 text-destructive mx-auto" />
+          <p className="text-muted-foreground">Não foi possível carregar o dashboard agora.</p>
+          <Button onClick={refetch} variant="outline">Tentar novamente</Button>
+        </div>
+      </div>
+    );
+  }
+
   if (isInitialLoad) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
