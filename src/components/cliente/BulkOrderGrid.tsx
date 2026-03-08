@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ShoppingCart } from 'lucide-react';
 import { ProductVariation } from '@/hooks/useProductVariations';
 import { formatCurrencyFromDecimal } from '@/utils/currency';
-import { colorNameToHex } from '@/utils/colorMap';
+import { getColorHex } from '@/utils/colorMap';
 
 interface BulkOrderGridProps {
   variations: ProductVariation[];
