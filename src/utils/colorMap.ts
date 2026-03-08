@@ -17,7 +17,7 @@ const COLOR_MAP: Record<string, string> = {
   vinho: '#722F37',
   azul marinho: '#1E3A5F',
   'azul claro': '#93C5FD',
-  'verde escuro': '#166534',
+  'verde escuro': '#166534',,
   caramelo: '#C68E17',
   nude: '#E8C39E',
   coral: '#FF7F50',
