@@ -322,7 +322,7 @@ const [analytics, setAnalytics] = useState<any>(null);
             <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent" />
           </CardHeader>
           <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">R$ {ticketMedio.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{formatCurrencyFromDecimal(ticketMedio)}</div>
           </CardContent>
         </Card>
 
