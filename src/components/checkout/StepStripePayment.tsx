@@ -46,6 +46,8 @@ export const StepStripePayment = ({
   onBack,
   onSuccess,
   onDiscountChange,
+  isPickup = false,
+  shippingRegion = null,
 }: StepStripePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
