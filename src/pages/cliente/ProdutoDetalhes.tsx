@@ -439,6 +439,14 @@ const ProdutoDetalhes = () => {
               </div>
             )}
 
+            {/* Freight Calculator */}
+            {product.supplierProfileId && (
+              <FreightCalculator 
+                supplierId={product.supplierProfileId} 
+                subtotal={product.priceNumber}
+              />
+            )}
+
             {/* Bulk Order Grid */}
             {hasVariations && (
               <BulkOrderGrid
