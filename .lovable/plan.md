@@ -1,52 +1,85 @@
 
 
-# Plano: Correção de 5 Bugs Críticos da Plataforma Nellor
+# Plano: Fixes Admin + Especificações de Produto
 
-## Análise do Estado Atual
+## Problemas Identificados
 
-Após análise do código, identifiquei o status de cada problema:
+### 1. Admin excluir/banir contas nao funciona
+A Edge Function `admin-user-actions` nao esta no `config.toml`. Sem a entrada, o Supabase pode rejeitar requests. Adicionaremos `verify_jwt = false`.
 
-1. **Deduplicação de push** -- Já parcialmente implementada na edge function (linhas 236-264), mas a dedup acontece DEPOIS do envio da push. Precisa mover a verificação para ANTES do envio.
-2. **Push em background** -- O SW (`src/sw.ts`) já tem handlers de `push` e `notificationclick`. VitePWA compila via `injectManifest`. O SW está correto para background push. Não há bug aqui -- o problema é que o SW usa workbox injectManifest que requer build. Em dev/preview pode não funcionar.
-3. **Confetti** -- Já usa `canvas-confetti` com 150 partículas e `confetti.reset()` após 3s. Está correto nos dois arquivos (`CheckoutSucesso.tsx` e `StepConcluido.tsx`).
-4. **Performance admin** -- Já usa `React.lazy` + `Suspense` em TODAS as rotas. A aba de notificações já tem paginação de 20 itens. O problema real é que `useAdminNotifications` busca dados de `orders` e transforma em notificações fake -- não busca da tabela `notifications` real.
-5. **Aba de notificações admin** -- O hook `useAdminNotifications` NÃO busca da tabela `notifications`. Ele fabrica notificações a partir de `orders`. Precisa buscar da tabela `notifications` real e também manter os dados de orders.
+### 2. Patrocinio e Denuncias nao chegam pro admin
+Os dados EXISTEM no banco (3 sponsored_products pendentes, 1 report pendente). As politicas RLS estao corretas (admin tem ALL). O problema provavel e que o admin nao esta vendo os dados na aba Alertas. Investigando mais: a query de `notifications` na linha 26 do Alertas.tsx faz `select('*')` sem filtro de user_id -- mas a RLS filtra por `user_id = auth.uid()` automaticamente. Se nao houver notificacoes do admin, retorna vazio. As queries de `sponsored_products` e `reports` tem politica ALL para admin e devem funcionar. Vou adicionar melhor tratamento de erro e logs para debug, e garantir que a aba Alertas mostre os dados mesmo quando notificacoes estao vazias.
 
-## Alterações Necessárias
+### 3. Especificacoes de Produto (Tamanhos, Cores, Kits)
+O banco ja tem colunas: `tamanhos` (JSONB), `cores` (JSONB), `is_kit` (boolean), `kit_items` (JSONB). Falta:
+- UI no modal de criacao/edicao de produto (Produtos.tsx)
+- Mapeamento no useSupplierProducts
+- Exibicao no ProdutoDetalhes.tsx para clientes escolherem
+- Incluir no CartItem para rastrear selecao
 
-### 1. Edge Function `send-push-notification` -- Dedup ANTES do envio
-**Arquivo:** `supabase/functions/send-push-notification/index.ts`
+---
 
-Mover a verificação de duplicata para ANTES de buscar subscriptions e enviar push. Se já existe notificação igual nos últimos 5 min, retornar imediatamente sem enviar nada.
+## Implementacao
 
-Mudança: após validar campos obrigatórios (linha 163-168), adicionar check de dedup. Se duplicata encontrada, retornar `{ skipped: true, reason: "duplicate" }` sem processar push nem inserir.
+### Arquivo: `supabase/config.toml`
+Adicionar entrada para `admin-user-actions`:
+```toml
+[functions.admin-user-actions]
+verify_jwt = false
+```
 
-### 2. Service Worker -- Sem alteração necessária
-O `src/sw.ts` já tem handlers completos para `push`, `notificationclick`, `notificationclose` e `message`. O VitePWA com `injectManifest` compila corretamente. Push notifications em background dependem da subscription estar ativa no servidor -- isso é responsabilidade da edge function, não do SW.
+### Arquivo: `supabase/functions/admin-user-actions/index.ts`
+Atualizar CORS headers para incluir headers extras que o client envia. Tambem adicionar verificacao de que o chamador e admin (usando service role para verificar user_roles).
 
-### 3. Confetti -- Sem alteração necessária
-Já usa `canvas-confetti` com 150 partículas e cleanup de 3s em ambos os arquivos.
+### Arquivo: `src/hooks/useSupplierProducts.tsx`
+Expandir interface `SupplierProduct` com campos:
+```ts
+sizes?: string[];        // ["P","M","G","GG"] ou ["38","39","40"]
+colors?: string[];       // ["Preto","Branco","Azul"]
+isKit?: boolean;
+kitItems?: { name: string; quantity: number }[];
+```
+Mapear `tamanhos`, `cores`, `is_kit`, `kit_items` do banco no fetch. Incluir no insert e update.
 
-### 4 e 5. Admin Notificações -- Reescrever hook para buscar dados reais
-**Arquivo:** `src/hooks/useAdminNotifications.tsx`
+### Arquivo: `src/pages/fornecedor/Produtos.tsx`
+Adicionar secoes opcionais no modal apos "Limites de Pedido":
 
-O problema central: o hook busca `orders` e fabrica notificações fake. Precisa TAMBÉM buscar da tabela `notifications` do Supabase.
+**Tamanhos** (opcional):
+- Toggle "Este produto tem tamanhos?"
+- Chips pre-definidos: P, M, G, GG, XG (para roupas)
+- Input livre para adicionar tamanhos customizados (ex: 38, 39, 40 para calcados)
+- Cada chip e clicavel para selecionar/deselecionar
 
-Mudança:
-- Adicionar query à tabela `notifications` (sem filtro de user_id, pois o admin tem RLS ALL)
-- Combinar notificações reais do banco com as derivadas de orders
-- Manter paginação e cache existentes
-- A query de notifications deve trazer: `id, user_id, title, body, type, read, created_at, data`
+**Cores** (opcional):
+- Toggle "Este produto tem cores?"
+- Input para adicionar cores com botao +
+- Chips removiveis para cada cor adicionada
 
-**Arquivo:** `src/pages/admin/NotificacoesAdmin.tsx`
+**Kit** (opcional):
+- Toggle "Este produto e um kit?"
+- Lista de itens do kit com nome e quantidade
+- Botao para adicionar item ao kit
 
-Adicionar filtro por lida/não lida:
-- Adicionar toggle ou botões "Todas / Não lidas / Lidas"
-- Exibir destinatário (user_id) quando disponível
+### Arquivo: `src/pages/cliente/ProdutoDetalhes.tsx`
+Adicionar selecao de tamanho e cor antes do botao "Adicionar ao Carrinho":
+- Se o produto tem `tamanhos`: mostrar chips selecionaveis
+- Se o produto tem `cores`: mostrar chips selecionaveis
+- Se e kit: mostrar lista de itens inclusos
+- Validar que tamanho e cor foram selecionados antes de adicionar ao carrinho
 
-## Ordem de Execução
+### Arquivo: `src/hooks/useCart.tsx`
+Expandir `CartItem` com `selectedSize?: string` e `selectedColor?: string` para rastrear a selecao.
 
-1. Fix dedup na edge function (mover check para antes do envio)
-2. Reescrever `useAdminNotifications` para buscar da tabela `notifications` real
-3. Atualizar `NotificacoesAdmin.tsx` com filtro lida/não lida
+### Arquivo: `src/pages/admin/Alertas.tsx`
+Melhorar tratamento de erros -- tratar cada query independentemente em vez de Promise.all, para que uma falha nao bloqueie as outras. Adicionar console.log para debug.
+
+---
+
+## Ordem de Execucao
+1. Fix config.toml + admin-user-actions (resolve exclusao de contas)
+2. Fix Alertas.tsx (garante que sponsorships e reports aparecem)
+3. Expandir useSupplierProducts com novos campos
+4. Adicionar UI de tamanhos/cores/kit no Produtos.tsx
+5. Exibir especificacoes no ProdutoDetalhes.tsx
+6. Expandir CartItem com selecao de variacao
 
