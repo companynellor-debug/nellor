@@ -95,8 +95,19 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }, 5000);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       clearTimeout(timeout);
+
+      if (error) {
+        console.error('Error restoring auth session:', error);
+        clearStaleAuthStorage();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -104,8 +115,13 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         fetchProfile(session.user.id);
       }
       setLoading(false);
-    }).catch(() => {
+    }).catch((error) => {
       clearTimeout(timeout);
+      console.error('Error restoring auth session:', error);
+      clearStaleAuthStorage();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
       setLoading(false);
     });
 
