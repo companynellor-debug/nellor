@@ -116,7 +116,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }, 5000);
 
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    withTimeout(supabase.auth.getSession(), 10000).then(({ data: { session }, error }) => {
       clearTimeout(timeout);
 
       if (error) {
@@ -133,7 +133,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchProfile(session.user.id);
+        void fetchProfile(session.user.id);
       }
       setLoading(false);
     }).catch((error) => {
