@@ -134,7 +134,7 @@ export const useAdminStats = () => {
   const query = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_stats");
+      const { data, error } = await withTimeout(supabase.rpc("get_admin_stats"));
       if (error) throw error;
       return (data?.[0] ?? null) as AdminStats | null;
     },
