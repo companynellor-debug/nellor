@@ -194,16 +194,16 @@ const [analytics, setAnalytics] = useState<any>(null);
       </div>
 
       {/* Status de Verificação */}
-      <Card className={`relative overflow-hidden border-2 ${canSell ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10' : 'border-red-500 bg-red-50/50 dark:bg-red-900/10'}`}>
+      <Card className={`relative overflow-hidden border-2 ${canSell ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10' : 'border-amber-500 bg-amber-50/50 dark:bg-amber-900/10'}`}>
         <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" />
+            <ShieldCheck className={`h-5 w-5 ${canSell ? 'text-green-600' : 'text-amber-600'}`} />
             Status da conta
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <div>
-            <p className={`text-lg font-semibold ${canSell ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>{statusLabel}</p>
+            <p className={`text-lg font-semibold ${canSell ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`}>{statusLabel}</p>
             {!canSell ? (
               <div className="mt-2">
                 <p className="text-xs text-muted-foreground mb-3">Para vender e solicitar saque, é obrigatório verificar a identidade.</p>
