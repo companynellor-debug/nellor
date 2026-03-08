@@ -202,16 +202,19 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        12000,
+      );
 
       if (error) {
         return { error };
       }
 
-      // Fetch profile
+      // Fetch profile (non-blocking hard-fail)
       if (data.user) {
         await fetchProfile(data.user.id);
       }
@@ -219,11 +222,18 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       toast.success('Login realizado! Bem-vindo de volta!');
 
       // Get redirect path based on user type
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('tipo, onboarding_completed')
-        .eq('id', data.user.id)
-        .single();
+      const { data: profileData, error: profileError } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('tipo, onboarding_completed')
+          .eq('id', data.user.id)
+          .single(),
+        10000,
+      );
+
+      if (profileError) {
+        console.error('Error fetching profile redirect data:', profileError);
+      }
 
       let redirectTo = '/cliente';
       if (profileData?.tipo === 'fornecedor' && !profileData?.onboarding_completed) {
