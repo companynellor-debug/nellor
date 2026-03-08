@@ -249,7 +249,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error signing in:', error);
       
       let errorMessage = 'Verifique suas credenciais e tente novamente.';
-      if (error.message.includes('Failed to fetch')) {
+      if (error.message.includes('Request timeout')) {
+        errorMessage = 'O servidor demorou para responder. Tente novamente em alguns segundos.';
+      } else if (error.message.includes('Failed to fetch')) {
         errorMessage = 'Falha de conexão com o servidor. Tente novamente em instantes.';
       } else if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos.';
