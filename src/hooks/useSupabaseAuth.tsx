@@ -49,6 +49,13 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, pix_key, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo';
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const isTransientAuthError = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error ?? '');
+    return message.includes('Failed to fetch') || message.includes('Request timeout');
+  };
+
   const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 12000): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -67,8 +74,33 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       Object.keys(localStorage)
         .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
         .forEach((key) => localStorage.removeItem(key));
+      sessionStorage.removeItem('nellor_admin_access');
     } catch (error) {
       console.error('Error clearing stale auth storage:', error);
+    }
+  };
+
+  const sanitizeStoredSession = () => {
+    try {
+      const authKeys = Object.keys(localStorage).filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'));
+      authKeys.forEach((key) => {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+
+        const parsed = JSON.parse(raw);
+        const refreshToken = parsed?.currentSession?.refresh_token;
+        const expiresAt = parsed?.currentSession?.expires_at;
+
+        const malformedToken = typeof refreshToken !== 'string' || refreshToken.length < 20;
+        const expiredSession = typeof expiresAt === 'number' && expiresAt * 1000 < Date.now() - 5 * 60 * 1000;
+
+        if (malformedToken || expiredSession) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Error sanitizing stored session:', error);
+      clearStaleAuthStorage();
     }
   };
 
@@ -94,6 +126,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    sanitizeStoredSession();
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -202,13 +236,24 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { data, error } = await withTimeout(
+
+      const executeSignIn = () => withTimeout(
         supabase.auth.signInWithPassword({
           email,
           password,
         }),
-        12000,
+        9000,
       );
+
+      let { data, error } = await executeSignIn();
+
+      // Retry único para instabilidades de rede momentâneas
+      if (error && isTransientAuthError(error)) {
+        await sleep(900);
+        const retry = await executeSignIn();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         return { error };
@@ -247,18 +292,30 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       return { error: null, redirectTo };
     } catch (error: any) {
       console.error('Error signing in:', error);
-      
+
+      if (isTransientAuthError(error)) {
+        clearStaleAuthStorage();
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch {
+          // no-op
+        }
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+      }
+
       let errorMessage = 'Verifique suas credenciais e tente novamente.';
       if (error.message.includes('Request timeout')) {
         errorMessage = 'O servidor demorou para responder. Tente novamente em alguns segundos.';
       } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Falha de conexão com o servidor. Tente novamente em instantes.';
+        errorMessage = 'Falha de conexão com o servidor. Limpamos sua sessão local; tente entrar novamente.';
       } else if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos.';
       } else if (error.message.includes('Email not confirmed')) {
         errorMessage = 'Por favor, confirme seu email antes de fazer login.';
       }
-      
+
       toast.error('Erro ao fazer login: ' + errorMessage);
       return { error };
     } finally {
