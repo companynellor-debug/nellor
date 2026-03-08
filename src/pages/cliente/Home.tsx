@@ -21,27 +21,27 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useProductVariations } from "@/hooks/useProductVariations";
 import { getColorHex } from "@/utils/colorMap";
 
-const ProductCardColorDots = ({ productId }: { productId: string }) => {
+const ProductCardColorDots = ({ productId }: {productId: string;}) => {
   const { variations } = useProductVariations(productId);
-  const uniqueColors = [...new Set(variations.filter(v => v.color).map(v => ({ name: v.color!, hex: v.color_hex })))];
+  const uniqueColors = [...new Set(variations.filter((v) => v.color).map((v) => ({ name: v.color!, hex: v.color_hex })))];
   const seen = new Set<string>();
-  const deduped = uniqueColors.filter(c => {
+  const deduped = uniqueColors.filter((c) => {
     if (seen.has(c.name)) return false;
     seen.add(c.name);
     return true;
   });
-  
+
   if (deduped.length === 0) return null;
   return (
     <div className="flex gap-1 mt-1">
-      {deduped.slice(0, 5).map(c => (
-        <div key={c.name} className="w-3.5 h-3.5 rounded-full border border-border" 
-          style={{ backgroundColor: c.hex || getColorHex(c.name) || '#ccc' }} 
-          title={c.name} />
-      ))}
+      {deduped.slice(0, 5).map((c) =>
+      <div key={c.name} className="w-3.5 h-3.5 rounded-full border border-border"
+      style={{ backgroundColor: c.hex || getColorHex(c.name) || '#ccc' }}
+      title={c.name} />
+      )}
       {deduped.length > 5 && <span className="text-[10px] text-muted-foreground">+{deduped.length - 5}</span>}
-    </div>
-  );
+    </div>);
+
 };
 
 const ClienteHome = () => {
@@ -68,7 +68,7 @@ const ClienteHome = () => {
   }, [searchParams, setSearchParams]);
 
   const mainBanners = banners.slice(0, 3);
-  const filteredProducts = selectedCategory ? products.filter(product => product.category === selectedCategory) : products;
+  const filteredProducts = selectedCategory ? products.filter((product) => product.category === selectedCategory) : products;
 
   return (
     <div className="min-h-screen bg-muted/30 pb-20 lg:pb-0">
@@ -120,8 +120,8 @@ const ClienteHome = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
-        {showStripeReturnBanner && (
-          <div className="mb-6">
+        {showStripeReturnBanner &&
+        <div className="mb-6">
             <Card className="border-primary/20 bg-primary/5">
               <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
@@ -138,26 +138,26 @@ const ClienteHome = () => {
               </div>
             </Card>
           </div>
-        )}
+        }
 
         {/* Banners */}
-        {banners.length > 0 && (
-          <div className="mb-4">
+        {banners.length > 0 &&
+        <div className="mb-4">
             <div className="max-w-6xl mx-auto">
               <Carousel opts={{ align: "center", loop: true }} plugins={[Autoplay({ delay: 4000 })]} className="w-full">
                 <CarouselContent>
-                  {mainBanners.map(banner => (
-                    <CarouselItem key={banner.id}>
+                  {mainBanners.map((banner) =>
+                <CarouselItem key={banner.id}>
                       <div className="relative overflow-hidden rounded-xl cursor-pointer" onClick={() => banner.link_url && navigate(banner.link_url)}>
                         <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-56 md:h-80 lg:h-[420px] object-cover" />
                       </div>
                     </CarouselItem>
-                  ))}
+                )}
                 </CarouselContent>
               </Carousel>
             </div>
           </div>
-        )}
+        }
 
         {/* B2B Banner Strip */}
         <div className="mb-6 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270 60% 50%) 100%)' }}>
@@ -165,7 +165,7 @@ const ClienteHome = () => {
             <div className="flex items-center gap-3 min-w-0">
               <Package className="h-5 w-5 text-white flex-shrink-0" />
               <p className="text-white font-bold text-sm sm:text-base truncate">
-                Marketplace de Fornecedores • Pedido mínimo a partir de 10 unidades
+                Pedido mínimo a partir de 10 unidades
               </p>
             </div>
             <Badge className="bg-white/20 text-white border-white/30 font-bold text-xs flex-shrink-0 ml-2">
@@ -175,31 +175,31 @@ const ClienteHome = () => {
         </div>
 
         {/* Categories */}
-        {categories.length > 0 && (
-          <section className="mb-8">
+        {categories.length > 0 &&
+        <section className="mb-8">
             <div className="bg-background rounded-xl p-4 shadow-sm border">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-muted-foreground">Categorias</h3>
-                {selectedCategory && (
-                  <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors">
+                {selectedCategory &&
+              <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors">
                     <X className="w-4 h-4" />Limpar filtro
                   </button>
-                )}
+              }
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide justify-start lg:justify-center">
-                {categories.map(category => (
-                  <button key={category.id} onClick={() => setSelectedCategory(selectedCategory === category.slug ? null : category.slug)}
-                    className={`flex flex-col items-center gap-2 min-w-[80px] p-3 rounded-xl transition-colors group ${selectedCategory === category.slug ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-muted'}`}>
+                {categories.map((category) =>
+              <button key={category.id} onClick={() => setSelectedCategory(selectedCategory === category.slug ? null : category.slug)}
+              className={`flex flex-col items-center gap-2 min-w-[80px] p-3 rounded-xl transition-colors group ${selectedCategory === category.slug ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-muted'}`}>
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${selectedCategory === category.slug ? 'bg-primary/30' : 'bg-primary/10 group-hover:bg-primary/20'}`}>
                       {category.imagem_url ? <img src={category.imagem_url} alt={category.nome} className="w-8 h-8 object-contain" /> : <span className="text-2xl">🛍️</span>}
                     </div>
                     <span className={`text-xs text-center font-medium whitespace-nowrap ${selectedCategory === category.slug ? 'text-primary' : 'text-foreground'}`}>{category.nome}</span>
                   </button>
-                ))}
+              )}
               </div>
             </div>
           </section>
-        )}
+        }
 
         {/* Produtos para Revenda */}
         <section className="mb-8">
@@ -210,16 +210,16 @@ const ClienteHome = () => {
             </button>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {filteredProducts.slice(0, 8).map(product => (
-              <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`} className="flex-shrink-0 w-44 lg:w-52">
+            {filteredProducts.slice(0, 8).map((product) =>
+            <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`} className="flex-shrink-0 w-44 lg:w-52">
                 <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group">
                   <div className="aspect-square overflow-hidden relative">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    {(product as any).minQuantity && (product as any).minQuantity > 1 && (
-                      <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">
+                    {(product as any).minQuantity && (product as any).minQuantity > 1 &&
+                  <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">
                         Mín. {(product as any).minQuantity} un.
                       </Badge>
-                    )}
+                  }
                   </div>
                   <div className="p-3">
                     <p className="text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</p>
@@ -235,21 +235,21 @@ const ClienteHome = () => {
                   </div>
                 </Card>
               </Link>
-            ))}
+            )}
           </div>
         </section>
 
         {/* Fornecedores em Destaque - Real Data */}
-        {stores.length > 0 && (
-          <section className="mb-8">
+        {stores.length > 0 &&
+        <section className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">🏆 Fornecedores em Destaque</h2>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-              {stores.map((store) => (
-                <div key={store.id} className="flex-shrink-0 w-64">
+              {stores.map((store) =>
+            <div key={store.id} className="flex-shrink-0 w-64">
                   <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group p-4 flex items-center gap-4 cursor-pointer"
-                    onClick={() => navigate(`/cliente/loja/${store.id}`)}>
+              onClick={() => navigate(`/cliente/loja/${store.id}`)}>
                     <Avatar className="h-16 w-16 border-2 border-primary/20 flex-shrink-0">
                       <AvatarImage src={store.foto_perfil_url || undefined} alt={store.nome} />
                       <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">{store.nome.charAt(0)}</AvatarFallback>
@@ -260,10 +260,10 @@ const ClienteHome = () => {
                     </div>
                   </Card>
                 </div>
-              ))}
+            )}
             </div>
           </section>
-        )}
+        }
 
         {/* Products Grid */}
         <section>
@@ -276,16 +276,16 @@ const ClienteHome = () => {
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {filteredProducts.map(product => (
-              <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`}>
+            {filteredProducts.map((product) =>
+            <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`}>
                 <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group h-full">
                   <div className="aspect-square overflow-hidden relative">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    {(product as any).minQuantity && (product as any).minQuantity > 1 && (
-                      <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">
+                    {(product as any).minQuantity && (product as any).minQuantity > 1 &&
+                  <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">
                         Mín. {(product as any).minQuantity} un.
                       </Badge>
-                    )}
+                  }
                   </div>
                   <div className="p-3">
                     <h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</h3>
@@ -301,14 +301,14 @@ const ClienteHome = () => {
                   </div>
                 </Card>
               </Link>
-            ))}
+            )}
           </div>
         </section>
       </main>
 
       {/* Floating Install Banner */}
-      {showInstallBanner && canInstall && !isInstalled && (
-        <div className="fixed bottom-20 left-4 right-4 z-50 lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm animate-in slide-in-from-bottom-4 duration-500">
+      {showInstallBanner && canInstall && !isInstalled &&
+      <div className="fixed bottom-20 left-4 right-4 z-50 lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm animate-in slide-in-from-bottom-4 duration-500">
           <Card className="bg-gradient-to-r from-primary to-purple-600 text-white p-4 shadow-2xl border-0">
             <button onClick={() => setShowInstallBanner(false)} className="absolute top-2 right-2 p-1 hover:bg-white/20 rounded-full transition-colors">
               <X className="h-4 w-4" />
@@ -323,8 +323,8 @@ const ClienteHome = () => {
                   {isIOS ? "Adicione à tela inicial para acesso rápido" : "Acesso rápido e notificações em tempo real"}
                 </p>
                 <Button size="sm" className="bg-white text-primary hover:bg-white/90 h-8 text-xs font-semibold" onClick={() => {
-                  if (isIOS) { navigate("/cliente/instalar"); } else { installApp(); }
-                }}>
+                if (isIOS) {navigate("/cliente/instalar");} else {installApp();}
+              }}>
                   <Download className="h-3.5 w-3.5 mr-1.5" />
                   {isIOS ? "Ver instruções" : "Instalar agora"}
                 </Button>
@@ -332,10 +332,10 @@ const ClienteHome = () => {
             </div>
           </Card>
         </div>
-      )}
+      }
 
       <BottomNav />
-    </div>
-  );
+    </div>);
+
 };
 export default ClienteHome;
