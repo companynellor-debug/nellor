@@ -241,7 +241,7 @@ const [analytics, setAnalytics] = useState<any>(null);
             <Wallet className="w-5 h-5 text-emerald-600" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-emerald-600">R$ {totalSupplierAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-emerald-600">{formatCurrencyFromDecimal(totalSupplierAmount)}</div>
             <p className="text-xs text-muted-foreground mt-1">Após taxa da plataforma</p>
           </CardContent>
         </Card>
