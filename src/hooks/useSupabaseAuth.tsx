@@ -47,6 +47,21 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, pix_key, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo';
+
+  const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 12000): Promise<T> => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
+    });
+
+    try {
+      return await Promise.race<T>([promise, timeoutPromise]);
+    } finally {
+      clearTimeout(timeoutId!);
+    }
+  };
+
   const clearStaleAuthStorage = () => {
     try {
       Object.keys(localStorage)
@@ -59,16 +74,22 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select(PROFILE_SELECT)
+          .eq('id', userId)
+          .single(),
+        10000,
+      );
 
       if (error) throw error;
-      setProfile(data);
+      setProfile((data as Profile) ?? null);
+      return data as Profile | null;
     } catch (error: any) {
       console.error('Error fetching profile:', error);
+      setProfile(null);
+      return null;
     }
   };
 
@@ -95,7 +116,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }, 5000);
 
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    withTimeout(supabase.auth.getSession(), 10000).then(({ data: { session }, error }) => {
       clearTimeout(timeout);
 
       if (error) {
@@ -112,7 +133,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchProfile(session.user.id);
+        void fetchProfile(session.user.id);
       }
       setLoading(false);
     }).catch((error) => {
@@ -143,21 +164,24 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const redirectUrl = `${window.location.origin}/`;
       
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            nome: metadata?.nome,
-            tipo: metadata?.tipo || 'cliente',
-            document: metadata?.document,
-            telefone: metadata?.telefone,
-            pix_key: metadata?.pix_key,
-            endereco_principal: metadata?.endereco_principal
+      const { error } = await withTimeout(
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              nome: metadata?.nome,
+              tipo: metadata?.tipo || 'cliente',
+              document: metadata?.document,
+              telefone: metadata?.telefone,
+              pix_key: metadata?.pix_key,
+              endereco_principal: metadata?.endereco_principal
+            }
           }
-        }
-      });
+        }),
+        12000,
+      );
 
       if (error) {
         return { error };
@@ -178,16 +202,19 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        12000,
+      );
 
       if (error) {
         return { error };
       }
 
-      // Fetch profile
+      // Fetch profile (non-blocking hard-fail)
       if (data.user) {
         await fetchProfile(data.user.id);
       }
@@ -195,11 +222,18 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       toast.success('Login realizado! Bem-vindo de volta!');
 
       // Get redirect path based on user type
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('tipo, onboarding_completed')
-        .eq('id', data.user.id)
-        .single();
+      const { data: profileData, error: profileError } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('tipo, onboarding_completed')
+          .eq('id', data.user.id)
+          .single(),
+        10000,
+      );
+
+      if (profileError) {
+        console.error('Error fetching profile redirect data:', profileError);
+      }
 
       let redirectTo = '/cliente';
       if (profileData?.tipo === 'fornecedor' && !profileData?.onboarding_completed) {
@@ -215,7 +249,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error signing in:', error);
       
       let errorMessage = 'Verifique suas credenciais e tente novamente.';
-      if (error.message.includes('Failed to fetch')) {
+      if (error.message.includes('Request timeout')) {
+        errorMessage = 'O servidor demorou para responder. Tente novamente em alguns segundos.';
+      } else if (error.message.includes('Failed to fetch')) {
         errorMessage = 'Falha de conexão com o servidor. Tente novamente em instantes.';
       } else if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos.';
