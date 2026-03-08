@@ -33,6 +33,8 @@ interface StepStripePaymentProps {
   onBack: () => void;
   onSuccess: (orderNumber: string) => void;
   onDiscountChange: (discount: number, couponId?: string) => void;
+  isPickup?: boolean;
+  shippingRegion?: string | null;
 }
 
 export const StepStripePayment = ({
