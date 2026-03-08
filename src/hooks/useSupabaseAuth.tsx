@@ -47,6 +47,16 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const clearStaleAuthStorage = () => {
+    try {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+        .forEach((key) => localStorage.removeItem(key));
+    } catch (error) {
+      console.error('Error clearing stale auth storage:', error);
+    }
+  };
+
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -85,8 +95,19 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }, 5000);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       clearTimeout(timeout);
+
+      if (error) {
+        console.error('Error restoring auth session:', error);
+        clearStaleAuthStorage();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -94,8 +115,13 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         fetchProfile(session.user.id);
       }
       setLoading(false);
-    }).catch(() => {
+    }).catch((error) => {
       clearTimeout(timeout);
+      console.error('Error restoring auth session:', error);
+      clearStaleAuthStorage();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
       setLoading(false);
     });
 
@@ -189,7 +215,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error signing in:', error);
       
       let errorMessage = 'Verifique suas credenciais e tente novamente.';
-      if (error.message.includes('Invalid login credentials')) {
+      if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Falha de conexão com o servidor. Tente novamente em instantes.';
+      } else if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos.';
       } else if (error.message.includes('Email not confirmed')) {
         errorMessage = 'Por favor, confirme seu email antes de fazer login.';

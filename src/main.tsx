@@ -9,16 +9,18 @@ import { ProfileProvider } from "./hooks/useProfile";
 import { AuthProvider } from "./hooks/useAuth";
 import { SupabaseAuthProvider } from "./hooks/useSupabaseAuth";
 
-// ✅ Correct SW registration for VitePWA (works in dev and prod)
-registerSW({
-  immediate: true,
-  onRegistered(r) {
-    console.log("✅ PWA Service Worker registered", r);
-  },
-  onRegisterError(error) {
-    console.error("❌ PWA Service Worker registration error", error);
-  },
-});
+// ✅ Register SW only in production to avoid dev/runtime registration issues
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  registerSW({
+    immediate: true,
+    onRegistered(r) {
+      console.log("✅ PWA Service Worker registered", r);
+    },
+    onRegisterError(error) {
+      console.error("❌ PWA Service Worker registration error", error);
+    },
+  });
+}
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>

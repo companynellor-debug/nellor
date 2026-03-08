@@ -12,15 +12,13 @@ import {
   Package,
   Image,
   PieChart,
-  UserCheck,
-  Layers
+  UserCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
   { icon: PieChart, label: "Indicadores", path: "/admin/indicadores" },
-  { icon: Layers, label: "Nellor Drop", path: "/admin/nellor-drop" },
   { icon: Users, label: "Usuários", path: "/admin/usuarios" },
   { icon: Store, label: "Fornecedores", path: "/admin/fornecedores" },
   { icon: UserCheck, label: "Afiliados & Prestadores", path: "/admin/afiliados-prestadores" },
