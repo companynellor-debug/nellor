@@ -188,10 +188,13 @@ export const useAdminBanners = () => {
   const query = useQuery({
     queryKey: ["admin-banners"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("banners")
-        .select("*")
-        .order("order_index", { ascending: true });
+      const { data, error } = await withTimeout(
+        supabase
+          .from("banners")
+          .select("id, title, subtitle, image_url, link_url, ativo, order_index, created_at")
+          .order("order_index", { ascending: true })
+      );
+      if (error) throw error;
       return data ?? [];
     },
     ...queryConfig,
