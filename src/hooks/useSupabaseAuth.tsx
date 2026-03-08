@@ -49,6 +49,13 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, pix_key, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo';
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const isTransientAuthError = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error ?? '');
+    return message.includes('Failed to fetch') || message.includes('Request timeout');
+  };
+
   const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 12000): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -67,6 +74,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       Object.keys(localStorage)
         .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
         .forEach((key) => localStorage.removeItem(key));
+      sessionStorage.removeItem('nellor_admin_access');
     } catch (error) {
       console.error('Error clearing stale auth storage:', error);
     }
