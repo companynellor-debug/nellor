@@ -12,12 +12,17 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
   
-  const { orders: allOrders, loading: ordersLoading, refetch: refetchOrders } = useAdminOrders();
-  const { profiles: allProfiles, loading: profilesLoading } = useAdminProfiles();
-  const { stats: statsData, loading: statsLoading } = useAdminStats();
+  const { orders: allOrders, loading: ordersLoading, error: ordersError, refetch: refetchOrders } = useAdminOrders();
+  const { profiles: allProfiles, loading: profilesLoading, error: profilesError, refetch: refetchProfiles } = useAdminProfiles();
+  const { stats: statsData, loading: statsLoading, error: statsError, refetch: refetchStats } = useAdminStats();
   
   const loading = ordersLoading || profilesLoading || statsLoading;
-  const refetch = refetchOrders;
+  const hasError = Boolean(ordersError || profilesError || statsError);
+  const refetch = () => {
+    refetchOrders();
+    refetchProfiles();
+    refetchStats();
+  };
 
   // ✅ Calcular tudo com useMemo para evitar recálculos desnecessários
   const { stats, salesData, revenueData, distributionData, topSuppliers, recentOrders, paidOrdersCount } = useMemo(() => {
