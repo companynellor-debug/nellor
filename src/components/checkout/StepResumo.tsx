@@ -25,6 +25,14 @@ export const StepResumo = ({
   buyerData,
   onBack,
   onNext,
+  isPickup = false,
+}: StepResumoProps) => {
+  subtotal,
+  shipping,
+  discount,
+  buyerData,
+  onBack,
+  onNext,
 }: StepResumoProps) => {
   const total = subtotal + shipping - discount;
 
