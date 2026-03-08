@@ -3,19 +3,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 function base64UrlDecode(str: string): Uint8Array {
   str = str.replace(/-/g, '+').replace(/_/g, '/');
-  while (str.length % 4) {
-    str += '=';
-  }
+  while (str.length % 4) str += '=';
   const binary = atob(str);
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
 }
 
@@ -31,37 +27,23 @@ async function generateVAPIDHeaders(
   const header = { typ: "JWT", alg: "ES256" };
   const payload = { aud: audience, exp: expiration, sub: vapidSubject };
 
-  const headerB64 = btoa(JSON.stringify(header))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const payloadB64 = btoa(JSON.stringify(payload))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const headerB64 = btoa(JSON.stringify(header)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const payloadB64 = btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
   const unsignedToken = `${headerB64}.${payloadB64}`;
   const publicKeyBytes = base64UrlDecode(vapidPublicKey);
-  
+
   const jwk = {
     kty: "EC",
     crv: "P-256",
     d: vapidPrivateKey,
-    x: btoa(String.fromCharCode(...publicKeyBytes.slice(1, 33)))
-      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
-    y: btoa(String.fromCharCode(...publicKeyBytes.slice(33, 65)))
-      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+    x: btoa(String.fromCharCode(...publicKeyBytes.slice(1, 33))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+    y: btoa(String.fromCharCode(...publicKeyBytes.slice(33, 65))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
   };
 
-  const cryptoKey = await crypto.subtle.importKey(
-    "jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]
-  );
-
-  const signature = await crypto.subtle.sign(
-    { name: "ECDSA", hash: "SHA-256" },
-    cryptoKey,
-    new TextEncoder().encode(unsignedToken)
-  );
-
-  const signatureBytes = new Uint8Array(signature);
-  const signatureB64 = btoa(String.fromCharCode(...signatureBytes))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const cryptoKey = await crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, cryptoKey, new TextEncoder().encode(unsignedToken));
+  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
   return {
     authorization: `vapid t=${unsignedToken}.${signatureB64}, k=${vapidPublicKey}`,
@@ -95,8 +77,6 @@ async function sendWebPush(
   vapidSubject: string
 ): Promise<PushResult> {
   try {
-    const payloadString = JSON.stringify(payload);
-    
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "TTL": "86400",
@@ -104,12 +84,7 @@ async function sendWebPush(
     };
 
     try {
-      const vapidHeaders = await generateVAPIDHeaders(
-        subscription.endpoint,
-        vapidPublicKey,
-        vapidPrivateKey,
-        vapidSubject
-      );
+      const vapidHeaders = await generateVAPIDHeaders(subscription.endpoint, vapidPublicKey, vapidPrivateKey, vapidSubject);
       headers["Authorization"] = vapidHeaders.authorization;
     } catch (vapidError) {
       console.error("VAPID header generation failed:", vapidError);
@@ -118,18 +93,15 @@ async function sendWebPush(
     const response = await fetch(subscription.endpoint, {
       method: "POST",
       headers,
-      body: payloadString,
+      body: JSON.stringify(payload),
     });
 
     if (response.status === 404 || response.status === 410) {
       return { success: false, status: response.status, expired: true, error: "Subscription expired" };
     }
-
     if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, status: response.status, error: errorText };
+      return { success: false, status: response.status, error: await response.text() };
     }
-
     return { success: true, status: response.status };
   } catch (error) {
     return { success: false, error: String(error) };
@@ -167,6 +139,30 @@ serve(async (req) => {
       );
     }
 
+    // ===== DEDUP CHECK - BEFORE any push or DB insert =====
+    const notifType = (type === "order_update" || type === "order_status_changed" || type === "payment_confirmed" || type === "new_message" || type === "promotion" || type === "general")
+      ? type
+      : "order_update";
+
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: existing } = await supabaseAdmin
+      .from("notifications")
+      .select("id")
+      .eq("user_id", user_id)
+      .eq("title", title)
+      .eq("type", notifType)
+      .gte("created_at", fiveMinutesAgo)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      console.log("⏭️ Duplicate notification blocked BEFORE send for user:", user_id, title);
+      return new Response(
+        JSON.stringify({ skipped: true, reason: "duplicate", sent: 0, failed: 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // ===== END DEDUP CHECK =====
+
     const { data: subscriptions, error: subError } = await supabaseAdmin
       .from("push_subscriptions")
       .select("id, endpoint, p256dh, auth")
@@ -179,9 +175,25 @@ serve(async (req) => {
       );
     }
 
+    // Insert notification in DB first (even if no subscriptions)
+    try {
+      await supabaseAdmin.from("notifications").insert({
+        user_id,
+        title,
+        body,
+        type: notifType,
+        data: data || null,
+        sound: true,
+        read: false,
+      });
+      console.log("✅ Notification inserted in DB for user:", user_id);
+    } catch (dbErr) {
+      console.error("❌ Failed to insert notification in DB:", dbErr);
+    }
+
     if (!subscriptions || subscriptions.length === 0) {
       return new Response(
-        JSON.stringify({ sent: 0, failed: 0, message: "No subscriptions found" }),
+        JSON.stringify({ sent: 0, failed: 0, message: "No subscriptions found, notification saved to DB" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -201,23 +213,17 @@ serve(async (req) => {
       subscriptions.map(async (sub) => {
         const result = await sendWebPush(
           { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-          payload,
-          vapidPublicKey,
-          vapidPrivateKey,
-          vapidSubject
+          payload, vapidPublicKey, vapidPrivateKey, vapidSubject
         );
 
-        const logEntry = {
+        await supabaseAdmin.from("push_notification_logs").insert({
           user_id,
           endpoint: sub.endpoint.substring(0, 200),
-          title,
-          body,
+          title, body,
           status: result.success ? "sent" : (result.expired ? "expired" : "failed"),
           error_message: result.error || null,
           http_status: result.status || null,
-        };
-
-        await supabaseAdmin.from("push_notification_logs").insert(logEntry);
+        });
 
         if (result.expired) {
           await supabaseAdmin.from("push_subscriptions").delete().eq("id", sub.id);
@@ -230,41 +236,6 @@ serve(async (req) => {
     const sent = results.filter((r) => r.success).length;
     const failed = results.filter((r) => !r.success).length;
     const expired = results.filter((r) => r.expired).length;
-
-    // Inserir notificação no banco usando service role (ignora RLS)
-    // Dedup: verificar se já existe notificação igual nos últimos 5 minutos
-    try {
-      const notifType = (type === "order_update" || type === "order_status_changed" || type === "payment_confirmed" || type === "new_message" || type === "promotion" || type === "general")
-        ? type
-        : "order_update";
-
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      const { data: existing } = await supabaseAdmin
-        .from("notifications")
-        .select("id")
-        .eq("user_id", user_id)
-        .eq("title", title)
-        .eq("type", notifType)
-        .gte("created_at", fiveMinutesAgo)
-        .limit(1);
-
-      if (existing && existing.length > 0) {
-        console.log("⏭️ Duplicate notification skipped for user:", user_id, title);
-      } else {
-        await supabaseAdmin.from("notifications").insert({
-          user_id,
-          title,
-          body,
-          type: notifType,
-          data: data || null,
-          sound: true,
-          read: false,
-        });
-        console.log("✅ Notification inserted in DB for user:", user_id);
-      }
-    } catch (dbErr) {
-      console.error("❌ Failed to insert notification in DB:", dbErr);
-    }
 
     return new Response(
       JSON.stringify({ sent, failed, expired, total: subscriptions.length }),
