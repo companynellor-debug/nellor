@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Plus, Upload } from 'lucide-react';
 import { getColorHex } from '@/utils/colorMap';
 
@@ -19,7 +20,12 @@ export interface VariationRow {
   stock: number;
   price: number | null;
   imageUrl: string;
+  variationType: string;
+  variationLabel: string;
+  variationValue: string;
 }
+
+export type VariationType = 'size' | 'numbering' | 'memory' | 'volume' | 'custom';
 
 interface VariationsEditorProps {
   colors: VariationColor[];
@@ -30,26 +36,34 @@ interface VariationsEditorProps {
   setVariationGrid: (grid: Record<string, Record<string, { stock: number; price: number | null }>>) => void;
   hasColors: boolean;
   hasSizes: boolean;
+  variationType: VariationType;
+  setVariationType: (t: VariationType) => void;
 }
 
-const PRESET_CLOTHING_SIZES = ["PP", "P", "M", "G", "GG", "XG"];
-const PRESET_SHOE_SIZES = ["34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"];
+const VARIATION_TYPE_CONFIG: Record<VariationType, { label: string; presets: string[]; placeholder: string }> = {
+  size: { label: 'Tamanho', presets: ['PP', 'P', 'M', 'G', 'GG', 'XG', 'GGG'], placeholder: 'Ex: XGG' },
+  numbering: { label: 'Numeração', presets: ['34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45'], placeholder: 'Ex: 46' },
+  memory: { label: 'Memória', presets: ['32GB', '64GB', '128GB', '256GB', '512GB', '1TB'], placeholder: 'Ex: 2TB' },
+  volume: { label: 'Volume', presets: ['100ml', '200ml', '500ml', '1L', '2L', '5L'], placeholder: 'Ex: 10L' },
+  custom: { label: 'Personalizado', presets: [], placeholder: 'Digite o valor' },
+};
 
 export const VariationsEditor = ({
   colors, setColors, sizes, setSizes,
   variationGrid, setVariationGrid,
-  hasColors, hasSizes,
+  hasColors, hasSizes, variationType, setVariationType,
 }: VariationsEditorProps) => {
   const [colorName, setColorName] = useState('');
   const [colorHex, setColorHex] = useState('#000000');
   const [sizeInput, setSizeInput] = useState('');
+
+  const config = VARIATION_TYPE_CONFIG[variationType];
 
   const addColor = () => {
     const name = colorName.trim();
     if (!name || colors.some(c => c.name === name)) return;
     const hex = colorHex || getColorHex(name) || '#000000';
     setColors([...colors, { name, hex, imageUrl: '' }]);
-    // Initialize grid row
     const newGrid = { ...variationGrid };
     newGrid[name] = {};
     if (hasSizes) {
@@ -84,12 +98,10 @@ export const VariationsEditor = ({
     if (!s || sizes.includes(s)) return;
     const newSizes = [...sizes, s];
     setSizes(newSizes);
-    // Add column to all existing color rows
     const newGrid = { ...variationGrid };
     Object.keys(newGrid).forEach(color => {
       if (!newGrid[color][s]) newGrid[color][s] = { stock: 0, price: null };
     });
-    // If no colors, add default row
     if (!hasColors && !newGrid['_default']) newGrid['_default'] = {};
     if (!hasColors) newGrid['_default'][s] = { stock: 0, price: null };
     setVariationGrid(newGrid);
@@ -123,7 +135,7 @@ export const VariationsEditor = ({
           <div className="flex gap-2 items-end">
             <div className="flex-1">
               <Label className="text-xs">Nome da cor</Label>
-              <Input value={colorName} onChange={e => setColorName(e.target.value)} placeholder="Ex: Preto" 
+              <Input value={colorName} onChange={e => setColorName(e.target.value)} placeholder="Ex: Preto"
                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addColor())} />
             </div>
             <div className="w-20">
@@ -135,7 +147,6 @@ export const VariationsEditor = ({
             </Button>
           </div>
 
-          {/* Color list with image upload */}
           {colors.length > 0 && (
             <div className="space-y-2">
               {colors.map(color => (
@@ -147,7 +158,7 @@ export const VariationsEditor = ({
                   ) : (
                     <label className="cursor-pointer">
                       <div className="flex items-center gap-1 text-xs text-primary hover:underline">
-                        <Upload className="h-3 w-3" /> Foto
+                        <Upload className="h-3 w-3" /> Foto *
                       </div>
                       <input type="file" accept="image/*" className="hidden" onChange={e => handleColorImageUpload(color.name, e)} />
                     </label>
@@ -160,54 +171,64 @@ export const VariationsEditor = ({
         </div>
       )}
 
-      {/* Size management */}
+      {/* Variation type selector + values */}
       {hasSizes && (
         <div className="space-y-3">
-          <Label className="font-semibold">Tamanhos</Label>
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Roupas</p>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_CLOTHING_SIZES.map(s => (
-                <Badge key={s} variant={sizes.includes(s) ? "default" : "outline"} className="cursor-pointer select-none text-xs"
-                  onClick={() => sizes.includes(s) ? removeSize(s) : addSize(s)}>{s}</Badge>
-              ))}
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <Label className="font-semibold">Tipo de variação</Label>
+              <Select value={variationType} onValueChange={(v) => setVariationType(v as VariationType)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="size">Tamanho (P/M/G)</SelectItem>
+                  <SelectItem value="numbering">Numeração (34-45)</SelectItem>
+                  <SelectItem value="memory">Memória (GB/TB)</SelectItem>
+                  <SelectItem value="volume">Volume (ml/L)</SelectItem>
+                  <SelectItem value="custom">Personalizado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <p className="text-xs text-muted-foreground">Calçados</p>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_SHOE_SIZES.map(s => (
-                <Badge key={s} variant={sizes.includes(s) ? "default" : "outline"} className="cursor-pointer select-none text-xs"
-                  onClick={() => sizes.includes(s) ? removeSize(s) : addSize(s)}>{s}</Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input value={sizeInput} onChange={e => setSizeInput(e.target.value)} placeholder="Personalizado"
-                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSize(sizeInput))} className="flex-1" />
-              <Button type="button" variant="outline" size="sm" onClick={() => addSize(sizeInput)}>+</Button>
-            </div>
-            {sizes.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {sizes.map(s => (
-                  <Badge key={s} variant="secondary" className="gap-1 text-xs">
-                    {s}<X className="h-3 w-3 cursor-pointer" onClick={() => removeSize(s)} />
-                  </Badge>
-                ))}
-              </div>
-            )}
           </div>
+
+          <Label className="font-semibold">{config.label}</Label>
+          {config.presets.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {config.presets.map(s => (
+                <Badge key={s} variant={sizes.includes(s) ? "default" : "outline"} className="cursor-pointer select-none text-xs"
+                  onClick={() => sizes.includes(s) ? removeSize(s) : addSize(s)}>{s}</Badge>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Input value={sizeInput} onChange={e => setSizeInput(e.target.value)} placeholder={config.placeholder}
+              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSize(sizeInput))} className="flex-1" />
+            <Button type="button" variant="outline" size="sm" onClick={() => addSize(sizeInput)}>+</Button>
+          </div>
+          {sizes.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {sizes.map(s => (
+                <Badge key={s} variant="secondary" className="gap-1 text-xs">
+                  {s}<X className="h-3 w-3 cursor-pointer" onClick={() => removeSize(s)} />
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {/* Variation Grid */}
       {(hasColors || hasSizes) && colorKeys.length > 0 && sizeKeys.length > 0 && (
         <div className="space-y-2">
-          <Label className="font-semibold">Grade de Estoque</Label>
+          <Label className="font-semibold">Grade de Estoque {hasSizes && hasColors ? `(${config.label} × Cor)` : ''}</Label>
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="bg-muted/50">
                   {hasColors && <th className="text-left p-2 text-xs font-medium">Cor</th>}
                   {sizeKeys.map(s => (
-                    <th key={s} className="text-center p-2 text-xs font-medium">{s === '_default' ? 'Estoque' : s}</th>
+                    <th key={s} className="text-center p-1 text-xs font-medium" colSpan={1}>
+                      {s === '_default' ? 'Estoque' : s}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -215,9 +236,11 @@ export const VariationsEditor = ({
                 {colorKeys.map(ck => (
                   <tr key={ck} className="border-t border-border">
                     {hasColors && (
-                      <td className="p-2 flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: colors.find(c => c.name === ck)?.hex || '#ccc' }} />
-                        <span className="text-xs">{ck}</span>
+                      <td className="p-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: colors.find(c => c.name === ck)?.hex || '#ccc' }} />
+                          <span className="text-xs">{ck}</span>
+                        </div>
                       </td>
                     )}
                     {sizeKeys.map(sk => (
@@ -245,10 +268,12 @@ export const editorToVariationRows = (
   grid: Record<string, Record<string, { stock: number; price: number | null }>>,
   hasColors: boolean,
   hasSizes: boolean,
+  variationType: VariationType = 'size',
 ): VariationRow[] => {
   const rows: VariationRow[] = [];
   const colorKeys = hasColors ? colors.map(c => c.name) : ['_default'];
   const sizeKeys = hasSizes ? sizes : ['_default'];
+  const config = VARIATION_TYPE_CONFIG[variationType];
 
   colorKeys.forEach(ck => {
     const colorData = hasColors ? colors.find(c => c.name === ck) : null;
@@ -261,6 +286,9 @@ export const editorToVariationRows = (
         stock: cell.stock,
         price: cell.price,
         imageUrl: colorData?.imageUrl || '',
+        variationType,
+        variationLabel: config.label,
+        variationValue: hasSizes ? sk : '',
       });
     });
   });
@@ -271,20 +299,23 @@ export const editorToVariationRows = (
 export const variationsToEditorState = (variations: Array<{
   color: string | null; color_hex: string | null; size: string | null;
   stock: number; price: number | null; image_url: string | null;
+  variation_type?: string | null; variation_label?: string | null; variation_value?: string | null;
 }>) => {
   const colorMap = new Map<string, VariationColor>();
   const sizeSet = new Set<string>();
   const grid: Record<string, Record<string, { stock: number; price: number | null }>> = {};
+  let detectedType: VariationType = 'size';
 
   variations.forEach(v => {
     const ck = v.color || '_default';
-    const sk = v.size || '_default';
-    
+    const sk = v.variation_value || v.size || '_default';
+
     if (v.color && !colorMap.has(v.color)) {
       colorMap.set(v.color, { name: v.color, hex: v.color_hex || '#000000', imageUrl: v.image_url || '' });
     }
-    if (v.size) sizeSet.add(v.size);
-    
+    if (sk !== '_default') sizeSet.add(sk);
+    if (v.variation_type) detectedType = v.variation_type as VariationType;
+
     if (!grid[ck]) grid[ck] = {};
     grid[ck][sk] = { stock: v.stock, price: v.price };
   });
@@ -295,5 +326,6 @@ export const variationsToEditorState = (variations: Array<{
     grid,
     hasColors: colorMap.size > 0,
     hasSizes: sizeSet.size > 0,
+    variationType: detectedType,
   };
 };
