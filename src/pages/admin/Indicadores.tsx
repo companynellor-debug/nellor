@@ -80,18 +80,12 @@ const Indicadores = () => {
     })}`;
   };
 
-  // Divisão societária
-  const parteNatan = data.receitaNellorTotal * 0.5;
-  const parteGustavo = data.receitaNellorTotal * 0.5;
-  const parteNatanMes = data.receitaNellorMes * 0.5;
-  const parteGustavoMes = data.receitaNellorMes * 0.5;
-
-  // Valuation por sócio
-  const valuationNatan = data.valuationEstimado * 0.5;
-  const valuationGustavo = data.valuationEstimado * 0.5;
+  // Receita integral do Natan (100%)
+  const parteNatan = data.receitaNellorTotal;
+  const parteNatanMes = data.receitaNellorMes;
+  const valuationNatan = data.valuationEstimado;
   const societyData = [
-    { name: "Natan (50%)", value: parteNatan, color: "#8B5CF6" },
-    { name: "Gustavo (50%)", value: parteGustavo, color: "#06B6D4" }
+    { name: "Natan (100%)", value: parteNatan, color: "#8B5CF6" }
   ];
 
   if (loading && orders.length === 0) {
