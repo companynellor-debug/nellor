@@ -144,7 +144,7 @@ const PaginatedNotifications = ({ notifications, onMarkAsRead, hasMore, onLoadMo
 };
 
 const NotificacoesAdmin = () => {
-  const { notifications, loading, unreadCount, markAsRead, markAllAsRead, getNotificationsByType } = useAdminNotifications();
+  const { notifications, loading, unreadCount, hasMore, loadMore, markAsRead, markAllAsRead, getNotificationsByType } = useAdminNotifications();
   const [activeTab, setActiveTab] = useState<string>('all');
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
 
