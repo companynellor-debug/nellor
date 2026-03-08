@@ -128,21 +128,15 @@ const FilterButton = ({ active, onClick, icon, label, count }: { active: boolean
 
 const PAGE_SIZE = 20;
 
-const PaginatedNotifications = ({ notifications, onMarkAsRead }: { notifications: AdminNotification[]; onMarkAsRead: (id: string) => void }) => {
-  const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(notifications.length / PAGE_SIZE);
-  const paginated = notifications.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
+const PaginatedNotifications = ({ notifications, onMarkAsRead, hasMore, onLoadMore }: { notifications: AdminNotification[]; onMarkAsRead: (id: string) => void; hasMore?: boolean; onLoadMore?: () => void }) => {
   return (
     <div className="space-y-3">
-      {paginated.map(notification => (
+      {notifications.map(notification => (
         <NotificationCard key={notification.id} notification={notification} onMarkAsRead={onMarkAsRead} />
       ))}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-4">
-          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Anterior</Button>
-          <span className="text-sm text-muted-foreground">{page} de {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Próxima</Button>
+      {hasMore && onLoadMore && (
+        <div className="flex items-center justify-center pt-4">
+          <Button variant="outline" size="sm" onClick={onLoadMore}>Carregar mais</Button>
         </div>
       )}
     </div>
