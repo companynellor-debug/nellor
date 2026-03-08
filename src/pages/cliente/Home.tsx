@@ -194,11 +194,11 @@ const ClienteHome = () => {
             </div>
           </section>}
 
-        {/* Flash Deals Section */}
+        {/* Flash Deals Section -> Produtos para Revenda */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-foreground">⚡ Ofertas Relâmpago</h2>
+              <h2 className="text-xl font-bold text-foreground">📦 Produtos para Revenda</h2>
             </div>
             <button onClick={() => navigate("/cliente/produtos")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
               Ver Tudo <ChevronRight className="h-4 w-4" />
