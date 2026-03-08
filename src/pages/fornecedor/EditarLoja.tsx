@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, Upload, Star, Package, Plus, X, Tag, Copy, ExternalLink } from "lucide-react";
 import { CurrencyInput, decimalToCents, centsToDecimal } from "@/utils/currency";
 import { toast } from "sonner";
+import { ShippingConfigTab } from "@/components/fornecedor/ShippingConfigTab";
 
 
 const EditarLoja = () => {
