@@ -4,17 +4,19 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Star } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Star, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useSupabaseAddresses } from "@/hooks/useSupabaseAddresses";
+import { formatCep, fetchAddressByCep } from "@/utils/viaCep";
 
 const Enderecos = () => {
   const navigate = useNavigate();
   const { addresses, addAddress, deleteAddress, setDefaultAddress } = useSupabaseAddresses();
   const [showDialog, setShowDialog] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
   const [formData, setFormData] = useState({
     label: 'Casa',
     name: '',
@@ -28,8 +30,33 @@ const Enderecos = () => {
     zip_code: '',
   });
 
+  const handleCepChange = async (value: string) => {
+    const formatted = formatCep(value);
+    setFormData(prev => ({ ...prev, zip_code: formatted }));
+
+    const clean = formatted.replace(/\D/g, '');
+    if (clean.length === 8) {
+      setCepLoading(true);
+      const result = await fetchAddressByCep(clean);
+      setCepLoading(false);
+
+      if (result) {
+        setFormData(prev => ({
+          ...prev,
+          street: result.logradouro || prev.street,
+          neighborhood: result.bairro || prev.neighborhood,
+          city: result.localidade || prev.city,
+          state: result.uf || prev.state,
+        }));
+        toast.success("Endereço encontrado pelo CEP!");
+      } else {
+        toast.error("CEP não encontrado. Preencha manualmente.");
+      }
+    }
+  };
+
   const handleAddAddress = async () => {
-    if (!formData.name || !formData.document || !formData.street || !formData.number || !formData.neighborhood || !formData.city || !formData.state || !formData.zip_code) {
+    if (!formData.zip_code || !formData.street || !formData.number || !formData.neighborhood || !formData.city || !formData.state) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -37,30 +64,22 @@ const Enderecos = () => {
     try {
       await addAddress({
         label: formData.label || 'Casa',
-        name: formData.name!,
-        document: formData.document!,
-        street: formData.street!,
-        number: formData.number!,
+        name: formData.name || '',
+        document: formData.document || '',
+        street: formData.street,
+        number: formData.number,
         complement: formData.complement,
-        neighborhood: formData.neighborhood!,
-        city: formData.city!,
-        state: formData.state!,
-        zip_code: formData.zip_code!,
-        is_default: addresses.length === 0
+        neighborhood: formData.neighborhood,
+        city: formData.city,
+        state: formData.state,
+        zip_code: formData.zip_code.replace(/\D/g, ''),
+        is_default: addresses.length === 0,
       });
 
       setShowDialog(false);
       setFormData({
-        label: 'Casa',
-        name: '',
-        document: '',
-        street: '',
-        number: '',
-        complement: '',
-        neighborhood: '',
-        city: '',
-        state: '',
-        zip_code: '',
+        label: 'Casa', name: '', document: '', street: '', number: '',
+        complement: '', neighborhood: '', city: '', state: '', zip_code: '',
       });
     } catch (error) {
       console.error('Error adding address:', error);
@@ -79,11 +98,15 @@ const Enderecos = () => {
 
   const getLabelIcon = (label: string) => {
     switch (label.toLowerCase()) {
-      case 'trabalho':
-        return Briefcase;
-      default:
-        return Home;
+      case 'trabalho': return Briefcase;
+      default: return Home;
     }
+  };
+
+  const formatDisplayCep = (cep: string) => {
+    const clean = cep.replace(/\D/g, '');
+    if (clean.length === 8) return `${clean.slice(0, 5)}-${clean.slice(5)}`;
+    return cep;
   };
 
   return (
@@ -127,29 +150,21 @@ const Enderecos = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {!address.is_default && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={() => handleSetDefault(address.id)}
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => handleSetDefault(address.id)}>
                         Padrão
                       </Button>
                     )}
-                    <button
-                      onClick={() => handleDeleteAddress(address.id)}
-                      className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                    >
+                    <button onClick={() => handleDeleteAddress(address.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-
                 <div className="text-sm text-muted-foreground space-y-1">
                   <p>{address.street}, {address.number}</p>
                   {address.complement && <p>{address.complement}</p>}
                   <p>{address.neighborhood}</p>
                   <p>{address.city} - {address.state}</p>
-                  <p>CEP: {address.zip_code}</p>
+                  <p>CEP: {formatDisplayCep(address.zip_code)}</p>
                 </div>
               </Card>
             );
@@ -178,26 +193,6 @@ const Enderecos = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo*</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Seu nome completo"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="document">CPF/CNPJ*</Label>
-              <Input
-                id="document"
-                value={formData.document}
-                onChange={(e) => setFormData({ ...formData, document: e.target.value })}
-                placeholder="000.000.000-00"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="label">Identificação</Label>
               <select
                 id="label"
@@ -209,6 +204,19 @@ const Enderecos = () => {
                 <option value="Trabalho">Trabalho</option>
                 <option value="Outro">Outro</option>
               </select>
+            </div>
+
+            {/* CEP First - auto-fills the rest */}
+            <div className="space-y-2">
+              <Label htmlFor="zipCode">CEP* {cepLoading && <Loader2 className="h-3 w-3 inline animate-spin ml-1" />}</Label>
+              <Input
+                id="zipCode"
+                value={formData.zip_code}
+                onChange={(e) => handleCepChange(e.target.value)}
+                placeholder="00000-000"
+                maxLength={9}
+              />
+              <p className="text-[10px] text-muted-foreground">Digite o CEP para preencher automaticamente</p>
             </div>
 
             <div className="grid grid-cols-4 gap-3">
@@ -267,7 +275,7 @@ const Enderecos = () => {
                 <Input
                   id="state"
                   value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
                   placeholder="UF"
                   maxLength={2}
                 />
@@ -275,22 +283,28 @@ const Enderecos = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="zipCode">CEP*</Label>
+              <Label htmlFor="name">Nome Completo (opcional)</Label>
               <Input
-                id="zipCode"
-                value={formData.zip_code}
-                onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
-                placeholder="00000-000"
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Seu nome completo"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="document">CPF/CNPJ (opcional)</Label>
+              <Input
+                id="document"
+                value={formData.document}
+                onChange={(e) => setFormData({ ...formData, document: e.target.value })}
+                placeholder="000.000.000-00"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAddAddress} className="bg-primary hover:bg-primary/90 text-white">
-              Adicionar
-            </Button>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button onClick={handleAddAddress} className="bg-primary hover:bg-primary/90 text-white">Adicionar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
