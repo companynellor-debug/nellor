@@ -2,6 +2,22 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useCallback } from "react";
 
+const QUERY_TIMEOUT_MS = 8000;
+
+const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = QUERY_TIMEOUT_MS): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Tempo limite excedido ao carregar dados.")), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 // Tipos para os dados do admin
 export type AdminOrder = {
   id: string;
@@ -64,7 +80,7 @@ export const useAdminOrders = () => {
   const query = useQuery({
     queryKey: ["admin-orders"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_orders");
+      const { data, error } = await withTimeout(supabase.rpc("get_admin_orders"));
       if (error) throw error;
       return (data ?? []) as AdminOrder[];
     },
@@ -91,7 +107,7 @@ export const useAdminProfiles = () => {
   const query = useQuery({
     queryKey: ["admin-profiles"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_profiles");
+      const { data, error } = await withTimeout(supabase.rpc("get_admin_profiles"));
       if (error) throw error;
       return (data ?? []) as AdminProfile[];
     },
@@ -118,7 +134,7 @@ export const useAdminStats = () => {
   const query = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_stats");
+      const { data, error } = await withTimeout(supabase.rpc("get_admin_stats"));
       if (error) throw error;
       return (data?.[0] ?? null) as AdminStats | null;
     },
@@ -145,7 +161,7 @@ export const useAdminSupportTickets = () => {
   const query = useQuery({
     queryKey: ["admin-support-tickets"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_support_tickets");
+      const { data, error } = await withTimeout(supabase.rpc("get_admin_support_tickets"));
       if (error) throw error;
       return data ?? [];
     },
@@ -172,10 +188,13 @@ export const useAdminBanners = () => {
   const query = useQuery({
     queryKey: ["admin-banners"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("banners")
-        .select("*")
-        .order("order_index", { ascending: true });
+      const { data, error } = await withTimeout(
+        supabase
+          .from("banners")
+          .select("id, title, subtitle, image_url, link_url, ativo, order_index, created_at")
+          .order("order_index", { ascending: true })
+      );
+      if (error) throw error;
       return data ?? [];
     },
     ...queryConfig,
@@ -201,10 +220,13 @@ export const useAdminCategories = () => {
   const query = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select("*")
-        .order("nome", { ascending: true });
+      const { data, error } = await withTimeout(
+        supabase
+          .from("categories")
+          .select("id, nome, slug, imagem_url, created_at")
+          .order("nome", { ascending: true })
+      );
+      if (error) throw error;
       return data ?? [];
     },
     ...queryConfig,

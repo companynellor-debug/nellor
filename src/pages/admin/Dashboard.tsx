@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Store, DollarSign, ShoppingCart, Percent, Loader2, TrendingUp, Clock, CheckCircle } from "lucide-react";
+import { Users, Store, DollarSign, ShoppingCart, Percent, Loader2, TrendingUp, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -12,12 +12,17 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
   
-  const { orders: allOrders, loading: ordersLoading, refetch: refetchOrders } = useAdminOrders();
-  const { profiles: allProfiles, loading: profilesLoading } = useAdminProfiles();
-  const { stats: statsData, loading: statsLoading } = useAdminStats();
+  const { orders: allOrders, loading: ordersLoading, error: ordersError, refetch: refetchOrders } = useAdminOrders();
+  const { profiles: allProfiles, loading: profilesLoading, error: profilesError, refetch: refetchProfiles } = useAdminProfiles();
+  const { stats: statsData, loading: statsLoading, error: statsError, refetch: refetchStats } = useAdminStats();
   
   const loading = ordersLoading || profilesLoading || statsLoading;
-  const refetch = refetchOrders;
+  const hasError = Boolean(ordersError || profilesError || statsError);
+  const refetch = () => {
+    refetchOrders();
+    refetchProfiles();
+    refetchStats();
+  };
 
   // ✅ Calcular tudo com useMemo para evitar recálculos desnecessários
   const { stats, salesData, revenueData, distributionData, topSuppliers, recentOrders, paidOrdersCount } = useMemo(() => {
@@ -176,6 +181,18 @@ const Dashboard = () => {
 
   // Skeleton loading apenas se não tiver dados cacheados
   const isInitialLoad = loading && allOrders.length === 0;
+
+  if (hasError && allOrders.length === 0 && !loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-3">
+          <AlertTriangle className="h-8 w-8 text-destructive mx-auto" />
+          <p className="text-muted-foreground">Não foi possível carregar o dashboard agora.</p>
+          <Button onClick={refetch} variant="outline">Tentar novamente</Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isInitialLoad) {
     return (

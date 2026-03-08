@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import {
   showOrderNotification,
   showPaymentNotification,
@@ -37,6 +38,7 @@ export const useAdminNotifications = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
+  const { user, profile, loading: authLoading } = useSupabaseAuth();
 
   const playNotificationSound = useCallback(() => {
     const audio = new Audio('/notification-sound.mp3');
@@ -51,22 +53,35 @@ export const useAdminNotifications = () => {
   }, []);
 
   const fetchNotifications = useCallback(async (pageNum = 0, append = false) => {
+    if (authLoading) return;
+
+    const isAdmin = profile?.tipo === 'admin';
+    if (!user?.id || !isAdmin) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setHasMore(false);
+      setLoading(false);
+      return;
+    }
+
     try {
       if (pageNum === 0) setLoading(true);
 
       const from = pageNum * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      // Fetch DB notifications with pagination
       const { data: dbNotifications, error: dbError } = await supabase
         .from('notifications')
-        .select('id, user_id, title, body, type, read, created_at, data')
+        .select('id, user_id, title, body, type, read, created_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .range(from, to);
 
       if (dbError) {
         console.error('Error fetching notifications:', dbError);
-        setLoading(false);
+        setNotifications([]);
+        setUnreadCount(0);
+        setHasMore(false);
         return;
       }
 
@@ -94,18 +109,23 @@ export const useAdminNotifications = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authLoading, profile?.tipo, user?.id]);
 
   const loadMore = useCallback(() => {
     if (hasMore) fetchNotifications(page + 1, true);
   }, [hasMore, page, fetchNotifications]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     setNotificationPermission(getNotificationPermission());
     fetchNotifications(0);
 
+    const isAdmin = profile?.tipo === 'admin';
+    if (!user?.id || !isAdmin) return;
+
     const ordersChannel = supabase
-      .channel('admin-orders-notify')
+      .channel(`admin-orders-notify-${user.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' },
         async (payload) => {
           const order = payload.new as any;
@@ -134,7 +154,7 @@ export const useAdminNotifications = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(ordersChannel); };
-  }, [playNotificationSound, toast, fetchNotifications]);
+  }, [authLoading, profile?.tipo, user?.id, playNotificationSound, toast, fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     if (!notificationId.startsWith('sale-') && !notificationId.startsWith('cancelled-') && !notificationId.startsWith('commission-')) {
