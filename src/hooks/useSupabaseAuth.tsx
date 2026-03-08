@@ -49,14 +49,14 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, pix_key, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo';
 
-  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 12000): Promise<T> => {
+  const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 12000): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
     });
 
     try {
-      return await Promise.race([promise, timeoutPromise]);
+      return await Promise.race<T>([promise, timeoutPromise]);
     } finally {
       clearTimeout(timeoutId!);
     }
