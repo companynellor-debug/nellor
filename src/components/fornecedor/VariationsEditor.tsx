@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Upload } from 'lucide-react';
-import { colorNameToHex } from '@/utils/colorMap';
+import { getColorHex } from '@/utils/colorMap';
 
 export interface VariationColor {
   name: string;
