@@ -376,6 +376,10 @@ const EditarLoja = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="frete" className="mt-6">
+          {user?.id && <ShippingConfigTab supplierId={user.id} />}
+        </TabsContent>
+
         <TabsContent value="preview" className="mt-6">
           {/* Preview da Loja (como aparece para clientes) */}
           <div className="space-y-6">
