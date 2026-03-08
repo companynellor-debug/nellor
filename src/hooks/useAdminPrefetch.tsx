@@ -107,7 +107,7 @@ export const useAdminProfiles = () => {
   const query = useQuery({
     queryKey: ["admin-profiles"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_profiles");
+      const { data, error } = await withTimeout(supabase.rpc("get_admin_profiles"));
       if (error) throw error;
       return (data ?? []) as AdminProfile[];
     },
