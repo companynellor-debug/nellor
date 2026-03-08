@@ -151,8 +151,9 @@ const EditarLoja = () => {
       </div>
 
       <Tabs defaultValue="personalizacao" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="personalizacao">Personalização</TabsTrigger>
+          <TabsTrigger value="frete">Configurar Frete</TabsTrigger>
           <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
         </TabsList>
 
