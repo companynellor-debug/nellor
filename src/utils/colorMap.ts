@@ -29,7 +29,7 @@ const COLOR_MAP: Record<string, string> = {
   grafite: '#474747',
   chumbo: '#36454F',
   chocolate: '#7B3F00',
-  areia: '#C2B280',
+  areia: '#C2B280',,
 };
 
 export const getColorHex = (colorName: string): string | null => {
