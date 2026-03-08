@@ -3,7 +3,8 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Minus, Plus, Trash2, ShoppingCart, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "@/hooks/use-toast";
@@ -15,7 +16,6 @@ const Carrinho = () => {
   
   const handleCheckout = () => {
     const validation = validateMinimumLimits();
-    
     if (!validation.isValid) {
       toast({
         title: "Limites mínimos não atendidos",
@@ -30,7 +30,6 @@ const Carrinho = () => {
       });
       return;
     }
-    
     navigate("/cliente/checkout");
   };
 
@@ -41,7 +40,6 @@ const Carrinho = () => {
     <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
 
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
@@ -57,10 +55,7 @@ const Carrinho = () => {
           <Card className="bg-white border shadow-sm p-12 text-center">
             <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground text-lg mb-4">Seu carrinho está vazio</p>
-            <Button 
-              onClick={() => navigate("/cliente/produtos")}
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
+            <Button onClick={() => navigate("/cliente/produtos")} className="bg-primary hover:bg-primary/90 text-white">
               Continuar Comprando
             </Button>
           </Card>
@@ -78,13 +73,27 @@ const Carrinho = () => {
                 return (
                   <Card key={item.id} className="bg-white border shadow-sm p-4">
                     <div className="flex gap-4">
-                      <div className="w-24 h-24 rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
+                      <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium mb-2 line-clamp-2">{item.name}</h3>
+                        <h3 className="font-medium mb-1 line-clamp-2">{item.name}</h3>
+                        {/* Show variation info */}
+                        {(item.selectedColor || item.selectedSize) && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {item.selectedColor && (
+                              <Badge variant="outline" className="text-xs">🎨 {item.selectedColor}</Badge>
+                            )}
+                            {item.selectedSize && (
+                              <Badge variant="outline" className="text-xs">📏 {item.selectedSize}</Badge>
+                            )}
+                          </div>
+                        )}
                         <p className="text-primary font-bold text-lg">
                           {formatCurrencyFromDecimal(itemTotal)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatCurrencyFromDecimal(item.price)} × {item.quantity}
                         </p>
                         {hasLimits && (
                           <div className="mt-2 space-y-1">
@@ -104,24 +113,15 @@ const Carrinho = () => {
                     </div>
                     <div className="flex items-center justify-between mt-4">
                       <div className="flex items-center gap-3 bg-muted rounded-full p-1">
-                        <button
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="p-2 hover:bg-muted-foreground/10 rounded-full transition-colors"
-                        >
+                        <button onClick={() => updateQuantity(item.id, -1)} className="p-2 hover:bg-muted-foreground/10 rounded-full transition-colors">
                           <Minus className="h-4 w-4" />
                         </button>
                         <span className="w-8 text-center font-medium">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="p-2 hover:bg-muted-foreground/10 rounded-full transition-colors"
-                        >
+                        <button onClick={() => updateQuantity(item.id, 1)} className="p-2 hover:bg-muted-foreground/10 rounded-full transition-colors">
                           <Plus className="h-4 w-4" />
                         </button>
                       </div>
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="p-2 hover:bg-red-500/10 text-red-500 rounded-full transition-colors"
-                      >
+                      <button onClick={() => removeItem(item.id)} className="p-2 hover:bg-red-500/10 text-red-500 rounded-full transition-colors">
                         <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
@@ -144,14 +144,12 @@ const Carrinho = () => {
                 </div>
                 <div className="border-t pt-3 flex justify-between items-center">
                   <span className="text-xl font-bold">Total</span>
-                  <span className="text-2xl font-bold text-primary">
-                    {formatCurrencyFromDecimal(total + shipping)}
-                  </span>
+                  <span className="text-2xl font-bold text-primary">{formatCurrencyFromDecimal(total + shipping)}</span>
                 </div>
               </div>
             </Card>
 
-            {/* Avisos de validação */}
+            {/* Validação */}
             {(() => {
               const validation = validateMinimumLimits();
               if (!validation.isValid) {
@@ -171,19 +169,9 @@ const Carrinho = () => {
               }
             })()}
 
-            {/* Botões de Ação */}
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => clearCart()}
-              >
-                Limpar Carrinho
-              </Button>
-              <Button 
-                onClick={handleCheckout}
-                className="flex-1 bg-primary hover:bg-primary/90 text-white h-14 text-lg font-bold"
-              >
+              <Button variant="outline" className="flex-1" onClick={() => clearCart()}>Limpar Carrinho</Button>
+              <Button onClick={handleCheckout} className="flex-1 bg-primary hover:bg-primary/90 text-white h-14 text-lg font-bold">
                 Finalizar Pedido
               </Button>
             </div>
