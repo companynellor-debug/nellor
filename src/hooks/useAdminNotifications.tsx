@@ -116,11 +116,16 @@ export const useAdminNotifications = () => {
   }, [hasMore, page, fetchNotifications]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     setNotificationPermission(getNotificationPermission());
     fetchNotifications(0);
 
+    const isAdmin = profile?.tipo === 'admin';
+    if (!user?.id || !isAdmin) return;
+
     const ordersChannel = supabase
-      .channel('admin-orders-notify')
+      .channel(`admin-orders-notify-${user.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' },
         async (payload) => {
           const order = payload.new as any;
@@ -149,7 +154,7 @@ export const useAdminNotifications = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(ordersChannel); };
-  }, [playNotificationSound, toast, fetchNotifications]);
+  }, [authLoading, profile?.tipo, user?.id, playNotificationSound, toast, fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     if (!notificationId.startsWith('sale-') && !notificationId.startsWith('cancelled-') && !notificationId.startsWith('commission-')) {
