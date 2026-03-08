@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone, CheckCircle2 } from "lucide-react";
+import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone, CheckCircle2, Package } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -171,6 +171,12 @@ const ClienteHome = () => {
             </div>
           </div>}
 
+        {/* Faixa de Compra em Massa */}
+        <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mb-8 text-center flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Package className="h-6 w-6 text-primary" />
+          <p className="text-foreground font-medium">Pedido mínimo a partir de 10 unidades — Compre para revender com os melhores preços!</p>
+        </div>
+
         {/* Categories - Icon style row */}
         {categories.length > 0 && <section className="mb-8">
             <div className="bg-background rounded-xl p-4 shadow-sm border">
@@ -194,11 +200,11 @@ const ClienteHome = () => {
             </div>
           </section>}
 
-        {/* Flash Deals Section */}
+        {/* Flash Deals Section -> Produtos para Revenda */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-foreground">⚡ Ofertas Relâmpago</h2>
+              <h2 className="text-xl font-bold text-foreground">📦 Produtos para Revenda</h2>
             </div>
             <button onClick={() => navigate("/cliente/produtos")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
               Ver Tudo <ChevronRight className="h-4 w-4" />
@@ -223,6 +229,34 @@ const ClienteHome = () => {
                   </div>
                 </Card>
               </Link>)}
+          </div>
+        </section>
+
+        {/* Featured Suppliers Section */}
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-foreground">🏆 Fornecedores em Destaque</h2>
+            </div>
+            <button onClick={() => navigate("/cliente/produtos")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
+              Ver Lojas <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {/* Simple mock list for layout, you can connect real stores via useSupabaseStores later */}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex-shrink-0 w-64">
+                <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group p-4 flex items-center gap-4 cursor-pointer" onClick={() => navigate('/cliente/produtos')}>
+                  <div className="w-16 h-16 rounded-full bg-muted overflow-hidden">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=store${i}`} alt="Fornecedor" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-foreground">Fornecedor Premium {i}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Vestuário • Mín: 10 un.</p>
+                  </div>
+                </Card>
+              </div>
+            ))}
           </div>
         </section>
 

@@ -1179,6 +1179,53 @@ export type Database = {
           },
         ]
       }
+      product_variations: {
+        Row: {
+          color: string | null
+          color_hex: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          price: number | null
+          product_id: string
+          size: string | null
+          stock: number
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          color_hex?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          price?: number | null
+          product_id: string
+          size?: string | null
+          stock?: number
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          color_hex?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          price?: number | null
+          product_id?: string
+          size?: string | null
+          stock?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           affiliate_commission_percent: number | null

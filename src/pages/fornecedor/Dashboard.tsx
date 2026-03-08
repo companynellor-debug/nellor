@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Package, TrendingUp, DollarSign, ShoppingCart, Loader2, Wallet, Percent, Bell, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { formatCurrencyFromDecimal } from "@/utils/currency";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
@@ -194,16 +195,16 @@ const [analytics, setAnalytics] = useState<any>(null);
       </div>
 
       {/* Status de Verificação */}
-      <Card className={`relative overflow-hidden border-2 ${canSell ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10' : 'border-red-500 bg-red-50/50 dark:bg-red-900/10'}`}>
+      <Card className={`relative overflow-hidden border-2 ${canSell ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10' : 'border-amber-500 bg-amber-50/50 dark:bg-amber-900/10'}`}>
         <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" />
+            <ShieldCheck className={`h-5 w-5 ${canSell ? 'text-green-600' : 'text-amber-600'}`} />
             Status da conta
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <div>
-            <p className={`text-lg font-semibold ${canSell ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>{statusLabel}</p>
+            <p className={`text-lg font-semibold ${canSell ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`}>{statusLabel}</p>
             {!canSell ? (
               <div className="mt-2">
                 <p className="text-xs text-muted-foreground mb-3">Para vender e solicitar saque, é obrigatório verificar a identidade.</p>
@@ -227,7 +228,7 @@ const [analytics, setAnalytics] = useState<any>(null);
             <DollarSign className="w-5 h-5 text-green-600" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrencyFromDecimal(totalRevenue)}</div>
           </CardContent>
         </Card>
 
@@ -241,7 +242,7 @@ const [analytics, setAnalytics] = useState<any>(null);
             <Wallet className="w-5 h-5 text-emerald-600" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-emerald-600">R$ {totalSupplierAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-emerald-600">{formatCurrencyFromDecimal(totalSupplierAmount)}</div>
             <p className="text-xs text-muted-foreground mt-1">Após taxa da plataforma</p>
           </CardContent>
         </Card>
@@ -256,7 +257,7 @@ const [analytics, setAnalytics] = useState<any>(null);
             <Percent className="w-5 h-5 text-purple-600" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-purple-600">R$ {totalPlatformFee.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-purple-600">{formatCurrencyFromDecimal(totalPlatformFee)}</div>
             <p className="text-xs text-muted-foreground mt-1">7,5% por venda</p>
           </CardContent>
         </Card>
@@ -322,7 +323,7 @@ const [analytics, setAnalytics] = useState<any>(null);
             <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent" />
           </CardHeader>
           <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">R$ {ticketMedio.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{formatCurrencyFromDecimal(ticketMedio)}</div>
           </CardContent>
         </Card>
 
@@ -404,7 +405,7 @@ const [analytics, setAnalytics] = useState<any>(null);
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-semibold text-sm sm:text-base whitespace-nowrap">R$ {Number(order.total || 0).toFixed(2)}</p>
+                      <p className="font-semibold text-sm sm:text-base whitespace-nowrap">{formatCurrencyFromDecimal(Number(order.total || 0))}</p>
                     </div>
                   </div>
                 </div>)}
