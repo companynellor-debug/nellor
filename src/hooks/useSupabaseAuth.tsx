@@ -47,6 +47,21 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, pix_key, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo';
+
+  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 12000): Promise<T> => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
+    });
+
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      clearTimeout(timeoutId!);
+    }
+  };
+
   const clearStaleAuthStorage = () => {
     try {
       Object.keys(localStorage)
@@ -59,16 +74,22 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select(PROFILE_SELECT)
+          .eq('id', userId)
+          .single(),
+        10000,
+      );
 
       if (error) throw error;
-      setProfile(data);
+      setProfile((data as Profile) ?? null);
+      return data as Profile | null;
     } catch (error: any) {
       console.error('Error fetching profile:', error);
+      setProfile(null);
+      return null;
     }
   };
 
