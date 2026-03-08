@@ -1,6 +1,7 @@
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { ReviewsList } from "@/components/cliente/ReviewsList";
+import { BulkOrderGrid } from "@/components/cliente/BulkOrderGrid";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -16,9 +17,11 @@ import { useCart } from "@/hooks/useCart";
 import { useProducts } from "@/hooks/useProducts";
 import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
+import { useProductVariations } from "@/hooks/useProductVariations";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
+import { getColorHex } from "@/utils/colorMap";
 import ReportButton from "@/components/ReportButton";
 
 const ProdutoDetalhes = () => {
@@ -46,11 +49,35 @@ const ProdutoDetalhes = () => {
   const legacyProductId = useMemo(() => { const n = Number.parseInt(routeId, 10); return Number.isFinite(n) ? n : null; }, [routeId]);
   const legacyProduct = legacyProductId ? getProductById(legacyProductId) : undefined;
 
-  // Product sizes/colors/kit from DB
   const productSizes: string[] = useMemo(() => (supabaseProductById?.tamanhos as string[]) || [], [supabaseProductById]);
   const productColors: string[] = useMemo(() => (supabaseProductById?.cores as string[]) || [], [supabaseProductById]);
   const productIsKit = supabaseProductById?.is_kit || false;
   const productKitItems: { name: string; quantity: number }[] = useMemo(() => (supabaseProductById?.kit_items as any[]) || [], [supabaseProductById]);
+
+  // Load variations from product_variations table
+  const { variations, loading: variationsLoading } = useProductVariations(supabaseProductById?.id);
+  const hasVariations = variations.length > 0;
+
+  // Unique colors from variations with images
+  const variationColors = useMemo(() => {
+    const seen = new Map<string, { hex: string; imageUrl: string }>();
+    variations.filter(v => v.color).forEach(v => {
+      if (!seen.has(v.color!)) seen.set(v.color!, { hex: v.color_hex || getColorHex(v.color!) || '#ccc', imageUrl: v.image_url || '' });
+    });
+    return Array.from(seen.entries()).map(([name, data]) => ({ name, ...data }));
+  }, [variations]);
+
+  // Unique sizes from variations
+  const variationSizes = useMemo(() => [...new Set(variations.filter(v => v.size).map(v => v.size!))], [variations]);
+
+  // Get stock for a specific variation
+  const getVariationStock = (color?: string, size?: string) => {
+    const v = variations.find(vr =>
+      (color ? vr.color === color : !vr.color) &&
+      (size ? vr.size === size : !vr.size)
+    );
+    return v?.stock ?? 0;
+  };
 
   const product = useMemo(() => {
     if (supabaseProductById) {
@@ -102,6 +129,20 @@ const ProdutoDetalhes = () => {
     fetchSupplierData();
   }, [product, supabaseProducts]);
 
+  // When a color is selected, change main image to color image if available
+  useEffect(() => {
+    if (selectedColor && variationColors.length > 0) {
+      const colorData = variationColors.find(c => c.name === selectedColor);
+      if (colorData?.imageUrl) {
+        // Find or add the color image to the images array
+        const imgs = product?.images || [];
+        const idx = imgs.indexOf(colorData.imageUrl);
+        if (idx >= 0) setSelectedImage(idx);
+        // Otherwise just keep current, the color image will show as thumbnail
+      }
+    }
+  }, [selectedColor, variationColors]);
+
   const handleToggleFavorite = () => { isProductFavorite ? removeFavorite(productId) : addFavorite(productId); };
 
   const handleShare = async () => {
@@ -127,11 +168,11 @@ const ProdutoDetalhes = () => {
       toast({ title: 'Erro', description: 'Informações do fornecedor não encontradas.', variant: 'destructive' });
       return;
     }
-    if (productSizes.length > 0 && !selectedSize) {
+    if (variationSizes.length > 0 && !selectedSize && !hasVariations) {
       toast({ title: 'Selecione o tamanho', description: 'Escolha um tamanho antes de continuar.', variant: 'destructive' });
       return;
     }
-    if (productColors.length > 0 && !selectedColor) {
+    if (variationColors.length > 0 && !selectedColor && !hasVariations) {
       toast({ title: 'Selecione a cor', description: 'Escolha uma cor antes de continuar.', variant: 'destructive' });
       return;
     }
@@ -143,6 +184,34 @@ const ProdutoDetalhes = () => {
     }, qty);
     if (thenNavigate) navigate(thenNavigate);
   };
+
+  // Bulk order handler
+  const handleBulkAddToCart = (items: Array<{ color: string; colorHex: string; size: string; quantity: number; price: number; imageUrl: string }>) => {
+    if (!product?.supplierProfileId) return;
+    items.forEach(item => {
+      addToCart({
+        productId: product.supplierUuid || '',
+        name: `${product.name}${item.color ? ` - ${item.color}` : ''}${item.size ? ` (${item.size})` : ''}`,
+        price: item.price,
+        image: item.imageUrl || product.images[0],
+        storeId: product.supplierProfileId || '',
+        storeName: supplierProfile?.nome || 'Loja',
+        selectedSize: item.size || undefined,
+        selectedColor: item.color || undefined,
+      }, item.quantity);
+    });
+    toast({ title: "Adicionado ao carrinho", description: `${items.reduce((s, i) => s + i.quantity, 0)} peças adicionadas.` });
+  };
+
+  // Build display images: product images + color variation images
+  const displayImages = useMemo(() => {
+    if (!product) return [];
+    const imgs = [...product.images];
+    variationColors.forEach(c => {
+      if (c.imageUrl && !imgs.includes(c.imageUrl)) imgs.push(c.imageUrl);
+    });
+    return imgs;
+  }, [product?.images, variationColors]);
 
   if (!product) {
     return (
@@ -185,7 +254,7 @@ const ProdutoDetalhes = () => {
           <div className="lg:col-span-7 mb-6 lg:mb-0">
             <div className="lg:flex lg:gap-4">
               <div className="hidden lg:flex lg:flex-col gap-2 order-1">
-                {product.images.map((image, index) => (
+                {displayImages.map((image, index) => (
                   <button key={index} onClick={() => setSelectedImage(index)}
                     className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === index ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"}`}>
                     <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
@@ -194,10 +263,10 @@ const ProdutoDetalhes = () => {
               </div>
               <div className="flex-1 order-2">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-muted max-w-lg mx-auto lg:max-w-none">
-                  <img src={product.images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+                  <img src={displayImages[selectedImage] || product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex gap-2 justify-center mt-4 lg:hidden">
-                  {product.images.map((image, index) => (
+                  {displayImages.map((image, index) => (
                     <button key={index} onClick={() => setSelectedImage(index)}
                       className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-primary scale-105" : "border-border"}`}>
                       <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
@@ -251,23 +320,36 @@ const ProdutoDetalhes = () => {
               <p className="text-muted-foreground leading-relaxed text-sm">{product.description}</p>
             </div>
 
-            {/* Tamanhos */}
-            {productSizes.length > 0 && (
+            {/* Color thumbnails from variations */}
+            {variationColors.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold mb-2">📏 Tamanho</h3>
+                <h3 className="text-sm font-semibold mb-2">🎨 Cor {selectedColor && <span className="text-muted-foreground font-normal">— {selectedColor}</span>}</h3>
                 <div className="flex flex-wrap gap-2">
-                  {productSizes.map(size => (
-                    <Badge key={size} variant={selectedSize === size ? "default" : "outline"}
-                      className="cursor-pointer select-none px-3 py-1" onClick={() => setSelectedSize(size)}>
-                      {size}
-                    </Badge>
+                  {variationColors.map(color => (
+                    <button key={color.name} onClick={() => {
+                      setSelectedColor(color.name);
+                      // Switch main image to color image
+                      if (color.imageUrl) {
+                        const idx = displayImages.indexOf(color.imageUrl);
+                        if (idx >= 0) setSelectedImage(idx);
+                      }
+                    }}
+                      className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedColor === color.name ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50'}`}>
+                      {color.imageUrl ? (
+                        <img src={color.imageUrl} alt={color.name} className="w-12 h-12 object-cover" />
+                      ) : (
+                        <div className="w-12 h-12 flex items-center justify-center" style={{ backgroundColor: color.hex }}>
+                          <span className="text-[10px] text-white font-bold drop-shadow">{color.name.slice(0, 2)}</span>
+                        </div>
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Cores */}
-            {productColors.length > 0 && (
+            {/* Fallback: colors from product JSON (no variations) */}
+            {variationColors.length === 0 && productColors.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold mb-2">🎨 Cor</h3>
                 <div className="flex flex-wrap gap-2">
@@ -275,6 +357,44 @@ const ProdutoDetalhes = () => {
                     <Badge key={color} variant={selectedColor === color ? "default" : "outline"}
                       className="cursor-pointer select-none px-3 py-1" onClick={() => setSelectedColor(color)}>
                       {color}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Size buttons from variations with stock info */}
+            {variationSizes.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2">📏 Tamanho</h3>
+                <div className="flex flex-wrap gap-2">
+                  {variationSizes.map(size => {
+                    const stockForSize = selectedColor
+                      ? getVariationStock(selectedColor, size)
+                      : variations.filter(v => v.size === size).reduce((s, v) => s + v.stock, 0);
+                    const outOfStock = stockForSize === 0;
+                    return (
+                      <Badge key={size}
+                        variant={selectedSize === size ? "default" : "outline"}
+                        className={`cursor-pointer select-none px-3 py-1 ${outOfStock ? 'opacity-40 line-through cursor-not-allowed' : ''}`}
+                        onClick={() => !outOfStock && setSelectedSize(size)}>
+                        {size}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Fallback: sizes from product JSON */}
+            {variationSizes.length === 0 && productSizes.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2">📏 Tamanho</h3>
+                <div className="flex flex-wrap gap-2">
+                  {productSizes.map(size => (
+                    <Badge key={size} variant={selectedSize === size ? "default" : "outline"}
+                      className="cursor-pointer select-none px-3 py-1" onClick={() => setSelectedSize(size)}>
+                      {size}
                     </Badge>
                   ))}
                 </div>
@@ -307,17 +427,29 @@ const ProdutoDetalhes = () => {
               </div>
             )}
 
-            {/* Desktop buttons */}
-            <div className="hidden lg:flex gap-3 pt-2">
-              <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12" disabled={currentStock === 0}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) return; validateAndAddToCart(1, '/cliente/carrinho'); }}>
-                <ShoppingCart className="h-5 w-5" />Adicionar ao Carrinho
-              </Button>
-              <Button className="flex-1 bg-primary hover:bg-primary/90 text-white h-12" disabled={currentStock === 0}
-                onClick={(e) => { e.preventDefault(); if (currentStock === 0) return; setQuantity(1); setShowQuantityDialog(true); }}>
-                Comprar Agora
-              </Button>
-            </div>
+            {/* Bulk Order Grid */}
+            {hasVariations && (
+              <BulkOrderGrid
+                variations={variations}
+                basePrice={product.priceNumber}
+                minQuantity={undefined}
+                onAddToCart={handleBulkAddToCart}
+              />
+            )}
+
+            {/* Desktop buttons - only if no bulk grid */}
+            {!hasVariations && (
+              <div className="hidden lg:flex gap-3 pt-2">
+                <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12" disabled={currentStock === 0}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) return; validateAndAddToCart(1, '/cliente/carrinho'); }}>
+                  <ShoppingCart className="h-5 w-5" />Adicionar ao Carrinho
+                </Button>
+                <Button className="flex-1 bg-primary hover:bg-primary/90 text-white h-12" disabled={currentStock === 0}
+                  onClick={(e) => { e.preventDefault(); if (currentStock === 0) return; setQuantity(1); setShowQuantityDialog(true); }}>
+                  Comprar Agora
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -369,18 +501,20 @@ const ProdutoDetalhes = () => {
         </Dialog>
 
         {/* Mobile buttons */}
-        <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30 lg:hidden">
-          <div className="container mx-auto flex gap-3">
-            <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2" disabled={currentStock === 0}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } validateAndAddToCart(1, '/cliente/carrinho'); }}>
-              <ShoppingCart className="h-5 w-5" />Adicionar
-            </Button>
-            <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" disabled={currentStock === 0}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } setQuantity(1); setShowQuantityDialog(true); }}>
-              Comprar
-            </Button>
+        {!hasVariations && (
+          <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30 lg:hidden">
+            <div className="container mx-auto flex gap-3">
+              <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2" disabled={currentStock === 0}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } validateAndAddToCart(1, '/cliente/carrinho'); }}>
+                <ShoppingCart className="h-5 w-5" />Adicionar
+              </Button>
+              <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" disabled={currentStock === 0}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } setQuantity(1); setShowQuantityDialog(true); }}>
+                Comprar
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       <BottomNav />

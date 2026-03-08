@@ -536,15 +536,22 @@ const Pedidos = () => {
                 </div>
               </div>
 
-              {/* Itens */}
+              {/* Itens do Pedido */}
               <div>
                 <h3 className="font-semibold mb-3">Itens do Pedido</h3>
                 <div className="space-y-2">
                   {Array.isArray(selectedOrder.itens) && selectedOrder.itens.map((item: any, idx: number) => (
                     <div key={idx} className="flex justify-between items-center p-3 bg-muted rounded">
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">Qtd: {item.quantity}</p>
+                      <div className="flex items-center gap-3">
+                        {item.image && <img src={item.image} alt={item.name} className="w-10 h-10 rounded object-cover" />}
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <div className="flex gap-2 mt-0.5">
+                            <p className="text-sm text-muted-foreground">Qtd: {item.quantity}</p>
+                            {item.selectedColor && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">🎨 {item.selectedColor}</span>}
+                            {item.selectedSize && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">📏 {item.selectedSize}</span>}
+                          </div>
+                        </div>
                       </div>
                       <p className="font-semibold">R$ {Number(item.price * item.quantity).toFixed(2)}</p>
                     </div>
