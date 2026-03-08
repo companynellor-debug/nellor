@@ -227,7 +227,7 @@ const [analytics, setAnalytics] = useState<any>(null);
             <DollarSign className="w-5 h-5 text-green-600" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrencyFromDecimal(totalRevenue)}</div>
           </CardContent>
         </Card>
 
