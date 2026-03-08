@@ -164,21 +164,24 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const redirectUrl = `${window.location.origin}/`;
       
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            nome: metadata?.nome,
-            tipo: metadata?.tipo || 'cliente',
-            document: metadata?.document,
-            telefone: metadata?.telefone,
-            pix_key: metadata?.pix_key,
-            endereco_principal: metadata?.endereco_principal
+      const { error } = await withTimeout(
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              nome: metadata?.nome,
+              tipo: metadata?.tipo || 'cliente',
+              document: metadata?.document,
+              telefone: metadata?.telefone,
+              pix_key: metadata?.pix_key,
+              endereco_principal: metadata?.endereco_principal
+            }
           }
-        }
-      });
+        }),
+        12000,
+      );
 
       if (error) {
         return { error };
