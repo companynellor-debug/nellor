@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,7 +17,6 @@ export interface SupplierProduct {
   colors?: string[];
   isKit?: boolean;
   kitItems?: { name: string; quantity: number }[];
-  // B2B fields
   brand?: string;
   material?: string;
   weightGrams?: number;
@@ -33,22 +32,31 @@ export interface SupplierProduct {
   isInternational?: boolean;
 }
 
+const PAGE_SIZE = 20;
+
 export const useSupplierProducts = () => {
   const [products, setProducts] = useState<SupplierProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async (pageNum = 0, append = false) => {
     try {
+      if (pageNum === 0) setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
 
+      const from = pageNum * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, nome, categoria_id, descricao_curta, imagens, preco, estoque, variacoes, tamanhos, cores, is_kit, kit_items, brand, material, weight_grams, width_cm, height_cm, depth_cm, condition, ncm_code, sale_unit, units_per_sale_unit, min_order_quantity, is_cnpj_only, is_international')
         .eq('supplier_id', user.id)
         .eq('ativo', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
 
@@ -60,8 +68,6 @@ export const useSupplierProducts = () => {
         images: product.imagens || [],
         price: parseFloat(product.preco),
         stock: product.estoque,
-        minQuantity: undefined,
-        minValue: undefined,
         variations: product.variacoes || undefined,
         sizes: product.tamanhos || undefined,
         colors: product.cores || undefined,
@@ -82,16 +88,27 @@ export const useSupplierProducts = () => {
         isInternational: product.is_international || false,
       }));
 
-      setProducts(mappedProducts);
+      setHasMore(mappedProducts.length === PAGE_SIZE);
+
+      if (append) {
+        setProducts(prev => [...prev, ...mappedProducts]);
+      } else {
+        setProducts(mappedProducts);
+      }
+      setPage(pageNum);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({ title: 'Erro ao carregar produtos', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  useEffect(() => { fetchProducts(); }, []);
+  useEffect(() => { fetchProducts(0); }, [fetchProducts]);
+
+  const loadMore = useCallback(() => {
+    if (hasMore) fetchProducts(page + 1, true);
+  }, [hasMore, page, fetchProducts]);
 
   const addProduct = async (product: Omit<SupplierProduct, 'id'>) => {
     try {
@@ -136,7 +153,7 @@ export const useSupplierProducts = () => {
 
       if (error) throw error;
       toast({ title: 'Produto adicionado', description: 'Produto criado com sucesso!' });
-      fetchProducts();
+      fetchProducts(0);
       return data;
     } catch (error: any) {
       console.error('Error adding product:', error);
@@ -162,7 +179,6 @@ export const useSupplierProducts = () => {
       if (updatedData.colors !== undefined) updatePayload.cores = updatedData.colors.length > 0 ? updatedData.colors : null;
       if (updatedData.isKit !== undefined) updatePayload.is_kit = updatedData.isKit;
       if (updatedData.kitItems !== undefined) updatePayload.kit_items = updatedData.kitItems.length > 0 ? updatedData.kitItems : null;
-      // B2B fields
       if (updatedData.brand !== undefined) updatePayload.brand = updatedData.brand || null;
       if (updatedData.material !== undefined) updatePayload.material = updatedData.material || null;
       if (updatedData.weightGrams !== undefined) updatePayload.weight_grams = updatedData.weightGrams || null;
@@ -180,7 +196,7 @@ export const useSupplierProducts = () => {
       const { error } = await supabase.from('products').update(updatePayload).eq('id', id);
       if (error) throw error;
       toast({ title: 'Produto atualizado', description: 'Alterações salvas com sucesso!' });
-      fetchProducts();
+      fetchProducts(0);
     } catch (error: any) {
       console.error('Error updating product:', error);
       toast({ title: 'Erro ao atualizar produto', description: error.message, variant: 'destructive' });
@@ -192,12 +208,12 @@ export const useSupplierProducts = () => {
       const { error } = await supabase.from('products').update({ ativo: false }).eq('id', id);
       if (error) throw error;
       toast({ title: 'Produto excluído', description: 'Produto removido com sucesso!' });
-      fetchProducts();
+      fetchProducts(0);
     } catch (error: any) {
       console.error('Error deleting product:', error);
       toast({ title: 'Erro ao excluir produto', description: error.message, variant: 'destructive' });
     }
   };
 
-  return { products, loading, addProduct, updateProduct, deleteProduct, refetch: fetchProducts };
+  return { products, loading, hasMore, loadMore, addProduct, updateProduct, deleteProduct, refetch: () => fetchProducts(0) };
 };

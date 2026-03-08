@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  showOrderNotification, 
+import {
+  showOrderNotification,
   showPaymentNotification,
   requestNotificationPermission,
   getNotificationPermission
@@ -27,15 +27,15 @@ export interface AdminNotification {
   user_id?: string;
 }
 
-let notificationsCache: AdminNotification[] | null = null;
-let lastFetch = 0;
-const CACHE_TTL = 3 * 60 * 1000;
+const PAGE_SIZE = 20;
 
 export const useAdminNotifications = () => {
-  const [notifications, setNotifications] = useState<AdminNotification[]>(notificationsCache || []);
-  const [loading, setLoading] = useState(!notificationsCache);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
 
   const playNotificationSound = useCallback(() => {
@@ -50,108 +50,45 @@ export const useAdminNotifications = () => {
     return granted;
   }, []);
 
-  const fetchNotifications = useCallback(async (force = false) => {
-    if (!force && notificationsCache && Date.now() - lastFetch < CACHE_TTL) {
-      setNotifications(notificationsCache);
-      setUnreadCount(notificationsCache.filter(n => !n.read).length);
-      setLoading(false);
-      return;
-    }
-
+  const fetchNotifications = useCallback(async (pageNum = 0, append = false) => {
     try {
-      setLoading(true);
+      if (pageNum === 0) setLoading(true);
 
-      // Fetch REAL notifications from DB (admin RLS = ALL)
+      const from = pageNum * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      // Fetch DB notifications with pagination
       const { data: dbNotifications, error: dbError } = await supabase
         .from('notifications')
         .select('id, user_id, title, body, type, read, created_at, data')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .range(from, to);
 
       if (dbError) {
         console.error('Error fetching notifications:', dbError);
+        setLoading(false);
+        return;
       }
 
-      // Also fetch recent orders for sale/commission cards
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('id, order_number, total, payment_status, order_status, created_at, updated_at, platform_fee')
-        .order('created_at', { ascending: false })
-        .limit(20);
+      const mapped: AdminNotification[] = (dbNotifications || []).map((n) => ({
+        id: n.id,
+        type: n.type as AdminNotificationType,
+        title: n.title,
+        body: n.body,
+        read: n.read ?? false,
+        created_at: n.created_at || '',
+        user_id: n.user_id,
+      }));
 
-      if (ordersError) {
-        console.error('Error fetching orders:', ordersError);
+      setHasMore(mapped.length === PAGE_SIZE);
+
+      if (append) {
+        setNotifications(prev => [...prev, ...mapped]);
+      } else {
+        setNotifications(mapped);
+        setUnreadCount(mapped.filter(n => !n.read).length);
       }
-
-      const allNotifications: AdminNotification[] = [];
-
-      // Map DB notifications
-      if (dbNotifications) {
-        dbNotifications.forEach((n) => {
-          allNotifications.push({
-            id: n.id,
-            type: n.type as AdminNotificationType,
-            title: n.title,
-            body: n.body,
-            read: n.read ?? false,
-            created_at: n.created_at || '',
-            user_id: n.user_id,
-          });
-        });
-      }
-
-      // Map orders into sale/commission notifications (only if not already in DB notifications)
-      const dbTitles = new Set(dbNotifications?.map(n => n.title) || []);
-      if (ordersData) {
-        ordersData.forEach((order) => {
-          if (order.payment_status === 'paid' && order.order_status !== 'cancelled') {
-            const saleTitle = `Venda Aprovada`;
-            if (!dbTitles.has(saleTitle)) {
-              const commission = (order.platform_fee as number) || order.total * 0.075;
-              allNotifications.push({
-                id: `sale-${order.id}`,
-                type: 'sale',
-                title: saleTitle,
-                body: `Pedido #${order.order_number}`,
-                value: order.total,
-                commission,
-                reference_id: order.id,
-                reference_type: 'order',
-                read: true,
-                created_at: order.created_at || '',
-                order_number: order.order_number,
-              });
-            }
-          }
-
-          if (order.payment_status === 'cancelled' || order.order_status === 'cancelled') {
-            const cancelTitle = `Pedido Cancelado`;
-            if (!dbTitles.has(cancelTitle)) {
-              allNotifications.push({
-                id: `cancelled-${order.id}`,
-                type: 'alert',
-                title: cancelTitle,
-                body: `Pedido #${order.order_number} foi cancelado`,
-                value: order.total,
-                reference_id: order.id,
-                reference_type: 'order',
-                read: true,
-                created_at: order.updated_at || order.created_at || '',
-                order_number: order.order_number,
-              });
-            }
-          }
-        });
-      }
-
-      // Sort by date
-      allNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      notificationsCache = allNotifications;
-      lastFetch = Date.now();
-
-      setNotifications(allNotifications);
-      setUnreadCount(allNotifications.filter(n => !n.read).length);
+      setPage(pageNum);
     } catch (error) {
       console.error('Error fetching admin notifications:', error);
     } finally {
@@ -159,9 +96,13 @@ export const useAdminNotifications = () => {
     }
   }, []);
 
+  const loadMore = useCallback(() => {
+    if (hasMore) fetchNotifications(page + 1, true);
+  }, [hasMore, page, fetchNotifications]);
+
   useEffect(() => {
     setNotificationPermission(getNotificationPermission());
-    fetchNotifications();
+    fetchNotifications(0);
 
     const ordersChannel = supabase
       .channel('admin-orders-notify')
@@ -171,8 +112,7 @@ export const useAdminNotifications = () => {
           playNotificationSound();
           toast({ title: '🛒 Novo Pedido!', description: `Pedido #${order.order_number} - R$ ${Number(order.total)?.toFixed(2)}` });
           await showOrderNotification(order.order_number, Number(order.total), order.buyer_name);
-          notificationsCache = null;
-          fetchNotifications(true);
+          fetchNotifications(0);
         }
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' },
@@ -187,8 +127,7 @@ export const useAdminNotifications = () => {
               toast({ title: '💰 Comissão Recebida!', description: `R$ ${commission.toFixed(2).replace('.', ',')} (7,5%)` });
             }, 1500);
             await showPaymentNotification(order.order_number, Number(order.total), 'paid');
-            notificationsCache = null;
-            fetchNotifications(true);
+            fetchNotifications(0);
           }
         }
       )
@@ -198,7 +137,6 @@ export const useAdminNotifications = () => {
   }, [playNotificationSound, toast, fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
-    // If it's a real DB notification (UUID format), update in DB
     if (!notificationId.startsWith('sale-') && !notificationId.startsWith('cancelled-') && !notificationId.startsWith('commission-')) {
       await supabase.from('notifications').update({ read: true }).eq('id', notificationId);
     }
@@ -207,7 +145,6 @@ export const useAdminNotifications = () => {
   };
 
   const markAllAsRead = async () => {
-    // Mark all real DB notifications as read
     const realIds = notifications.filter(n => !n.read && !n.id.startsWith('sale-') && !n.id.startsWith('cancelled-') && !n.id.startsWith('commission-')).map(n => n.id);
     if (realIds.length > 0) {
       await supabase.from('notifications').update({ read: true }).in('id', realIds);
@@ -217,19 +154,7 @@ export const useAdminNotifications = () => {
     toast({ title: 'Notificações marcadas como lidas' });
   };
 
-  const getNotificationsByType = (type: AdminNotificationType) => {
-    return notifications.filter(n => n.type === type);
-  };
+  const getNotificationsByType = (type: AdminNotificationType) => notifications.filter(n => n.type === type);
 
-  return {
-    notifications,
-    loading,
-    unreadCount,
-    notificationPermission,
-    requestPermission,
-    markAsRead,
-    markAllAsRead,
-    getNotificationsByType,
-    refetch: () => fetchNotifications(true)
-  };
+  return { notifications, loading, unreadCount, hasMore, loadMore, notificationPermission, requestPermission, markAsRead, markAllAsRead, getNotificationsByType, refetch: () => fetchNotifications(0) };
 };

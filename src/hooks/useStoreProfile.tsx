@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, createContext } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -15,28 +15,22 @@ export interface StoreProfile {
 }
 
 const defaultStoreProfile: StoreProfile = {
-  storeName: "",
-  bio: "",
-  avatar: "",
-  banner: "",
-  whatsapp: "",
-  address: "",
-  minOrderQuantity: 0,
-  minOrderValue: 0,
-  customCategories: [],
+  storeName: "", bio: "", avatar: "", banner: "", whatsapp: "", address: "",
+  minOrderQuantity: 0, minOrderValue: 0, customCategories: [],
 };
 
+// Module-level cache
+let profileCache: StoreProfile | null = null;
+let cachedUserId: string | null = null;
+
 export const useStoreProfile = () => {
-  const [storeProfile, setStoreProfile] = useState<StoreProfile>(defaultStoreProfile);
+  const [storeProfile, setStoreProfile] = useState<StoreProfile>(profileCache || defaultStoreProfile);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Get user directly from supabase instead of context to avoid dependency issues
   useEffect(() => {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUserId(session.user.id);
-      }
+      if (session?.user) setUserId(session.user.id);
     };
     getUser();
 
@@ -47,37 +41,37 @@ export const useStoreProfile = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch profile when userId changes
   useEffect(() => {
-    if (!userId) {
-      setStoreProfile(defaultStoreProfile);
+    if (!userId) { setStoreProfile(defaultStoreProfile); return; }
+
+    // Use cache if same user
+    if (profileCache && cachedUserId === userId) {
+      setStoreProfile(profileCache);
       return;
     }
 
     const fetchProfile = async () => {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('nome, descricao_loja, foto_perfil_url, banner_loja_url, telefone, endereco_principal')
         .eq('id', userId)
         .single();
 
-      if (error) {
-        console.error('Error fetching store profile:', error);
-        return;
-      }
+      if (error) { console.error('Error fetching store profile:', error); return; }
 
       if (profile) {
-        setStoreProfile({
+        const mapped: StoreProfile = {
           storeName: profile.nome || "",
           bio: profile.descricao_loja || "",
           avatar: profile.foto_perfil_url || "",
           banner: profile.banner_loja_url || "",
           whatsapp: profile.telefone || "",
           address: profile.endereco_principal as any || "",
-          minOrderQuantity: (profile as any).min_order_quantity || 0,
-          minOrderValue: (profile as any).min_order_value || 0,
-          customCategories: [],
-        });
+          minOrderQuantity: 0, minOrderValue: 0, customCategories: [],
+        };
+        profileCache = mapped;
+        cachedUserId = userId;
+        setStoreProfile(mapped);
       }
     };
 
@@ -86,7 +80,6 @@ export const useStoreProfile = () => {
 
   const updateStoreProfile = async (newData: Partial<StoreProfile>) => {
     if (!userId) return;
-
     try {
       const { error } = await supabase
         .from('profiles')
@@ -96,14 +89,13 @@ export const useStoreProfile = () => {
           foto_perfil_url: newData.avatar,
           banner_loja_url: newData.banner,
           telefone: newData.whatsapp,
-          ...(newData.minOrderQuantity !== undefined && { min_order_quantity: newData.minOrderQuantity }),
-          ...(newData.minOrderValue !== undefined && { min_order_value: newData.minOrderValue }),
         } as any)
         .eq('id', userId);
 
       if (error) throw error;
-
-      setStoreProfile({ ...storeProfile, ...newData });
+      const updated = { ...storeProfile, ...newData };
+      profileCache = updated;
+      setStoreProfile(updated);
     } catch (error: any) {
       console.error('Erro ao atualizar perfil:', error);
       toast.error("Erro ao atualizar perfil da loja");
