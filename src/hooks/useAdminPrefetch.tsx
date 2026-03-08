@@ -4,7 +4,7 @@ import { useMemo, useCallback } from "react";
 
 const QUERY_TIMEOUT_MS = 8000;
 
-const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = QUERY_TIMEOUT_MS): Promise<T> => {
+const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = QUERY_TIMEOUT_MS): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
