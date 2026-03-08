@@ -232,6 +232,34 @@ const ClienteHome = () => {
           </div>
         </section>
 
+        {/* Featured Suppliers Section */}
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-foreground">🏆 Fornecedores em Destaque</h2>
+            </div>
+            <button onClick={() => navigate("/cliente/produtos")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
+              Ver Lojas <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {/* Simple mock list for layout, you can connect real stores via useSupabaseStores later */}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex-shrink-0 w-64">
+                <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group p-4 flex items-center gap-4 cursor-pointer" onClick={() => navigate('/cliente/produtos')}>
+                  <div className="w-16 h-16 rounded-full bg-muted overflow-hidden">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=store${i}`} alt="Fornecedor" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-foreground">Fornecedor Premium {i}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Vestuário • Mín: 10 un.</p>
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Products Grid - Recomendados */}
         <section>
           <div className="flex items-center justify-between mb-4">
