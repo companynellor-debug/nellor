@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone, CheckCircle2 } from "lucide-react";
+import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone, CheckCircle2, Package } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
