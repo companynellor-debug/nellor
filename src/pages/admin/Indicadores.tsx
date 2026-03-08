@@ -190,21 +190,15 @@ const Indicadores = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              Divisão Societária - Receita Total
+              Receita do Proprietário
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="mb-6">
               <div className="p-4 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                <p className="text-sm text-muted-foreground">Parte Natan (50%)</p>
+                <p className="text-sm text-muted-foreground">Natan (100%)</p>
                 <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                   {formatCurrency(parteNatan)}
-                </p>
-              </div>
-              <div className="p-4 rounded-lg bg-cyan-100 dark:bg-cyan-900/30">
-                <p className="text-sm text-muted-foreground">Parte vinicius  (50%)</p>
-                <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
-                  {formatCurrency(parteGustavo)}
                 </p>
               </div>
             </div>
@@ -239,17 +233,11 @@ const Indicadores = () => {
                 {formatCurrency(data.valuationEstimado)}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div>
               <div className="p-4 rounded-lg bg-gradient-to-br from-purple-100 to-purple-50 dark:from-purple-900/30 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800">
-                <p className="text-sm text-muted-foreground">Parte Natan (50%)</p>
+                <p className="text-sm text-muted-foreground">Natan (100%)</p>
                 <p className="text-xl font-bold text-purple-700 dark:text-purple-300">
                   {formatCurrency(valuationNatan)}
-                </p>
-              </div>
-              <div className="p-4 rounded-lg bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-900/30 dark:to-cyan-800/20 border border-cyan-200 dark:border-cyan-800">
-                <p className="text-sm text-muted-foreground">Parte Gustavo (50%)</p>
-                <p className="text-xl font-bold text-cyan-700 dark:text-cyan-300">
-                  {formatCurrency(valuationGustavo)}
                 </p>
               </div>
             </div>
@@ -262,13 +250,13 @@ const Indicadores = () => {
         </Card>
       </div>
 
-      {/* Receita Mensal dos Sócios */}
+      {/* Receita Mensal */}
       <Card className="border-purple-100">
         <CardHeader>
-          <CardTitle>💰 Divisão Societária - Receita do Mês Atual</CardTitle>
+          <CardTitle>💰 Receita do Mês Atual</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-lg bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/30 dark:to-emerald-800/20 border border-green-200 dark:border-green-800">
               <p className="text-sm text-muted-foreground">Receita Nellor (Mês)</p>
               <p className="text-2xl font-bold text-green-700 dark:text-green-300">
@@ -276,15 +264,9 @@ const Indicadores = () => {
               </p>
             </div>
             <div className="p-4 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
-              <p className="text-sm text-muted-foreground">Natan (50%)</p>
+              <p className="text-sm text-muted-foreground">Natan (100%)</p>
               <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                 {formatCurrency(parteNatanMes)}
-              </p>
-            </div>
-            <div className="p-4 rounded-lg bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800">
-              <p className="text-sm text-muted-foreground">Gustavo (50%)</p>
-              <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
-                {formatCurrency(parteGustavoMes)}
               </p>
             </div>
           </div>
