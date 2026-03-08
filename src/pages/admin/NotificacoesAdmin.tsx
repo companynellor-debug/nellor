@@ -209,7 +209,13 @@ const NotificacoesAdmin = () => {
         ))}
       </div>
 
-      {filteredNotifications.length === 0 ? (
+      {loading && notifications.length === 0 ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />
+          ))}
+        </div>
+      ) : filteredNotifications.length === 0 ? (
         <Card className="p-8 text-center bg-card border-border">
           <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">
@@ -217,7 +223,7 @@ const NotificacoesAdmin = () => {
           </p>
         </Card>
       ) : (
-        <PaginatedNotifications notifications={filteredNotifications} onMarkAsRead={markAsRead} />
+        <PaginatedNotifications notifications={filteredNotifications} onMarkAsRead={markAsRead} hasMore={hasMore} onLoadMore={loadMore} />
       )}
     </div>
   );
