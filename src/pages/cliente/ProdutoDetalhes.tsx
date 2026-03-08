@@ -2,6 +2,7 @@ import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { ReviewsList } from "@/components/cliente/ReviewsList";
 import { BulkOrderGrid } from "@/components/cliente/BulkOrderGrid";
+import { FreightCalculator } from "@/components/cliente/FreightCalculator";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
