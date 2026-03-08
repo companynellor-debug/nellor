@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Package, TrendingUp, DollarSign, ShoppingCart, Loader2, Wallet, Percent, Bell, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { formatCurrencyFromDecimal } from "@/utils/currency";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
