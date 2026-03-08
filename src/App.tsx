@@ -91,8 +91,8 @@ const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configurac
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes
+      staleTime: 1000 * 60 * 10, // 10 minutes
+      gcTime: 1000 * 60 * 15, // 15 minutes
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       retry: 1,
