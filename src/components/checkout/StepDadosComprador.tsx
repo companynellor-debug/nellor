@@ -27,6 +27,7 @@ export interface BuyerData {
 interface StepDadosCompradorProps {
   onNext: (data: BuyerData) => void;
   initialData?: BuyerData;
+  isPickup?: boolean;
 }
 
 interface SupabaseProfile {
