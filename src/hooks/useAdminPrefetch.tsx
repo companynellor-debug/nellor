@@ -161,7 +161,7 @@ export const useAdminSupportTickets = () => {
   const query = useQuery({
     queryKey: ["admin-support-tickets"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_support_tickets");
+      const { data, error } = await withTimeout(supabase.rpc("get_admin_support_tickets"));
       if (error) throw error;
       return data ?? [];
     },
