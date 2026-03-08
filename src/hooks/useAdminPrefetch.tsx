@@ -220,10 +220,13 @@ export const useAdminCategories = () => {
   const query = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select("*")
-        .order("nome", { ascending: true });
+      const { data, error } = await withTimeout(
+        supabase
+          .from("categories")
+          .select("id, nome, slug, imagem_url, created_at")
+          .order("nome", { ascending: true })
+      );
+      if (error) throw error;
       return data ?? [];
     },
     ...queryConfig,
