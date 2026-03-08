@@ -47,7 +47,7 @@ export const VariationsEditor = ({
   const addColor = () => {
     const name = colorName.trim();
     if (!name || colors.some(c => c.name === name)) return;
-    const hex = colorHex || colorNameToHex(name) || '#000000';
+    const hex = colorHex || getColorHex(name) || '#000000';
     setColors([...colors, { name, hex, imageUrl: '' }]);
     // Initialize grid row
     const newGrid = { ...variationGrid };

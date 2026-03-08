@@ -118,7 +118,7 @@ export const BulkOrderGrid = ({ variations, basePrice, minQuantity, onAddToCart 
                 <td className="p-2">
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 rounded-full border border-border flex-shrink-0"
-                      style={{ backgroundColor: color.hex || colorNameToHex(color.name) || '#ccc' }} />
+                      style={{ backgroundColor: color.hex || getColorHex(color.name) || '#ccc' }} />
                     <span className="text-xs font-medium">{color.name}</span>
                   </div>
                 </td>

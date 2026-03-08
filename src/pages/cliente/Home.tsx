@@ -36,7 +36,7 @@ const ProductCardColorDots = ({ productId }: { productId: string }) => {
     <div className="flex gap-1 mt-1">
       {deduped.slice(0, 5).map(c => (
         <div key={c.name} className="w-3.5 h-3.5 rounded-full border border-border" 
-          style={{ backgroundColor: c.hex || colorNameToHex(c.name) || '#ccc' }} 
+          style={{ backgroundColor: c.hex || getColorHex(c.name) || '#ccc' }} 
           title={c.name} />
       ))}
       {deduped.length > 5 && <span className="text-[10px] text-muted-foreground">+{deduped.length - 5}</span>}
