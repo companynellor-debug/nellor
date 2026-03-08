@@ -1179,6 +1179,41 @@ export type Database = {
           },
         ]
       }
+      product_price_tiers: {
+        Row: {
+          created_at: string | null
+          id: string
+          max_quantity: number | null
+          min_quantity: number
+          price_per_unit: number
+          product_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          max_quantity?: number | null
+          min_quantity: number
+          price_per_unit: number
+          product_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          max_quantity?: number | null
+          min_quantity?: number
+          price_per_unit?: number
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_price_tiers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variations: {
         Row: {
           color: string | null
@@ -1191,6 +1226,9 @@ export type Database = {
           size: string | null
           stock: number
           updated_at: string | null
+          variation_label: string | null
+          variation_type: string | null
+          variation_value: string | null
         }
         Insert: {
           color?: string | null
@@ -1203,6 +1241,9 @@ export type Database = {
           size?: string | null
           stock?: number
           updated_at?: string | null
+          variation_label?: string | null
+          variation_type?: string | null
+          variation_value?: string | null
         }
         Update: {
           color?: string | null
@@ -1215,6 +1256,9 @@ export type Database = {
           size?: string | null
           stock?: number
           updated_at?: string | null
+          variation_label?: string | null
+          variation_type?: string | null
+          variation_value?: string | null
         }
         Relationships: [
           {
@@ -1230,80 +1274,119 @@ export type Database = {
         Row: {
           affiliate_commission_percent: number | null
           ativo: boolean | null
+          brand: string | null
           categoria_id: string | null
+          condition: string | null
           cores: Json | null
           created_at: string | null
+          depth_cm: number | null
           descricao_curta: string | null
           descricao_longa: string | null
           dimensoes: Json | null
           estoque: number
+          height_cm: number | null
           id: string
           imagens: string[] | null
+          is_cnpj_only: boolean | null
+          is_international: boolean | null
           is_kit: boolean | null
           kit_items: Json | null
+          material: string | null
+          min_order_quantity: number | null
+          ncm_code: string | null
           nome: string
           origin: string | null
           peso: number | null
           preco: number
           rating_medio: number | null
+          sale_unit: string | null
           supplier_id: string
           tamanhos: Json | null
           total_reviews: number | null
+          units_per_sale_unit: number | null
           updated_at: string | null
           variacoes: Json | null
           vendas_count: number | null
+          weight_grams: number | null
+          width_cm: number | null
         }
         Insert: {
           affiliate_commission_percent?: number | null
           ativo?: boolean | null
+          brand?: string | null
           categoria_id?: string | null
+          condition?: string | null
           cores?: Json | null
           created_at?: string | null
+          depth_cm?: number | null
           descricao_curta?: string | null
           descricao_longa?: string | null
           dimensoes?: Json | null
           estoque?: number
+          height_cm?: number | null
           id?: string
           imagens?: string[] | null
+          is_cnpj_only?: boolean | null
+          is_international?: boolean | null
           is_kit?: boolean | null
           kit_items?: Json | null
+          material?: string | null
+          min_order_quantity?: number | null
+          ncm_code?: string | null
           nome: string
           origin?: string | null
           peso?: number | null
           preco: number
           rating_medio?: number | null
+          sale_unit?: string | null
           supplier_id: string
           tamanhos?: Json | null
           total_reviews?: number | null
+          units_per_sale_unit?: number | null
           updated_at?: string | null
           variacoes?: Json | null
           vendas_count?: number | null
+          weight_grams?: number | null
+          width_cm?: number | null
         }
         Update: {
           affiliate_commission_percent?: number | null
           ativo?: boolean | null
+          brand?: string | null
           categoria_id?: string | null
+          condition?: string | null
           cores?: Json | null
           created_at?: string | null
+          depth_cm?: number | null
           descricao_curta?: string | null
           descricao_longa?: string | null
           dimensoes?: Json | null
           estoque?: number
+          height_cm?: number | null
           id?: string
           imagens?: string[] | null
+          is_cnpj_only?: boolean | null
+          is_international?: boolean | null
           is_kit?: boolean | null
           kit_items?: Json | null
+          material?: string | null
+          min_order_quantity?: number | null
+          ncm_code?: string | null
           nome?: string
           origin?: string | null
           peso?: number | null
           preco?: number
           rating_medio?: number | null
+          sale_unit?: string | null
           supplier_id?: string
           tamanhos?: Json | null
           total_reviews?: number | null
+          units_per_sale_unit?: number | null
           updated_at?: string | null
           variacoes?: Json | null
           vendas_count?: number | null
+          weight_grams?: number | null
+          width_cm?: number | null
         }
         Relationships: [
           {
