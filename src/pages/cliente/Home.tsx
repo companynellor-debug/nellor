@@ -171,6 +171,12 @@ const ClienteHome = () => {
             </div>
           </div>}
 
+        {/* Faixa de Compra em Massa */}
+        <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mb-8 text-center flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Package className="h-6 w-6 text-primary" />
+          <p className="text-foreground font-medium">Pedido mínimo a partir de 10 unidades — Compre para revender com os melhores preços!</p>
+        </div>
+
         {/* Categories - Icon style row */}
         {categories.length > 0 && <section className="mb-8">
             <div className="bg-background rounded-xl p-4 shadow-sm border">
