@@ -203,6 +203,16 @@ const ProdutoDetalhes = () => {
     toast({ title: "Adicionado ao carrinho", description: `${items.reduce((s, i) => s + i.quantity, 0)} peças adicionadas.` });
   };
 
+  // Build display images: product images + color variation images
+  const displayImages = useMemo(() => {
+    if (!product) return [];
+    const imgs = [...product.images];
+    variationColors.forEach(c => {
+      if (c.imageUrl && !imgs.includes(c.imageUrl)) imgs.push(c.imageUrl);
+    });
+    return imgs;
+  }, [product?.images, variationColors]);
+
   if (!product) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -215,15 +225,6 @@ const ProdutoDetalhes = () => {
   }
 
   const relatedProducts = getRelatedProducts(product.id, product.category, 4);
-
-  // Build display images: product images + color variation images
-  const displayImages = useMemo(() => {
-    const imgs = [...product.images];
-    variationColors.forEach(c => {
-      if (c.imageUrl && !imgs.includes(c.imageUrl)) imgs.push(c.imageUrl);
-    });
-    return imgs;
-  }, [product.images, variationColors]);
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-6">
