@@ -80,7 +80,7 @@ export const useAdminOrders = () => {
   const query = useQuery({
     queryKey: ["admin-orders"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_orders");
+      const { data, error } = await withTimeout(supabase.rpc("get_admin_orders"));
       if (error) throw error;
       return (data ?? []) as AdminOrder[];
     },
