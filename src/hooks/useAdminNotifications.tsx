@@ -38,6 +38,7 @@ export const useAdminNotifications = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
+  const { user, profile, loading: authLoading } = useSupabaseAuth();
 
   const playNotificationSound = useCallback(() => {
     const audio = new Audio('/notification-sound.mp3');
