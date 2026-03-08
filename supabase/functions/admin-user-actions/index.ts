@@ -40,6 +40,12 @@ Deno.serve(async (req) => {
 
       if (banError) throw banError;
 
+      // Also deactivate all supplier products
+      await supabaseAdmin
+        .from("products")
+        .update({ ativo: false })
+        .eq("supplier_id", user_id);
+
       return new Response(JSON.stringify({ success: true, action: "banned" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -65,15 +71,126 @@ Deno.serve(async (req) => {
     }
 
     if (action === "delete") {
-      const { error: profileError } = await supabaseAdmin
+      // 1. Get all product IDs for this supplier
+      const { data: products } = await supabaseAdmin
+        .from("products")
+        .select("id")
+        .eq("supplier_id", user_id);
+
+      const productIds = (products || []).map((p: any) => p.id);
+
+      if (productIds.length > 0) {
+        // Delete product_price_tiers
+        await supabaseAdmin
+          .from("product_price_tiers")
+          .delete()
+          .in("product_id", productIds);
+
+        // Delete product_variations
+        await supabaseAdmin
+          .from("product_variations")
+          .delete()
+          .in("product_id", productIds);
+
+        // Delete product_drop_settings
+        await supabaseAdmin
+          .from("product_drop_settings")
+          .delete()
+          .in("product_id", productIds);
+
+        // Delete client_drop_products referencing these products
+        await supabaseAdmin
+          .from("client_drop_products")
+          .delete()
+          .in("product_id", productIds);
+
+        // Delete reviews for these products
+        await supabaseAdmin
+          .from("reviews")
+          .delete()
+          .in("product_id", productIds);
+
+        // Delete coupons
+        await supabaseAdmin
+          .from("coupons")
+          .delete()
+          .eq("supplier_id", user_id);
+
+        // Delete products
+        await supabaseAdmin
+          .from("products")
+          .delete()
+          .eq("supplier_id", user_id);
+      }
+
+      // 2. Delete orders (supplier's orders)
+      await supabaseAdmin
+        .from("orders")
+        .delete()
+        .eq("supplier_id", user_id);
+
+      // 3. Delete drop_orders
+      await supabaseAdmin
+        .from("drop_orders")
+        .delete()
+        .eq("supplier_id", user_id);
+
+      // 4. Delete analytics
+      await supabaseAdmin
+        .from("analytics")
+        .delete()
+        .eq("supplier_id", user_id);
+
+      // 5. Delete payouts
+      await supabaseAdmin
+        .from("payouts")
+        .delete()
+        .eq("supplier_id", user_id);
+
+      // 6. Delete notifications
+      await supabaseAdmin
+        .from("notifications")
+        .delete()
+        .eq("user_id", user_id);
+
+      // 7. Delete messages
+      await supabaseAdmin
+        .from("messages")
+        .delete()
+        .or(`from_user.eq.${user_id},to_user.eq.${user_id}`);
+
+      // 8. Delete push subscriptions
+      await supabaseAdmin
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", user_id);
+
+      // 9. Delete addresses
+      await supabaseAdmin
+        .from("addresses")
+        .delete()
+        .eq("user_id", user_id);
+
+      // 10. Delete payment_methods
+      await supabaseAdmin
+        .from("payment_methods")
+        .delete()
+        .eq("user_id", user_id);
+
+      // 11. Delete notification_preferences
+      await supabaseAdmin
+        .from("notification_preferences")
+        .delete()
+        .eq("user_id", user_id);
+
+      // 12. Delete profile
+      await supabaseAdmin
         .from("profiles")
-        .update({ ativo: false })
+        .delete()
         .eq("id", user_id);
 
-      if (profileError) throw profileError;
-
+      // 13. Delete auth user
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
-
       if (deleteError) throw deleteError;
 
       return new Response(JSON.stringify({ success: true, action: "deleted" }), {
