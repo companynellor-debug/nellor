@@ -19,7 +19,7 @@ import { useCart } from "@/hooks/useCart";
 import { usePWA } from "@/hooks/usePWA";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useProductVariations } from "@/hooks/useProductVariations";
-import { colorNameToHex } from "@/utils/colorMap";
+import { getColorHex } from "@/utils/colorMap";
 
 const ProductCardColorDots = ({ productId }: { productId: string }) => {
   const { variations } = useProductVariations(productId);
