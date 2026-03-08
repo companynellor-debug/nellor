@@ -8,7 +8,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Heart, Share2, Star, Store, ShoppingCart, Package, MessageCircle } from "lucide-react";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { ArrowLeft, Heart, Share2, Star, ShoppingCart, Package, MessageCircle, Box } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useStores } from "@/hooks/useStores";
@@ -18,11 +19,16 @@ import { useProducts } from "@/hooks/useProducts";
 import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import { useProductVariations } from "@/hooks/useProductVariations";
+import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
 import { getColorHex } from "@/utils/colorMap";
 import ReportButton from "@/components/ReportButton";
+
+const SALE_UNIT_LABELS: Record<string, string> = {
+  unit: 'Unidade', pair: 'Par', kit: 'Kit', closed_box: 'Caixa Fechada', bale: 'Fardo',
+};
 
 const ProdutoDetalhes = () => {
   const navigate = useNavigate();
@@ -49,14 +55,27 @@ const ProdutoDetalhes = () => {
   const legacyProductId = useMemo(() => { const n = Number.parseInt(routeId, 10); return Number.isFinite(n) ? n : null; }, [routeId]);
   const legacyProduct = legacyProductId ? getProductById(legacyProductId) : undefined;
 
-  const productSizes: string[] = useMemo(() => (supabaseProductById?.tamanhos as string[]) || [], [supabaseProductById]);
-  const productColors: string[] = useMemo(() => (supabaseProductById?.cores as string[]) || [], [supabaseProductById]);
+  // Load variations and price tiers
+  const { variations, loading: variationsLoading } = useProductVariations(supabaseProductById?.id);
+  const { tiers: priceTiers } = useProductPriceTiers(supabaseProductById?.id);
+  const hasVariations = variations.length > 0;
+
+  // B2B fields
+  const saleUnit = (supabaseProductById as any)?.sale_unit || 'unit';
+  const unitsPerSaleUnit = (supabaseProductById as any)?.units_per_sale_unit || 1;
+  const minOrderQuantity = (supabaseProductById as any)?.min_order_quantity || 1;
+  const productBrand = (supabaseProductById as any)?.brand || '';
+  const productMaterial = (supabaseProductById as any)?.material || '';
+  const productCondition = (supabaseProductById as any)?.condition || 'new';
+  const productWeightGrams = (supabaseProductById as any)?.weight_grams;
+  const productWidthCm = (supabaseProductById as any)?.width_cm;
+  const productHeightCm = (supabaseProductById as any)?.height_cm;
+  const productDepthCm = (supabaseProductById as any)?.depth_cm;
+  const productNcm = (supabaseProductById as any)?.ncm_code;
+  const productIsInternational = (supabaseProductById as any)?.is_international;
+
   const productIsKit = supabaseProductById?.is_kit || false;
   const productKitItems: { name: string; quantity: number }[] = useMemo(() => (supabaseProductById?.kit_items as any[]) || [], [supabaseProductById]);
-
-  // Load variations from product_variations table
-  const { variations, loading: variationsLoading } = useProductVariations(supabaseProductById?.id);
-  const hasVariations = variations.length > 0;
 
   // Unique colors from variations with images
   const variationColors = useMemo(() => {
@@ -67,14 +86,16 @@ const ProdutoDetalhes = () => {
     return Array.from(seen.entries()).map(([name, data]) => ({ name, ...data }));
   }, [variations]);
 
-  // Unique sizes from variations
-  const variationSizes = useMemo(() => [...new Set(variations.filter(v => v.size).map(v => v.size!))], [variations]);
+  // Unique sizes/variation values
+  const variationSizes = useMemo(() => {
+    const vals = variations.filter(v => v.variation_value || v.size).map(v => v.variation_value || v.size!);
+    return [...new Set(vals)];
+  }, [variations]);
 
-  // Get stock for a specific variation
   const getVariationStock = (color?: string, size?: string) => {
     const v = variations.find(vr =>
       (color ? vr.color === color : !vr.color) &&
-      (size ? vr.size === size : !vr.size)
+      (size ? (vr.variation_value === size || vr.size === size) : !vr.size)
     );
     return v?.stock ?? 0;
   };
@@ -129,16 +150,13 @@ const ProdutoDetalhes = () => {
     fetchSupplierData();
   }, [product, supabaseProducts]);
 
-  // When a color is selected, change main image to color image if available
   useEffect(() => {
     if (selectedColor && variationColors.length > 0) {
       const colorData = variationColors.find(c => c.name === selectedColor);
       if (colorData?.imageUrl) {
-        // Find or add the color image to the images array
-        const imgs = product?.images || [];
+        const imgs = displayImages;
         const idx = imgs.indexOf(colorData.imageUrl);
         if (idx >= 0) setSelectedImage(idx);
-        // Otherwise just keep current, the color image will show as thumbnail
       }
     }
   }, [selectedColor, variationColors]);
@@ -168,14 +186,6 @@ const ProdutoDetalhes = () => {
       toast({ title: 'Erro', description: 'Informações do fornecedor não encontradas.', variant: 'destructive' });
       return;
     }
-    if (variationSizes.length > 0 && !selectedSize && !hasVariations) {
-      toast({ title: 'Selecione o tamanho', description: 'Escolha um tamanho antes de continuar.', variant: 'destructive' });
-      return;
-    }
-    if (variationColors.length > 0 && !selectedColor && !hasVariations) {
-      toast({ title: 'Selecione a cor', description: 'Escolha uma cor antes de continuar.', variant: 'destructive' });
-      return;
-    }
     addToCart({
       productId: product.supplierUuid || '', name: product.name, price: product.priceNumber,
       image: product.images[0], storeId: product.supplierProfileId || '',
@@ -185,7 +195,6 @@ const ProdutoDetalhes = () => {
     if (thenNavigate) navigate(thenNavigate);
   };
 
-  // Bulk order handler
   const handleBulkAddToCart = (items: Array<{ color: string; colorHex: string; size: string; quantity: number; price: number; imageUrl: string }>) => {
     if (!product?.supplierProfileId) return;
     items.forEach(item => {
@@ -203,7 +212,6 @@ const ProdutoDetalhes = () => {
     toast({ title: "Adicionado ao carrinho", description: `${items.reduce((s, i) => s + i.quantity, 0)} peças adicionadas.` });
   };
 
-  // Build display images: product images + color variation images
   const displayImages = useMemo(() => {
     if (!product) return [];
     const imgs = [...product.images];
@@ -310,17 +318,45 @@ const ProdutoDetalhes = () => {
               {product.supplierUuid && <div className="mt-2"><ReportButton targetType="product" targetId={product.supplierUuid} /></div>}
             </div>
 
+            {/* Sale unit badge */}
+            {saleUnit !== 'unit' && (
+              <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
+                <Box className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">
+                  Vendido por: {SALE_UNIT_LABELS[saleUnit]}{(saleUnit === 'closed_box' || saleUnit === 'bale') && unitsPerSaleUnit > 1 ? ` com ${unitsPerSaleUnit} unidades` : ''}
+                </span>
+              </div>
+            )}
+
             <div className="py-4 border-y border-border">
               <p className="text-3xl font-bold text-primary">{product.price}</p>
-              <p className="text-xs text-muted-foreground mt-1">à vista no PIX</p>
+              {priceTiers.length > 1 && <p className="text-xs text-muted-foreground mt-1">Preço base • veja faixas de desconto abaixo</p>}
+              {minOrderQuantity > 1 && (
+                <p className="text-xs text-orange-600 font-medium mt-1">Pedido mínimo: {minOrderQuantity} unidades</p>
+              )}
             </div>
+
+            {/* Price tiers table */}
+            {priceTiers.length > 0 && (
+              <div className="bg-muted/30 rounded-lg p-3 border">
+                <p className="text-xs font-semibold mb-2">💰 Preços por quantidade</p>
+                <div className="space-y-1">
+                  {priceTiers.map((t, idx) => (
+                    <div key={idx} className="flex justify-between text-xs px-2 py-1">
+                      <span>{t.min_quantity}{t.max_quantity ? ` - ${t.max_quantity}` : '+'} unid.</span>
+                      <span className="font-semibold text-primary">{formatCurrencyFromDecimal(t.price_per_unit)}/un</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <h3 className="text-sm font-semibold mb-2">Descrição</h3>
               <p className="text-muted-foreground leading-relaxed text-sm">{product.description}</p>
             </div>
 
-            {/* Color thumbnails from variations */}
+            {/* Color thumbnails */}
             {variationColors.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold mb-2">🎨 Cor {selectedColor && <span className="text-muted-foreground font-normal">— {selectedColor}</span>}</h3>
@@ -328,7 +364,6 @@ const ProdutoDetalhes = () => {
                   {variationColors.map(color => (
                     <button key={color.name} onClick={() => {
                       setSelectedColor(color.name);
-                      // Switch main image to color image
                       if (color.imageUrl) {
                         const idx = displayImages.indexOf(color.imageUrl);
                         if (idx >= 0) setSelectedImage(idx);
@@ -348,30 +383,15 @@ const ProdutoDetalhes = () => {
               </div>
             )}
 
-            {/* Fallback: colors from product JSON (no variations) */}
-            {variationColors.length === 0 && productColors.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold mb-2">🎨 Cor</h3>
-                <div className="flex flex-wrap gap-2">
-                  {productColors.map(color => (
-                    <Badge key={color} variant={selectedColor === color ? "default" : "outline"}
-                      className="cursor-pointer select-none px-3 py-1" onClick={() => setSelectedColor(color)}>
-                      {color}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Size buttons from variations with stock info */}
+            {/* Size/variation buttons */}
             {variationSizes.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold mb-2">📏 Tamanho</h3>
+                <h3 className="text-sm font-semibold mb-2">📏 {variations[0]?.variation_label || 'Tamanho'}</h3>
                 <div className="flex flex-wrap gap-2">
                   {variationSizes.map(size => {
                     const stockForSize = selectedColor
                       ? getVariationStock(selectedColor, size)
-                      : variations.filter(v => v.size === size).reduce((s, v) => s + v.stock, 0);
+                      : variations.filter(v => (v.variation_value === size || v.size === size)).reduce((s, v) => s + v.stock, 0);
                     const outOfStock = stockForSize === 0;
                     return (
                       <Badge key={size}
@@ -382,21 +402,6 @@ const ProdutoDetalhes = () => {
                       </Badge>
                     );
                   })}
-                </div>
-              </div>
-            )}
-
-            {/* Fallback: sizes from product JSON */}
-            {variationSizes.length === 0 && productSizes.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold mb-2">📏 Tamanho</h3>
-                <div className="flex flex-wrap gap-2">
-                  {productSizes.map(size => (
-                    <Badge key={size} variant={selectedSize === size ? "default" : "outline"}
-                      className="cursor-pointer select-none px-3 py-1" onClick={() => setSelectedSize(size)}>
-                      {size}
-                    </Badge>
-                  ))}
                 </div>
               </div>
             )}
@@ -413,17 +418,23 @@ const ProdutoDetalhes = () => {
               </div>
             )}
 
-            {/* Specs */}
-            {product.specs.length > 0 && (
+            {/* Product details table */}
+            {(productBrand || productMaterial || productWeightGrams || productWidthCm) && (
               <div className="bg-muted/30 rounded-lg p-4">
-                <h3 className="text-sm font-semibold mb-3">Especificações</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {product.specs.slice(0, 4).map((spec) => (
-                    <div key={spec.label} className="text-sm">
-                      <span className="text-muted-foreground">{spec.label}: </span><span className="font-medium">{spec.value}</span>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-sm font-semibold mb-3">Detalhes do Produto</h3>
+                <Table>
+                  <TableBody>
+                    {productBrand && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Marca</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productBrand}</TableCell></TableRow>}
+                    {productMaterial && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Material</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productMaterial}</TableCell></TableRow>}
+                    <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Condição</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productCondition === 'new' ? 'Novo' : 'Usado'}</TableCell></TableRow>
+                    <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Origem</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productIsInternational ? 'Internacional' : 'Nacional'}</TableCell></TableRow>
+                    {productWeightGrams && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Peso</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productWeightGrams}g</TableCell></TableRow>}
+                    {productWidthCm && productHeightCm && productDepthCm && (
+                      <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Dimensões</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productWidthCm}×{productHeightCm}×{productDepthCm} cm</TableCell></TableRow>
+                    )}
+                    {productNcm && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">NCM</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productNcm}</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
               </div>
             )}
 
@@ -432,12 +443,13 @@ const ProdutoDetalhes = () => {
               <BulkOrderGrid
                 variations={variations}
                 basePrice={product.priceNumber}
-                minQuantity={undefined}
+                minQuantity={minOrderQuantity > 1 ? minOrderQuantity : undefined}
+                priceTiers={priceTiers}
                 onAddToCart={handleBulkAddToCart}
               />
             )}
 
-            {/* Desktop buttons - only if no bulk grid */}
+            {/* Desktop buttons */}
             {!hasVariations && (
               <div className="hidden lg:flex gap-3 pt-2">
                 <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12" disabled={currentStock === 0}
