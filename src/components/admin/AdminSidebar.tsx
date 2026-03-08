@@ -12,8 +12,7 @@ import {
   Package,
   Image,
   PieChart,
-  UserCheck,
-  Layers
+  UserCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
