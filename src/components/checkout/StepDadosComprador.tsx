@@ -27,6 +27,7 @@ export interface BuyerData {
 interface StepDadosCompradorProps {
   onNext: (data: BuyerData) => void;
   initialData?: BuyerData;
+  isPickup?: boolean;
 }
 
 interface SupabaseProfile {
@@ -36,7 +37,7 @@ interface SupabaseProfile {
   document: string | null;
 }
 
-export const StepDadosComprador = ({ onNext, initialData }: StepDadosCompradorProps) => {
+export const StepDadosComprador = ({ onNext, initialData, isPickup = false }: StepDadosCompradorProps) => {
   const { addresses, loading: addressesLoading } = useSupabaseAddresses();
   const [profile, setProfile] = useState<SupabaseProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);

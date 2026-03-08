@@ -14,6 +14,7 @@ interface StepResumoProps {
   buyerData: BuyerData;
   onBack: () => void;
   onNext: () => void;
+  isPickup?: boolean;
 }
 
 export const StepResumo = ({
@@ -24,6 +25,7 @@ export const StepResumo = ({
   buyerData,
   onBack,
   onNext,
+  isPickup = false,
 }: StepResumoProps) => {
   const total = subtotal + shipping - discount;
 

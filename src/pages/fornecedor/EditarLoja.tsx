@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, Upload, Star, Package, Plus, X, Tag, Copy, ExternalLink } from "lucide-react";
 import { CurrencyInput, decimalToCents, centsToDecimal } from "@/utils/currency";
 import { toast } from "sonner";
+import { ShippingConfigTab } from "@/components/fornecedor/ShippingConfigTab";
 
 
 const EditarLoja = () => {
@@ -150,8 +151,9 @@ const EditarLoja = () => {
       </div>
 
       <Tabs defaultValue="personalizacao" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="personalizacao">Personalização</TabsTrigger>
+          <TabsTrigger value="frete">Configurar Frete</TabsTrigger>
           <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
         </TabsList>
 
@@ -372,6 +374,10 @@ const EditarLoja = () => {
               </div>
             </div>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="frete" className="mt-6">
+          {user?.id && <ShippingConfigTab supplierId={user.id} />}
         </TabsContent>
 
         <TabsContent value="preview" className="mt-6">

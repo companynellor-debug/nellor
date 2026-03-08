@@ -8,7 +8,7 @@ import { StepResumo } from "@/components/checkout/StepResumo";
 import { StepStripePayment } from "@/components/checkout/StepStripePayment";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart, AlertCircle } from "lucide-react";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const Checkout = () => {
@@ -21,13 +21,30 @@ const Checkout = () => {
   const [discount, setDiscount] = useState(0);
   const [couponId, setCouponId] = useState<string | undefined>(undefined);
 
+  // Load shipping data from cart page
+  const [shippingData, setShippingData] = useState<{
+    addressId: string | null;
+    shippingPrice: number;
+    isPickup: boolean;
+    region: string | null;
+  }>({ addressId: null, shippingPrice: 0, isPickup: false, region: null });
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('checkout_shipping');
+      if (stored) {
+        setShippingData(JSON.parse(stored));
+      }
+    } catch {}
+  }, []);
+
   const handleDiscountChange = (newDiscount: number, newCouponId?: string) => {
     setDiscount(newDiscount);
     setCouponId(newCouponId);
   };
 
   const subtotal = getTotal();
-  const shipping = cartItems.length > 0 ? 15.0 : 0;
+  const shipping = shippingData.shippingPrice;
 
   // Check if payment was cancelled
   useEffect(() => {
@@ -37,7 +54,6 @@ const Checkout = () => {
         description: "Você pode tentar novamente quando quiser.",
         variant: "destructive",
       });
-      // Clear the cancelled param
       navigate('/cliente/checkout', { replace: true });
     }
   }, [searchParams, navigate]);
@@ -71,35 +87,28 @@ const Checkout = () => {
   };
 
   const handlePaymentSuccess = (orderId: string) => {
+    localStorage.removeItem('checkout_shipping');
     navigate(`/cliente/checkout/sucesso?order_id=${orderId}`);
   };
 
   const getStepTitle = () => {
     switch (currentStep) {
-      case 1:
-        return "Dados do Cliente";
-      case 2:
-        return "Resumo do Pedido";
-      case 3:
-        return "Pagamento";
-      default:
-        return "Checkout";
+      case 1: return "Dados do Cliente";
+      case 2: return "Resumo do Pedido";
+      case 3: return "Pagamento";
+      default: return "Checkout";
     }
   };
 
   const handleBack = () => {
-    if (currentStep === 1) {
-      navigate("/cliente/carrinho");
-    } else {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep === 1) navigate("/cliente/carrinho");
+    else setCurrentStep(currentStep - 1);
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
       
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
@@ -112,17 +121,15 @@ const Checkout = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-6 relative z-10">
-        {/* Steps Indicator */}
         <CheckoutSteps currentStep={currentStep} />
         
-        {/* Step Content */}
         <div className="mt-8">
           {currentStep === 1 && (
             <StepDadosComprador 
               onNext={handleBuyerDataSubmit} 
-              initialData={buyerData || undefined} 
+              initialData={buyerData || undefined}
+              isPickup={shippingData.isPickup}
             />
           )}
           
@@ -135,6 +142,7 @@ const Checkout = () => {
               buyerData={buyerData}
               onBack={() => setCurrentStep(1)}
               onNext={() => setCurrentStep(3)}
+              isPickup={shippingData.isPickup}
             />
           )}
           
@@ -149,12 +157,13 @@ const Checkout = () => {
               onBack={() => setCurrentStep(2)}
               onSuccess={handlePaymentSuccess}
               onDiscountChange={handleDiscountChange}
+              isPickup={shippingData.isPickup}
+              shippingRegion={shippingData.region}
             />
           )}
         </div>
       </main>
 
-      {/* Bottom Nav */}
       <BottomNav />
     </div>
   );

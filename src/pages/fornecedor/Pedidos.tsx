@@ -326,12 +326,22 @@ const Pedidos = () => {
                 {/* Address */}
                 <div>
                   <h3 className="font-semibold mb-3">Endereço de Entrega</h3>
-                  <p className="text-sm">
-                    {(selectedOrder.endereco_entrega as any)?.street}, {(selectedOrder.endereco_entrega as any)?.number}
-                    {(selectedOrder.endereco_entrega as any)?.complement && ` - ${(selectedOrder.endereco_entrega as any)?.complement}`}
-                    <br />{(selectedOrder.endereco_entrega as any)?.neighborhood} - {(selectedOrder.endereco_entrega as any)?.city}/{(selectedOrder.endereco_entrega as any)?.state}
-                    <br />CEP: {(selectedOrder.endereco_entrega as any)?.zip_code}
-                  </p>
+                  {(selectedOrder.endereco_entrega as any)?.is_pickup ? (
+                    <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                      <Package className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="font-medium text-sm">Retirada na fonte</p>
+                        <p className="text-xs text-muted-foreground">O cliente irá buscar o pedido</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm">
+                      {(selectedOrder.endereco_entrega as any)?.street}, {(selectedOrder.endereco_entrega as any)?.number}
+                      {(selectedOrder.endereco_entrega as any)?.complement && ` - ${(selectedOrder.endereco_entrega as any)?.complement}`}
+                      <br />{(selectedOrder.endereco_entrega as any)?.neighborhood} - {(selectedOrder.endereco_entrega as any)?.city}/{(selectedOrder.endereco_entrega as any)?.state}
+                      <br />CEP: {(selectedOrder.endereco_entrega as any)?.zip_code}
+                    </p>
+                  )}
                 </div>
 
                 {/* Tracking */}

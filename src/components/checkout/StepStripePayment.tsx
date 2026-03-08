@@ -33,6 +33,8 @@ interface StepStripePaymentProps {
   onBack: () => void;
   onSuccess: (orderNumber: string) => void;
   onDiscountChange: (discount: number, couponId?: string) => void;
+  isPickup?: boolean;
+  shippingRegion?: string | null;
 }
 
 export const StepStripePayment = ({
@@ -44,6 +46,8 @@ export const StepStripePayment = ({
   onBack,
   onSuccess,
   onDiscountChange,
+  isPickup = false,
+  shippingRegion = null,
 }: StepStripePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -107,13 +111,15 @@ export const StepStripePayment = ({
         endereco_entrega: {
           name: buyerData.nome,
           document: buyerData.documento,
-          street: buyerData.endereco.street,
-          number: buyerData.endereco.number,
-          complement: buyerData.endereco.complement || "",
-          neighborhood: buyerData.endereco.neighborhood,
-          city: buyerData.endereco.city,
-          state: buyerData.endereco.state,
-          zip_code: buyerData.endereco.zip_code,
+          street: buyerData.endereco?.street || '',
+          number: buyerData.endereco?.number || '',
+          complement: buyerData.endereco?.complement || "",
+          neighborhood: buyerData.endereco?.neighborhood || '',
+          city: buyerData.endereco?.city || '',
+          state: buyerData.endereco?.state || '',
+          zip_code: buyerData.endereco?.zip_code || '',
+          is_pickup: isPickup,
+          shipping_region: shippingRegion,
         },
         tracking_code: null,
         proof_url: null,
