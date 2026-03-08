@@ -256,7 +256,7 @@ const [analytics, setAnalytics] = useState<any>(null);
             <Percent className="w-5 h-5 text-purple-600" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-purple-600">R$ {totalPlatformFee.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-purple-600">{formatCurrencyFromDecimal(totalPlatformFee)}</div>
             <p className="text-xs text-muted-foreground mt-1">7,5% por venda</p>
           </CardContent>
         </Card>
