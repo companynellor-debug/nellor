@@ -210,13 +210,24 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { data, error } = await withTimeout(
+
+      const executeSignIn = () => withTimeout(
         supabase.auth.signInWithPassword({
           email,
           password,
         }),
-        12000,
+        9000,
       );
+
+      let { data, error } = await executeSignIn();
+
+      // Retry único para instabilidades de rede momentâneas
+      if (error && isTransientAuthError(error)) {
+        await sleep(900);
+        const retry = await executeSignIn();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         return { error };
@@ -255,18 +266,30 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       return { error: null, redirectTo };
     } catch (error: any) {
       console.error('Error signing in:', error);
-      
+
+      if (isTransientAuthError(error)) {
+        clearStaleAuthStorage();
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch {
+          // no-op
+        }
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+      }
+
       let errorMessage = 'Verifique suas credenciais e tente novamente.';
       if (error.message.includes('Request timeout')) {
         errorMessage = 'O servidor demorou para responder. Tente novamente em alguns segundos.';
       } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Falha de conexão com o servidor. Tente novamente em instantes.';
+        errorMessage = 'Falha de conexão com o servidor. Limpamos sua sessão local; tente entrar novamente.';
       } else if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos.';
       } else if (error.message.includes('Email not confirmed')) {
         errorMessage = 'Por favor, confirme seu email antes de fazer login.';
       }
-      
+
       toast.error('Erro ao fazer login: ' + errorMessage);
       return { error };
     } finally {
