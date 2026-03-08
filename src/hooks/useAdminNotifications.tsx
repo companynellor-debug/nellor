@@ -53,22 +53,35 @@ export const useAdminNotifications = () => {
   }, []);
 
   const fetchNotifications = useCallback(async (pageNum = 0, append = false) => {
+    if (authLoading) return;
+
+    const isAdmin = profile?.tipo === 'admin';
+    if (!user?.id || !isAdmin) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setHasMore(false);
+      setLoading(false);
+      return;
+    }
+
     try {
       if (pageNum === 0) setLoading(true);
 
       const from = pageNum * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      // Fetch DB notifications with pagination
       const { data: dbNotifications, error: dbError } = await supabase
         .from('notifications')
-        .select('id, user_id, title, body, type, read, created_at, data')
+        .select('id, user_id, title, body, type, read, created_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .range(from, to);
 
       if (dbError) {
         console.error('Error fetching notifications:', dbError);
-        setLoading(false);
+        setNotifications([]);
+        setUnreadCount(0);
+        setHasMore(false);
         return;
       }
 
@@ -96,7 +109,7 @@ export const useAdminNotifications = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authLoading, profile?.tipo, user?.id]);
 
   const loadMore = useCallback(() => {
     if (hasMore) fetchNotifications(page + 1, true);
