@@ -34,6 +34,7 @@ const Carrinho = () => {
   };
 
   const total = getTotal();
+  const totalPieces = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const shipping = cartItems.length > 0 ? 15.00 : 0;
 
   return (
@@ -44,7 +45,7 @@ const Carrinho = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-primary">Meu Carrinho</h1>
-            <p className="text-sm text-muted-foreground">{itemCount} {itemCount === 1 ? 'item' : 'itens'}</p>
+            <p className="text-sm text-muted-foreground">{itemCount} {itemCount === 1 ? 'item' : 'itens'} • {totalPieces} peças</p>
           </div>
           <ShoppingCart className="h-6 w-6 text-primary" />
         </div>
@@ -64,11 +65,6 @@ const Carrinho = () => {
             <div className="space-y-4 mb-6">
               {cartItems.map((item) => {
                 const itemTotal = item.price * item.quantity;
-                const hasMinQuantity = item.minQuantity && item.minQuantity > 0;
-                const hasMinValue = item.minValue && item.minValue > 0;
-                const meetsMinQuantity = !hasMinQuantity || item.quantity >= item.minQuantity!;
-                const meetsMinValue = !hasMinValue || itemTotal >= item.minValue!;
-                const hasLimits = hasMinQuantity || hasMinValue;
                 
                 return (
                   <Card key={item.id} className="bg-white border shadow-sm p-4">
@@ -78,7 +74,6 @@ const Carrinho = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium mb-1 line-clamp-2">{item.name}</h3>
-                        {/* Show variation info */}
                         {(item.selectedColor || item.selectedSize) && (
                           <div className="flex flex-wrap gap-1 mb-2">
                             {item.selectedColor && (
@@ -93,22 +88,8 @@ const Carrinho = () => {
                           {formatCurrencyFromDecimal(itemTotal)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatCurrencyFromDecimal(item.price)} × {item.quantity}
+                          {formatCurrencyFromDecimal(item.price)} × {item.quantity} peças
                         </p>
-                        {hasLimits && (
-                          <div className="mt-2 space-y-1">
-                            {hasMinQuantity && (
-                              <div className={`flex items-center gap-1 text-xs ${meetsMinQuantity ? 'text-green-600' : 'text-red-600'}`}>
-                                {meetsMinQuantity ? '✓' : '✗'} Mín: {item.minQuantity} unidades
-                              </div>
-                            )}
-                            {hasMinValue && (
-                              <div className={`flex items-center gap-1 text-xs ${meetsMinValue ? 'text-green-600' : 'text-red-600'}`}>
-                                {meetsMinValue ? '✓' : '✗'} Mín: {formatCurrencyFromDecimal(item.minValue!)}
-                              </div>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
                     <div className="flex items-center justify-between mt-4">
@@ -134,6 +115,10 @@ const Carrinho = () => {
             <Card className="bg-white border shadow-sm p-6 mb-6">
               <h2 className="text-xl font-bold text-primary mb-4">Resumo do Pedido</h2>
               <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total de peças</span>
+                  <span className="font-medium">{totalPieces}</span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-medium">{formatCurrencyFromDecimal(total)}</span>
