@@ -95,8 +95,13 @@ const Patrocinios = () => {
         .select("id, nome")
         .in("id", supplierIds);
 
-      const { data: products } = productIds.length > 0
-        ? await supabase.from("products").select("id, nome").in("id", productIds)
+      const supplierMap: Record<string, string> = {};
+      suppliers?.forEach((s) => { supplierMap[s.id] = s.nome; });
+
+      const productMap: Record<string, string> = {};
+      if (productIds.length > 0) {
+        const { data: productsData } = await supabase.from("products").select("id, nome").in("id", productIds);
+        productsData?.forEach((p) => { productMap[p.id] = p.nome; });
         : { data: [] };
 
       const supplierMap = new Map(suppliers?.map((s) => [s.id, s.nome]) || []);
