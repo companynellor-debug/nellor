@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { ReviewsList } from "@/components/cliente/ReviewsList";
@@ -16,6 +16,7 @@ import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
 import ReportButton from "@/components/ReportButton";
 
@@ -33,16 +34,31 @@ const PerfilLoja = () => {
     refetch();
   }, [id]);
   
-  const storeProfile = stores.find(s => s.id === id);
-  // Buscar produtos do fornecedor usando supplier_id
-  const storeProducts = supabaseProducts.filter(p => p.supplier_id === id);
+  // Support both UUID and slug-based lookups
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || '');
   
-  console.log('Store ID:', id);
-  console.log('All stores:', stores.length);
-  console.log('Store profile found:', !!storeProfile);
-  console.log('Store products:', storeProducts.length);
+  const [slugProfile, setSlugProfile] = useState<any>(null);
   
-  // Filtrar avaliações dos produtos desta loja
+  useEffect(() => {
+    if (!isUuid && id) {
+      // Lookup by slug
+      const lookupBySlug = async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, nome, descricao_loja, foto_perfil_url, banner_loja_url, store_slug')
+          .eq('store_slug', id)
+          .eq('tipo', 'fornecedor')
+          .single();
+        if (data) setSlugProfile(data);
+      };
+      lookupBySlug();
+    }
+  }, [id, isUuid]);
+  
+  const resolvedId = isUuid ? id : slugProfile?.id;
+  const storeProfile = stores.find(s => s.id === resolvedId) || (slugProfile ? { id: slugProfile.id, nome: slugProfile.nome, descricao_loja: slugProfile.descricao_loja, foto_perfil_url: slugProfile.foto_perfil_url, banner_loja_url: slugProfile.banner_loja_url } : undefined);
+  const storeProducts = supabaseProducts.filter(p => p.supplier_id === resolvedId);
+  
   const storeProductIds = storeProducts.map(p => p.id?.toString()).filter(Boolean);
   const storeReviews = allReviews.filter(r => storeProductIds.includes(r.product_id));
   const averageRating = storeReviews.length > 0

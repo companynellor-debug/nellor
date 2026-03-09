@@ -47,10 +47,8 @@ const Financeiro = () => {
 
   // Comissão Nellor: 7,5%
   const comissaoNellor = totalVendido * 0.075;
-  // Taxa processador: ~3,49%
-  const taxaProcessador = totalVendido * 0.0349;
-  // Valor líquido
-  const valorLiquido = totalVendido - comissaoNellor - taxaProcessador;
+  // Valor líquido (apenas taxa da plataforma)
+  const valorLiquido = totalVendido - comissaoNellor;
 
   // Simulação de saldo (placeholder - será real com backend)
   const saldoDisponivel = valorLiquido * 0.7; // 70% disponível
@@ -260,7 +258,7 @@ const Financeiro = () => {
       {/* Resumo de Taxas */}
       <Card className="bg-muted/20">
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground text-xs">Total Bruto</p>
               <p className="font-semibold">{formatCurrency(totalVendido)}</p>
@@ -268,10 +266,6 @@ const Financeiro = () => {
             <div>
               <p className="text-muted-foreground text-xs">Comissão Nellor (7,5%)</p>
               <p className="font-semibold text-purple-600">- {formatCurrency(comissaoNellor)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">Taxa Processador (~3,49%)</p>
-              <p className="font-semibold text-orange-600">- {formatCurrency(taxaProcessador)}</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Valor Líquido</p>
@@ -376,8 +370,7 @@ const Financeiro = () => {
               <div className="bg-muted p-3 rounded-lg">
                 <h4 className="font-medium mb-2">Taxas aplicadas:</h4>
                 <ul className="space-y-1 text-xs">
-                  <li>• Comissão Nellor: 7,5% (Plano Grátis) ou 0% (Premium)</li>
-                  <li>• Taxa do processador: ~3,49%</li>
+                  <li>• Comissão Nellor: 7,5%</li>
                 </ul>
               </div>
 
@@ -386,8 +379,7 @@ const Financeiro = () => {
                 <ul className="space-y-1 text-xs">
                   <li>• Valor bruto: R$ 100,00</li>
                   <li>• Comissão (7,5%): - R$ 7,50</li>
-                  <li>• Taxa processador: - R$ 3,49</li>
-                  <li className="font-bold pt-1 border-t">• Você recebe: R$ 89,01</li>
+                  <li className="font-bold pt-1 border-t">• Você recebe: R$ 92,50</li>
                 </ul>
               </div>
 

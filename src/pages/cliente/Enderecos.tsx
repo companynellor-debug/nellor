@@ -17,6 +17,8 @@ const Enderecos = () => {
   const { addresses, addAddress, deleteAddress, setDefaultAddress } = useSupabaseAddresses();
   const [showDialog, setShowDialog] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
+  const [cepValid, setCepValid] = useState<boolean | null>(null);
+  const [cepAutoFilled, setCepAutoFilled] = useState(false);
   const [formData, setFormData] = useState({
     label: 'Casa',
     name: '',
@@ -30,9 +32,20 @@ const Enderecos = () => {
     zip_code: '',
   });
 
+  const resetForm = () => {
+    setFormData({
+      label: 'Casa', name: '', document: '', street: '', number: '',
+      complement: '', neighborhood: '', city: '', state: '', zip_code: '',
+    });
+    setCepValid(null);
+    setCepAutoFilled(false);
+  };
+
   const handleCepChange = async (value: string) => {
     const formatted = formatCep(value);
     setFormData(prev => ({ ...prev, zip_code: formatted }));
+    setCepValid(null);
+    setCepAutoFilled(false);
 
     const clean = formatted.replace(/\D/g, '');
     if (clean.length === 8) {
@@ -43,21 +56,37 @@ const Enderecos = () => {
       if (result) {
         setFormData(prev => ({
           ...prev,
-          street: result.logradouro || prev.street,
-          neighborhood: result.bairro || prev.neighborhood,
-          city: result.localidade || prev.city,
-          state: result.uf || prev.state,
+          street: result.logradouro || '',
+          neighborhood: result.bairro || '',
+          city: result.localidade || '',
+          state: result.uf || '',
         }));
+        setCepValid(true);
+        setCepAutoFilled(true);
         toast.success("Endereço encontrado pelo CEP!");
       } else {
-        toast.error("CEP não encontrado. Preencha manualmente.");
+        setCepValid(false);
+        setCepAutoFilled(false);
+        toast.error("CEP não encontrado. Verifique o número digitado.");
       }
     }
   };
 
   const handleAddAddress = async () => {
-    if (!formData.zip_code || !formData.street || !formData.number || !formData.neighborhood || !formData.city || !formData.state) {
+    // Validate CEP
+    const cleanCep = formData.zip_code.replace(/\D/g, '');
+    if (cleanCep.length !== 8 || cepValid === false) {
+      toast.error("CEP inválido. Verifique o número digitado.");
+      return;
+    }
+
+    if (!formData.street || !formData.neighborhood || !formData.city || !formData.state) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    if (!formData.number.trim()) {
+      toast.error("Preencha o número do endereço");
       return;
     }
 
@@ -72,15 +101,12 @@ const Enderecos = () => {
         neighborhood: formData.neighborhood,
         city: formData.city,
         state: formData.state,
-        zip_code: formData.zip_code.replace(/\D/g, ''),
+        zip_code: cleanCep,
         is_default: addresses.length === 0,
       });
 
       setShowDialog(false);
-      setFormData({
-        label: 'Casa', name: '', document: '', street: '', number: '',
-        complement: '', neighborhood: '', city: '', state: '', zip_code: '',
-      });
+      resetForm();
     } catch (error) {
       console.error('Error adding address:', error);
     }
@@ -121,7 +147,7 @@ const Enderecos = () => {
             </button>
             <h1 className="text-2xl font-bold text-primary">Endereços</h1>
           </div>
-          <Button onClick={() => setShowDialog(true)} className="bg-primary hover:bg-primary/90 text-white">
+          <Button onClick={() => { resetForm(); setShowDialog(true); }} className="bg-primary hover:bg-primary/90 text-white">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -178,7 +204,7 @@ const Enderecos = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Adicione um endereço para facilitar suas compras
             </p>
-            <Button onClick={() => setShowDialog(true)} className="bg-primary hover:bg-primary/90 text-white">
+            <Button onClick={() => { resetForm(); setShowDialog(true); }} className="bg-primary hover:bg-primary/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Endereço
             </Button>
@@ -186,7 +212,7 @@ const Enderecos = () => {
         )}
       </main>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <Dialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) resetForm(); }}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Novo Endereço</DialogTitle>
@@ -215,8 +241,17 @@ const Enderecos = () => {
                 onChange={(e) => handleCepChange(e.target.value)}
                 placeholder="00000-000"
                 maxLength={9}
+                className={cepValid === false ? 'border-red-500' : cepValid === true ? 'border-green-500' : ''}
               />
-              <p className="text-[10px] text-muted-foreground">Digite o CEP para preencher automaticamente</p>
+              {cepValid === false && (
+                <p className="text-xs text-red-500">CEP não encontrado. Verifique o número digitado.</p>
+              )}
+              {cepValid === true && (
+                <p className="text-xs text-green-600">CEP válido ✓</p>
+              )}
+              {cepValid === null && (
+                <p className="text-[10px] text-muted-foreground">Digite o CEP para preencher automaticamente</p>
+              )}
             </div>
 
             <div className="grid grid-cols-4 gap-3">
@@ -227,6 +262,8 @@ const Enderecos = () => {
                   value={formData.street}
                   onChange={(e) => setFormData({ ...formData, street: e.target.value })}
                   placeholder="Nome da rua"
+                  disabled={cepAutoFilled}
+                  className={cepAutoFilled ? 'bg-muted' : ''}
                 />
               </div>
               <div className="space-y-2">
@@ -257,6 +294,8 @@ const Enderecos = () => {
                 value={formData.neighborhood}
                 onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
                 placeholder="Nome do bairro"
+                disabled={cepAutoFilled}
+                className={cepAutoFilled ? 'bg-muted' : ''}
               />
             </div>
 
@@ -268,6 +307,8 @@ const Enderecos = () => {
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   placeholder="Cidade"
+                  disabled={cepAutoFilled}
+                  className={cepAutoFilled ? 'bg-muted' : ''}
                 />
               </div>
               <div className="space-y-2">
@@ -278,6 +319,8 @@ const Enderecos = () => {
                   onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
                   placeholder="UF"
                   maxLength={2}
+                  disabled={cepAutoFilled}
+                  className={cepAutoFilled ? 'bg-muted' : ''}
                 />
               </div>
             </div>
@@ -304,7 +347,13 @@ const Enderecos = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
-            <Button onClick={handleAddAddress} className="bg-primary hover:bg-primary/90 text-white">Adicionar</Button>
+            <Button 
+              onClick={handleAddAddress} 
+              className="bg-primary hover:bg-primary/90 text-white"
+              disabled={cepValid === false || cepLoading}
+            >
+              Adicionar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

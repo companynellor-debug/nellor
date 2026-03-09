@@ -54,8 +54,25 @@ const EditarLoja = () => {
     });
   }, [storeProfile]);
 
-  // Link público da loja
-  const storeLink = user?.id ? `${window.location.origin}/loja/${user.id}` : '';
+  // Store slug state
+  const [storeSlug, setStoreSlug] = useState('');
+  
+  // Fetch store slug
+  useEffect(() => {
+    const fetchSlug = async () => {
+      if (!user?.id) return;
+      const { data } = await (await import('@/integrations/supabase/client')).supabase
+        .from('profiles')
+        .select('store_slug, shipping_city, shipping_state')
+        .eq('id', user.id)
+        .single();
+      if (data?.store_slug) setStoreSlug(data.store_slug);
+    };
+    fetchSlug();
+  }, [user?.id]);
+
+  // Link público da loja using slug
+  const storeLink = storeSlug ? `${window.location.origin}/loja/${storeSlug}` : (user?.id ? `${window.location.origin}/loja/${user.id}` : '');
 
   const handleCopyLink = () => {
     if (storeLink) {
