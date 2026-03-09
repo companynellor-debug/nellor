@@ -352,6 +352,14 @@ const ProdutoDetalhes = () => {
               </div>
             )}
 
+            {/* Price History Chart */}
+            {supabaseProductById?.id && (
+              <PriceHistoryChart 
+                productId={supabaseProductById.id} 
+                currentPrice={product.priceNumber} 
+              />
+            )}
+
             <div>
               <h3 className="text-sm font-semibold mb-2">Descrição</h3>
               <p className="text-muted-foreground leading-relaxed text-sm">{product.description}</p>
