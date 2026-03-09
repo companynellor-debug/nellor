@@ -370,8 +370,7 @@ const Financeiro = () => {
               <div className="bg-muted p-3 rounded-lg">
                 <h4 className="font-medium mb-2">Taxas aplicadas:</h4>
                 <ul className="space-y-1 text-xs">
-                  <li>• Comissão Nellor: 7,5% (Plano Grátis) ou 0% (Premium)</li>
-                  <li>• Taxa do processador: ~3,49%</li>
+                  <li>• Comissão Nellor: 7,5%</li>
                 </ul>
               </div>
 
@@ -380,8 +379,7 @@ const Financeiro = () => {
                 <ul className="space-y-1 text-xs">
                   <li>• Valor bruto: R$ 100,00</li>
                   <li>• Comissão (7,5%): - R$ 7,50</li>
-                  <li>• Taxa processador: - R$ 3,49</li>
-                  <li className="font-bold pt-1 border-t">• Você recebe: R$ 89,01</li>
+                  <li className="font-bold pt-1 border-t">• Você recebe: R$ 92,50</li>
                 </ul>
               </div>
 
