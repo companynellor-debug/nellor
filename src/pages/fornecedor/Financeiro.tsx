@@ -7,10 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  DollarSign, 
-  TrendingUp, 
-  Eye, 
+import {
+  DollarSign,
+  TrendingUp,
+  Eye,
   HelpCircle,
   AlertTriangle,
   ArrowRight,
@@ -21,7 +21,7 @@ import {
   Wallet,
   ArrowDownToLine,
   Shield,
-  FileText
+  FileText,
 } from "lucide-react";
 import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
 import { format } from "date-fns";
@@ -29,6 +29,8 @@ import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useIdentityVerification } from "@/hooks/useIdentityVerification";
+import { formatCurrency } from "@/utils/formatCurrency";
+
 
 const Financeiro = () => {
   const navigate = useNavigate();
