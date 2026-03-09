@@ -27,6 +27,7 @@ interface ShippingInfo {
 
 const Carrinho = () => {
   const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
   const { cartItems, updateQuantity, removeItem, clearCart, getTotal, itemCount, validateMinimumLimits } = useCart();
   const { addresses, loading: addressesLoading } = useSupabaseAddresses();
   const { getShippingForSupplier } = useShippingCalculator();
@@ -35,6 +36,7 @@ const Carrinho = () => {
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [isPickup, setIsPickup] = useState(false);
+  const [sharingCart, setSharingCart] = useState(false);
 
   // Auto-select default address
   useEffect(() => {
