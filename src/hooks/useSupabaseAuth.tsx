@@ -147,15 +147,14 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    // Then restore existing session
-    withTimeout(supabase.auth.getSession(), 10000)
+    // Then restore existing session (without aggressive timeout to avoid false logout on slow networks)
+    supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         getSessionResolvedRef.current = true;
         clearTimeout(initTimeout);
 
         if (error) {
           console.error('Error restoring auth session:', error);
-          clearStaleAuthStorage();
           setSession(null);
           setUser(null);
           setProfile(null);
@@ -172,7 +171,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         getSessionResolvedRef.current = true;
         clearTimeout(initTimeout);
         console.error('Error restoring auth session:', error);
-        clearStaleAuthStorage();
         setSession(null);
         setUser(null);
         setProfile(null);
