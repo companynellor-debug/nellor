@@ -16,6 +16,7 @@ import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
 import ReportButton from "@/components/ReportButton";
 
