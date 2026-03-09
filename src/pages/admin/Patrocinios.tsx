@@ -102,15 +102,12 @@ const Patrocinios = () => {
       if (productIds.length > 0) {
         const { data: productsData } = await supabase.from("products").select("id, nome").in("id", productIds);
         productsData?.forEach((p) => { productMap[p.id] = p.nome; });
-        : { data: [] };
-
-      const supplierMap = new Map(suppliers?.map((s) => [s.id, s.nome]) || []);
-      const productMap = new Map(products?.map((p) => [p.id, p.nome]) || []);
+      }
 
       const enriched = data.map((r: any) => ({
         ...r,
-        supplier_name: supplierMap.get(r.supplier_id) || "Fornecedor",
-        product_name: r.product_id ? productMap.get(r.product_id) || "Produto" : null,
+        supplier_name: supplierMap[r.supplier_id] || "Fornecedor",
+        product_name: r.product_id ? productMap[r.product_id] || "Produto" : null,
       }));
 
       setRequests(enriched);
