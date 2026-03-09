@@ -33,6 +33,8 @@ export const ParticlesBackground = () => {
       });
     }
 
+    let animationId: number;
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -49,10 +51,10 @@ export const ParticlesBackground = () => {
         if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
       });
 
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationId = requestAnimationFrame(animate);
 
     const handleResize = () => {
       canvas.width = window.innerWidth;
@@ -60,7 +62,10 @@ export const ParticlesBackground = () => {
     };
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   return (
