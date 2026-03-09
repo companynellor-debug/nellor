@@ -193,24 +193,6 @@ const Recebimentos = () => {
             </p>
           </CardContent>
         </Card>
-
-        <Card className="relative overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              Taxa Processador (est.)
-              <Tooltip>
-                <TooltipTrigger><Info className="h-3 w-3" /></TooltipTrigger>
-                <TooltipContent>Taxa estimada do processador (~3,49%)</TooltipContent>
-              </Tooltip>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-orange-600">
-              - R$ {taxaProcessador.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </p>
-          </CardContent>
-        </Card>
-
         <Card className="relative overflow-hidden border-green-200 bg-green-50/50 dark:bg-green-900/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
