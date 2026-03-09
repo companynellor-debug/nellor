@@ -53,7 +53,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const initInProgressRef = useRef(true);
   const getSessionResolvedRef = useRef(false);
 
-  const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, pix_key, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo';
+  const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, pix_key, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo, shipping_city, shipping_state, store_slug';
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
