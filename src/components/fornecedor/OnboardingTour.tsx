@@ -106,7 +106,7 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
       
       const { data } = await supabase
         .from("profiles")
-        .select("onboarding_tour_completed")
+        .select("onboarding_completed")
         .eq("id", user.id)
         .single();
 
