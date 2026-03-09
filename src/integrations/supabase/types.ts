@@ -2285,6 +2285,54 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_shipping_regions: {
+        Row: {
+          allows_pickup: boolean
+          created_at: string
+          free_above: number | null
+          id: string
+          price: number
+          region: Database["public"]["Enums"]["shipping_region"]
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          allows_pickup?: boolean
+          created_at?: string
+          free_above?: number | null
+          id?: string
+          price?: number
+          region: Database["public"]["Enums"]["shipping_region"]
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          allows_pickup?: boolean
+          created_at?: string
+          free_above?: number | null
+          id?: string
+          price?: number
+          region?: Database["public"]["Enums"]["shipping_region"]
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_shipping_regions_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_shipping_regions_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           assunto: string
@@ -2946,6 +2994,7 @@ export type Database = {
       payment_status: "pending" | "paid" | "refunded" | "cancelled"
       payout_status: "requested" | "approved" | "paid" | "rejected"
       service_provider_status: "pending" | "active" | "suspended"
+      shipping_region: "norte" | "nordeste" | "centro_oeste" | "sudeste" | "sul"
       support_status: "open" | "pending" | "closed"
       transaction_type: "sale" | "platform_fee" | "payout" | "refund"
       user_type: "cliente" | "fornecedor" | "admin"
@@ -3116,6 +3165,7 @@ export const Constants = {
       payment_status: ["pending", "paid", "refunded", "cancelled"],
       payout_status: ["requested", "approved", "paid", "rejected"],
       service_provider_status: ["pending", "active", "suspended"],
+      shipping_region: ["norte", "nordeste", "centro_oeste", "sudeste", "sul"],
       support_status: ["open", "pending", "closed"],
       transaction_type: ["sale", "platform_fee", "payout", "refund"],
       user_type: ["cliente", "fornecedor", "admin"],
