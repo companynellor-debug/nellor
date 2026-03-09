@@ -29,6 +29,8 @@ import { useProducts } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/utils/formatCurrency";
+
 
 const CollectionsTab = () => {
   const navigate = useNavigate();
@@ -197,7 +199,7 @@ const CollectionsTab = () => {
                         <div className="p-2">
                           <p className="text-xs font-medium line-clamp-2">{p.nome}</p>
                           <p className="text-xs text-primary font-bold mt-0.5">
-                            R$ {Number(p.preco).toFixed(2)}
+                            {formatCurrency(p.preco)}
                           </p>
                         </div>
                       </>
