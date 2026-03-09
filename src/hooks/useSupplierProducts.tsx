@@ -30,6 +30,7 @@ export interface SupplierProduct {
   minOrderQuantity?: number;
   isCnpjOnly?: boolean;
   isInternational?: boolean;
+  keywords?: string[];
 }
 
 const PAGE_SIZE = 20;
@@ -52,7 +53,7 @@ export const useSupplierProducts = () => {
 
       const { data, error } = await supabase
         .from('products')
-        .select('id, nome, categoria_id, descricao_curta, imagens, preco, estoque, variacoes, tamanhos, cores, is_kit, kit_items, brand, material, weight_grams, width_cm, height_cm, depth_cm, condition, ncm_code, sale_unit, units_per_sale_unit, min_order_quantity, is_cnpj_only, is_international')
+        .select('id, nome, categoria_id, descricao_curta, imagens, preco, estoque, variacoes, tamanhos, cores, is_kit, kit_items, brand, material, weight_grams, width_cm, height_cm, depth_cm, condition, ncm_code, sale_unit, units_per_sale_unit, min_order_quantity, is_cnpj_only, is_international, keywords')
         .eq('supplier_id', user.id)
         .eq('ativo', true)
         .order('created_at', { ascending: false })
@@ -86,6 +87,7 @@ export const useSupplierProducts = () => {
         minOrderQuantity: product.min_order_quantity || 1,
         isCnpjOnly: product.is_cnpj_only || false,
         isInternational: product.is_international || false,
+        keywords: product.keywords || [],
       }));
 
       setHasMore(mappedProducts.length === PAGE_SIZE);
@@ -147,6 +149,7 @@ export const useSupplierProducts = () => {
           min_order_quantity: product.minOrderQuantity || 1,
           is_cnpj_only: product.isCnpjOnly || false,
           is_international: product.isInternational || false,
+          keywords: product.keywords || [],
         }])
         .select()
         .single();
@@ -192,6 +195,7 @@ export const useSupplierProducts = () => {
       if (updatedData.minOrderQuantity !== undefined) updatePayload.min_order_quantity = updatedData.minOrderQuantity;
       if (updatedData.isCnpjOnly !== undefined) updatePayload.is_cnpj_only = updatedData.isCnpjOnly;
       if (updatedData.isInternational !== undefined) updatePayload.is_international = updatedData.isInternational;
+      if (updatedData.keywords !== undefined) updatePayload.keywords = updatedData.keywords;
 
       const { error } = await supabase.from('products').update(updatePayload).eq('id', id);
       if (error) throw error;

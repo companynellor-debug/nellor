@@ -49,6 +49,8 @@ const Produtos = () => {
     ncmCode: '', isCnpjOnly: false,
     stock: '', priceCents: 0,
   });
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [keywordInput, setKeywordInput] = useState('');
   const [imageFiles, setImageFiles] = useState<string[]>([]);
 
   // Price tiers
@@ -89,6 +91,8 @@ const Produtos = () => {
         stock: product.stock.toString(), priceCents: decimalToCents(product.price),
       });
       setImageFiles(product.images);
+      setKeywords(product.keywords || []);
+      setKeywordInput('');
       setIsKit(product.isKit || false);
       setKitItems(product.kitItems || []);
 
@@ -130,6 +134,8 @@ const Produtos = () => {
         stock: '', priceCents: 0,
       });
       setImageFiles([]);
+      setKeywords([]);
+      setKeywordInput('');
       setPriceTiers([{ minQty: '1', maxQty: '', priceCents: 0 }]);
       setHasVariations(false);
       setHasColors(false); setHasSizes(false);
@@ -139,6 +145,25 @@ const Produtos = () => {
     }
     setOpenSections({ basic: true, saleUnit: true, pricing: true, logistics: false, variations: false, images: true });
     setIsModalOpen(true);
+  };
+
+  const addKeyword = (value: string) => {
+    const word = value.trim().toLowerCase();
+    if (word && !keywords.includes(word) && keywords.length < 10) {
+      setKeywords(prev => [...prev, word]);
+    }
+    setKeywordInput('');
+  };
+
+  const handleKeywordInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addKeyword(keywordInput);
+    }
+  };
+
+  const removeKeyword = (word: string) => {
+    setKeywords(prev => prev.filter(k => k !== word));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,6 +239,7 @@ const Produtos = () => {
       heightCm: formData.heightCm ? parseFloat(formData.heightCm) : undefined,
       depthCm: formData.depthCm ? parseFloat(formData.depthCm) : undefined,
       ncmCode: formData.ncmCode, isCnpjOnly: formData.isCnpjOnly,
+      keywords,
     };
 
     const tiersToSave: Omit<PriceTier, 'id' | 'product_id'>[] = priceTiers.map(t => ({
@@ -390,6 +416,27 @@ const Produtos = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                <div>
+                  <Label>Palavras-chave <span className="text-xs text-muted-foreground">({keywords.length}/10)</span></Label>
+                  <Input 
+                    value={keywordInput} 
+                    onChange={(e) => setKeywordInput(e.target.value.replace(',', ''))}
+                    onKeyDown={handleKeywordInput}
+                    onBlur={() => keywordInput && addKeyword(keywordInput)}
+                    placeholder="Digite e pressione Enter ou vírgula"
+                    disabled={keywords.length >= 10}
+                  />
+                  {keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {keywords.map((word) => (
+                        <Badge key={word} variant="secondary" className="gap-1 pr-1">
+                          {word}
+                          <X className="h-3 w-3 cursor-pointer hover:text-destructive" onClick={() => removeKeyword(word)} />
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>

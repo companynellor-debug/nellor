@@ -1420,6 +1420,7 @@ export type Database = {
           is_cnpj_only: boolean | null
           is_international: boolean | null
           is_kit: boolean | null
+          keywords: string[] | null
           kit_items: Json | null
           material: string | null
           min_order_quantity: number | null
@@ -1459,6 +1460,7 @@ export type Database = {
           is_cnpj_only?: boolean | null
           is_international?: boolean | null
           is_kit?: boolean | null
+          keywords?: string[] | null
           kit_items?: Json | null
           material?: string | null
           min_order_quantity?: number | null
@@ -1498,6 +1500,7 @@ export type Database = {
           is_cnpj_only?: boolean | null
           is_international?: boolean | null
           is_kit?: boolean | null
+          keywords?: string[] | null
           kit_items?: Json | null
           material?: string | null
           min_order_quantity?: number | null
