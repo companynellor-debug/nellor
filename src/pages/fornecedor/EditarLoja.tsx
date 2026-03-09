@@ -16,6 +16,7 @@ import { Save, Upload, Star, Package, Plus, X, Tag, Copy, ExternalLink } from "l
 import { CurrencyInput, decimalToCents, centsToDecimal } from "@/utils/currency";
 import { toast } from "sonner";
 import { ShippingConfigTab } from "@/components/fornecedor/ShippingConfigTab";
+import CatalogoPDFButton from "@/components/fornecedor/CatalogoPDFButton";
 
 
 const EditarLoja = () => {
@@ -144,10 +145,23 @@ const EditarLoja = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl sm:text-3xl font-bold">Editar Loja</h1>
-        <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
-          <Save className="h-4 w-4 mr-2" />
-          Salvar
-        </Button>
+        <div className="flex items-center gap-2">
+          <CatalogoPDFButton
+            storeInfo={{
+              storeName: formData.storeName,
+              bio: formData.bio,
+              avatar: formData.avatar,
+              banner: formData.banner,
+              whatsapp: formData.whatsapp,
+              address: formData.address,
+            }}
+            products={products}
+          />
+          <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
+            <Save className="h-4 w-4 mr-2" />
+            Salvar
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="personalizacao" className="w-full">

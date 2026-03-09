@@ -19,6 +19,8 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PublicProduto = lazy(() => import("./pages/PublicProduto"));
+const PastaPublica = lazy(() => import("./pages/PastaPublica"));
+const CarrinhoCompartilhado = lazy(() => import("./pages/CarrinhoCompartilhado"));
 const Onboarding = lazy(() => import("./pages/fornecedor/Onboarding"));
 
 // Lazy load cliente pages
@@ -118,6 +120,12 @@ const App = () => {
 
               {/* Public Store Route - qualquer visitante pode ver */}
               <Route path="/loja/:id" element={<PerfilLoja />} />
+
+              {/* Public Collection Route */}
+              <Route path="/pasta/:token" element={<PastaPublica />} />
+
+              {/* Public Shared Cart Route */}
+              <Route path="/carrinho/:token" element={<CarrinhoCompartilhado />} />
 
               {/* Fornecedor Onboarding */}
               <Route

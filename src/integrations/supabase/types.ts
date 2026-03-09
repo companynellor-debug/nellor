@@ -518,6 +518,97 @@ export type Database = {
         }
         Relationships: []
       }
+      collection_items: {
+        Row: {
+          added_at: string | null
+          collection_id: string
+          id: string
+          reference_id: string
+          type: Database["public"]["Enums"]["collection_item_type"]
+        }
+        Insert: {
+          added_at?: string | null
+          collection_id: string
+          id?: string
+          reference_id: string
+          type: Database["public"]["Enums"]["collection_item_type"]
+        }
+        Update: {
+          added_at?: string | null
+          collection_id?: string
+          id?: string
+          reference_id?: string
+          type?: Database["public"]["Enums"]["collection_item_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collection_members: {
+        Row: {
+          added_at: string | null
+          collection_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          collection_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          collection_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_members_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collections: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          share_token: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          share_token?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          share_token?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           ativo: boolean | null
@@ -1122,6 +1213,45 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_history: {
+        Row: {
+          id: string
+          price: number
+          product_id: string
+          recorded_at: string | null
+          variation_id: string | null
+        }
+        Insert: {
+          id?: string
+          price: number
+          product_id: string
+          recorded_at?: string | null
+          variation_id?: string | null
+        }
+        Update: {
+          id?: string
+          price?: number
+          product_id?: string
+          recorded_at?: string | null
+          variation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_variation_id_fkey"
+            columns: ["variation_id"]
+            isOneToOne: false
+            referencedRelation: "product_variations"
             referencedColumns: ["id"]
           },
         ]
@@ -1943,6 +2073,33 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_carts: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          items: Json
+          share_token: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          items?: Json
+          share_token?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          items?: Json
+          share_token?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sponsored_products: {
         Row: {
           approved_at: string | null
@@ -2759,6 +2916,7 @@ export type Database = {
     Enums: {
       affiliate_status: "pending" | "active" | "suspended"
       app_role: "admin" | "fornecedor" | "cliente"
+      collection_item_type: "product" | "supplier"
       commission_status: "pending" | "confirmed" | "paid" | "cancelled"
       coupon_type: "percentage" | "fixed"
       crm_contract_type: "single" | "monthly"
@@ -2926,6 +3084,7 @@ export const Constants = {
     Enums: {
       affiliate_status: ["pending", "active", "suspended"],
       app_role: ["admin", "fornecedor", "cliente"],
+      collection_item_type: ["product", "supplier"],
       commission_status: ["pending", "confirmed", "paid", "cancelled"],
       coupon_type: ["percentage", "fixed"],
       crm_contract_type: ["single", "monthly"],

@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Truck, MapPin, Package, Loader2, CheckCircle } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Truck, MapPin, Package, Loader2, CheckCircle, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { useSupabaseAddresses } from "@/hooks/useSupabaseAddresses";
 import { useShippingCalculator, getRegionFromState, REGION_LABELS } from "@/hooks/useSupplierShipping";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
 
@@ -25,6 +27,7 @@ interface ShippingInfo {
 
 const Carrinho = () => {
   const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
   const { cartItems, updateQuantity, removeItem, clearCart, getTotal, itemCount, validateMinimumLimits } = useCart();
   const { addresses, loading: addressesLoading } = useSupabaseAddresses();
   const { getShippingForSupplier } = useShippingCalculator();
@@ -33,6 +36,7 @@ const Carrinho = () => {
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [isPickup, setIsPickup] = useState(false);
+  const [sharingCart, setSharingCart] = useState(false);
 
   // Auto-select default address
   useEffect(() => {
@@ -127,6 +131,34 @@ const Carrinho = () => {
     navigate("/cliente/checkout");
   };
 
+  const handleShareCart = async () => {
+    if (!user || cartItems.length === 0) return;
+    setSharingCart(true);
+    try {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 7);
+      
+      const { data, error } = await (supabase.from("shared_carts" as any) as any)
+        .insert({
+          user_id: user.id,
+          items: cartItems,
+          expires_at: expires.toISOString(),
+        })
+        .select("share_token")
+        .single();
+      
+      if (error) throw error;
+      
+      const url = `${window.location.origin}/carrinho/${data.share_token}`;
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Carrinho compartilhado!", description: "Link copiado para a área de transferência. Válido por 7 dias." });
+    } catch {
+      toast({ title: "Erro ao compartilhar", description: "Tente novamente.", variant: "destructive" });
+    } finally {
+      setSharingCart(false);
+    }
+  };
+
   const selectedAddress = addresses.find(a => a.id === selectedAddressId);
 
   return (
@@ -139,7 +171,20 @@ const Carrinho = () => {
             <h1 className="text-2xl font-bold text-primary">Meu Carrinho</h1>
             <p className="text-sm text-muted-foreground">{itemCount} {itemCount === 1 ? 'item' : 'itens'} • {totalPieces} peças</p>
           </div>
-          <ShoppingCart className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-2">
+            {cartItems.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShareCart}
+                disabled={sharingCart}
+                title="Compartilhar carrinho"
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+            )}
+            <ShoppingCart className="h-6 w-6 text-primary" />
+          </div>
         </div>
       </header>
 
