@@ -279,7 +279,7 @@ const CheckoutSucesso = () => {
 
   return (
     <div className="min-h-screen bg-background py-8">
-      <ParticlesBackground />
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-2xl mx-auto">
           <Card className="border shadow-lg overflow-hidden">
