@@ -27,7 +27,6 @@ const PerfilLoja = () => {
   const { products: supabaseProducts } = useSupabaseProducts();
   const { user } = useSupabaseAuth();
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
-  const { reviews: allReviews, loading: reviewsLoading } = useSupabaseReviews();
   
   // Refetch stores when component mounts to ensure fresh data
   useEffect(() => {
