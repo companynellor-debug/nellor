@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { ReviewItem } from '@/components/cliente/ReviewsList';
 
-export interface SupplierReview {
-  id: string;
-  product_id: string;
-  rating: number;
-  comment: string | null;
-  photos: string[];
-  created_at: string;
-  buyer_first_name: string | null;
-}
+export type SupplierReview = ReviewItem;
 
 export const useSupplierReviews = (supplierId?: string) => {
   const [reviews, setReviews] = useState<SupplierReview[]>([]);
