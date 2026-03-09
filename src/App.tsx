@@ -61,7 +61,7 @@ const NotificacoesFornecedor = lazy(() => import("./pages/fornecedor/Notificacoe
 const EditarLoja = lazy(() => import("./pages/fornecedor/EditarLoja"));
 const Estatisticas = lazy(() => import("./pages/fornecedor/Estatisticas"));
 const Recebimentos = lazy(() => import("./pages/fornecedor/Recebimentos"));
-const PlanosFornecedor = lazy(() => import("./pages/fornecedor/Planos"));
+// PlanosFornecedor removido (Stripe/planos desativados)
 const CuponsFornecedor = lazy(() => import("./pages/fornecedor/Cupons"));
 const RelatorioCupons = lazy(() => import("./pages/fornecedor/RelatorioCupons"));
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
