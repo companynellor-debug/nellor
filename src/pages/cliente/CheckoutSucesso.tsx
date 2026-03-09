@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Package, Truck, ClipboardList, Home, AlertTriangle, CreditCard, Shield, Loader2 } from "lucide-react";
-import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
+
 import { useCart } from "@/hooks/useCart";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
