@@ -75,13 +75,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const clearStaleAuthStorage = () => {
-    try {
-      sessionStorage.removeItem('nellor_admin_access');
-    } catch (error) {
-      console.error('Error clearing stale auth storage:', error);
-    }
-  };
 
   // Removed aggressive sanitizeStoredSession — Supabase SDK handles token refresh internally.
   // The old implementation was deleting valid refresh tokens on page reload, causing logout.
