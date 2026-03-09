@@ -12,8 +12,8 @@ import { useStoresFavorites } from "@/hooks/useStoresFavorites";
 import { useProducts } from "@/hooks/useProducts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
-import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
+import { useSupplierReviews } from "@/hooks/useSupplierReviews";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,7 +27,6 @@ const PerfilLoja = () => {
   const { products: supabaseProducts } = useSupabaseProducts();
   const { user } = useSupabaseAuth();
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
-  const { reviews: allReviews, loading: reviewsLoading } = useSupabaseReviews();
   
   // Refetch stores when component mounts to ensure fresh data
   useEffect(() => {
@@ -58,12 +57,9 @@ const PerfilLoja = () => {
   const resolvedId = isUuid ? id : slugProfile?.id;
   const storeProfile = stores.find(s => s.id === resolvedId) || (slugProfile ? { id: slugProfile.id, nome: slugProfile.nome, descricao_loja: slugProfile.descricao_loja, foto_perfil_url: slugProfile.foto_perfil_url, banner_loja_url: slugProfile.banner_loja_url } : undefined);
   const storeProducts = supabaseProducts.filter(p => p.supplier_id === resolvedId);
-  
-  const storeProductIds = storeProducts.map(p => p.id?.toString()).filter(Boolean);
-  const storeReviews = allReviews.filter(r => storeProductIds.includes(r.product_id));
-  const averageRating = storeReviews.length > 0
-    ? storeReviews.reduce((sum, r) => sum + r.rating, 0) / storeReviews.length
-    : 0;
+
+  // Fetch reviews for this supplier
+  const { reviews: storeReviews, loading: reviewsLoading, averageRating } = useSupplierReviews(resolvedId);
 
   if (loading) {
     return (
