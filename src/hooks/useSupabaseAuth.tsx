@@ -291,22 +291,15 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error signing in:', error);
 
       if (isTransientAuthError(error)) {
-        clearStaleAuthStorage();
-        try {
-          await supabase.auth.signOut({ scope: 'local' });
-        } catch {
-          // no-op
-        }
-        setSession(null);
-        setUser(null);
-        setProfile(null);
+        // Não limpar tokens automaticamente para evitar logout indevido em instabilidade momentânea.
+        setSession((prev) => prev);
       }
 
       let errorMessage = 'Verifique suas credenciais e tente novamente.';
       if (error.message.includes('Request timeout')) {
         errorMessage = 'O servidor demorou para responder. Tente novamente em alguns segundos.';
       } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Falha de conexão com o servidor. Limpamos sua sessão local; tente entrar novamente.';
+        errorMessage = 'Falha de conexão com o servidor. Tente novamente sem recarregar a página.';
       } else if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos.';
       } else if (error.message.includes('Email not confirmed')) {
