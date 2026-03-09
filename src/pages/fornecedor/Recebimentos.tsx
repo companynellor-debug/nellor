@@ -310,7 +310,6 @@ const Recebimentos = () => {
                     <th className="text-left py-3 px-2 font-medium text-muted-foreground">Pedido</th>
                     <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor Bruto</th>
                     <th className="text-right py-3 px-2 font-medium text-muted-foreground">Comissão</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">Taxa Proc.</th>
                     <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor Líquido</th>
                     <th className="text-center py-3 px-2 font-medium text-muted-foreground">Status</th>
                   </tr>
@@ -322,10 +321,9 @@ const Recebimentos = () => {
                       <tr key={tx.id} className="border-b hover:bg-muted/20">
                         <td className="py-3 px-2">{tx.date}</td>
                         <td className="py-3 px-2 font-medium">{tx.order}</td>
-                        <td className="py-3 px-2 text-right">R$ {tx.gross.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-purple-600">- R$ {tx.platformFee.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-orange-600">- R$ {tx.processorFee.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-green-600 font-medium">R$ {tx.net.toFixed(2)}</td>
+                        <td className="py-3 px-2 text-right">{formatCurrency(tx.gross)}</td>
+                        <td className="py-3 px-2 text-right text-purple-600">- {formatCurrency(tx.platformFee)}</td>
+                        <td className="py-3 px-2 text-right text-green-600 font-medium">{formatCurrency(tx.net)}</td>
                         <td className="py-3 px-2 text-center">
                           <Badge variant={badge.variant} className="text-xs">
                             {badge.label}
