@@ -12,7 +12,8 @@ import {
   Package,
   Image,
   PieChart,
-  UserCheck
+  UserCheck,
+  Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
