@@ -45,6 +45,7 @@ const CollectionsTab = () => {
     inviteToCollection,
     getCollectionItems,
     getShareUrl,
+    generateShareToken,
   } = useCollections();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
