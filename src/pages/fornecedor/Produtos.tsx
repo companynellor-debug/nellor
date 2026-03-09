@@ -417,6 +417,27 @@ const Produtos = () => {
                     </Select>
                   </div>
                 </div>
+                <div>
+                  <Label>Palavras-chave <span className="text-xs text-muted-foreground">({keywords.length}/10)</span></Label>
+                  <Input 
+                    value={keywordInput} 
+                    onChange={(e) => setKeywordInput(e.target.value.replace(',', ''))}
+                    onKeyDown={handleKeywordInput}
+                    onBlur={() => keywordInput && addKeyword(keywordInput)}
+                    placeholder="Digite e pressione Enter ou vírgula"
+                    disabled={keywords.length >= 10}
+                  />
+                  {keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {keywords.map((word) => (
+                        <Badge key={word} variant="secondary" className="gap-1 pr-1">
+                          {word}
+                          <X className="h-3 w-3 cursor-pointer hover:text-destructive" onClick={() => removeKeyword(word)} />
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CollapsibleContent>
             </Collapsible>
 

@@ -195,6 +195,7 @@ export const useSupplierProducts = () => {
       if (updatedData.minOrderQuantity !== undefined) updatePayload.min_order_quantity = updatedData.minOrderQuantity;
       if (updatedData.isCnpjOnly !== undefined) updatePayload.is_cnpj_only = updatedData.isCnpjOnly;
       if (updatedData.isInternational !== undefined) updatePayload.is_international = updatedData.isInternational;
+      if (updatedData.keywords !== undefined) updatePayload.keywords = updatedData.keywords;
 
       const { error } = await supabase.from('products').update(updatePayload).eq('id', id);
       if (error) throw error;
