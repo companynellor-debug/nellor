@@ -77,9 +77,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const clearStaleAuthStorage = () => {
     try {
-      Object.keys(localStorage)
-        .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
-        .forEach((key) => localStorage.removeItem(key));
       sessionStorage.removeItem('nellor_admin_access');
     } catch (error) {
       console.error('Error clearing stale auth storage:', error);
