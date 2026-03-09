@@ -2933,6 +2933,10 @@ export type Database = {
         Args: { curlopt: string; value: string }
         Returns: boolean
       }
+      is_collection_owner: {
+        Args: { _collection_id: string; _user_id: string }
+        Returns: boolean
+      }
       regenerate_supplier_code: {
         Args: { _supplier_id: string }
         Returns: string
