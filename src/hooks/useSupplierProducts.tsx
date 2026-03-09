@@ -149,6 +149,7 @@ export const useSupplierProducts = () => {
           min_order_quantity: product.minOrderQuantity || 1,
           is_cnpj_only: product.isCnpjOnly || false,
           is_international: product.isInternational || false,
+          keywords: product.keywords || [],
         }])
         .select()
         .single();
