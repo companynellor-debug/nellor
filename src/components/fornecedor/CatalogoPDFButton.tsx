@@ -9,8 +9,8 @@ interface Product {
   id: string;
   nome: string;
   preco: number;
-  imagens?: string[];
-  descricao_curta?: string;
+  imagens?: string[] | null;
+  descricao_curta?: string | null;
   estoque: number;
 }
 
@@ -25,7 +25,7 @@ interface StoreInfo {
 
 interface CatalogoPDFButtonProps {
   storeInfo: StoreInfo;
-  products: Product[];
+  products: any[]; // Accept any array of product-like objects
 }
 
 const CatalogoPDFButton = ({ storeInfo, products }: CatalogoPDFButtonProps) => {
