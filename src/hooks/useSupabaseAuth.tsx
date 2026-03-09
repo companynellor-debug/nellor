@@ -292,7 +292,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (isTransientAuthError(error)) {
         // Não limpar tokens automaticamente para evitar logout indevido em instabilidade momentânea.
-        setSession((prev) => prev);
       }
 
       let errorMessage = 'Verifique suas credenciais e tente novamente.';

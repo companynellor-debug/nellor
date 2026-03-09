@@ -97,7 +97,9 @@ const CollectionsTab = () => {
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
-    await createCollection(newName.trim(), newDesc.trim() || undefined);
+    const created = await createCollection(newName.trim(), newDesc.trim() || undefined);
+    if (!created) return;
+
     setNewName("");
     setNewDesc("");
     setShowCreateModal(false);
