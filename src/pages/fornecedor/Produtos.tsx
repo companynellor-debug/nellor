@@ -294,12 +294,14 @@ const Produtos = () => {
 
   const SectionHeader = ({ icon: Icon, title, sectionKey }: { icon: any; title: string; sectionKey: string }) => (
     <CollapsibleTrigger asChild onClick={() => toggleSection(sectionKey)}>
-      <button className="flex items-center justify-between w-full p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-primary" />
+      <button className="flex items-center justify-between w-full p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl hover:from-primary/15 hover:to-primary/10 transition-all border border-primary/10">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+            <Icon className="h-4 w-4 text-primary" />
+          </div>
           <span className="font-semibold text-sm">{title}</span>
         </div>
-        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${openSections[sectionKey] ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${openSections[sectionKey] ? 'rotate-180' : ''}`} />
       </button>
     </CollapsibleTrigger>
   );
