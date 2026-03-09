@@ -139,7 +139,17 @@ const CatalogoPDFButton = ({ storeInfo, products }: CatalogoPDFButtonProps) => {
       // ============================
       // PRODUTOS — 2 colunas por página
       // ============================
-      const activeProducts = products.filter((p) => p.estoque > 0);
+      // Normalize products to support both Portuguese and English field names
+      const normalizedProducts = products.map(p => ({
+        id: p.id,
+        nome: p.nome || p.name || '',
+        preco: p.preco ?? p.price ?? 0,
+        imagens: p.imagens || p.images || [],
+        descricao_curta: p.descricao_curta || p.description || '',
+        estoque: p.estoque ?? p.stock ?? 0,
+      }));
+      
+      const activeProducts = normalizedProducts.filter((p) => p.estoque > 0);
       const cols = 2;
       const cardW = (W - 20 - (cols - 1) * 6 - 20) / cols; // ~82mm
       const cardH = 75;
