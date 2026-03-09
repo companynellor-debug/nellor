@@ -357,11 +357,11 @@ const Recebimentos = () => {
           </DialogHeader>
           <div className="space-y-4 text-sm">
             <p>
-              Todos os pagamentos são processados de forma segura. Assim que o cliente paga pelo pedido, 
-              o valor é dividido automaticamente entre a plataforma (comissão), o vendedor e as taxas do processador.
+              Todos os pagamentos são processados de forma segura. Assim que o cliente paga pelo pedido,
+              o valor é dividido automaticamente entre a plataforma (comissão) e o vendedor.
             </p>
             <p>
-              Os vendedores podem <strong>solicitar saques a qualquer momento</strong> após o período de carência. 
+              Os vendedores podem <strong>solicitar saques a qualquer momento</strong> após o período de carência.
               O valor é transferido via Pix para a conta cadastrada.
             </p>
             <p>
@@ -373,8 +373,7 @@ const Recebimentos = () => {
               <ul className="space-y-1 text-xs">
                 <li>• Valor da venda: R$ 100,00</li>
                 <li>• Comissão plataforma (7,5%): - R$ 7,50</li>
-                <li>• Taxa processador (~3,49%): - R$ 3,49</li>
-                <li>• <strong>Valor líquido: R$ 89,01</strong></li>
+                <li>• <strong>Valor líquido: R$ 92,50</strong></li>
               </ul>
             </div>
           </div>

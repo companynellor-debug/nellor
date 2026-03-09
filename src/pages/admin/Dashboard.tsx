@@ -96,11 +96,10 @@ const Dashboard = () => {
       .slice(0, 5);
 
     // Distribuição de receita
-    const fornecedorValue = gmvPeriod - (gmvPeriod * 0.075) - (gmvPeriod * 0.034);
+    const fornecedorValue = gmvPeriod - (gmvPeriod * 0.075);
     const distribution = [
       { name: "Fornecedores", value: fornecedorValue, color: "#3B82F6" },
       { name: "Comissão Nellor", value: gmvPeriod * 0.075, color: "#8B5CF6" },
-      { name: "Taxa Stripe (est.)", value: gmvPeriod * 0.034, color: "#F59E0B" },
     ];
 
     // Pedidos recentes
