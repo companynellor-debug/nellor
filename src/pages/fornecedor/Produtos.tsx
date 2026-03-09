@@ -91,6 +91,8 @@ const Produtos = () => {
         stock: product.stock.toString(), priceCents: decimalToCents(product.price),
       });
       setImageFiles(product.images);
+      setKeywords(product.keywords || []);
+      setKeywordInput('');
       setIsKit(product.isKit || false);
       setKitItems(product.kitItems || []);
 
