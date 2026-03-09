@@ -87,6 +87,7 @@ export const useSupplierProducts = () => {
         minOrderQuantity: product.min_order_quantity || 1,
         isCnpjOnly: product.is_cnpj_only || false,
         isInternational: product.is_international || false,
+        keywords: product.keywords || [],
       }));
 
       setHasMore(mappedProducts.length === PAGE_SIZE);
