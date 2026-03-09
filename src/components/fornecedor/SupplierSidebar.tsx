@@ -1,4 +1,4 @@
-import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Wallet, Crown, Ticket, Shield, Megaphone } from "lucide-react";
+import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Wallet, Ticket, Shield, Megaphone } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
@@ -6,7 +6,6 @@ import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 const menuItems = [
   { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
   { title: "Pedidos", url: "/fornecedor/pedidos", icon: Package },
-  
   { title: "Chat", url: "/fornecedor/chat", icon: MessageSquare },
   { title: "Produtos", url: "/fornecedor/produtos", icon: Tag },
   { title: "Cupons", url: "/fornecedor/cupons", icon: Ticket },
@@ -14,7 +13,6 @@ const menuItems = [
   { title: "Financeiro", url: "/fornecedor/financeiro", icon: DollarSign },
   { title: "Permissões", url: "/fornecedor/permissoes", icon: Shield },
   { title: "Patrocínio", url: "/fornecedor/patrocinio", icon: Megaphone },
-  { title: "Planos", url: "/fornecedor/planos", icon: Crown },
   { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
 ];
@@ -60,5 +58,3 @@ export function SupplierSidebar() {
     </aside>
   );
 }
-
-

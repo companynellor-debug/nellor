@@ -14,13 +14,8 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
   const [roleLoading, setRoleLoading] = useState(false);
   const [hasAdminRole, setHasAdminRole] = useState(false);
 
-  // PRIMEIRO: Checar sessionStorage para admin - SE TIVER, LIBERA IMEDIATAMENTE
-  if (requireType === 'admin') {
-    const adminAccess = sessionStorage.getItem('nellor_admin_access');
-    if (adminAccess === 'true') {
-      return <>{children}</>;
-    }
-  }
+  // Check admin session storage (non-hook, safe to do before hooks)
+  const adminAccess = requireType === 'admin' ? sessionStorage.getItem('nellor_admin_access') === 'true' : false;
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -31,16 +26,13 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
       }
 
       setRoleLoading(true);
-      
-      // Check sessionStorage first
-      const adminAccess = sessionStorage.getItem('nellor_admin_access');
-      if (adminAccess === 'true') {
+
+      if (adminAccess) {
         setHasAdminRole(true);
         setRoleLoading(false);
         return;
       }
 
-      // Check database role if user is authenticated
       if (!user?.id) {
         setHasAdminRole(false);
         setRoleLoading(false);
@@ -66,8 +58,9 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
     };
 
     void checkAccess();
-  }, [requireType, user?.id]);
+  }, [requireType, user?.id, adminAccess]);
 
+  // Show loader while auth is loading
   if (loading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -76,7 +69,12 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
     );
   }
 
-  // Admin check
+  // Admin via sessionStorage - bypass everything
+  if (requireType === 'admin' && adminAccess) {
+    return <>{children}</>;
+  }
+
+  // Admin check via DB role
   if (requireType === 'admin') {
     if (!hasAdminRole) {
       return <Navigate to="/auth" replace />;
@@ -89,11 +87,19 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
-  if (requireType && profile?.tipo !== requireType) {
-    // Redirect to appropriate dashboard based on user type
-    if (profile?.tipo === 'fornecedor') {
+  // CRITICAL FIX: If authenticated but profile not yet loaded, wait
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (requireType && profile.tipo !== requireType) {
+    if (profile.tipo === 'fornecedor') {
       return <Navigate to="/fornecedor/dashboard" replace />;
-    } else if (profile?.tipo === 'admin') {
+    } else if (profile.tipo === 'admin') {
       return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/cliente" replace />;
