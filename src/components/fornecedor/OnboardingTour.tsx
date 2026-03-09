@@ -110,7 +110,7 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
         .eq("id", user.id)
         .single();
 
-      if (data && !data.onboarding_tour_completed) {
+      if (data && !data.onboarding_completed) {
         // Delay start by 1 second
         setTimeout(() => setIsActive(true), 1000);
       }
