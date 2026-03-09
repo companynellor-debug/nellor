@@ -47,10 +47,8 @@ const Financeiro = () => {
 
   // Comissão Nellor: 7,5%
   const comissaoNellor = totalVendido * 0.075;
-  // Taxa processador: ~3,49%
-  const taxaProcessador = totalVendido * 0.0349;
-  // Valor líquido
-  const valorLiquido = totalVendido - comissaoNellor - taxaProcessador;
+  // Valor líquido (apenas taxa da plataforma)
+  const valorLiquido = totalVendido - comissaoNellor;
 
   // Simulação de saldo (placeholder - será real com backend)
   const saldoDisponivel = valorLiquido * 0.7; // 70% disponível
