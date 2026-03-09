@@ -17,6 +17,9 @@ interface Profile {
   endereco_principal?: any;
   onboarding_completed: boolean;
   ativo: boolean;
+  shipping_city?: string | null;
+  shipping_state?: string | null;
+  store_slug?: string | null;
 }
 
 interface AuthContextType {
