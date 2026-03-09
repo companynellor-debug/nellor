@@ -199,7 +199,7 @@ const CollectionsTab = () => {
                         <div className="p-2">
                           <p className="text-xs font-medium line-clamp-2">{p.nome}</p>
                           <p className="text-xs text-primary font-bold mt-0.5">
-                            R$ {Number(p.preco).toFixed(2)}
+                            {formatCurrency(p.preco)}
                           </p>
                         </div>
                       </>

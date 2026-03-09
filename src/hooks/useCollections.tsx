@@ -53,10 +53,12 @@ export const useCollections = () => {
         setCollections(withCounts);
       }
 
-      const { data: memberships } = await supabase
+      const { data: memberships, error: membershipsError } = await supabase
         .from('collection_members')
         .select('collection_id')
         .eq('user_id', user.id);
+
+      if (membershipsError) throw membershipsError;
 
       if (memberships && memberships.length > 0) {
         const ids = memberships.map((m) => m.collection_id);
