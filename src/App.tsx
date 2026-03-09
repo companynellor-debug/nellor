@@ -121,6 +121,12 @@ const App = () => {
               {/* Public Store Route - qualquer visitante pode ver */}
               <Route path="/loja/:id" element={<PerfilLoja />} />
 
+              {/* Public Collection Route */}
+              <Route path="/pasta/:token" element={<PastaPublica />} />
+
+              {/* Public Shared Cart Route */}
+              <Route path="/carrinho/:token" element={<CarrinhoCompartilhado />} />
+
               {/* Fornecedor Onboarding */}
               <Route
                 path="/fornecedor/onboarding"

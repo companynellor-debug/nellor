@@ -171,7 +171,20 @@ const Carrinho = () => {
             <h1 className="text-2xl font-bold text-primary">Meu Carrinho</h1>
             <p className="text-sm text-muted-foreground">{itemCount} {itemCount === 1 ? 'item' : 'itens'} • {totalPieces} peças</p>
           </div>
-          <ShoppingCart className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-2">
+            {cartItems.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShareCart}
+                disabled={sharingCart}
+                title="Compartilhar carrinho"
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+            )}
+            <ShoppingCart className="h-6 w-6 text-primary" />
+          </div>
         </div>
       </header>
 
