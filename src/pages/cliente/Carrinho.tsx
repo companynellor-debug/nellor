@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Truck, MapPin, Package, Loader2, CheckCircle } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Truck, MapPin, Package, Loader2, CheckCircle, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { useSupabaseAddresses } from "@/hooks/useSupabaseAddresses";
