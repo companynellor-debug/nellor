@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
@@ -11,8 +11,11 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierNotifications } from "@/hooks/useSupplierNotifications";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { FornecedorPrefetchProvider } from "@/hooks/useFornecedorPrefetch";
+import { OnboardingTourProvider, useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+
+const OnboardingTour = lazy(() => import("@/components/fornecedor/OnboardingTour"));
 
 const FornecedorLayoutContent = () => {
   const navigate = useNavigate();
