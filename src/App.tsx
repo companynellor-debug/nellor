@@ -19,6 +19,8 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PublicProduto = lazy(() => import("./pages/PublicProduto"));
+const PastaPublica = lazy(() => import("./pages/PastaPublica"));
+const CarrinhoCompartilhado = lazy(() => import("./pages/CarrinhoCompartilhado"));
 const Onboarding = lazy(() => import("./pages/fornecedor/Onboarding"));
 
 // Lazy load cliente pages
