@@ -258,7 +258,7 @@ const Financeiro = () => {
       {/* Resumo de Taxas */}
       <Card className="bg-muted/20">
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground text-xs">Total Bruto</p>
               <p className="font-semibold">{formatCurrency(totalVendido)}</p>
@@ -266,10 +266,6 @@ const Financeiro = () => {
             <div>
               <p className="text-muted-foreground text-xs">Comissão Nellor (7,5%)</p>
               <p className="font-semibold text-purple-600">- {formatCurrency(comissaoNellor)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">Taxa Processador (~3,49%)</p>
-              <p className="font-semibold text-orange-600">- {formatCurrency(taxaProcessador)}</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Valor Líquido</p>
