@@ -131,6 +131,34 @@ const Carrinho = () => {
     navigate("/cliente/checkout");
   };
 
+  const handleShareCart = async () => {
+    if (!user || cartItems.length === 0) return;
+    setSharingCart(true);
+    try {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 7);
+      
+      const { data, error } = await (supabase.from("shared_carts" as any) as any)
+        .insert({
+          user_id: user.id,
+          items: cartItems,
+          expires_at: expires.toISOString(),
+        })
+        .select("share_token")
+        .single();
+      
+      if (error) throw error;
+      
+      const url = `${window.location.origin}/carrinho/${data.share_token}`;
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Carrinho compartilhado!", description: "Link copiado para a área de transferência. Válido por 7 dias." });
+    } catch {
+      toast({ title: "Erro ao compartilhar", description: "Tente novamente.", variant: "destructive" });
+    } finally {
+      setSharingCart(false);
+    }
+  };
+
   const selectedAddress = addresses.find(a => a.id === selectedAddressId);
 
   return (
