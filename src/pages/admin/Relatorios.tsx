@@ -1,145 +1,123 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Loader2 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { subMonths } from "date-fns";
-import { fetchAdminOrders, fetchAdminProfiles } from "@/lib/adminRpc";
+import { subDays, subMonths, startOfMonth } from "date-fns";
+import { fetchAdminOrders, fetchAdminProfiles, AdminOrder, AdminProfile } from "@/lib/adminRpc";
+import { formatCurrency } from "@/utils/formatCurrency";
+
+const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 const Relatorios = () => {
   const [loading, setLoading] = useState(true);
-  const [growthData, setGrowthData] = useState<any[]>([]);
-  const [categoryRevenueData, setCategoryRevenueData] = useState<any[]>([]);
-  const [totalTransactions, setTotalTransactions] = useState(0);
-  const [receitaTotal, setReceitaTotal] = useState(0);
-  const [novosClientes, setNovosClientes] = useState(0);
-  const [novosFornecedores, setNovosFornecedores] = useState(0);
-  const [stateData, setStateData] = useState<any[]>([]);
+  const [allOrders, setAllOrders] = useState<AdminOrder[]>([]);
+  const [allProfiles, setAllProfiles] = useState<AdminProfile[]>([]);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [periodDays, setPeriodDays] = useState("30");
+
+  // Derived filtered data
+  const cutoff = periodDays === "all" ? null : subDays(new Date(), Number(periodDays));
+  
+  const orders = allOrders.filter(o => {
+    if (o.payment_status !== 'paid' || o.order_status === 'cancelled') return false;
+    if (cutoff && new Date(o.created_at) < cutoff) return false;
+    return true;
+  });
+
+  const clientes = allProfiles.filter(p => p.tipo === 'cliente');
+  const fornecedores = allProfiles.filter(p => p.tipo === 'fornecedor');
+
+  const clientesNoPeriodo = cutoff
+    ? clientes.filter(c => new Date(c.created_at) >= cutoff).length
+    : clientes.length;
+  const fornecedoresNoPeriodo = cutoff
+    ? fornecedores.filter(f => new Date(f.created_at) >= cutoff).length
+    : fornecedores.length;
+
+  const gmvTotal = orders.reduce((s, o) => s + Number(o.total), 0);
+  const receitaNellor = gmvTotal * 0.075;
+
+  // Growth chart (cumulative last 6 months, always full range)
+  const growthData = (() => {
+    const data = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = subMonths(new Date(), i);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      data.push({
+        month: MESES[date.getMonth()],
+        clientes: clientes.filter(c => new Date(c.created_at) <= endOfMonth).length,
+        fornecedores: fornecedores.filter(f => new Date(f.created_at) <= endOfMonth).length,
+      });
+    }
+    return data;
+  })();
+
+  // Category revenue
+  const categoryRevenueData = (() => {
+    const productCategoryMap: Record<string, string> = {};
+    allProducts.forEach(p => {
+      productCategoryMap[p.id] = (p.categories as any)?.nome || 'Outros';
+    });
+    const rev: Record<string, number> = {};
+    orders.forEach(order => {
+      const itens = (order.itens as any) || [];
+      if (Array.isArray(itens)) {
+        itens.forEach((item: any) => {
+          const cat = productCategoryMap[item.product_id || item.productId] || 'Outros';
+          rev[cat] = (rev[cat] || 0) + (item.quantity || 1) * (item.price || item.preco || 0);
+        });
+      }
+    });
+    return Object.entries(rev)
+      .map(([category, revenue]) => ({ category, revenue }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+  })();
+
+  // State data
+  const stateData = (() => {
+    const counts: Record<string, number> = {};
+    orders.forEach(order => {
+      if (order.endereco_entrega && typeof order.endereco_entrega === 'object') {
+        const state = (order.endereco_entrega as any).state || 'N/A';
+        counts[state] = (counts[state] || 0) + 1;
+      }
+    });
+    return Object.entries(counts)
+      .map(([state, count]) => ({ state, orders: count }))
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 6);
+  })();
 
   useEffect(() => {
-    fetchData();
+    (async () => {
+      try {
+        setLoading(true);
+        const [profiles, ordersList, { data: products }] = await Promise.all([
+          fetchAdminProfiles(),
+          fetchAdminOrders(),
+          supabase.from('products').select('id, categoria_id, categories(nome)')
+        ]);
+        setAllProfiles(profiles);
+        setAllOrders(ordersList);
+        setAllProducts(products || []);
+      } catch (e) {
+        console.error('Error fetching report data:', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Buscar dados via RPC (bypass RLS)
-      const profiles = await fetchAdminProfiles();
+  if (loading) {
+    return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
 
-      const ordersList = (await fetchAdminOrders()).filter(
-        (o) => o.payment_status === "paid" && o.order_status !== "cancelled"
-      );
-
-
-      // Buscar produtos com categorias
-      const { data: products } = await supabase
-        .from('products')
-        .select('id, categoria_id, categories(nome)');
-
-      const clientes = profiles?.filter((p: any) => p.tipo === "cliente") || [];
-      const fornecedores = profiles?.filter((p: any) => p.tipo === "fornecedor") || [];
-      const orders = ordersList || [];
-
-
-      // Crescimento dos últimos 6 meses
-      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-      const growth = [];
-      
-      for (let i = 5; i >= 0; i--) {
-        const date = subMonths(new Date(), i);
-        const clientesAteData = clientes.filter(c => new Date(c.created_at) <= date).length;
-        const fornecedoresAteData = fornecedores.filter(f => new Date(f.created_at) <= date).length;
-
-        growth.push({
-          month: meses[date.getMonth()],
-          clientes: clientesAteData,
-          fornecedores: fornecedoresAteData
-        });
-      }
-      setGrowthData(growth);
-
-      // Calcular receita real por categoria baseado nos pedidos
-      const categoryRevenue: Record<string, number> = {};
-      const productCategoryMap: Record<string, string> = {};
-      
-      // Mapear produtos para categorias
-      products?.forEach(p => {
-        const catName = (p.categories as any)?.nome || 'Outros';
-        productCategoryMap[p.id] = catName;
-      });
-
-      // Calcular receita por categoria baseado nos itens dos pedidos
-      orders.forEach(order => {
-        const itens = (order.itens as any) || [];
-        if (Array.isArray(itens)) {
-          itens.forEach((item: any) => {
-            const productId = item.product_id || item.productId;
-            const category = productCategoryMap[productId] || 'Outros';
-            const itemTotal = (item.quantity || 1) * (item.price || item.preco || 0);
-            categoryRevenue[category] = (categoryRevenue[category] || 0) + itemTotal;
-          });
-        }
-      });
-
-      const categoryRevenueFormatted = Object.entries(categoryRevenue)
-        .map(([category, revenue]) => ({ category, revenue }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5);
-      
-      // Se não houver dados, mostrar categorias com 0
-      if (categoryRevenueFormatted.length === 0) {
-        const { data: categories } = await supabase
-          .from('categories')
-          .select('nome')
-          .limit(5);
-        
-        categories?.forEach(cat => {
-          categoryRevenueFormatted.push({ category: cat.nome, revenue: 0 });
-        });
-      }
-
-      setCategoryRevenueData(categoryRevenueFormatted);
-
-      // Estatísticas
-      setTotalTransactions(orders.length);
-      setReceitaTotal(orders.reduce((sum, o) => sum + Number(o.total), 0));
-
-
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      setNovosClientes(clientes.filter(c => new Date(c.created_at) >= startOfMonth).length);
-      setNovosFornecedores(fornecedores.filter(f => new Date(f.created_at) >= startOfMonth).length);
-
-      // Calcular pedidos por estado
-      const stateCount: Record<string, number> = {};
-      orders.forEach(order => {
-        if (order.endereco_entrega && typeof order.endereco_entrega === 'object') {
-          const endereco = order.endereco_entrega as any;
-          const state = endereco.state || 'Desconhecido';
-          stateCount[state] = (stateCount[state] || 0) + 1;
-        }
-      });
-
-
-      const stateDataList = Object.entries(stateCount)
-        .map(([state, orders]) => ({ state, orders }))
-        .sort((a, b) => b.orders - a.orders)
-        .slice(0, 6);
-
-      setStateData(stateDataList);
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  return <div className="space-y-8">
+  return (
+    <div className="space-y-8">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-900 to-violet-900 bg-clip-text mb-2 text-slate-50">
@@ -156,30 +134,16 @@ const Relatorios = () => {
       <Card className="border-purple-100">
         <CardHeader>
           <div className="flex gap-4 items-center">
-            <div className="flex-1">
-              <CardTitle>Filtros</CardTitle>
-            </div>
-            <Select defaultValue="30">
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
+            <div className="flex-1"><CardTitle>Filtros</CardTitle></div>
+            <Select value={periodDays} onValueChange={setPeriodDays}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="14">Últimos 14 dias</SelectItem>
                 <SelectItem value="30">Últimos 30 dias</SelectItem>
                 <SelectItem value="90">Últimos 3 meses</SelectItem>
                 <SelectItem value="365">Último ano</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os dados</SelectItem>
-                <SelectItem value="financial">Financeiro</SelectItem>
-                <SelectItem value="orders">Pedidos</SelectItem>
-                <SelectItem value="users">Usuários</SelectItem>
-                <SelectItem value="suppliers">Fornecedores</SelectItem>
+                <SelectItem value="all">Todo o período</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -188,9 +152,7 @@ const Relatorios = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-purple-100">
-          <CardHeader>
-            <CardTitle>📈 Crescimento: Clientes vs Fornecedores</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>📈 Crescimento: Clientes vs Fornecedores</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={growthData}>
@@ -207,34 +169,30 @@ const Relatorios = () => {
         </Card>
 
         <Card className="border-purple-100">
-          <CardHeader>
-            <CardTitle>💰 Receita por Categoria</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>💰 Receita por Categoria</CardTitle></CardHeader>
           <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={categoryRevenueData}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={categoryRevenueData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="category" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip />
-                <Bar dataKey="revenue" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+                <YAxis stroke="#6b7280" tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Bar dataKey="revenue" fill="#8B5CF6" radius={[8, 8, 0, 0]} name="Receita" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         <Card className="border-purple-100">
-          <CardHeader>
-            <CardTitle>🗺️ Pedidos por Estado</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>🗺️ Pedidos por Estado</CardTitle></CardHeader>
           <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stateData} layout="vertical">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stateData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis type="number" stroke="#6b7280" />
                 <YAxis dataKey="state" type="category" stroke="#6b7280" width={60} />
                 <Tooltip />
-                <Bar dataKey="orders" fill="#6366F1" radius={[0, 8, 8, 0]} />
+                <Bar dataKey="orders" fill="#6366F1" radius={[0, 8, 8, 0]} name="Pedidos" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -246,30 +204,30 @@ const Relatorios = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">Total de Transações:</span>
-              <span className="font-bold text-lg text-neutral-700">{totalTransactions}</span>
+              <span className="text-muted-foreground">Total de Pedidos Pagos:</span>
+              <span className="font-bold text-lg text-neutral-700">{orders.length}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">Receita Total:</span>
-              <span className="font-bold text-lg text-green-700">R$ {receitaTotal.toFixed(2)}</span>
+              <span className="text-muted-foreground">GMV (Volume Bruto):</span>
+              <span className="font-bold text-lg text-neutral-700">{formatCurrency(gmvTotal)}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b">
+              <span className="text-muted-foreground">Receita Nellor (7,5%):</span>
+              <span className="font-bold text-lg text-green-700">{formatCurrency(receitaNellor)}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">Novos Clientes:</span>
-              <span className="font-bold text-lg text-blue-700">{novosClientes}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">Novos Fornecedores:</span>
-              <span className="font-bold text-lg text-purple-700">{novosFornecedores}</span>
+              <span className="font-bold text-lg text-blue-700">{clientesNoPeriodo}</span>
             </div>
             <div className="flex justify-between items-center py-2">
-              <span className="text-muted-foreground">Taxa de Crescimento:</span>
-              <span className="font-bold text-lg text-orange-700">
-                {novosClientes > 0 ? `+${((novosClientes / totalTransactions) * 100).toFixed(1)}%` : '0%'}
-              </span>
+              <span className="text-muted-foreground">Novos Fornecedores:</span>
+              <span className="font-bold text-lg text-purple-700">{fornecedoresNoPeriodo}</span>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Relatorios;
