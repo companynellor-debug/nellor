@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -46,6 +46,9 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const initInProgressRef = useRef(true);
+  const getSessionResolvedRef = useRef(false);
 
   const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, pix_key, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo';
 
@@ -128,60 +131,77 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     sanitizeStoredSession();
 
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    // THEN check for existing session with timeout
-    const timeout = setTimeout(() => {
+    const finishInit = () => {
+      initInProgressRef.current = false;
       setLoading(false);
+    };
+
+    // 5s safety timeout (keeps app responsive), but DO NOT treat it as logout.
+    const initTimeout = setTimeout(() => {
+      if (initInProgressRef.current) finishInit();
     }, 5000);
 
-    withTimeout(supabase.auth.getSession(), 10000).then(({ data: { session }, error }) => {
-      clearTimeout(timeout);
+    // Listener first
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
 
-      if (error) {
+      if (nextSession?.user) {
+        // fire-and-forget
+        void fetchProfile(nextSession.user.id);
+      } else {
+        setProfile(null);
+      }
+
+      // During INITIAL_SESSION, Supabase pode disparar com session=null antes do getSession() resolver.
+      // Se liberarmos loading=false cedo demais, o ProtectedRoute redireciona e “parece” logout.
+      if (!initInProgressRef.current) {
+        setLoading(false);
+        return;
+      }
+
+      if (event !== 'INITIAL_SESSION' || getSessionResolvedRef.current || nextSession) {
+        clearTimeout(initTimeout);
+        finishInit();
+      }
+    });
+
+    // Then restore existing session
+    withTimeout(supabase.auth.getSession(), 10000)
+      .then(({ data: { session }, error }) => {
+        getSessionResolvedRef.current = true;
+        clearTimeout(initTimeout);
+
+        if (error) {
+          console.error('Error restoring auth session:', error);
+          clearStaleAuthStorage();
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          finishInit();
+          return;
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) void fetchProfile(session.user.id);
+        finishInit();
+      })
+      .catch((error) => {
+        getSessionResolvedRef.current = true;
+        clearTimeout(initTimeout);
         console.error('Error restoring auth session:', error);
         clearStaleAuthStorage();
         setSession(null);
         setUser(null);
         setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        void fetchProfile(session.user.id);
-      }
-      setLoading(false);
-    }).catch((error) => {
-      clearTimeout(timeout);
-      console.error('Error restoring auth session:', error);
-      clearStaleAuthStorage();
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      setLoading(false);
-    });
+        finishInit();
+      });
 
     return () => {
-      clearTimeout(timeout);
+      clearTimeout(initTimeout);
       subscription.unsubscribe();
     };
   }, []);
