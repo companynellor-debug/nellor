@@ -30,6 +30,7 @@ export interface SupplierProduct {
   minOrderQuantity?: number;
   isCnpjOnly?: boolean;
   isInternational?: boolean;
+  keywords?: string[];
 }
 
 const PAGE_SIZE = 20;
