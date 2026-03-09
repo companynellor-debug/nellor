@@ -292,6 +292,19 @@ const Onboarding = () => {
   const handleFinish = async () => {
     setLoading(true);
     try {
+      // Generate store slug from store name
+      const generateSlug = (name: string) => {
+        return name
+          .toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+      };
+      const baseSlug = generateSlug(storeData.storeName);
+      const slug = baseSlug + '-' + (user?.id?.substring(0, 4) || '');
+
       // Atualizar perfil do fornecedor
       const {
         error: profileError
@@ -300,6 +313,7 @@ const Onboarding = () => {
         descricao_loja: storeData.bio,
         foto_perfil_url: storeData.avatar,
         banner_loja_url: storeData.banner,
+        store_slug: slug,
         onboarding_completed: true
       }).eq('id', user?.id);
       if (profileError) {
