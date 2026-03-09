@@ -5,15 +5,6 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface Product {
-  id: string;
-  nome: string;
-  preco: number;
-  imagens?: string[] | null;
-  descricao_curta?: string | null;
-  estoque: number;
-}
-
 interface StoreInfo {
   storeName: string;
   bio: string;
@@ -25,7 +16,19 @@ interface StoreInfo {
 
 interface CatalogoPDFButtonProps {
   storeInfo: StoreInfo;
-  products: any[]; // Accept any array of product-like objects
+  products: Array<{
+    id: string;
+    name?: string;
+    nome?: string;
+    price?: number;
+    preco?: number;
+    images?: string[];
+    imagens?: string[] | null;
+    description?: string;
+    descricao_curta?: string | null;
+    stock?: number;
+    estoque?: number;
+  }>;
 }
 
 const CatalogoPDFButton = ({ storeInfo, products }: CatalogoPDFButtonProps) => {
