@@ -111,7 +111,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    sanitizeStoredSession();
+    // sanitizeStoredSession removed — Supabase handles token refresh
 
     const finishInit = () => {
       initInProgressRef.current = false;
