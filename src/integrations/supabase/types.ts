@@ -1559,6 +1559,9 @@ export type Database = {
           onboarding_completed: boolean | null
           pix_key: string | null
           service_provider_code: string | null
+          shipping_city: string | null
+          shipping_state: string | null
+          store_slug: string | null
           stripe_account_id: string | null
           stripe_ready: boolean | null
           telefone: string | null
@@ -1581,6 +1584,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           pix_key?: string | null
           service_provider_code?: string | null
+          shipping_city?: string | null
+          shipping_state?: string | null
+          store_slug?: string | null
           stripe_account_id?: string | null
           stripe_ready?: boolean | null
           telefone?: string | null
@@ -1603,6 +1609,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           pix_key?: string | null
           service_provider_code?: string | null
+          shipping_city?: string | null
+          shipping_state?: string | null
+          store_slug?: string | null
           stripe_account_id?: string | null
           stripe_ready?: boolean | null
           telefone?: string | null
