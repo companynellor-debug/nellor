@@ -49,6 +49,8 @@ const Produtos = () => {
     ncmCode: '', isCnpjOnly: false,
     stock: '', priceCents: 0,
   });
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [keywordInput, setKeywordInput] = useState('');
   const [imageFiles, setImageFiles] = useState<string[]>([]);
 
   // Price tiers
