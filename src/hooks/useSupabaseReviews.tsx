@@ -1,16 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ReviewItem } from '@/components/cliente/ReviewsList';
 
-export interface Review {
-  id: string;
-  product_id: string;
-  rating: number;
-  comment: string | null;
-  photos: string[];
-  created_at: string;
-  buyer_first_name: string | null;
-}
+export type Review = ReviewItem;
 
 export const useSupabaseReviews = (productId?: string) => {
   const [reviews, setReviews] = useState<Review[]>([]);
