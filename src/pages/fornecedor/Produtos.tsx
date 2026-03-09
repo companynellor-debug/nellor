@@ -134,6 +134,8 @@ const Produtos = () => {
         stock: '', priceCents: 0,
       });
       setImageFiles([]);
+      setKeywords([]);
+      setKeywordInput('');
       setPriceTiers([{ minQty: '1', maxQty: '', priceCents: 0 }]);
       setHasVariations(false);
       setHasColors(false); setHasSizes(false);
@@ -143,6 +145,25 @@ const Produtos = () => {
     }
     setOpenSections({ basic: true, saleUnit: true, pricing: true, logistics: false, variations: false, images: true });
     setIsModalOpen(true);
+  };
+
+  const addKeyword = (value: string) => {
+    const word = value.trim().toLowerCase();
+    if (word && !keywords.includes(word) && keywords.length < 10) {
+      setKeywords(prev => [...prev, word]);
+    }
+    setKeywordInput('');
+  };
+
+  const handleKeywordInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addKeyword(keywordInput);
+    }
+  };
+
+  const removeKeyword = (word: string) => {
+    setKeywords(prev => prev.filter(k => k !== word));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
