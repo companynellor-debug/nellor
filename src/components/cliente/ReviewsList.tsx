@@ -1,11 +1,20 @@
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star, Image as ImageIcon } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Review } from "@/hooks/useSupabaseReviews";
+
+export interface ReviewItem {
+  id: string;
+  product_id: string;
+  rating: number;
+  comment: string | null;
+  photos: string[];
+  created_at: string;
+  buyer_first_name: string | null;
+}
 
 interface ReviewsListProps {
-  reviews: Review[];
+  reviews: ReviewItem[];
   loading: boolean;
 }
 
