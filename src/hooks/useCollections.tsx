@@ -88,9 +88,11 @@ export const useCollections = () => {
       return false;
     }
 
+    const shareToken = crypto.randomUUID();
+
     const { error } = await supabase
       .from('collections')
-      .insert({ user_id: user.id, name, description: description || null, is_public: false });
+      .insert({ user_id: user.id, name, description: description || null, is_public: false, share_token: shareToken });
 
     if (error) {
       toast({ title: 'Erro ao criar pasta', description: error.message, variant: 'destructive' });
@@ -100,6 +102,20 @@ export const useCollections = () => {
     toast({ title: 'Pasta criada!', description: `${name} foi criada com sucesso.` });
     await fetchCollections();
     return true;
+  };
+
+  const generateShareToken = async (collectionId: string) => {
+    const shareToken = crypto.randomUUID();
+    const { error } = await supabase
+      .from('collections')
+      .update({ share_token: shareToken, is_public: true })
+      .eq('id', collectionId);
+    if (error) {
+      toast({ title: 'Erro ao gerar link', variant: 'destructive' });
+      return null;
+    }
+    await fetchCollections();
+    return shareToken;
   };
 
   const deleteCollection = async (id: string) => {
@@ -196,6 +212,7 @@ export const useCollections = () => {
     inviteToCollection,
     getCollectionItems,
     getShareUrl,
+    generateShareToken,
     refetch: fetchCollections,
   };
 };

@@ -86,6 +86,7 @@ const AdminBanners = lazy(() => import("./pages/admin/Banners"));
 const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
 // Reconciliacao removido - era dependente do Stripe
 const AdminAffiliatePrestadores = lazy(() => import("./pages/admin/AffiliatePrestadores"));
+const AdminPatrocinios = lazy(() => import("./pages/admin/Patrocinios"));
 // AdminNellorDrop removido - desativado temporariamente
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 
@@ -228,6 +229,7 @@ const App = () => {
                 <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
                 {/* Rota de reconciliação removida - era dependente do Stripe */}
                 <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
+                <Route path="patrocinios" element={<Suspense fallback={<PageSkeleton />}><AdminPatrocinios /></Suspense>} />
                 {/* admin nellor-drop removido temporariamente */}
               </Route>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
@@ -11,8 +11,11 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierNotifications } from "@/hooks/useSupplierNotifications";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { FornecedorPrefetchProvider } from "@/hooks/useFornecedorPrefetch";
+import { OnboardingTourProvider, useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+
+const OnboardingTour = lazy(() => import("@/components/fornecedor/OnboardingTour"));
 
 const FornecedorLayoutContent = () => {
   const navigate = useNavigate();
@@ -141,16 +144,29 @@ const FornecedorLayoutContent = () => {
 
         {/* Mobile Bottom Navigation */}
         <BottomNavFornecedor />
+
+        {/* Onboarding Tour */}
+        <Suspense fallback={null}>
+          <OnboardingTourContent />
+        </Suspense>
       </div>
     </div>
   );
+};
+
+const OnboardingTourContent = () => {
+  const { shouldShowTour, forceRestart, endTour } = useOnboardingTour();
+  // Always render - the component handles its own visibility
+  return <OnboardingTour onComplete={endTour} forceStart={forceRestart} />;
 };
 
 // Wrapper com prefetch provider
 const FornecedorLayout = () => {
   return (
     <FornecedorPrefetchProvider>
-      <FornecedorLayoutContent />
+      <OnboardingTourProvider>
+        <FornecedorLayoutContent />
+      </OnboardingTourProvider>
     </FornecedorPrefetchProvider>
   );
 };

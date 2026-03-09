@@ -12,7 +12,8 @@ import {
   Package,
   Image,
   PieChart,
-  UserCheck
+  UserCheck,
+  Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ const menuItems = [
   { icon: MessageCircle, label: "Suporte", path: "/admin/suporte" },
   { icon: Package, label: "Categorias", path: "/admin/categorias" },
   { icon: Image, label: "Banners", path: "/admin/banners" },
+  { icon: Megaphone, label: "Patrocínios", path: "/admin/patrocinios" },
   { icon: Settings, label: "Configurações", path: "/admin/configuracoes" },
 ];
 

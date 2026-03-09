@@ -1,7 +1,8 @@
-import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Wallet, Ticket, Shield, Megaphone } from "lucide-react";
+import { Home, Package, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Wallet, Ticket, Shield, Megaphone, HelpCircle } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
+import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 
 const menuItems = [
   { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
@@ -20,9 +21,10 @@ const menuItems = [
 export function SupplierSidebar() {
   const location = useLocation();
   const { unreadCount } = useSupabaseNotifications();
+  const { triggerRestart } = useOnboardingTour();
 
   return (
-    <aside className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-b from-purple-950 to-violet-950 text-white shadow-2xl border-r border-purple-800/30">
+    <aside className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-b from-purple-950 to-violet-950 text-white shadow-2xl border-r border-purple-800/30 flex flex-col">
       <div className="p-6 border-b border-purple-800/30">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-200 to-violet-200 bg-clip-text text-transparent">
           NELLOR
@@ -30,7 +32,7 @@ export function SupplierSidebar() {
         <p className="text-xs text-purple-300 mt-1">Painel Fornecedor</p>
       </div>
 
-      <nav className="p-4 space-y-2">
+      <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.url;
           return (
@@ -55,6 +57,17 @@ export function SupplierSidebar() {
           );
         })}
       </nav>
+
+      {/* Footer - Ver tutorial */}
+      <div className="p-4 border-t border-purple-800/30">
+        <button
+          onClick={triggerRestart}
+          className="flex items-center gap-2 text-xs text-purple-400 hover:text-purple-200 transition-colors w-full px-4 py-2"
+        >
+          <HelpCircle className="w-4 h-4" />
+          Ver tutorial novamente
+        </button>
+      </div>
     </aside>
   );
 }
