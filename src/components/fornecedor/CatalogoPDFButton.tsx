@@ -5,15 +5,6 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface Product {
-  id: string;
-  nome: string;
-  preco: number;
-  imagens?: string[] | null;
-  descricao_curta?: string | null;
-  estoque: number;
-}
-
 interface StoreInfo {
   storeName: string;
   bio: string;
@@ -25,7 +16,19 @@ interface StoreInfo {
 
 interface CatalogoPDFButtonProps {
   storeInfo: StoreInfo;
-  products: any[]; // Accept any array of product-like objects
+  products: Array<{
+    id: string;
+    name?: string;
+    nome?: string;
+    price?: number;
+    preco?: number;
+    images?: string[];
+    imagens?: string[] | null;
+    description?: string;
+    descricao_curta?: string | null;
+    stock?: number;
+    estoque?: number;
+  }>;
 }
 
 const CatalogoPDFButton = ({ storeInfo, products }: CatalogoPDFButtonProps) => {
@@ -136,7 +139,17 @@ const CatalogoPDFButton = ({ storeInfo, products }: CatalogoPDFButtonProps) => {
       // ============================
       // PRODUTOS — 2 colunas por página
       // ============================
-      const activeProducts = products.filter((p) => p.estoque > 0);
+      // Normalize products to support both Portuguese and English field names
+      const normalizedProducts = products.map(p => ({
+        id: p.id,
+        nome: p.nome || p.name || '',
+        preco: p.preco ?? p.price ?? 0,
+        imagens: p.imagens || p.images || [],
+        descricao_curta: p.descricao_curta || p.description || '',
+        estoque: p.estoque ?? p.stock ?? 0,
+      }));
+      
+      const activeProducts = normalizedProducts.filter((p) => p.estoque > 0);
       const cols = 2;
       const cardW = (W - 20 - (cols - 1) * 6 - 20) / cols; // ~82mm
       const cardH = 75;
