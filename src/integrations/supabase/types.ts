@@ -2503,6 +2503,7 @@ export type Database = {
         Returns: string
       }
       generate_order_number: { Args: never; Returns: string }
+      generate_store_slug: { Args: { store_name: string }; Returns: string }
       generate_supplier_code: { Args: never; Returns: string }
       get_active_attribution: {
         Args: { _buyer_id: string; _supplier_id: string }
