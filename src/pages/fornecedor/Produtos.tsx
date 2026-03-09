@@ -239,6 +239,7 @@ const Produtos = () => {
       heightCm: formData.heightCm ? parseFloat(formData.heightCm) : undefined,
       depthCm: formData.depthCm ? parseFloat(formData.depthCm) : undefined,
       ncmCode: formData.ncmCode, isCnpjOnly: formData.isCnpjOnly,
+      keywords,
     };
 
     const tiersToSave: Omit<PriceTier, 'id' | 'product_id'>[] = priceTiers.map(t => ({
