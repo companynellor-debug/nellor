@@ -163,7 +163,7 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
     if (user) {
       await supabase
         .from("profiles")
-        .update({ onboarding_tour_completed: true } as any)
+        .update({ onboarding_completed: true })
         .eq("id", user.id);
     }
     setIsActive(false);

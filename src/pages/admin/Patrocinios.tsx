@@ -176,13 +176,13 @@ const Patrocinios = () => {
             : newStatus === "rejected"
             ? "Patrocínio Não Aprovado"
             : "Patrocínio Agendado 📅",
-        message:
+        body:
           newStatus === "approved"
             ? `Seu patrocínio foi aprovado e está ativo.${adminResponse ? ` Resposta: ${adminResponse}` : ""}`
             : newStatus === "rejected"
             ? `Seu patrocínio não foi aprovado. Motivo: ${adminResponse}`
             : `Seu patrocínio foi agendado para ${new Date(scheduledDate).toLocaleDateString("pt-BR")}.${adminResponse ? ` Observação: ${adminResponse}` : ""}`,
-        type: "patrocinio",
+        type: "order_update",
       });
 
       toast.success(
