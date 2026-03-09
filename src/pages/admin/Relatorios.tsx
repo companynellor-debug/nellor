@@ -202,26 +202,26 @@ const Relatorios = () => {
           <CardHeader>
             <CardTitle className="text-stone-950">📋 Resumo do Período</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">Total de Pedidos Pagos:</span>
-              <span className="font-bold text-lg text-neutral-700">{orders.length}</span>
+          <CardContent className="space-y-5">
+            <div className="flex justify-between items-center py-3 border-b">
+              <span className="text-sm text-muted-foreground">Total de Pedidos Pagos</span>
+              <span className="font-bold text-2xl text-neutral-700">{orders.length.toLocaleString('pt-BR')}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">GMV (Volume Bruto):</span>
-              <span className="font-bold text-lg text-neutral-700">{formatCurrency(gmvTotal)}</span>
+            <div className="flex justify-between items-center py-3 border-b">
+              <span className="text-sm text-muted-foreground">GMV (Volume Bruto)</span>
+              <span className="font-bold text-2xl text-neutral-700">{formatCurrency(gmvTotal)}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">Receita Nellor (7,5%):</span>
-              <span className="font-bold text-lg text-green-700">{formatCurrency(receitaNellor)}</span>
+            <div className="flex justify-between items-center py-3 border-b">
+              <span className="text-sm text-muted-foreground">Receita Nellor (7,5%)</span>
+              <span className="font-bold text-2xl text-green-700">{formatCurrency(receitaNellor)}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-muted-foreground">Novos Clientes:</span>
-              <span className="font-bold text-lg text-blue-700">{clientesNoPeriodo}</span>
+            <div className="flex justify-between items-center py-3 border-b">
+              <span className="text-sm text-muted-foreground">Novos Clientes</span>
+              <span className="font-bold text-2xl text-blue-700">{clientesNoPeriodo.toLocaleString('pt-BR')}</span>
             </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-muted-foreground">Novos Fornecedores:</span>
-              <span className="font-bold text-lg text-purple-700">{fornecedoresNoPeriodo}</span>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-sm text-muted-foreground">Novos Fornecedores</span>
+              <span className="font-bold text-2xl text-purple-700">{fornecedoresNoPeriodo.toLocaleString('pt-BR')}</span>
             </div>
           </CardContent>
         </Card>
