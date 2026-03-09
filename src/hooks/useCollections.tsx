@@ -32,11 +32,13 @@ export const useCollections = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data: myCollections } = await supabase
-        .from('collections')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        const { data: myCollections, error: myCollectionsError } = await supabase
+          .from('collections')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (myCollectionsError) throw myCollectionsError;
 
       if (myCollections) {
         const withCounts = await Promise.all(

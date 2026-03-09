@@ -29,6 +29,8 @@ import { useProducts } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/utils/formatCurrency";
+
 
 const CollectionsTab = () => {
   const navigate = useNavigate();
