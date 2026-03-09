@@ -83,16 +83,23 @@ export const useCollections = () => {
   }, [fetchCollections]);
 
   const createCollection = async (name: string, description?: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({ title: 'Sessão expirada', description: 'Entre novamente para criar pastas.', variant: 'destructive' });
+      return false;
+    }
+
     const { error } = await supabase
       .from('collections')
       .insert({ user_id: user.id, name, description: description || null, is_public: false });
+
     if (error) {
       toast({ title: 'Erro ao criar pasta', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Pasta criada!', description: `${name} foi criada com sucesso.` });
-      fetchCollections();
+      return false;
     }
+
+    toast({ title: 'Pasta criada!', description: `${name} foi criada com sucesso.` });
+    await fetchCollections();
+    return true;
   };
 
   const deleteCollection = async (id: string) => {

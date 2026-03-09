@@ -75,16 +75,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const clearStaleAuthStorage = () => {
-    try {
-      Object.keys(localStorage)
-        .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
-        .forEach((key) => localStorage.removeItem(key));
-      sessionStorage.removeItem('nellor_admin_access');
-    } catch (error) {
-      console.error('Error clearing stale auth storage:', error);
-    }
-  };
 
   // Removed aggressive sanitizeStoredSession — Supabase SDK handles token refresh internally.
   // The old implementation was deleting valid refresh tokens on page reload, causing logout.
@@ -150,15 +140,14 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    // Then restore existing session
-    withTimeout(supabase.auth.getSession(), 10000)
+    // Then restore existing session (without aggressive timeout to avoid false logout on slow networks)
+    supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         getSessionResolvedRef.current = true;
         clearTimeout(initTimeout);
 
         if (error) {
           console.error('Error restoring auth session:', error);
-          clearStaleAuthStorage();
           setSession(null);
           setUser(null);
           setProfile(null);
@@ -175,7 +164,6 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         getSessionResolvedRef.current = true;
         clearTimeout(initTimeout);
         console.error('Error restoring auth session:', error);
-        clearStaleAuthStorage();
         setSession(null);
         setUser(null);
         setProfile(null);
@@ -296,22 +284,14 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error signing in:', error);
 
       if (isTransientAuthError(error)) {
-        clearStaleAuthStorage();
-        try {
-          await supabase.auth.signOut({ scope: 'local' });
-        } catch {
-          // no-op
-        }
-        setSession(null);
-        setUser(null);
-        setProfile(null);
+        // Não limpar tokens automaticamente para evitar logout indevido em instabilidade momentânea.
       }
 
       let errorMessage = 'Verifique suas credenciais e tente novamente.';
       if (error.message.includes('Request timeout')) {
         errorMessage = 'O servidor demorou para responder. Tente novamente em alguns segundos.';
       } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Falha de conexão com o servidor. Limpamos sua sessão local; tente entrar novamente.';
+        errorMessage = 'Falha de conexão com o servidor. Tente novamente sem recarregar a página.';
       } else if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos.';
       } else if (error.message.includes('Email not confirmed')) {
