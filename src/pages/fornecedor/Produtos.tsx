@@ -351,11 +351,17 @@ const Produtos = () => {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? 'Editar Produto' : 'Cadastrar Produto'}</DialogTitle>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Package className="h-4 w-4 text-primary" />
+              </div>
+              {editingProduct ? 'Editar Produto' : 'Cadastrar Produto'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4">
+
 
             {/* SECTION 1 — Basic Info */}
             <Collapsible open={openSections.basic}>

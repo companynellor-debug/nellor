@@ -212,6 +212,7 @@ export const useCollections = () => {
     inviteToCollection,
     getCollectionItems,
     getShareUrl,
+    generateShareToken,
     refetch: fetchCollections,
   };
 };

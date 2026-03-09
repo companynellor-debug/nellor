@@ -106,9 +106,13 @@ const CollectionsTab = () => {
     setShowCreateModal(false);
   };
 
-  const handleShare = (col: Collection) => {
-    if (!col.share_token) return;
-    const url = getShareUrl(col.share_token);
+  const handleShare = async (col: Collection) => {
+    let token = col.share_token;
+    if (!token) {
+      token = await generateShareToken(col.id);
+      if (!token) return;
+    }
+    const url = getShareUrl(token);
     navigator.clipboard.writeText(url).catch(() => {});
     toast({ title: "Link copiado!", description: url });
   };

@@ -93,14 +93,31 @@ const EditarLoja = () => {
     () => allReviews.filter(r => storeProductIds.includes(r.product_id)),
     [allReviews, storeProductIds]
   );
+
+  // Fetch real sales count from orders
+  const [totalSales, setTotalSales] = useState(0);
+  useEffect(() => {
+    const fetchSales = async () => {
+      if (!user?.id || storeProductIds.length === 0) return;
+      try {
+        const { count } = await (await import('@/integrations/supabase/client')).supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .in('product_id', storeProductIds)
+          .in('status', ['delivered', 'completed', 'shipped']);
+        setTotalSales(count || 0);
+      } catch { /* ignore */ }
+    };
+    fetchSales();
+  }, [user?.id, storeProductIds]);
+
   const storeStats = useMemo(() => {
     const totalReviews = storeReviews.length;
     const rating = totalReviews > 0
       ? storeReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
       : 0;
-    const totalSales = products.reduce((sum, p) => sum + ((p as any).vendas_count || 0), 0);
     return { rating, totalReviews, totalSales };
-  }, [storeReviews, products]);
+  }, [storeReviews, totalSales]);
 
   const reviews = storeReviews.slice(0, 5);
 

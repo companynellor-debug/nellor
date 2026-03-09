@@ -144,16 +144,29 @@ const FornecedorLayoutContent = () => {
 
         {/* Mobile Bottom Navigation */}
         <BottomNavFornecedor />
+
+        {/* Onboarding Tour */}
+        <Suspense fallback={null}>
+          <OnboardingTourContent />
+        </Suspense>
       </div>
     </div>
   );
+};
+
+const OnboardingTourContent = () => {
+  const { shouldShowTour, forceRestart, endTour } = useOnboardingTour();
+  // Always render - the component handles its own visibility
+  return <OnboardingTour onComplete={endTour} forceStart={forceRestart} />;
 };
 
 // Wrapper com prefetch provider
 const FornecedorLayout = () => {
   return (
     <FornecedorPrefetchProvider>
-      <FornecedorLayoutContent />
+      <OnboardingTourProvider>
+        <FornecedorLayoutContent />
+      </OnboardingTourProvider>
     </FornecedorPrefetchProvider>
   );
 };

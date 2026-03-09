@@ -229,6 +229,7 @@ const App = () => {
                 <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
                 {/* Rota de reconciliação removida - era dependente do Stripe */}
                 <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
+                <Route path="patrocinios" element={<Suspense fallback={<PageSkeleton />}><AdminPatrocinios /></Suspense>} />
                 {/* admin nellor-drop removido temporariamente */}
               </Route>
 
