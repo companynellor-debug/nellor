@@ -70,11 +70,6 @@ const Financeiro = () => {
     };
     return labels[status] || status;
   };
-
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
-
   const handleWithdraw = () => {
     if (!canWithdraw) {
       toast.error("Você precisa verificar sua conta antes de solicitar saques");
