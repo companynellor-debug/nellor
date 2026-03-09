@@ -4,18 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  DollarSign, 
-  Clock, 
-  Calendar, 
-  HelpCircle, 
+import {
+  DollarSign,
+  Clock,
+  Calendar,
+  HelpCircle,
   AlertTriangle,
   ArrowRight,
   Info,
   CheckCircle2,
   XCircle,
   Loader2,
-  Shield
+  Shield,
 } from "lucide-react";
 import { FeeTransparency } from "@/components/fornecedor/FeeTransparency";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
@@ -24,6 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { format, subDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const Recebimentos = () => {
   const navigate = useNavigate();
@@ -31,18 +32,18 @@ const Recebimentos = () => {
   const { data: verificationData, statusLabel, canWithdraw } = useIdentityVerification();
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [dateFilter, setDateFilter] = useState<'7days' | '30days' | '90days' | 'all'>('30days');
-  
+
   const isVerified = verificationData.status === 'verified';
 
   // Filtrar pedidos pagos (não cancelados) do fornecedor
   const getFilteredOrders = () => {
     const now = new Date();
     let startDate: Date | null = null;
-    
+
     if (dateFilter === '7days') startDate = subDays(now, 7);
     else if (dateFilter === '30days') startDate = subDays(now, 30);
     else if (dateFilter === '90days') startDate = subDays(now, 90);
-    
+
     return orders.filter(order => {
       const isPaid = order.payment_status === 'paid' && order.order_status !== 'cancelled';
       if (!isPaid) return false;
@@ -53,11 +54,10 @@ const Recebimentos = () => {
 
   const filteredOrders = getFilteredOrders();
 
-  // Cálculos financeiros
+  // Cálculos financeiros (APENAS taxa da plataforma 7,5%)
   const totalBruto = filteredOrders.reduce((sum, o) => sum + Number(o.total), 0);
   const comissaoNellor = totalBruto * 0.075;
-  const taxaProcessador = totalBruto * 0.0349;
-  const valorLiquido = totalBruto - comissaoNellor - taxaProcessador;
+  const valorLiquido = totalBruto - comissaoNellor;
 
   // Transações (baseado em pedidos reais)
   const transactions = filteredOrders.map(order => ({
@@ -66,9 +66,8 @@ const Recebimentos = () => {
     order: `#${order.order_number}`,
     gross: Number(order.total),
     platformFee: Number(order.total) * 0.075,
-    processorFee: Number(order.total) * 0.0349,
-    net: Number(order.total) - (Number(order.total) * 0.075) - (Number(order.total) * 0.0349),
-    status: order.order_status
+    net: Number(order.total) - (Number(order.total) * 0.075),
+    status: order.order_status,
   }));
 
   const getStatusBadge = (status: string) => {
@@ -77,10 +76,11 @@ const Recebimentos = () => {
       shipped: { label: "Em processamento", variant: "secondary" },
       preparing: { label: "Em processamento", variant: "secondary" },
       pending: { label: "Aguardando", variant: "outline" },
-      cancelled: { label: "Cancelado", variant: "destructive" }
+      cancelled: { label: "Cancelado", variant: "destructive" },
     };
     return map[status] || { label: status, variant: "outline" };
   };
+
 
   if (ordersLoading) {
     return (
