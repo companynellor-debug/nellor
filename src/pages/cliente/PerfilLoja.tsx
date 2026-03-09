@@ -59,7 +59,6 @@ const PerfilLoja = () => {
   const storeProfile = stores.find(s => s.id === resolvedId) || (slugProfile ? { id: slugProfile.id, nome: slugProfile.nome, descricao_loja: slugProfile.descricao_loja, foto_perfil_url: slugProfile.foto_perfil_url, banner_loja_url: slugProfile.banner_loja_url } : undefined);
   const storeProducts = supabaseProducts.filter(p => p.supplier_id === resolvedId);
   
-  // Filtrar avaliações dos produtos desta loja
   const storeProductIds = storeProducts.map(p => p.id?.toString()).filter(Boolean);
   const storeReviews = allReviews.filter(r => storeProductIds.includes(r.product_id));
   const averageRating = storeReviews.length > 0
