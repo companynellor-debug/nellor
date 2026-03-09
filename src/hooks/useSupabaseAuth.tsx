@@ -86,29 +86,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sanitizeStoredSession = () => {
-    try {
-      const authKeys = Object.keys(localStorage).filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'));
-      authKeys.forEach((key) => {
-        const raw = localStorage.getItem(key);
-        if (!raw) return;
-
-        const parsed = JSON.parse(raw);
-        const refreshToken = parsed?.currentSession?.refresh_token;
-        const expiresAt = parsed?.currentSession?.expires_at;
-
-        const malformedToken = typeof refreshToken !== 'string' || refreshToken.length < 20;
-        const expiredSession = typeof expiresAt === 'number' && expiresAt * 1000 < Date.now() - 5 * 60 * 1000;
-
-        if (malformedToken || expiredSession) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch (error) {
-      console.error('Error sanitizing stored session:', error);
-      clearStaleAuthStorage();
-    }
-  };
+  // Removed aggressive sanitizeStoredSession — Supabase SDK handles token refresh internally.
+  // The old implementation was deleting valid refresh tokens on page reload, causing logout.
 
   const fetchProfile = async (userId: string) => {
     try {
