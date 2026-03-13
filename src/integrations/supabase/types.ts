@@ -1569,6 +1569,7 @@ export type Database = {
           stripe_ready: boolean | null
           telefone: string | null
           tipo: Database["public"]["Enums"]["user_type"]
+          tour_completed: boolean | null
           updated_at: string | null
         }
         Insert: {
@@ -1594,6 +1595,7 @@ export type Database = {
           stripe_ready?: boolean | null
           telefone?: string | null
           tipo: Database["public"]["Enums"]["user_type"]
+          tour_completed?: boolean | null
           updated_at?: string | null
         }
         Update: {
@@ -1619,6 +1621,7 @@ export type Database = {
           stripe_ready?: boolean | null
           telefone?: string | null
           tipo?: Database["public"]["Enums"]["user_type"]
+          tour_completed?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2149,6 +2152,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "sponsored_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsorship_requests: {
+        Row: {
+          admin_response: string | null
+          banner_image_url: string | null
+          created_at: string | null
+          id: string
+          message: string | null
+          product_id: string | null
+          scheduled_date: string | null
+          status: Database["public"]["Enums"]["sponsorship_status"] | null
+          supplier_id: string
+          type: Database["public"]["Enums"]["sponsorship_type"]
+        }
+        Insert: {
+          admin_response?: string | null
+          banner_image_url?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          product_id?: string | null
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["sponsorship_status"] | null
+          supplier_id: string
+          type: Database["public"]["Enums"]["sponsorship_type"]
+        }
+        Update: {
+          admin_response?: string | null
+          banner_image_url?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          product_id?: string | null
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["sponsorship_status"] | null
+          supplier_id?: string
+          type?: Database["public"]["Enums"]["sponsorship_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsorship_requests_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -3002,6 +3052,8 @@ export type Database = {
       payout_status: "requested" | "approved" | "paid" | "rejected"
       service_provider_status: "pending" | "active" | "suspended"
       shipping_region: "norte" | "nordeste" | "centro_oeste" | "sudeste" | "sul"
+      sponsorship_status: "pending" | "approved" | "rejected" | "scheduled"
+      sponsorship_type: "produto_destaque" | "banner_homepage"
       support_status: "open" | "pending" | "closed"
       transaction_type: "sale" | "platform_fee" | "payout" | "refund"
       user_type: "cliente" | "fornecedor" | "admin"
@@ -3173,6 +3225,8 @@ export const Constants = {
       payout_status: ["requested", "approved", "paid", "rejected"],
       service_provider_status: ["pending", "active", "suspended"],
       shipping_region: ["norte", "nordeste", "centro_oeste", "sudeste", "sul"],
+      sponsorship_status: ["pending", "approved", "rejected", "scheduled"],
+      sponsorship_type: ["produto_destaque", "banner_homepage"],
       support_status: ["open", "pending", "closed"],
       transaction_type: ["sale", "platform_fee", "payout", "refund"],
       user_type: ["cliente", "fornecedor", "admin"],
