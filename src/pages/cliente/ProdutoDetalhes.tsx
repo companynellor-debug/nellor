@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Heart, Share2, Star, ShoppingCart, Package, MessageCircle, Box } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Star, ShoppingCart, Package, MessageCircle, Box, AlertCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useStores } from "@/hooks/useStores";
@@ -45,6 +45,7 @@ const ProdutoDetalhes = () => {
   const [showQuantityDialog, setShowQuantityDialog] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
+  const [variationError, setVariationError] = useState<string | null>(null);
 
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { addToCart } = useCart();
@@ -95,6 +96,22 @@ const ProdutoDetalhes = () => {
     return [...new Set(vals)];
   }, [variations]);
 
+  // Variation type label
+  const variationLabel = useMemo(() => {
+    const v = variations.find(v => v.variation_label);
+    return v?.variation_label || 'Tamanho';
+  }, [variations]);
+
+  // Check if all required variations are selected
+  const hasColors = variationColors.length > 0;
+  const hasSizes = variationSizes.length > 0;
+  const allVariationsSelected = useMemo(() => {
+    if (!hasVariations) return true;
+    if (hasColors && !selectedColor) return false;
+    if (hasSizes && !selectedSize) return false;
+    return true;
+  }, [hasVariations, hasColors, hasSizes, selectedColor, selectedSize]);
+
   const getVariationStock = (color?: string, size?: string) => {
     const v = variations.find(vr =>
       (color ? vr.color === color : !vr.color) &&
@@ -102,6 +119,15 @@ const ProdutoDetalhes = () => {
     );
     return v?.stock ?? 0;
   };
+
+  // Get the selected variation's price if it has one
+  const selectedVariation = useMemo(() => {
+    if (!hasVariations) return null;
+    return variations.find(v =>
+      (hasColors ? v.color === selectedColor : true) &&
+      (hasSizes ? (v.variation_value === selectedSize || v.size === selectedSize) : true)
+    ) || null;
+  }, [variations, hasVariations, hasColors, hasSizes, selectedColor, selectedSize]);
 
   const product = useMemo(() => {
     if (supabaseProductById) {
@@ -164,6 +190,11 @@ const ProdutoDetalhes = () => {
     }
   }, [selectedColor, variationColors]);
 
+  // Clear variation error when selections change
+  useEffect(() => {
+    if (allVariationsSelected) setVariationError(null);
+  }, [allVariationsSelected]);
+
   const handleToggleFavorite = () => { isProductFavorite ? removeFavorite(productId) : addFavorite(productId); };
 
   const handleShare = async () => {
@@ -184,16 +215,48 @@ const ProdutoDetalhes = () => {
     await copyToClipboard();
   };
 
+  const buildVariationsMap = (): Record<string, string> => {
+    const map: Record<string, string> = {};
+    if (selectedColor) map['Cor'] = selectedColor;
+    if (selectedSize) map[variationLabel] = selectedSize;
+    return map;
+  };
+
+  const getVariationImage = (): string | undefined => {
+    if (selectedColor) {
+      const colorData = variationColors.find(c => c.name === selectedColor);
+      return colorData?.imageUrl || undefined;
+    }
+    return undefined;
+  };
+
   const validateAndAddToCart = (qty: number, thenNavigate?: string) => {
     if (!product?.supplierProfileId) {
       toast({ title: 'Erro', description: 'Informações do fornecedor não encontradas.', variant: 'destructive' });
       return;
     }
+
+    // Enforce variation selection
+    if (hasVariations && !allVariationsSelected) {
+      const missing: string[] = [];
+      if (hasColors && !selectedColor) missing.push('cor');
+      if (hasSizes && !selectedSize) missing.push(variationLabel.toLowerCase());
+      setVariationError(`Selecione: ${missing.join(', ')}`);
+      toast({ title: 'Selecione as variações', description: `Escolha ${missing.join(' e ')} antes de adicionar ao carrinho.`, variant: 'destructive' });
+      return;
+    }
+
+    const variationsMap = buildVariationsMap();
+    const varImage = getVariationImage();
+    const effectivePrice = selectedVariation?.price ?? product.priceNumber;
+
     addToCart({
-      productId: product.supplierUuid || '', name: product.name, price: product.priceNumber,
-      image: product.images[0], storeId: product.supplierProfileId || '',
+      productId: product.supplierUuid || '', name: product.name, price: effectivePrice,
+      image: varImage || product.images[0], storeId: product.supplierProfileId || '',
       storeName: supplierProfile?.nome || 'Loja',
       selectedSize, selectedColor,
+      variations: Object.keys(variationsMap).length > 0 ? variationsMap : undefined,
+      variationImage: varImage,
     }, qty);
     if (thenNavigate) navigate(thenNavigate);
   };
@@ -201,15 +264,21 @@ const ProdutoDetalhes = () => {
   const handleBulkAddToCart = (items: Array<{ color: string; colorHex: string; size: string; quantity: number; price: number; imageUrl: string }>) => {
     if (!product?.supplierProfileId) return;
     items.forEach(item => {
+      const variationsMap: Record<string, string> = {};
+      if (item.color) variationsMap['Cor'] = item.color;
+      if (item.size) variationsMap[variationLabel] = item.size;
+
       addToCart({
         productId: product.supplierUuid || '',
-        name: `${product.name}${item.color ? ` - ${item.color}` : ''}${item.size ? ` (${item.size})` : ''}`,
+        name: product.name,
         price: item.price,
         image: item.imageUrl || product.images[0],
         storeId: product.supplierProfileId || '',
         storeName: supplierProfile?.nome || 'Loja',
         selectedSize: item.size || undefined,
         selectedColor: item.color || undefined,
+        variations: Object.keys(variationsMap).length > 0 ? variationsMap : undefined,
+        variationImage: item.imageUrl || undefined,
       }, item.quantity);
     });
     toast({ title: "Adicionado ao carrinho", description: `${items.reduce((s, i) => s + i.quantity, 0)} peças adicionadas.` });
@@ -236,6 +305,12 @@ const ProdutoDetalhes = () => {
   }
 
   const relatedProducts = getRelatedProducts(product.id, product.category, 4);
+
+  // Effective display price considering selected variation
+  const displayPrice = selectedVariation?.price
+    ? formatCurrencyFromDecimal(selectedVariation.price)
+    : product.price;
+  const displayPriceNumber = selectedVariation?.price ?? product.priceNumber;
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-6">
@@ -335,7 +410,7 @@ const ProdutoDetalhes = () => {
             )}
 
             <div className="py-4 border-y border-border">
-              <p className="text-3xl font-bold text-primary">{product.price}</p>
+              <p className="text-3xl font-bold text-primary">{displayPrice}</p>
               {priceTiers.length > 1 && <p className="text-xs text-muted-foreground mt-1">Preço base • veja faixas de desconto abaixo</p>}
               {minOrderQuantity > 1 && (
                 <p className="text-xs text-orange-600 font-medium mt-1">Pedido mínimo: {minOrderQuantity} unidades</p>
@@ -373,7 +448,10 @@ const ProdutoDetalhes = () => {
             {/* Color thumbnails */}
             {variationColors.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold mb-2">🎨 Cor {selectedColor && <span className="text-muted-foreground font-normal">— {selectedColor}</span>}</h3>
+                <h3 className="text-sm font-semibold mb-2">
+                  🎨 Cor {selectedColor && <span className="text-muted-foreground font-normal">— {selectedColor}</span>}
+                  {!selectedColor && <span className="text-destructive font-normal text-xs ml-2">* Obrigatório</span>}
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {variationColors.map(color => (
                     <button key={color.name} onClick={() => {
@@ -400,7 +478,10 @@ const ProdutoDetalhes = () => {
             {/* Size/variation buttons */}
             {variationSizes.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold mb-2">📏 {variations[0]?.variation_label || 'Tamanho'}</h3>
+                <h3 className="text-sm font-semibold mb-2">
+                  📏 {variationLabel}
+                  {!selectedSize && <span className="text-destructive font-normal text-xs ml-2">* Obrigatório</span>}
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {variationSizes.map(size => {
                     const stockForSize = selectedColor
@@ -417,6 +498,30 @@ const ProdutoDetalhes = () => {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* Variation error message */}
+            {variationError && (
+              <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 rounded-lg p-3">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{variationError}</span>
+              </div>
+            )}
+
+            {/* Selected variation summary */}
+            {hasVariations && allVariationsSelected && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+                <p className="text-xs font-semibold text-primary mb-1">✅ Configuração selecionada:</p>
+                <p className="text-sm font-medium">
+                  {Object.entries(buildVariationsMap()).map(([k, v]) => `${v}`).join(' • ')}
+                </p>
+                {selectedVariation && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Estoque: {selectedVariation.stock} unid.
+                    {selectedVariation.price && ` • ${formatCurrencyFromDecimal(selectedVariation.price)}`}
+                  </p>
+                )}
               </div>
             )}
 
@@ -456,7 +561,7 @@ const ProdutoDetalhes = () => {
             {product.supplierProfileId && (
               <FreightCalculator 
                 supplierId={product.supplierProfileId} 
-                subtotal={product.priceNumber}
+                subtotal={displayPriceNumber}
               />
             )}
 
@@ -471,19 +576,17 @@ const ProdutoDetalhes = () => {
               />
             )}
 
-            {/* Desktop buttons */}
-            {!hasVariations && (
-              <div className="hidden lg:flex gap-3 pt-2">
-                <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12" disabled={currentStock === 0}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) return; validateAndAddToCart(1, '/cliente/carrinho'); }}>
-                  <ShoppingCart className="h-5 w-5" />Adicionar ao Carrinho
-                </Button>
-                <Button className="flex-1 bg-primary hover:bg-primary/90 text-white h-12" disabled={currentStock === 0}
-                  onClick={(e) => { e.preventDefault(); if (currentStock === 0) return; setQuantity(1); setShowQuantityDialog(true); }}>
-                  Comprar Agora
-                </Button>
-              </div>
-            )}
+            {/* Desktop buttons - show for ALL products */}
+            <div className="hidden lg:flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12" disabled={currentStock === 0}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) return; validateAndAddToCart(1, '/cliente/carrinho'); }}>
+                <ShoppingCart className="h-5 w-5" />Adicionar ao Carrinho
+              </Button>
+              <Button className="flex-1 bg-primary hover:bg-primary/90 text-white h-12" disabled={currentStock === 0}
+                onClick={(e) => { e.preventDefault(); if (currentStock === 0) return; if (hasVariations && !allVariationsSelected) { validateAndAddToCart(1); return; } setQuantity(1); setShowQuantityDialog(true); }}>
+                Comprar Agora
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -520,6 +623,11 @@ const ProdutoDetalhes = () => {
           <DialogContent>
             <div className="space-y-4">
               <h2 className="text-xl font-bold">Selecione a quantidade</h2>
+              {allVariationsSelected && hasVariations && (
+                <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-2">
+                  {Object.entries(buildVariationsMap()).map(([k, v]) => `${v}`).join(' • ')}
+                </p>
+              )}
               <div className="flex items-center gap-4">
                 <Button variant="outline" onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</Button>
                 <Input type="number" value={quantity} onChange={(e) => { const v = parseInt(e.target.value); if (v > 0 && v <= currentStock) setQuantity(v); }} className="text-center w-20" min="1" max={currentStock} />
@@ -534,21 +642,19 @@ const ProdutoDetalhes = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Mobile buttons */}
-        {!hasVariations && (
-          <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30 lg:hidden">
-            <div className="container mx-auto flex gap-3">
-              <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2" disabled={currentStock === 0}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } validateAndAddToCart(1, '/cliente/carrinho'); }}>
-                <ShoppingCart className="h-5 w-5" />Adicionar
-              </Button>
-              <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" disabled={currentStock === 0}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } setQuantity(1); setShowQuantityDialog(true); }}>
-                Comprar
-              </Button>
-            </div>
+        {/* Mobile buttons - show for ALL products */}
+        <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30 lg:hidden">
+          <div className="container mx-auto flex gap-3">
+            <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2" disabled={currentStock === 0}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } validateAndAddToCart(1, '/cliente/carrinho'); }}>
+              <ShoppingCart className="h-5 w-5" />Adicionar
+            </Button>
+            <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" disabled={currentStock === 0}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } if (hasVariations && !allVariationsSelected) { validateAndAddToCart(1); return; } setQuantity(1); setShowQuantityDialog(true); }}>
+              Comprar
+            </Button>
           </div>
-        )}
+        </div>
       </main>
 
       <BottomNav />

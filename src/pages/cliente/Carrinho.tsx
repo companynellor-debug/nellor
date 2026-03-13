@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Truck, MapPin, Package, Loader2, CheckCircle, Share2 } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, AlertCircle, Truck, MapPin, Package, Loader2, CheckCircle, Share2, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { useSupabaseAddresses } from "@/hooks/useSupabaseAddresses";
@@ -159,6 +159,16 @@ const Carrinho = () => {
     }
   };
 
+  const getVariationSummary = (item: typeof cartItems[0]) => {
+    if (item.variations && Object.keys(item.variations).length > 0) {
+      return Object.values(item.variations).join(' • ');
+    }
+    const parts: string[] = [];
+    if (item.selectedColor) parts.push(item.selectedColor);
+    if (item.selectedSize) parts.push(item.selectedSize);
+    return parts.length > 0 ? parts.join(' • ') : null;
+  };
+
   const selectedAddress = addresses.find(a => a.id === selectedAddressId);
 
   return (
@@ -202,19 +212,20 @@ const Carrinho = () => {
             <div className="space-y-4 mb-6">
               {cartItems.map((item) => {
                 const itemTotal = item.price * item.quantity;
+                const variationSummary = getVariationSummary(item);
+                const displayImage = item.variationImage || item.image;
                 return (
                   <Card key={item.id} className="bg-white border shadow-sm p-4">
                     <div className="flex gap-4">
                       <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <img src={displayImage} alt={item.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium mb-1 line-clamp-2">{item.name}</h3>
-                        {(item.selectedColor || item.selectedSize) && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {item.selectedColor && <Badge variant="outline" className="text-xs">🎨 {item.selectedColor}</Badge>}
-                            {item.selectedSize && <Badge variant="outline" className="text-xs">📏 {item.selectedSize}</Badge>}
-                          </div>
+                        {variationSummary && (
+                          <p className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 inline-block mb-2">
+                            {variationSummary}
+                          </p>
                         )}
                         <p className="text-primary font-bold text-lg">{formatCurrencyFromDecimal(itemTotal)}</p>
                         <p className="text-xs text-muted-foreground">{formatCurrencyFromDecimal(item.price)} × {item.quantity} peças</p>
@@ -230,9 +241,21 @@ const Carrinho = () => {
                           <Plus className="h-4 w-4" />
                         </button>
                       </div>
-                      <button onClick={() => removeItem(item.id)} className="p-2 hover:bg-destructive/10 text-destructive rounded-full transition-colors">
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {/* "Add more" navigates to product page */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/cliente/produto/${item.productId}`)}
+                          className="text-primary text-xs gap-1"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Mais opções
+                        </Button>
+                        <button onClick={() => removeItem(item.id)} className="p-2 hover:bg-destructive/10 text-destructive rounded-full transition-colors">
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
                     </div>
                   </Card>
                 );
@@ -396,37 +419,22 @@ const Carrinho = () => {
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
                       <p className="font-medium mb-2">Atenção! Limites mínimos não atendidos:</p>
-                      <ul className="space-y-1 text-sm">
-                        {validation.errors.map((error, index) => (
-                          <li key={index}>• {error}</li>
-                        ))}
-                      </ul>
+                      {validation.errors.map((error, index) => (
+                        <p key={index} className="text-sm">• {error}</p>
+                      ))}
                     </AlertDescription>
                   </Alert>
                 );
               }
+              return null;
             })()}
 
-            {addresses.length === 0 && (
-              <Alert className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <p className="font-medium">Cadastre um endereço de entrega no seu perfil para finalizar o pedido.</p>
-                  <Button variant="link" className="p-0 h-auto text-primary" onClick={() => navigate("/cliente/enderecos")}>
-                    Adicionar endereço →
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => clearCart()}>Limpar Carrinho</Button>
-              <Button 
-                onClick={handleCheckout} 
-                className="flex-1 bg-primary hover:bg-primary/90 text-white h-14 text-lg font-bold"
-                disabled={addresses.length === 0 || (shippingInfo?.available === false && !isPickup)}
-              >
-                Finalizar Pedido
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => navigate("/cliente/produtos")} className="flex-1">
+                Continuar Comprando
+              </Button>
+              <Button onClick={handleCheckout} className="flex-1 bg-primary hover:bg-primary/90 text-white">
+                Finalizar Compra
               </Button>
             </div>
           </>

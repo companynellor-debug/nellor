@@ -41,35 +41,28 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 4,
-    title: "Descrição da Loja",
-    description: "Escreva uma descrição que explique o que você vende e para quem. Fornecedores com descrição completa vendem até 3x mais.",
-    selector: "[data-tour='store-bio']",
-    route: "/fornecedor/editar-loja",
-  },
-  {
-    id: 5,
     title: "Adicione seu Primeiro Produto",
-    description: "Agora vamos cadastrar seu primeiro produto. Clique aqui para começar. Lembre-se de preencher as variações de cor e tamanho para mais visibilidade.",
+    description: "Agora vamos cadastrar seu primeiro produto. Clique no botão 'Adicionar Produto' para começar.",
     selector: "[data-tour='add-product']",
     route: "/fornecedor/produtos",
     icon: Package,
   },
   {
-    id: 6,
+    id: 5,
     title: "Variações de Produto",
     description: "Produtos com variações de cor e tamanho aparecem muito mais nas buscas. Não esqueça de adicionar fotos para cada cor!",
     selector: "[data-tour='variations-section']",
     icon: Palette,
   },
   {
-    id: 7,
+    id: 6,
     title: "Faixas de Preço",
     description: "Configure preços por quantidade. Quanto mais o cliente comprar, menor o preço — isso incentiva pedidos maiores.",
     selector: "[data-tour='price-tiers']",
     icon: DollarSign,
   },
   {
-    id: 8,
+    id: 7,
     title: "Você está pronto para vender! 🚀",
     description: "Sua loja está configurada. Agora é só aguardar os primeiros pedidos. Quanto mais completo seu perfil e produtos, maior sua visibilidade no marketplace.",
     isModal: true,
@@ -103,15 +96,23 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
 
     const checkTourStatus = async () => {
       if (!user) return;
-      
-      const { data } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("id", user.id)
-        .single();
 
-      if (data && !data.onboarding_completed) {
-        // Delay start by 1 second
+      // Check localStorage flag first (set after onboarding completion)
+      const showTour = localStorage.getItem(`nellor_show_tour_${user.id}`);
+      if (showTour === 'true') {
+        localStorage.removeItem(`nellor_show_tour_${user.id}`);
+        setTimeout(() => setIsActive(true), 1000);
+        return;
+      }
+
+      // Check DB for tour_completed
+      const { data } = await (supabase
+        .from("profiles")
+        .select("tour_completed")
+        .eq("id", user.id)
+        .single() as any);
+
+      if (data && data.tour_completed === false) {
         setTimeout(() => setIsActive(true), 1000);
       }
     };
@@ -145,10 +146,7 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
       }
     };
 
-    // Initial check
     const timer = setTimeout(findElement, 500);
-
-    // Re-check on scroll/resize
     window.addEventListener("scroll", findElement);
     window.addEventListener("resize", findElement);
 
@@ -161,10 +159,10 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
 
   const completeTour = useCallback(async () => {
     if (user) {
-      await supabase
+      await (supabase
         .from("profiles")
-        .update({ onboarding_completed: true })
-        .eq("id", user.id);
+        .update({ tour_completed: true } as any)
+        .eq("id", user.id) as any);
     }
     setIsActive(false);
     onComplete?.();
@@ -196,12 +194,8 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
     const Icon = step.icon;
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-        {/* Overlay */}
         <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-        
-        {/* Modal */}
         <div className="relative bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-          {/* Header gradient */}
           <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-8 text-center">
             {Icon && (
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
@@ -210,12 +204,8 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
             )}
             <h2 className="text-2xl font-bold text-foreground">{step.title}</h2>
           </div>
-          
-          {/* Content */}
           <div className="p-6 text-center">
             <p className="text-muted-foreground mb-6">{step.description}</p>
-            
-            {/* Progress */}
             <div className="mb-6">
               <div className="flex justify-between text-xs text-muted-foreground mb-2">
                 <span>Passo {currentStep} de {TOUR_STEPS.length}</span>
@@ -223,21 +213,17 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
               </div>
               <Progress value={progress} className="h-2" />
             </div>
-            
-            {/* Buttons */}
             <div className="flex gap-3 justify-center">
               {currentStep === 1 ? (
                 <>
-                  <Button variant="outline" onClick={skipTour}>Pular</Button>
+                  <Button variant="outline" onClick={skipTour}>Pular Tour</Button>
                   <Button onClick={nextStep} className="gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    Começar
+                    <Sparkles className="w-4 h-4" />Começar
                   </Button>
                 </>
               ) : (
                 <Button onClick={completeTour} className="gap-2">
-                  <Trophy className="w-4 h-4" />
-                  Ir para o Dashboard
+                  <Trophy className="w-4 h-4" />Ir para o Dashboard
                 </Button>
               )}
             </div>
@@ -283,10 +269,7 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
           </mask>
         </defs>
         <rect
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
+          x="0" y="0" width="100%" height="100%"
           fill="rgba(0,0,0,0.75)"
           mask="url(#spotlight-mask)"
           style={{ pointerEvents: "auto" }}
@@ -308,23 +291,14 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
       )}
 
       {/* Tooltip */}
-      <div
-        style={tooltipStyle}
-        className="bg-card border border-border rounded-xl shadow-2xl w-[380px] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
-      >
-        {/* Close button */}
-        <button
-          onClick={skipTour}
-          className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted transition-colors"
-        >
+      <div style={tooltipStyle}
+        className="bg-card border border-border rounded-xl shadow-2xl w-[380px] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <button onClick={skipTour} className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted transition-colors">
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
-
         <div className="p-5">
           <h3 className="font-bold text-lg text-foreground mb-2">{step.title}</h3>
           <p className="text-sm text-muted-foreground mb-4">{step.description}</p>
-
-          {/* Progress */}
           <div className="mb-4">
             <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
               <span>Passo {currentStep} de {TOUR_STEPS.length}</span>
@@ -332,22 +306,11 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
             </div>
             <Progress value={progress} className="h-1.5" />
           </div>
-
-          {/* Navigation buttons */}
           <div className="flex gap-2 justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={skipTour}
-              className="text-muted-foreground"
-            >
-              Pular Tour
-            </Button>
+            <Button variant="ghost" size="sm" onClick={skipTour} className="text-muted-foreground">Pular Tour</Button>
             <div className="flex gap-2">
               {currentStep > 1 && (
-                <Button variant="outline" size="sm" onClick={prevStep}>
-                  Anterior
-                </Button>
+                <Button variant="outline" size="sm" onClick={prevStep}>Anterior</Button>
               )}
               <Button size="sm" onClick={nextStep}>
                 {currentStep === TOUR_STEPS.length ? "Concluir" : "Próximo"}

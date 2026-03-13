@@ -22,6 +22,7 @@ const PublicProduto = lazy(() => import("./pages/PublicProduto"));
 const PastaPublica = lazy(() => import("./pages/PastaPublica"));
 const CarrinhoCompartilhado = lazy(() => import("./pages/CarrinhoCompartilhado"));
 const Onboarding = lazy(() => import("./pages/fornecedor/Onboarding"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 // Lazy load cliente pages
 const ClienteHome = lazy(() => import("./pages/cliente/Home"));
@@ -115,6 +116,7 @@ const App = () => {
               {/* Welcome Screen - única página pública */}
               <Route path="/" element={<Welcome />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               
               {/* Public Product Share Route (mantido para links de compartilhamento) */}
               <Route path="/p/:id" element={<PublicProduto />} />
