@@ -9,7 +9,7 @@ interface TypingUser {
 export const useTypingPresence = (chatId: string, userId: string | undefined) => {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!chatId || !userId) return;
