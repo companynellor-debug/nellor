@@ -57,8 +57,8 @@ const Patrocinios = () => {
       }
 
       // Enrich with supplier and product names
-      const supplierIds = [...new Set((data || []).map((r: any) => r.supplier_id))];
-      const productIds = [...new Set((data || []).filter((r: any) => r.product_id).map((r: any) => r.product_id))];
+      const supplierIds = [...new Set((data || []).map((r: any) => r.supplier_id))] as string[];
+      const productIds = [...new Set((data || []).filter((r: any) => r.product_id).map((r: any) => r.product_id))] as string[];
 
       const { data: suppliers } = await supabase
         .from("profiles")
