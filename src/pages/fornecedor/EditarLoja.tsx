@@ -100,11 +100,13 @@ const EditarLoja = () => {
     const fetchSales = async () => {
       if (!user?.id || storeProductIds.length === 0) return;
       try {
-        const { count } = await (await import('@/integrations/supabase/client')).supabase
+        const { supabase } = await import('@/integrations/supabase/client');
+        const result = await (supabase
           .from('orders')
-          .select('*', { count: 'exact', head: true })
+          .select('*', { count: 'exact', head: true }) as any)
           .in('product_id', storeProductIds)
           .in('status', ['delivered', 'completed', 'shipped']);
+        const count = result?.count;
         setTotalSales(count || 0);
       } catch { /* ignore */ }
     };
