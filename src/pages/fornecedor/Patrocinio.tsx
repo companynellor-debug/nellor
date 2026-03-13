@@ -52,35 +52,21 @@ const Patrocinio = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Try new table first
-      const { data: newData, error: newError } = await supabase
+      const { data, error } = await (supabase
         .from("sponsorship_requests" as any)
         .select("*")
         .eq("supplier_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }) as any);
 
-      let data: any[] = [];
-
-      if (!newError && newData) {
-        data = newData;
-      } else {
-        // Fallback to old table
-        const { data: oldData } = await supabase
-          .from("sponsored_products")
-          .select("*")
-          .eq("supplier_id", user.id)
-          .order("created_at", { ascending: false });
-
-        data = (oldData || []).map((item: any) => ({
-          ...item,
-          type: "produto_destaque" as const,
-          message: item.description,
-          banner_image_url: item.banner_url,
-        }));
+      if (error) {
+        console.error("Error fetching sponsorship requests:", error);
+        setRequests([]);
+        setLoading(false);
+        return;
       }
 
       // Enrich with product names
-      const enriched = data.map((r: any) => {
+      const enriched = (data || []).map((r: any) => {
         const product = products.find((p) => p.id === r.product_id);
         return { ...r, product_name: product?.name || null };
       });
@@ -97,13 +83,11 @@ const Patrocinio = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Check file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast.error("Imagem muito grande. Máximo 2MB.");
       return;
     }
 
-    // Check file type
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       toast.error("Formato inválido. Use JPG, PNG ou WebP.");
       return;
@@ -130,8 +114,7 @@ const Patrocinio = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
-      // Try new table first
-      const { error: newError } = await supabase
+      const { error } = await (supabase
         .from("sponsorship_requests" as any)
         .insert({
           supplier_id: user.id,
@@ -139,23 +122,9 @@ const Patrocinio = () => {
           product_id: type === "produto_destaque" ? selectedProduct : null,
           banner_image_url: type === "banner_homepage" ? bannerFile : null,
           message: message || null,
-        });
+        }) as any);
 
-      if (newError) {
-        // Fallback to old table (only for product sponsorship)
-        if (type === "produto_destaque") {
-          await supabase
-            .from("sponsored_products")
-            .insert({
-              product_id: selectedProduct,
-              supplier_id: user.id,
-              description: message || null,
-              banner_url: bannerFile || null,
-            } as any);
-        } else {
-          throw new Error("Sistema de banners não disponível no momento");
-        }
-      }
+      if (error) throw error;
 
       toast.success("Solicitação enviada! Aguarde aprovação do admin.");
       setModalOpen(false);
@@ -256,32 +225,18 @@ const Patrocinio = () => {
           {requests.map((req) => (
             <Card key={req.id} className="p-5">
               <div className="flex flex-col sm:flex-row gap-4">
-                {/* Banner preview */}
                 {req.banner_image_url && (
                   <div className="w-full sm:w-40 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                    <img
-                      src={req.banner_image_url}
-                      alt="Banner"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={req.banner_image_url} alt="Banner" className="w-full h-full object-cover" />
                   </div>
                 )}
-
-                {/* Info */}
                 <div className="flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     {getTypeBadge(req.type)}
                     {getStatusBadge(req.status)}
                   </div>
-
-                  {req.product_name && (
-                    <p className="font-medium">{req.product_name}</p>
-                  )}
-
-                  {req.message && (
-                    <p className="text-sm text-muted-foreground">{req.message}</p>
-                  )}
-
+                  {req.product_name && <p className="font-medium">{req.product_name}</p>}
+                  {req.message && <p className="text-sm text-muted-foreground">{req.message}</p>}
                   {req.admin_response && (
                     <div className="bg-muted/50 p-3 rounded-lg">
                       <p className="text-xs text-muted-foreground">
@@ -289,13 +244,11 @@ const Patrocinio = () => {
                       </p>
                     </div>
                   )}
-
                   {req.scheduled_date && (
                     <p className="text-xs text-primary">
                       📅 Agendado para {new Date(req.scheduled_date).toLocaleDateString("pt-BR")}
                     </p>
                   )}
-
                   <p className="text-xs text-muted-foreground">
                     Enviado em {new Date(req.created_at).toLocaleDateString("pt-BR")}
                   </p>
@@ -317,32 +270,17 @@ const Patrocinio = () => {
           </DialogHeader>
 
           <div className="space-y-5">
-            {/* Type Selection */}
             <div>
               <Label className="text-sm font-medium">Tipo de Patrocínio *</Label>
               <div className="grid grid-cols-2 gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setType("produto_destaque")}
-                  className={`p-4 rounded-lg border-2 text-left transition-all ${
-                    type === "produto_destaque"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-muted-foreground/50"
-                  }`}
-                >
+                <button type="button" onClick={() => setType("produto_destaque")}
+                  className={`p-4 rounded-lg border-2 text-left transition-all ${type === "produto_destaque" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50"}`}>
                   <Package className={`h-6 w-6 mb-2 ${type === "produto_destaque" ? "text-primary" : "text-muted-foreground"}`} />
                   <p className="font-medium text-sm">Produto em Destaque</p>
                   <p className="text-xs text-muted-foreground mt-1">Badge "Patrocinado" na vitrine</p>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setType("banner_homepage")}
-                  className={`p-4 rounded-lg border-2 text-left transition-all ${
-                    type === "banner_homepage"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-muted-foreground/50"
-                  }`}
-                >
+                <button type="button" onClick={() => setType("banner_homepage")}
+                  className={`p-4 rounded-lg border-2 text-left transition-all ${type === "banner_homepage" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50"}`}>
                   <Image className={`h-6 w-6 mb-2 ${type === "banner_homepage" ? "text-primary" : "text-muted-foreground"}`} />
                   <p className="font-medium text-sm">Banner na Homepage</p>
                   <p className="text-xs text-muted-foreground mt-1">Carrossel principal</p>
@@ -350,41 +288,28 @@ const Patrocinio = () => {
               </div>
             </div>
 
-            {/* Product Selection (for produto_destaque) */}
             {type === "produto_destaque" && (
               <div>
                 <Label>Produto *</Label>
                 <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue placeholder="Selecione um produto" />
-                  </SelectTrigger>
+                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Selecione um produto" /></SelectTrigger>
                   <SelectContent>
                     {products.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             )}
 
-            {/* Banner Upload (for banner_homepage) */}
             {type === "banner_homepage" && (
               <div>
                 <Label>Imagem do Banner * <span className="text-xs text-muted-foreground">(JPG/PNG, máx. 2MB)</span></Label>
                 {bannerFile ? (
                   <div className="relative mt-2">
-                    <img
-                      src={bannerFile}
-                      alt="Preview"
-                      className="w-full h-40 object-cover rounded-lg border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setBannerFile(null)}
-                      className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 shadow-lg hover:bg-destructive/90"
-                    >
+                    <img src={bannerFile} alt="Preview" className="w-full h-40 object-cover rounded-lg border" />
+                    <button type="button" onClick={() => setBannerFile(null)}
+                      className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 shadow-lg hover:bg-destructive/90">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -393,30 +318,18 @@ const Patrocinio = () => {
                     <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                     <span className="text-sm text-muted-foreground">Clique para enviar</span>
                     <span className="text-xs text-muted-foreground mt-1">Recomendado: 1200x400px</span>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={handleBannerUpload}
-                    />
+                    <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleBannerUpload} />
                   </label>
                 )}
               </div>
             )}
 
-            {/* Message */}
             <div>
               <Label>Mensagem para o Admin (opcional)</Label>
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Adicione informações sobre sua campanha..."
-                rows={3}
-                className="mt-1.5"
-              />
+              <Textarea value={message} onChange={(e) => setMessage(e.target.value)}
+                placeholder="Adicione informações sobre sua campanha..." rows={3} className="mt-1.5" />
             </div>
 
-            {/* Info */}
             <div className="flex gap-2 p-3 bg-muted/50 rounded-lg">
               <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground">
@@ -426,21 +339,9 @@ const Patrocinio = () => {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setModalOpen(false)}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
             <Button onClick={handleSubmit} disabled={submitting} className="gap-2">
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Megaphone className="h-4 w-4" />
-                  Enviar Solicitação
-                </>
-              )}
+              {submitting ? <><Loader2 className="h-4 w-4 animate-spin" />Enviando...</> : <><Megaphone className="h-4 w-4" />Enviar Solicitação</>}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -14,6 +14,10 @@ export interface CartItem {
   minValue?: number;
   selectedSize?: string;
   selectedColor?: string;
+  /** All variation selections, e.g. {"Cor":"Preto","Memória":"128GB","RAM":"6GB"} */
+  variations?: Record<string, string>;
+  /** Image specific to the selected color variation */
+  variationImage?: string;
 }
 
 export const useCart = () => {
@@ -49,19 +53,27 @@ export const useCart = () => {
       return false;
     }
 
-    // Match by productId + size + color combination
-    const existingItem = cartItems.find(i => 
-      i.productId === item.productId && 
-      i.selectedSize === item.selectedSize && 
-      i.selectedColor === item.selectedColor
-    );
+    // Build a unique key from productId + all variation values
+    const variationKey = item.variations
+      ? Object.values(item.variations).sort().join('|')
+      : `${item.selectedSize || ''}|${item.selectedColor || ''}`;
+
+    const existingItem = cartItems.find(i => {
+      const existingKey = i.variations
+        ? Object.values(i.variations).sort().join('|')
+        : `${i.selectedSize || ''}|${i.selectedColor || ''}`;
+      return i.productId === item.productId && existingKey === variationKey;
+    });
 
     if (existingItem) {
-      const updated = cartItems.map(i =>
-        (i.productId === item.productId && i.selectedSize === item.selectedSize && i.selectedColor === item.selectedColor)
+      const updated = cartItems.map(i => {
+        const iKey = i.variations
+          ? Object.values(i.variations).sort().join('|')
+          : `${i.selectedSize || ''}|${i.selectedColor || ''}`;
+        return (i.productId === item.productId && iKey === variationKey)
           ? { ...i, quantity: i.quantity + requestedQuantity }
-          : i
-      );
+          : i;
+      });
       saveCart(updated);
     } else {
       const newItem: CartItem = { ...item, id: Date.now(), quantity: requestedQuantity };
