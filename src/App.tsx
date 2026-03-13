@@ -116,6 +116,7 @@ const App = () => {
               {/* Welcome Screen - única página pública */}
               <Route path="/" element={<Welcome />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               
               {/* Public Product Share Route (mantido para links de compartilhamento) */}
               <Route path="/p/:id" element={<PublicProduto />} />
