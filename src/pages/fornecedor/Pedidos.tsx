@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info, DollarSign, Banknote } from "lucide-react";
+import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info, DollarSign } from "lucide-react";
 import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const Pedidos = () => {
   const navigate = useNavigate();
@@ -80,21 +81,19 @@ const Pedidos = () => {
   };
 
   const getTransferStatus = (order: Order) => {
-    if (order.payment_method === 'cartao' && order.payment_status === 'paid' && order.stripe_payment_intent_id) {
-      return { label: "Automático (Stripe)", color: "bg-green-100 text-green-800", icon: CheckCircle };
+    if (order.payment_status === 'paid') {
+      return { label: "Repasse ao fornecedor", color: "bg-green-100 text-green-800", icon: CheckCircle };
     }
-    if (order.payment_status === 'paid' && !order.stripe_payment_intent_id) {
-      return { label: "Pendente manual", color: "bg-yellow-100 text-yellow-800", icon: Banknote };
-    }
+
     return { label: "Aguardando pagamento", color: "bg-gray-100 text-gray-800", icon: null };
   };
 
   const calculateOrderBreakdown = (order: Order) => {
     const total = Number(order.total);
-    const comissaoNellor = total * 0.075;
-    const taxaStripe = order.payment_method === 'cartao' ? total * 0.034 : 0;
-    const valorLiquido = total - comissaoNellor - taxaStripe;
-    return { total, comissaoNellor, taxaStripe, valorLiquido };
+    const taxaPlataforma = Number(order.platform_fee ?? total * 0.075);
+    const valorLiquidoFornecedor = Number(order.supplier_amount ?? (total - taxaPlataforma));
+
+    return { total, taxaPlataforma, valorLiquidoFornecedor };
   };
 
   const handleStatusChange = async (orderId: string, newStatus: Order['order_status']) => {
@@ -252,7 +251,7 @@ const Pedidos = () => {
                     </div>
                     <div>
                       <p className="text-muted-foreground text-[10px] sm:text-xs">Valor Total</p>
-                      <p className="font-semibold text-primary text-sm sm:text-base">R$ {Number(order.total).toFixed(2)}</p>
+                      <p className="font-semibold text-primary text-sm sm:text-base">{formatCurrency(order.total)}</p>
                     </div>
                   </div>
 
@@ -267,11 +266,10 @@ const Pedidos = () => {
                         {transferStatus.label}
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] sm:text-xs">
-                      <div><span className="text-muted-foreground">Bruto:</span><p className="font-medium">R$ {breakdown.total.toFixed(2)}</p></div>
-                      <div><span className="text-muted-foreground">Comissão (7,5%):</span><p className="font-medium text-purple-600">-R$ {breakdown.comissaoNellor.toFixed(2)}</p></div>
-                      <div><span className="text-muted-foreground">{order.payment_method === 'cartao' ? 'Taxa Stripe:' : 'Taxa:'}</span><p className="font-medium text-orange-600">-R$ {breakdown.taxaStripe.toFixed(2)}</p></div>
-                      <div><span className="text-muted-foreground">Líquido:</span><p className="font-semibold text-green-600">R$ {breakdown.valorLiquido.toFixed(2)}</p></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px] sm:text-xs">
+                      <div><span className="text-muted-foreground">Bruto:</span><p className="font-medium">{formatCurrency(breakdown.total)}</p></div>
+                      <div><span className="text-muted-foreground">Taxa Nellor (7,5%):</span><p className="font-medium text-purple-600">-{formatCurrency(breakdown.taxaPlataforma)}</p></div>
+                      <div><span className="text-muted-foreground">Líquido fornecedor:</span><p className="font-semibold text-green-600">{formatCurrency(breakdown.valorLiquidoFornecedor)}</p></div>
                     </div>
                   </div>
                   
@@ -307,9 +305,8 @@ const Pedidos = () => {
                       <div><p className="text-sm text-muted-foreground">Status</p><Badge className={cn(getPaymentStatusBadge(selectedOrder.payment_status).color)}>{getPaymentStatusBadge(selectedOrder.payment_status).label}</Badge></div>
                     </div>
                     <div className="mt-4 pt-4 border-t space-y-2">
-                      <div className="flex justify-between text-sm"><span>Comissão Nellor (7,5%)</span><span className="text-purple-600">- R$ {breakdown.comissaoNellor.toFixed(2)}</span></div>
-                      <div className="flex justify-between text-sm"><span>Taxa Stripe (est. ~3,4%)</span><span className="text-orange-600">- R$ {breakdown.taxaStripe.toFixed(2)}</span></div>
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Valor líquido estimado</span><span className="text-green-600">R$ {breakdown.valorLiquido.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-sm"><span>Taxa Nellor (7,5%)</span><span className="text-purple-600">- {formatCurrency(breakdown.taxaPlataforma)}</span></div>
+                      <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Valor líquido fornecedor</span><span className="text-green-600">{formatCurrency(breakdown.valorLiquidoFornecedor)}</span></div>
                     </div>
                   </div>
                 </Card>
@@ -392,17 +389,17 @@ const Pedidos = () => {
                               {item.selectedColor && <Badge variant="outline" className="text-xs">🎨 {item.selectedColor}</Badge>}
                               {item.selectedSize && <Badge variant="outline" className="text-xs">📏 {item.selectedSize}</Badge>}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">{item.price ? `R$ ${Number(item.price).toFixed(2)}/un` : ''}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{item.price ? `${formatCurrency(item.price)}/un` : ''}</p>
                           </div>
                         </div>
-                        <p className="font-semibold">R$ {Number((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
+                        <p className="font-semibold">{formatCurrency(Number(item.price || 0) * Number(item.quantity || 0))}</p>
                       </div>
                     ))}
                   </div>
                   {totalPieces > 0 && (
                     <div className="flex justify-between items-center mt-3 pt-3 border-t">
                       <span className="text-sm font-medium">Total de peças: <span className="font-bold">{totalPieces}</span></span>
-                      <span className="text-lg font-bold text-primary">R$ {Number(selectedOrder.total).toFixed(2)}</span>
+                      <span className="text-lg font-bold text-primary">{formatCurrency(selectedOrder.total)}</span>
                     </div>
                   )}
                 </div>
@@ -428,7 +425,7 @@ const Pedidos = () => {
 
                 <div className="bg-muted/50 p-3 rounded-lg text-xs text-muted-foreground">
                   <Info className="h-4 w-4 inline mr-1" />
-                  Os pagamentos são processados automaticamente via Stripe. Não há opção de saque manual.
+                  O valor líquido do pedido já considera apenas a taxa da plataforma Nellor (7,5%).
                 </div>
               </div>
             );

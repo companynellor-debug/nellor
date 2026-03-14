@@ -1,3 +1,5 @@
+import { formatCurrency } from "@/utils/formatCurrency";
+
 // Utility functions for PWA push notifications
 
 export const requestNotificationPermission = async (): Promise<boolean> => {
@@ -164,7 +166,7 @@ export const showOrderNotification = async (
   buyerName?: string
 ) => {
   const title = '🛒 Novo Pedido Recebido!';
-  const body = `Pedido #${orderNumber} - R$ ${total.toFixed(2)}${buyerName ? ` de ${buyerName}` : ''}`;
+  const body = `Pedido #${orderNumber} - ${formatCurrency(total)}${buyerName ? ` de ${buyerName}` : ''}`;
 
   await showPushNotification(title, {
     body,
@@ -177,11 +179,11 @@ export const showSupplierNotification = async (
   supplierName: string,
   type: 'registered' | 'stripe_connected'
 ) => {
-  const title = type === 'stripe_connected' 
-    ? '💳 Stripe Conectado!' 
+  const title = type === 'stripe_connected'
+    ? '✅ Conta financeira configurada!'
     : '🏪 Novo Fornecedor!';
   const body = type === 'stripe_connected'
-    ? `${supplierName} conectou sua conta Stripe`
+    ? `${supplierName} configurou a conta financeira`
     : `${supplierName} se cadastrou na plataforma`;
 
   await showPushNotification(title, {
@@ -204,7 +206,7 @@ export const showPaymentNotification = async (
 
   const { emoji, text } = statusMap[status];
   const title = `${emoji} ${text}!`;
-  const body = `Pedido #${orderNumber} - R$ ${total.toFixed(2)}`;
+  const body = `Pedido #${orderNumber} - ${formatCurrency(total)}`;
 
   await showPushNotification(title, {
     body,

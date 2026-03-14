@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 const getNotificationIcon = (type: AdminNotificationType) => {
   switch (type) {
@@ -106,7 +107,7 @@ const NotificationItem = ({
           <div className="flex items-center justify-between mt-1">
             {notification.value != null && (
               <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-                R$ {notification.value.toFixed(2).replace('.', ',')}
+                {formatCurrency(notification.value)}
               </span>
             )}
             <span className="text-[10px] text-muted-foreground">

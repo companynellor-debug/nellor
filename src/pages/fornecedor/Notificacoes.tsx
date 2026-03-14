@@ -6,6 +6,7 @@ import { useSupplierNotifications } from "@/hooks/useSupplierNotifications";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import logo from "@/assets/logo.png";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const Notificacoes = () => {
   const {
@@ -75,7 +76,7 @@ const Notificacoes = () => {
                   <div className="flex-1 min-w-0 overflow-hidden">
                     <h3 className="text-xs md:text-base font-bold mb-0.5 truncate">{notification.title}</h3>
                     <p className="text-[10px] md:text-sm opacity-90 truncate">{notification.body}</p>
-                    {total != null && total !== undefined && <p className="text-[10px] md:text-sm font-medium mt-0.5 md:mt-1 truncate">R$ {total.toFixed(2).replace('.', ',')}</p>}
+                    {total != null && total !== undefined && <p className="text-[10px] md:text-sm font-medium mt-0.5 md:mt-1 truncate">{formatCurrency(total)}</p>}
                   </div>
 
                   
