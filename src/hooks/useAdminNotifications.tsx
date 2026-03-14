@@ -8,6 +8,7 @@ import {
   requestNotificationPermission,
   getNotificationPermission
 } from '@/utils/pushNotifications';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 export type AdminNotificationType = 'sale' | 'commission' | 'alert' | 'supplier' | 'payment' | 'order_update' | 'order_status_changed' | 'payment_confirmed' | 'new_message' | 'promotion' | 'general';
 

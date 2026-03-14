@@ -6,6 +6,7 @@ import { useSupplierNotifications } from "@/hooks/useSupplierNotifications";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import logo from "@/assets/logo.png";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const Notificacoes = () => {
   const {

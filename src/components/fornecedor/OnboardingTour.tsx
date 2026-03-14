@@ -94,25 +94,13 @@ const OnboardingTour = ({ onComplete, forceStart = false }: OnboardingTourProps)
       return;
     }
 
-    const checkTourStatus = async () => {
+    const checkTourStatus = () => {
       if (!user) return;
 
-      // Check localStorage flag first (set after onboarding completion)
+      // Inicia automaticamente apenas após concluir o onboarding inicial
       const showTour = localStorage.getItem(`nellor_show_tour_${user.id}`);
       if (showTour === 'true') {
         localStorage.removeItem(`nellor_show_tour_${user.id}`);
-        setTimeout(() => setIsActive(true), 1000);
-        return;
-      }
-
-      // Check DB for tour_completed
-      const { data } = await (supabase
-        .from("profiles")
-        .select("tour_completed")
-        .eq("id", user.id)
-        .single() as any);
-
-      if (data && data.tour_completed === false) {
         setTimeout(() => setIsActive(true), 1000);
       }
     };

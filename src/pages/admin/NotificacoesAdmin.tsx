@@ -12,6 +12,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import logo from '@/assets/logo.png';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 const getTypeLabel = (type: AdminNotificationType) => {
   const map: Record<string, string> = {

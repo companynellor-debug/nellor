@@ -1,3 +1,5 @@
+import { formatCurrency } from "@/utils/formatCurrency";
+
 // Utility functions for PWA push notifications
 
 export const requestNotificationPermission = async (): Promise<boolean> => {

@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 const getNotificationIcon = (type: AdminNotificationType) => {
   switch (type) {
