@@ -305,9 +305,8 @@ const Pedidos = () => {
                       <div><p className="text-sm text-muted-foreground">Status</p><Badge className={cn(getPaymentStatusBadge(selectedOrder.payment_status).color)}>{getPaymentStatusBadge(selectedOrder.payment_status).label}</Badge></div>
                     </div>
                     <div className="mt-4 pt-4 border-t space-y-2">
-                      <div className="flex justify-between text-sm"><span>Comissão Nellor (7,5%)</span><span className="text-purple-600">- R$ {breakdown.comissaoNellor.toFixed(2)}</span></div>
-                      <div className="flex justify-between text-sm"><span>Taxa Stripe (est. ~3,4%)</span><span className="text-orange-600">- R$ {breakdown.taxaStripe.toFixed(2)}</span></div>
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Valor líquido estimado</span><span className="text-green-600">R$ {breakdown.valorLiquido.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-sm"><span>Taxa Nellor (7,5%)</span><span className="text-purple-600">- {formatCurrency(breakdown.taxaPlataforma)}</span></div>
+                      <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Valor líquido fornecedor</span><span className="text-green-600">{formatCurrency(breakdown.valorLiquidoFornecedor)}</span></div>
                     </div>
                   </div>
                 </Card>
