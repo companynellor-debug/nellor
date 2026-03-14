@@ -425,7 +425,7 @@ const Pedidos = () => {
 
                 <div className="bg-muted/50 p-3 rounded-lg text-xs text-muted-foreground">
                   <Info className="h-4 w-4 inline mr-1" />
-                  Os pagamentos são processados automaticamente via Stripe. Não há opção de saque manual.
+                  O valor líquido do pedido já considera apenas a taxa da plataforma Nellor (7,5%).
                 </div>
               </div>
             );
