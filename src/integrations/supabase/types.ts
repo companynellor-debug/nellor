@@ -2727,6 +2727,23 @@ export type Database = {
           user_photo: string
         }[]
       }
+      get_admin_sponsorship_requests: {
+        Args: never
+        Returns: {
+          admin_response: string
+          banner_image_url: string
+          created_at: string
+          id: string
+          message: string
+          product_id: string
+          product_name: string
+          scheduled_date: string
+          status: Database["public"]["Enums"]["sponsorship_status"]
+          supplier_id: string
+          supplier_name: string
+          type: Database["public"]["Enums"]["sponsorship_type"]
+        }[]
+      }
       get_admin_stats: {
         Args: never
         Returns: {
