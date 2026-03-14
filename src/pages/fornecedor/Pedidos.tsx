@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info, DollarSign, Banknote } from "lucide-react";
+import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info, DollarSign } from "lucide-react";
 import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const Pedidos = () => {
   const navigate = useNavigate();
