@@ -166,7 +166,7 @@ export const showOrderNotification = async (
   buyerName?: string
 ) => {
   const title = '🛒 Novo Pedido Recebido!';
-  const body = `Pedido #${orderNumber} - R$ ${total.toFixed(2)}${buyerName ? ` de ${buyerName}` : ''}`;
+  const body = `Pedido #${orderNumber} - ${formatCurrency(total)}${buyerName ? ` de ${buyerName}` : ''}`;
 
   await showPushNotification(title, {
     body,
