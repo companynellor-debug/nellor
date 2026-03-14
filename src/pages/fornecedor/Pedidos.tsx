@@ -389,17 +389,17 @@ const Pedidos = () => {
                               {item.selectedColor && <Badge variant="outline" className="text-xs">🎨 {item.selectedColor}</Badge>}
                               {item.selectedSize && <Badge variant="outline" className="text-xs">📏 {item.selectedSize}</Badge>}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">{item.price ? `R$ ${Number(item.price).toFixed(2)}/un` : ''}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{item.price ? `${formatCurrency(item.price)}/un` : ''}</p>
                           </div>
                         </div>
-                        <p className="font-semibold">R$ {Number((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
+                        <p className="font-semibold">{formatCurrency(Number(item.price || 0) * Number(item.quantity || 0))}</p>
                       </div>
                     ))}
                   </div>
                   {totalPieces > 0 && (
                     <div className="flex justify-between items-center mt-3 pt-3 border-t">
                       <span className="text-sm font-medium">Total de peças: <span className="font-bold">{totalPieces}</span></span>
-                      <span className="text-lg font-bold text-primary">R$ {Number(selectedOrder.total).toFixed(2)}</span>
+                      <span className="text-lg font-bold text-primary">{formatCurrency(selectedOrder.total)}</span>
                     </div>
                   )}
                 </div>
