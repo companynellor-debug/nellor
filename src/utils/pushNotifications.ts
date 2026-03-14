@@ -179,11 +179,11 @@ export const showSupplierNotification = async (
   supplierName: string,
   type: 'registered' | 'stripe_connected'
 ) => {
-  const title = type === 'stripe_connected' 
-    ? '💳 Stripe Conectado!' 
+  const title = type === 'stripe_connected'
+    ? '✅ Conta financeira configurada!'
     : '🏪 Novo Fornecedor!';
   const body = type === 'stripe_connected'
-    ? `${supplierName} conectou sua conta Stripe`
+    ? `${supplierName} configurou a conta financeira`
     : `${supplierName} se cadastrou na plataforma`;
 
   await showPushNotification(title, {
