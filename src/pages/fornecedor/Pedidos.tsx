@@ -251,7 +251,7 @@ const Pedidos = () => {
                     </div>
                     <div>
                       <p className="text-muted-foreground text-[10px] sm:text-xs">Valor Total</p>
-                      <p className="font-semibold text-primary text-sm sm:text-base">R$ {Number(order.total).toFixed(2)}</p>
+                      <p className="font-semibold text-primary text-sm sm:text-base">{formatCurrency(order.total)}</p>
                     </div>
                   </div>
 
@@ -266,11 +266,10 @@ const Pedidos = () => {
                         {transferStatus.label}
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] sm:text-xs">
-                      <div><span className="text-muted-foreground">Bruto:</span><p className="font-medium">R$ {breakdown.total.toFixed(2)}</p></div>
-                      <div><span className="text-muted-foreground">Comissão (7,5%):</span><p className="font-medium text-purple-600">-R$ {breakdown.comissaoNellor.toFixed(2)}</p></div>
-                      <div><span className="text-muted-foreground">{order.payment_method === 'cartao' ? 'Taxa Stripe:' : 'Taxa:'}</span><p className="font-medium text-orange-600">-R$ {breakdown.taxaStripe.toFixed(2)}</p></div>
-                      <div><span className="text-muted-foreground">Líquido:</span><p className="font-semibold text-green-600">R$ {breakdown.valorLiquido.toFixed(2)}</p></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px] sm:text-xs">
+                      <div><span className="text-muted-foreground">Bruto:</span><p className="font-medium">{formatCurrency(breakdown.total)}</p></div>
+                      <div><span className="text-muted-foreground">Taxa Nellor (7,5%):</span><p className="font-medium text-purple-600">-{formatCurrency(breakdown.taxaPlataforma)}</p></div>
+                      <div><span className="text-muted-foreground">Líquido fornecedor:</span><p className="font-semibold text-green-600">{formatCurrency(breakdown.valorLiquidoFornecedor)}</p></div>
                     </div>
                   </div>
                   
