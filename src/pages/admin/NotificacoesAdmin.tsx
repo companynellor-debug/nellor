@@ -80,19 +80,19 @@ const NotificationCard = ({ notification, onMarkAsRead }: { notification: AdminN
             {notification.value != null && notification.type !== 'commission' && (
               <div className="flex items-center gap-1.5 bg-black/30 rounded-lg px-2 py-1">
                 <span className="text-[10px] text-white/70">Valor:</span>
-                <span className="text-xs md:text-sm font-bold text-white">R$ {notification.value.toFixed(2).replace('.', ',')}</span>
+                <span className="text-xs md:text-sm font-bold text-white">{formatCurrency(notification.value)}</span>
               </div>
             )}
             {notification.type === 'sale' && commission != null && (
               <div className="flex items-center gap-1.5 bg-black/30 rounded-lg px-2 py-1">
                 <span className="text-[10px] text-white/70">Comissão 7,5%:</span>
-                <span className="text-xs md:text-sm font-bold text-green-300">R$ {commission.toFixed(2).replace('.', ',')}</span>
+                <span className="text-xs md:text-sm font-bold text-green-300">{formatCurrency(commission)}</span>
               </div>
             )}
             {notification.type === 'commission' && notification.value != null && (
               <div className="flex items-center gap-1.5 bg-green-500/30 rounded-lg px-2.5 py-1.5">
                 <DollarSign className="h-4 w-4 text-green-300" />
-                <span className="text-sm font-bold text-green-300">+ R$ {notification.value.toFixed(2).replace('.', ',')}</span>
+                <span className="text-sm font-bold text-green-300">+ {formatCurrency(notification.value)}</span>
               </div>
             )}
           </div>

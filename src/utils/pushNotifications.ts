@@ -206,7 +206,7 @@ export const showPaymentNotification = async (
 
   const { emoji, text } = statusMap[status];
   const title = `${emoji} ${text}!`;
-  const body = `Pedido #${orderNumber} - R$ ${total.toFixed(2)}`;
+  const body = `Pedido #${orderNumber} - ${formatCurrency(total)}`;
 
   await showPushNotification(title, {
     body,

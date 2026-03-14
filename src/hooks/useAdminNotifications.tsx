@@ -131,7 +131,7 @@ export const useAdminNotifications = () => {
         async (payload) => {
           const order = payload.new as any;
           playNotificationSound();
-          toast({ title: '🛒 Novo Pedido!', description: `Pedido #${order.order_number} - R$ ${Number(order.total)?.toFixed(2)}` });
+          toast({ title: '🛒 Novo Pedido!', description: `Pedido #${order.order_number} - ${formatCurrency(Number(order.total))}` });
           await showOrderNotification(order.order_number, Number(order.total), order.buyer_name);
           fetchNotifications(0);
         }
@@ -143,9 +143,9 @@ export const useAdminNotifications = () => {
           if (order?.payment_status === 'paid' && oldOrder?.payment_status !== 'paid') {
             const commission = Number(order.platform_fee) || Number(order.total) * 0.075;
             playNotificationSound();
-            toast({ title: '✅ Pagamento Confirmado!', description: `Pedido #${order.order_number} - R$ ${Number(order.total)?.toFixed(2)}` });
+            toast({ title: '✅ Pagamento Confirmado!', description: `Pedido #${order.order_number} - ${formatCurrency(Number(order.total))}` });
             setTimeout(() => {
-              toast({ title: '💰 Comissão Recebida!', description: `R$ ${commission.toFixed(2).replace('.', ',')} (7,5%)` });
+              toast({ title: '💰 Comissão Recebida!', description: `${formatCurrency(commission)} (7,5%)` });
             }, 1500);
             await showPaymentNotification(order.order_number, Number(order.total), 'paid');
             fetchNotifications(0);
