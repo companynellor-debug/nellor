@@ -81,21 +81,19 @@ const Pedidos = () => {
   };
 
   const getTransferStatus = (order: Order) => {
-    if (order.payment_method === 'cartao' && order.payment_status === 'paid' && order.stripe_payment_intent_id) {
-      return { label: "Automático (Stripe)", color: "bg-green-100 text-green-800", icon: CheckCircle };
+    if (order.payment_status === 'paid') {
+      return { label: "Repasse ao fornecedor", color: "bg-green-100 text-green-800", icon: CheckCircle };
     }
-    if (order.payment_status === 'paid' && !order.stripe_payment_intent_id) {
-      return { label: "Pendente manual", color: "bg-yellow-100 text-yellow-800", icon: Banknote };
-    }
+
     return { label: "Aguardando pagamento", color: "bg-gray-100 text-gray-800", icon: null };
   };
 
   const calculateOrderBreakdown = (order: Order) => {
     const total = Number(order.total);
-    const comissaoNellor = total * 0.075;
-    const taxaStripe = order.payment_method === 'cartao' ? total * 0.034 : 0;
-    const valorLiquido = total - comissaoNellor - taxaStripe;
-    return { total, comissaoNellor, taxaStripe, valorLiquido };
+    const taxaPlataforma = Number(order.platform_fee ?? total * 0.075);
+    const valorLiquidoFornecedor = Number(order.supplier_amount ?? (total - taxaPlataforma));
+
+    return { total, taxaPlataforma, valorLiquidoFornecedor };
   };
 
   const handleStatusChange = async (orderId: string, newStatus: Order['order_status']) => {
