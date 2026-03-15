@@ -52,11 +52,11 @@ const Patrocinio = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await (supabase
+      const { data, error } = await supabase
         .from("sponsorship_requests" as any)
         .select("*")
         .eq("supplier_id", user.id)
-        .order("created_at", { ascending: false }) as any);
+        .order("created_at", { ascending: false }) as any;
 
       if (error) {
         console.error("Error fetching sponsorship requests:", error);

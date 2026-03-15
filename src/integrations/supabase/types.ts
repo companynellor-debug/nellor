@@ -2598,6 +2598,7 @@ export type Database = {
         Args: { _order_id: string }
         Returns: undefined
       }
+      format_brl: { Args: { value: number }; Returns: string }
       generate_affiliate_code: { Args: never; Returns: string }
       generate_or_get_supplier_code: {
         Args: { _supplier_id: string }

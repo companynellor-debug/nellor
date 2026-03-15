@@ -137,9 +137,9 @@ const Dashboard = () => {
       color: "from-violet-500 to-violet-600",
     },
     {
-      title: "📊 GMV Total (Movimentado)",
-      value: `R$ ${stats.gmvTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      subtitle: "Soma de todos os pedidos pagos",
+      title: "📊 GMV do Período",
+      value: `R$ ${stats.gmvPeriod.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      subtitle: `GMV dos últimos ${dateFilter === 'today' ? 'hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'}`,
       icon: TrendingUp,
       color: "from-green-500 to-green-600",
     },

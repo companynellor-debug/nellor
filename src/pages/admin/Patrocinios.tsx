@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Megaphone, Loader2, Clock, CheckCircle, XCircle, Calendar, Image, Package, User, Eye } from "lucide-react";
+import { Megaphone, Loader2, Clock, CheckCircle, XCircle, Calendar, Image, Package, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -44,10 +44,8 @@ const Patrocinios = () => {
 
   const fetchRequests = async () => {
     try {
-      const { data, error } = await (supabase
-        .from("sponsorship_requests" as any)
-        .select("*")
-        .order("created_at", { ascending: false }) as any);
+      // Use RPC to bypass RLS and get enriched data
+      const { data, error } = await supabase.rpc("get_admin_sponsorship_requests" as any);
 
       if (error) {
         console.error("Error fetching sponsorship requests:", error);
@@ -56,31 +54,7 @@ const Patrocinios = () => {
         return;
       }
 
-      // Enrich with supplier and product names
-      const supplierIds = [...new Set((data || []).map((r: any) => r.supplier_id))] as string[];
-      const productIds = [...new Set((data || []).filter((r: any) => r.product_id).map((r: any) => r.product_id))] as string[];
-
-      const { data: suppliers } = await supabase
-        .from("profiles")
-        .select("id, nome")
-        .in("id", supplierIds);
-
-      const supplierMap: Record<string, string> = {};
-      suppliers?.forEach((s) => { supplierMap[s.id] = s.nome; });
-
-      const productMap: Record<string, string> = {};
-      if (productIds.length > 0) {
-        const { data: productsData } = await supabase.from("products").select("id, nome").in("id", productIds);
-        productsData?.forEach((p) => { productMap[p.id] = p.nome; });
-      }
-
-      const enriched = (data || []).map((r: any) => ({
-        ...r,
-        supplier_name: supplierMap[r.supplier_id] || "Fornecedor",
-        product_name: r.product_id ? productMap[r.product_id] || "Produto" : null,
-      }));
-
-      setRequests(enriched);
+      setRequests((data || []) as SponsorshipRequest[]);
     } catch (error) {
       console.error("Error fetching sponsorship requests:", error);
     } finally {

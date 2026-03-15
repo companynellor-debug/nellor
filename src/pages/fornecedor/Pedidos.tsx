@@ -301,7 +301,7 @@ const Pedidos = () => {
                   <div className="p-4">
                     <h3 className="font-semibold mb-3 flex items-center gap-2"><DollarSign className="h-4 w-4" />Detalhes do Pagamento</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      <div><p className="text-sm text-muted-foreground">Valor total</p><p className="text-xl font-bold">R$ {Number(selectedOrder.total).toFixed(2)}</p></div>
+                      <div><p className="text-sm text-muted-foreground">Valor total</p><p className="text-xl font-bold">{formatCurrency(selectedOrder.total)}</p></div>
                       <div><p className="text-sm text-muted-foreground">Status</p><Badge className={cn(getPaymentStatusBadge(selectedOrder.payment_status).color)}>{getPaymentStatusBadge(selectedOrder.payment_status).label}</Badge></div>
                     </div>
                     <div className="mt-4 pt-4 border-t space-y-2">
