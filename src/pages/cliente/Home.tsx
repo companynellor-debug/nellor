@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
