@@ -2739,10 +2739,10 @@ export type Database = {
           product_id: string
           product_name: string
           scheduled_date: string
-          status: Database["public"]["Enums"]["sponsorship_status"]
+          status: string
           supplier_id: string
           supplier_name: string
-          type: Database["public"]["Enums"]["sponsorship_type"]
+          type: string
         }[]
       }
       get_admin_stats: {
