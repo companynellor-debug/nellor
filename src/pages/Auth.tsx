@@ -239,6 +239,14 @@ const Auth = () => {
               <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
             </div>
 
+            {isLogin && (
+              <div className="text-right -mt-2">
+                <button type="button" onClick={() => { setShowForgotPassword(true); setResetEmail(email); setResetSent(false); }}
+                  className="text-xs text-[#7C3AED] hover:underline">
+                  Esqueci minha senha
+                </button>
+              </div>
+            )}
 
             <Button type="submit" disabled={submitting} className="w-full h-11 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-semibold rounded-full mt-4 shadow-md">
               {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'ENTRAR' : 'CRIAR CONTA'}
