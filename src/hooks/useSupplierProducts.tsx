@@ -18,7 +18,10 @@ export interface SupplierProduct {
   isKit?: boolean;
   kitItems?: { name: string; quantity: number }[];
   brand?: string;
+  model?: string;
   material?: string;
+  gender?: string;
+  ageGroup?: string;
   weightGrams?: number;
   widthCm?: number;
   heightCm?: number;
@@ -28,9 +31,12 @@ export interface SupplierProduct {
   saleUnit?: string;
   unitsPerSaleUnit?: number;
   minOrderQuantity?: number;
+  maxOrderQuantity?: number;
   isCnpjOnly?: boolean;
   isInternational?: boolean;
   keywords?: string[];
+  warrantyDays?: number;
+  whatIsInTheBox?: string;
 }
 
 const PAGE_SIZE = 20;
@@ -53,7 +59,7 @@ export const useSupplierProducts = () => {
 
       const { data, error } = await supabase
         .from('products')
-        .select('id, nome, categoria_id, descricao_curta, imagens, preco, estoque, variacoes, tamanhos, cores, is_kit, kit_items, brand, material, weight_grams, width_cm, height_cm, depth_cm, condition, ncm_code, sale_unit, units_per_sale_unit, min_order_quantity, is_cnpj_only, is_international, keywords')
+        .select('id, nome, categoria_id, descricao_curta, imagens, preco, estoque, variacoes, tamanhos, cores, is_kit, kit_items, brand, model, material, gender, age_group, weight_grams, width_cm, height_cm, depth_cm, condition, ncm_code, sale_unit, units_per_sale_unit, min_order_quantity, max_order_quantity, is_cnpj_only, is_international, keywords, warranty_days, what_is_in_the_box')
         .eq('supplier_id', user.id)
         .eq('ativo', true)
         .order('created_at', { ascending: false })
@@ -75,7 +81,10 @@ export const useSupplierProducts = () => {
         isKit: product.is_kit || false,
         kitItems: product.kit_items || undefined,
         brand: product.brand || undefined,
+        model: product.model || undefined,
         material: product.material || undefined,
+        gender: product.gender || 'none',
+        ageGroup: product.age_group || 'none',
         weightGrams: product.weight_grams || undefined,
         widthCm: product.width_cm ? parseFloat(product.width_cm) : undefined,
         heightCm: product.height_cm ? parseFloat(product.height_cm) : undefined,
@@ -85,9 +94,12 @@ export const useSupplierProducts = () => {
         saleUnit: product.sale_unit || 'unit',
         unitsPerSaleUnit: product.units_per_sale_unit || 1,
         minOrderQuantity: product.min_order_quantity || 1,
+        maxOrderQuantity: product.max_order_quantity || undefined,
         isCnpjOnly: product.is_cnpj_only || false,
         isInternational: product.is_international || false,
         keywords: product.keywords || [],
+        warrantyDays: product.warranty_days || undefined,
+        whatIsInTheBox: product.what_is_in_the_box || undefined,
       }));
 
       setHasMore(mappedProducts.length === PAGE_SIZE);
@@ -137,7 +149,10 @@ export const useSupplierProducts = () => {
           rating_medio: 0,
           total_reviews: 0,
           brand: product.brand || null,
+          model: product.model || null,
           material: product.material || null,
+          gender: product.gender || 'none',
+          age_group: product.ageGroup || 'none',
           weight_grams: product.weightGrams || null,
           width_cm: product.widthCm || null,
           height_cm: product.heightCm || null,
@@ -147,9 +162,12 @@ export const useSupplierProducts = () => {
           sale_unit: product.saleUnit || 'unit',
           units_per_sale_unit: product.unitsPerSaleUnit || 1,
           min_order_quantity: product.minOrderQuantity || 1,
+          max_order_quantity: product.maxOrderQuantity || null,
           is_cnpj_only: product.isCnpjOnly || false,
           is_international: product.isInternational || false,
           keywords: product.keywords || [],
+          warranty_days: product.warrantyDays || null,
+          what_is_in_the_box: product.whatIsInTheBox || null,
         }])
         .select()
         .single();
@@ -183,7 +201,10 @@ export const useSupplierProducts = () => {
       if (updatedData.isKit !== undefined) updatePayload.is_kit = updatedData.isKit;
       if (updatedData.kitItems !== undefined) updatePayload.kit_items = updatedData.kitItems.length > 0 ? updatedData.kitItems : null;
       if (updatedData.brand !== undefined) updatePayload.brand = updatedData.brand || null;
+      if (updatedData.model !== undefined) updatePayload.model = updatedData.model || null;
       if (updatedData.material !== undefined) updatePayload.material = updatedData.material || null;
+      if (updatedData.gender !== undefined) updatePayload.gender = updatedData.gender;
+      if (updatedData.ageGroup !== undefined) updatePayload.age_group = updatedData.ageGroup;
       if (updatedData.weightGrams !== undefined) updatePayload.weight_grams = updatedData.weightGrams || null;
       if (updatedData.widthCm !== undefined) updatePayload.width_cm = updatedData.widthCm || null;
       if (updatedData.heightCm !== undefined) updatePayload.height_cm = updatedData.heightCm || null;
@@ -193,9 +214,12 @@ export const useSupplierProducts = () => {
       if (updatedData.saleUnit !== undefined) updatePayload.sale_unit = updatedData.saleUnit;
       if (updatedData.unitsPerSaleUnit !== undefined) updatePayload.units_per_sale_unit = updatedData.unitsPerSaleUnit;
       if (updatedData.minOrderQuantity !== undefined) updatePayload.min_order_quantity = updatedData.minOrderQuantity;
+      if (updatedData.maxOrderQuantity !== undefined) updatePayload.max_order_quantity = updatedData.maxOrderQuantity || null;
       if (updatedData.isCnpjOnly !== undefined) updatePayload.is_cnpj_only = updatedData.isCnpjOnly;
       if (updatedData.isInternational !== undefined) updatePayload.is_international = updatedData.isInternational;
       if (updatedData.keywords !== undefined) updatePayload.keywords = updatedData.keywords;
+      if (updatedData.warrantyDays !== undefined) updatePayload.warranty_days = updatedData.warrantyDays || null;
+      if (updatedData.whatIsInTheBox !== undefined) updatePayload.what_is_in_the_box = updatedData.whatIsInTheBox || null;
 
       const { error } = await supabase.from('products').update(updatePayload).eq('id', id);
       if (error) throw error;
