@@ -77,46 +77,21 @@ const Patrocinios = () => {
 
     setSubmitting(true);
     try {
-      const newStatus =
-        actionModal.action === "approve" ? "approved"
-        : actionModal.action === "reject" ? "rejected"
-        : "scheduled";
-
-      const updateData: any = {
-        status: newStatus,
-        admin_response: adminResponse || null,
-      };
-
-      if (actionModal.action === "schedule") {
-        updateData.scheduled_date = scheduledDate;
-      }
-
-      const { error } = await (supabase
-        .from("sponsorship_requests" as any)
-        .update(updateData)
-        .eq("id", actionModal.request.id) as any);
-
-      if (error) throw error;
-
-      // Send notification to supplier
-      await supabase.from("notifications").insert({
-        user_id: actionModal.request.supplier_id,
-        title:
-          newStatus === "approved" ? "Patrocínio Aprovado! ✅"
-          : newStatus === "rejected" ? "Patrocínio Não Aprovado"
-          : "Patrocínio Agendado 📅",
-        body:
-          newStatus === "approved"
-            ? `Seu patrocínio foi aprovado e está ativo.${adminResponse ? ` Resposta: ${adminResponse}` : ""}`
-            : newStatus === "rejected"
-            ? `Seu patrocínio não foi aprovado. Motivo: ${adminResponse}`
-            : `Seu patrocínio foi agendado para ${new Date(scheduledDate).toLocaleDateString("pt-BR")}.${adminResponse ? ` Observação: ${adminResponse}` : ""}`,
-        type: "order_update",
+      const { data, error } = await supabase.functions.invoke("admin-sponsorship-action", {
+        body: {
+          request_id: actionModal.request.id,
+          action: actionModal.action,
+          admin_response: adminResponse || undefined,
+          scheduled_date: actionModal.action === "schedule" ? scheduledDate : undefined,
+        },
       });
 
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       toast.success(
-        newStatus === "approved" ? "Patrocínio aprovado!"
-        : newStatus === "rejected" ? "Patrocínio rejeitado"
+        actionModal.action === "approve" ? "Patrocínio aprovado!"
+        : actionModal.action === "reject" ? "Patrocínio rejeitado"
         : "Patrocínio agendado!"
       );
 
