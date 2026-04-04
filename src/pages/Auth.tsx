@@ -216,17 +216,6 @@ const Auth = () => {
               <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
             </div>
 
-            {/* Account Type (only for signup - only Cliente and Fornecedor) */}
-            {!isLogin && (
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setTipo('cliente')} className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${tipo === 'cliente' ? 'bg-[#6D28D9] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                  Cliente
-                </button>
-                <button type="button" onClick={() => setTipo('fornecedor')} className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${tipo === 'fornecedor' ? 'bg-[#6D28D9] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                  Fornecedor
-                </button>
-              </div>
-            )}
 
             <Button type="submit" disabled={submitting} className="w-full h-11 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-semibold rounded-full mt-4 shadow-md">
               {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'ENTRAR' : 'CRIAR CONTA'}
