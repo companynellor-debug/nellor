@@ -33,6 +33,8 @@ export const BottomNavFornecedor = () => {
     { icon: Ticket, label: "Cupons", path: "/fornecedor/cupons", badge: activeCouponsCount },
     { icon: BarChart3, label: "Estatísticas", path: "/fornecedor/estatisticas" },
     { icon: DollarSign, label: "Financeiro", path: "/fornecedor/financeiro" },
+    { icon: Shield, label: "Permissões", path: "/fornecedor/permissoes" },
+    { icon: Megaphone, label: "Patrocínio", path: "/fornecedor/patrocinio" },
     { icon: Bell, label: "Notificações", path: "/fornecedor/notificacoes" },
     { icon: Store, label: "Editar Loja", path: "/fornecedor/editar-loja" },
   ];
