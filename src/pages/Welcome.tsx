@@ -191,7 +191,7 @@ const Welcome = () => {
         </div>
 
         {/* Bottom section - Tagline and buttons (compact) */}
-        <div className="w-full mt-0 sm:-mt-6 my-[54px]">
+        <div className="w-full mt-0 sm:-mt-6">
           <p className="text-center text-white/60 text-xs sm:text-sm mb-2 sm:mb-4 py-[17px]">
             Conectando você aos melhores fornecedores.
           </p>
