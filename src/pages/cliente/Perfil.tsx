@@ -2,11 +2,12 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Truck, HeadphonesIcon, Folder } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Truck, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { usePWA } from "@/hooks/usePWA";
+import { useSupplierApplication } from "@/hooks/useSupplierApplication";
 import CollectionsTab from "@/components/cliente/CollectionsTab";
 import nellorLogo from "@/assets/nellor-logo.png";
 
@@ -15,6 +16,7 @@ const Perfil = () => {
   const { profile, signOut } = useSupabaseAuth();
   const { orders } = useSupabaseOrders();
   const { canInstall, isInstalled } = usePWA();
+  const { application } = useSupplierApplication();
 
   const handleLogout = async () => {
     await signOut();
@@ -162,6 +164,57 @@ const Perfil = () => {
                 );
               })}
             </div>
+
+            {/* Quero Vender na Nellor */}
+            <Card className="border shadow-sm overflow-hidden">
+              {!application ? (
+                <button
+                  onClick={() => navigate("/cliente/solicitar-fornecedor")}
+                  className="w-full flex items-center gap-3 px-4 py-4 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                    <Store className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold">Quero Vender na Nellor</p>
+                    <p className="text-[11px] text-muted-foreground">Torne-se um fornecedor e comece a vender</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate("/cliente/solicitar-fornecedor")}
+                  className="w-full flex items-center gap-3 px-4 py-4 hover:bg-muted/30 transition-colors"
+                >
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    application.status === "approved" ? "bg-green-100 dark:bg-green-900/30" :
+                    application.status === "under_review" ? "bg-blue-100 dark:bg-blue-900/30" :
+                    application.status === "rejected" ? "bg-red-100 dark:bg-red-900/30" :
+                    "bg-yellow-100 dark:bg-yellow-900/30"
+                  }`}>
+                    {application.status === "approved" ? <CheckCircle className="h-5 w-5 text-green-600" /> :
+                     application.status === "under_review" ? <Clock className="h-5 w-5 text-blue-600" /> :
+                     application.status === "rejected" ? <XCircle className="h-5 w-5 text-red-600" /> :
+                     <Clock className="h-5 w-5 text-yellow-600" />}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold">Solicitação de Fornecedor</p>
+                    <p className={`text-[11px] font-medium ${
+                      application.status === "approved" ? "text-green-600" :
+                      application.status === "under_review" ? "text-blue-600" :
+                      application.status === "rejected" ? "text-red-600" :
+                      "text-yellow-600"
+                    }`}>
+                      {application.status === "approved" ? "Aprovado ✓" :
+                       application.status === "under_review" ? "Em análise" :
+                       application.status === "rejected" ? "Recusado" :
+                       "Pendente - envie os documentos"}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
+            </Card>
 
             {/* Serviços Nellor */}
             <div>
