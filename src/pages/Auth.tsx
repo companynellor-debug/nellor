@@ -18,7 +18,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [nome, setNome] = useState('');
   const [sobrenome, setSobrenome] = useState('');
-  const [tipo, setTipo] = useState<'cliente' | 'fornecedor'>('cliente');
+  const [tipo] = useState<'cliente' | 'fornecedor'>('cliente');
   const [submitting, setSubmitting] = useState(false);
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
