@@ -2242,6 +2242,99 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_applications: {
+        Row: {
+          address_cep: string
+          address_city: string
+          address_complement: string | null
+          address_neighborhood: string
+          address_number: string
+          address_state: string
+          address_street: string
+          business_description: string | null
+          business_type: Database["public"]["Enums"]["business_type"]
+          cnpj: string | null
+          company_name: string | null
+          cpf: string | null
+          created_at: string
+          document_back_url: string | null
+          document_front_url: string | null
+          extra_document_url: string | null
+          full_name: string
+          id: string
+          phone: string
+          product_category: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string | null
+          status: Database["public"]["Enums"]["supplier_application_status"]
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_cep: string
+          address_city: string
+          address_complement?: string | null
+          address_neighborhood: string
+          address_number: string
+          address_state: string
+          address_street: string
+          business_description?: string | null
+          business_type: Database["public"]["Enums"]["business_type"]
+          cnpj?: string | null
+          company_name?: string | null
+          cpf?: string | null
+          created_at?: string
+          document_back_url?: string | null
+          document_front_url?: string | null
+          extra_document_url?: string | null
+          full_name: string
+          id?: string
+          phone: string
+          product_category?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: Database["public"]["Enums"]["supplier_application_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_cep?: string
+          address_city?: string
+          address_complement?: string | null
+          address_neighborhood?: string
+          address_number?: string
+          address_state?: string
+          address_street?: string
+          business_description?: string | null
+          business_type?: Database["public"]["Enums"]["business_type"]
+          cnpj?: string | null
+          company_name?: string | null
+          cpf?: string | null
+          created_at?: string
+          document_back_url?: string | null
+          document_front_url?: string | null
+          extra_document_url?: string | null
+          full_name?: string
+          id?: string
+          phone?: string
+          product_category?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: Database["public"]["Enums"]["supplier_application_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       supplier_categories: {
         Row: {
           created_at: string
@@ -2756,6 +2849,41 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_admin_supplier_applications: {
+        Args: never
+        Returns: {
+          address_cep: string
+          address_city: string
+          address_complement: string
+          address_neighborhood: string
+          address_number: string
+          address_state: string
+          address_street: string
+          business_description: string
+          business_type: Database["public"]["Enums"]["business_type"]
+          cnpj: string
+          company_name: string
+          cpf: string
+          created_at: string
+          document_back_url: string
+          document_front_url: string
+          extra_document_url: string
+          full_name: string
+          id: string
+          phone: string
+          product_category: string
+          rejection_reason: string
+          reviewed_at: string
+          reviewed_by: string
+          selfie_url: string
+          status: Database["public"]["Enums"]["supplier_application_status"]
+          submitted_at: string
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_name: string
+        }[]
+      }
       get_admin_support_tickets: {
         Args: never
         Returns: {
@@ -3049,6 +3177,7 @@ export type Database = {
     Enums: {
       affiliate_status: "pending" | "active" | "suspended"
       app_role: "admin" | "fornecedor" | "cliente"
+      business_type: "individual" | "company"
       collection_item_type: "product" | "supplier"
       commission_status: "pending" | "confirmed" | "paid" | "cancelled"
       coupon_type: "percentage" | "fixed"
@@ -3072,6 +3201,11 @@ export type Database = {
       shipping_region: "norte" | "nordeste" | "centro_oeste" | "sudeste" | "sul"
       sponsorship_status: "pending" | "approved" | "rejected" | "scheduled"
       sponsorship_type: "produto_destaque" | "banner_homepage"
+      supplier_application_status:
+        | "pending"
+        | "under_review"
+        | "approved"
+        | "rejected"
       support_status: "open" | "pending" | "closed"
       transaction_type: "sale" | "platform_fee" | "payout" | "refund"
       user_type: "cliente" | "fornecedor" | "admin"
@@ -3220,6 +3354,7 @@ export const Constants = {
     Enums: {
       affiliate_status: ["pending", "active", "suspended"],
       app_role: ["admin", "fornecedor", "cliente"],
+      business_type: ["individual", "company"],
       collection_item_type: ["product", "supplier"],
       commission_status: ["pending", "confirmed", "paid", "cancelled"],
       coupon_type: ["percentage", "fixed"],
@@ -3245,6 +3380,12 @@ export const Constants = {
       shipping_region: ["norte", "nordeste", "centro_oeste", "sudeste", "sul"],
       sponsorship_status: ["pending", "approved", "rejected", "scheduled"],
       sponsorship_type: ["produto_destaque", "banner_homepage"],
+      supplier_application_status: [
+        "pending",
+        "under_review",
+        "approved",
+        "rejected",
+      ],
       support_status: ["open", "pending", "closed"],
       transaction_type: ["sale", "platform_fee", "payout", "refund"],
       user_type: ["cliente", "fornecedor", "admin"],
