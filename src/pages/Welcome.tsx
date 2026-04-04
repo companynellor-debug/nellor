@@ -191,7 +191,7 @@ const Welcome = () => {
         </div>
 
         {/* Bottom section - Tagline and buttons (compact) */}
-        <div className="w-full mt-0 sm:-mt-6">
+        <div className="w-full mt-0 sm:-mt-6 my-[114px]">
 
           <div className="max-w-xs sm:max-w-sm mx-auto space-y-2.5">
             <Button onClick={() => navigate('/auth?modo=login')} className="w-full h-10 sm:h-11 bg-white hover:bg-white/90 text-[#11001e] font-semibold text-sm sm:text-base rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
