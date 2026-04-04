@@ -23,6 +23,8 @@ interface ShippingInfo {
   allowsPickup: boolean;
   region: string | null;
   isFreeShipping: boolean;
+  deliveryDaysMin: number | null;
+  deliveryDaysMax: number | null;
 }
 
 const Carrinho = () => {
