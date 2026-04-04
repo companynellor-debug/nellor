@@ -235,6 +235,7 @@ const App = () => {
                 {/* Rota de reconciliação removida - era dependente do Stripe */}
                 <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
                 <Route path="patrocinios" element={<Suspense fallback={<PageSkeleton />}><AdminPatrocinios /></Suspense>} />
+                <Route path="solicitacoes-fornecedor" element={<Suspense fallback={<PageSkeleton />}><AdminSolicitacoesFornecedor /></Suspense>} />
                 {/* admin nellor-drop removido temporariamente */}
               </Route>
 
