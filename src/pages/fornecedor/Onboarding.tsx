@@ -48,7 +48,7 @@ const Onboarding = () => {
       }, 400);
     }
   }, [showCongrats]);
-  const [loading, setLoading] = useState(false);
+  
   const [storeData, setStoreData] = useState({
     storeName: "",
     bio: "",
