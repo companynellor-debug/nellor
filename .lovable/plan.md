@@ -1,85 +1,47 @@
 
 
-# Plano: Fixes Admin + Especificações de Produto
+# Plan: Generate WebViewApp Android Project ZIP
 
-## Problemas Identificados
+This is a **file generation task** -- I will create a complete Android Studio project with all specified files and package it as a downloadable ZIP.
 
-### 1. Admin excluir/banir contas nao funciona
-A Edge Function `admin-user-actions` nao esta no `config.toml`. Sem a entrada, o Supabase pode rejeitar requests. Adicionaremos `verify_jwt = false`.
+## What will be generated
 
-### 2. Patrocinio e Denuncias nao chegam pro admin
-Os dados EXISTEM no banco (3 sponsored_products pendentes, 1 report pendente). As politicas RLS estao corretas (admin tem ALL). O problema provavel e que o admin nao esta vendo os dados na aba Alertas. Investigando mais: a query de `notifications` na linha 26 do Alertas.tsx faz `select('*')` sem filtro de user_id -- mas a RLS filtra por `user_id = auth.uid()` automaticamente. Se nao houver notificacoes do admin, retorna vazio. As queries de `sponsored_products` e `reports` tem politica ALL para admin e devem funcionar. Vou adicionar melhor tratamento de erro e logs para debug, e garantir que a aba Alertas mostre os dados mesmo quando notificacoes estao vazias.
+A complete Android native project (`WebViewApp.zip`) containing:
 
-### 3. Especificacoes de Produto (Tamanhos, Cores, Kits)
-O banco ja tem colunas: `tamanhos` (JSONB), `cores` (JSONB), `is_kit` (boolean), `kit_items` (JSONB). Falta:
-- UI no modal de criacao/edicao de produto (Produtos.tsx)
-- Mapeamento no useSupplierProducts
-- Exibicao no ProdutoDetalhes.tsx para clientes escolherem
-- Incluir no CartItem para rastrear selecao
+### Core Java files
+- **SplashActivity.java** -- Fullscreen splash screen with configurable duration, navigates to MainActivity
+- **MainActivity.java** -- Full WebView implementation with JavaScript bridge (`AndroidBridge`), custom WebViewClient/WebChromeClient, connectivity handling, file chooser, progress bar, back button navigation, and lifecycle management
+- **MyFirebaseMessagingService.java** -- FCM push notification handler with notification channel, foreground/background behavior, and token management
 
----
+### Android resources
+- Layouts: `activity_main.xml` (WebView + progress bar + offline layout), `activity_splash.xml`
+- Values: `strings.xml` (configurable URL, app name), `colors.xml`, `themes.xml` (fullscreen, no ActionBar)
+- Drawable: `ic_notification.xml` (vector icon)
+- XML: `network_security_config.xml`
 
-## Implementacao
+### Build configuration
+- Root `build.gradle`, `settings.gradle`, `gradle.properties`
+- App `build.gradle` with Firebase BOM, AndroidX, Material, WebKit dependencies
+- `proguard-rules.pro` with Firebase/WebView rules
+- `google-services.json.example` placeholder
+- `AndroidManifest.xml` with all permissions (INTERNET, CAMERA, LOCATION, POST_NOTIFICATIONS, etc.)
 
-### Arquivo: `supabase/config.toml`
-Adicionar entrada para `admin-user-actions`:
-```toml
-[functions.admin-user-actions]
-verify_jwt = false
-```
+### JavaScript Bridge methods
+The `AndroidBridge` interface exposed to the web page:
+- `showNotification(title, body)` -- native Android notification
+- `getDeviceToken(callback)` -- FCM token retrieval
+- `setStatusBarColor(hexColor)` -- dynamic status bar color
+- `openExternalUrl(url)` -- open in system browser
+- `shareContent(title, text, url)` -- native share intent
+- `vibrate(ms)` -- device vibration
+- `getAppVersion()` -- returns app version
 
-### Arquivo: `supabase/functions/admin-user-actions/index.ts`
-Atualizar CORS headers para incluir headers extras que o client envia. Tambem adicionar verificacao de que o chamador e admin (usando service role para verificar user_roles).
+### Documentation
+- Complete `README.md` with setup instructions for URL config, Firebase, APK generation, and JS Bridge usage
 
-### Arquivo: `src/hooks/useSupplierProducts.tsx`
-Expandir interface `SupplierProduct` com campos:
-```ts
-sizes?: string[];        // ["P","M","G","GG"] ou ["38","39","40"]
-colors?: string[];       // ["Preto","Branco","Azul"]
-isKit?: boolean;
-kitItems?: { name: string; quantity: number }[];
-```
-Mapear `tamanhos`, `cores`, `is_kit`, `kit_items` do banco no fetch. Incluir no insert e update.
-
-### Arquivo: `src/pages/fornecedor/Produtos.tsx`
-Adicionar secoes opcionais no modal apos "Limites de Pedido":
-
-**Tamanhos** (opcional):
-- Toggle "Este produto tem tamanhos?"
-- Chips pre-definidos: P, M, G, GG, XG (para roupas)
-- Input livre para adicionar tamanhos customizados (ex: 38, 39, 40 para calcados)
-- Cada chip e clicavel para selecionar/deselecionar
-
-**Cores** (opcional):
-- Toggle "Este produto tem cores?"
-- Input para adicionar cores com botao +
-- Chips removiveis para cada cor adicionada
-
-**Kit** (opcional):
-- Toggle "Este produto e um kit?"
-- Lista de itens do kit com nome e quantidade
-- Botao para adicionar item ao kit
-
-### Arquivo: `src/pages/cliente/ProdutoDetalhes.tsx`
-Adicionar selecao de tamanho e cor antes do botao "Adicionar ao Carrinho":
-- Se o produto tem `tamanhos`: mostrar chips selecionaveis
-- Se o produto tem `cores`: mostrar chips selecionaveis
-- Se e kit: mostrar lista de itens inclusos
-- Validar que tamanho e cor foram selecionados antes de adicionar ao carrinho
-
-### Arquivo: `src/hooks/useCart.tsx`
-Expandir `CartItem` com `selectedSize?: string` e `selectedColor?: string` para rastrear a selecao.
-
-### Arquivo: `src/pages/admin/Alertas.tsx`
-Melhorar tratamento de erros -- tratar cada query independentemente em vez de Promise.all, para que uma falha nao bloqueie as outras. Adicionar console.log para debug.
-
----
-
-## Ordem de Execucao
-1. Fix config.toml + admin-user-actions (resolve exclusao de contas)
-2. Fix Alertas.tsx (garante que sponsorships e reports aparecem)
-3. Expandir useSupplierProducts com novos campos
-4. Adicionar UI de tamanhos/cores/kit no Produtos.tsx
-5. Exibir especificacoes no ProdutoDetalhes.tsx
-6. Expandir CartItem com selecao de variacao
+## Technical notes
+- Target: API 21 (Android 5.0) through API 34 (Android 14)
+- The `target_url` in `strings.xml` will default to `https://nellor.lovable.app`
+- All files will be written to `/tmp/WebViewApp/` then zipped to `/mnt/documents/WebViewApp.zip`
+- The project will sync in Android Studio once the user adds their own `google-services.json`
 
