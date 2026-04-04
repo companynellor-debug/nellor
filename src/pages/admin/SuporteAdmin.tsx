@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { clearAdminAccess, getAdminToken, storeAdminAccess } from "@/lib/adminAccess";
 
 interface SupportTicket {
   id: string;
@@ -45,19 +46,24 @@ const SuporteAdmin = () => {
   const fetchAll = async () => {
     setLoading(true);
 
-    // Tickets
     try {
       const { data, error } = await supabase.rpc('get_admin_support_tickets');
       if (error) throw error;
       setTickets((data || []).map((t: any) => ({
-        id: t.id, user_id: t.user_id, assunto: t.assunto, mensagem: t.mensagem,
-        resposta_admin: t.resposta_admin, status: t.status as any,
-        created_at: t.created_at, updated_at: t.updated_at,
+        id: t.id,
+        user_id: t.user_id,
+        assunto: t.assunto,
+        mensagem: t.mensagem,
+        resposta_admin: t.resposta_admin,
+        status: t.status as SupportTicket['status'],
+        created_at: t.created_at,
+        updated_at: t.updated_at,
         profiles: { nome: t.user_name || 'Usuário', tipo: 'cliente' }
       })));
-    } catch (e) { console.error('Tickets fetch failed:', e); }
+    } catch (e) {
+      console.error('Tickets fetch failed:', e);
+    }
 
-    // Reports
     try {
       const { data, error } = await supabase
         .from('reports')
@@ -65,35 +71,91 @@ const SuporteAdmin = () => {
         .order('created_at', { ascending: false })
         .limit(50);
       if (!error) setReports(data || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
 
     setLoading(false);
   };
 
+  const ensureAdminToken = async () => {
+    const existingToken = getAdminToken();
+    if (existingToken) return existingToken;
+
+    const password = window.prompt('Digite a senha admin para confirmar esta ação:');
+    if (!password?.trim()) return null;
+
+    const { data, error } = await supabase.functions.invoke('admin-grant-role', {
+      body: { password: password.trim() }
+    });
+
+    if (error || !data?.adminToken) {
+      throw new Error('ADMIN_LOGIN_FAILED');
+    }
+
+    storeAdminAccess(data.adminToken);
+    return data.adminToken as string;
+  };
+
+  const runAdminSupportAction = async (payload: Record<string, unknown>) => {
+    const adminToken = await ensureAdminToken();
+    if (!adminToken) return { cancelled: true };
+
+    const { data, error } = await supabase.functions.invoke('admin-support-action', {
+      body: { ...payload, adminToken }
+    });
+
+    if (error || !data?.ok) {
+      if (data?.error === 'INVALID_ADMIN_TOKEN') {
+        clearAdminAccess();
+      }
+      throw new Error(data?.error || error?.message || 'ADMIN_SUPPORT_ACTION_FAILED');
+    }
+
+    return data;
+  };
+
   const handleRespond = async () => {
     if (!selectedTicket || !response.trim()) return;
+
     try {
       setSending(true);
-      const { error } = await supabase.rpc('admin_update_support_ticket', {
-        _ticket_id: selectedTicket.id, _resposta_admin: response, _status: 'pending'
+      const result = await runAdminSupportAction({
+        type: 'ticket',
+        ticketId: selectedTicket.id,
+        response,
+        status: 'pending'
       });
-      if (error) throw error;
+
+      if ('cancelled' in result) return;
+
       toast.success('Resposta enviada!');
       setResponse("");
-      fetchAll();
+      void fetchAll();
       setSelectedTicket(prev => prev ? { ...prev, resposta_admin: response, status: 'pending' } : null);
-    } catch (e) { toast.error('Erro ao enviar resposta'); } finally { setSending(false); }
+    } catch (e) {
+      console.error('Respond ticket error:', e);
+      toast.error('Erro ao enviar resposta');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleCloseTicket = async (ticketId: string) => {
     try {
-      const { error } = await supabase.rpc('admin_update_support_ticket', {
-        _ticket_id: ticketId, _status: 'closed'
+      const result = await runAdminSupportAction({
+        type: 'ticket',
+        ticketId,
+        status: 'closed'
       });
-      if (error) throw error;
+
+      if ('cancelled' in result) return;
+
       toast.success('Ticket fechado!');
-      fetchAll();
-      if (selectedTicket?.id === ticketId) setSelectedTicket(prev => prev ? { ...prev, status: 'closed' } : null);
+      void fetchAll();
+      if (selectedTicket?.id === ticketId) {
+        setSelectedTicket(prev => prev ? { ...prev, status: 'closed' } : null);
+      }
     } catch (e) {
       console.error('Close ticket error:', e);
       toast.error('Erro ao fechar ticket');
@@ -102,13 +164,20 @@ const SuporteAdmin = () => {
 
   const handleReportAction = async (id: string, action: 'reviewed' | 'resolved') => {
     try {
-      const { error } = await supabase.rpc('admin_update_report', {
-        _report_id: id, _status: action
+      const result = await runAdminSupportAction({
+        type: 'report',
+        reportId: id,
+        status: action
       });
-      if (error) throw error;
+
+      if ('cancelled' in result) return;
+
       toast.success('Denúncia atualizada!');
       setReports(prev => prev.filter(r => r.id !== id));
-    } catch (e) { toast.error('Erro ao atualizar denúncia'); }
+    } catch (e) {
+      console.error('Report action error:', e);
+      toast.error('Erro ao atualizar denúncia');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -190,7 +259,6 @@ const SuporteAdmin = () => {
         <p className="text-muted-foreground">Tickets de suporte e denúncias de usuários</p>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-6">
           <div className="flex items-center justify-between mb-2">
@@ -208,7 +276,6 @@ const SuporteAdmin = () => {
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="tickets" className="w-full">
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="tickets" className="gap-1">
@@ -219,7 +286,6 @@ const SuporteAdmin = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tickets Tab */}
         <TabsContent value="tickets">
           <Card>
             <div className="divide-y">
@@ -254,7 +320,6 @@ const SuporteAdmin = () => {
           </Card>
         </TabsContent>
 
-        {/* Reports Tab */}
         <TabsContent value="reports">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {reports.length === 0 ? (

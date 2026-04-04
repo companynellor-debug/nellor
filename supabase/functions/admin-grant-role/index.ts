@@ -9,11 +9,39 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const encoder = new TextEncoder();
+
 function json(status: number, body: Json) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
+}
+
+function toBase64Url(input: Uint8Array | string) {
+  const bytes = typeof input === "string" ? encoder.encode(input) : input;
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function signValue(value: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
+  return toBase64Url(new Uint8Array(signature));
+}
+
+async function createAdminToken(secret: string) {
+  const payload = toBase64Url(JSON.stringify({ exp: Date.now() + 12 * 60 * 60 * 1000, v: 1 }));
+  const signature = await signValue(payload, secret);
+  return `${payload}.${signature}`;
 }
 
 serve(async (req) => {
@@ -26,9 +54,7 @@ serve(async (req) => {
   }
 
   const adminPasswordSecret = Deno.env.get("ADMIN_PANEL_PASSWORD") ?? "";
-  
   if (!adminPasswordSecret) {
-    console.error("ADMIN_PANEL_PASSWORD not configured");
     return json(500, { ok: false, error: "ADMIN_PASSWORD_NOT_CONFIGURED" });
   }
 
@@ -46,19 +72,16 @@ serve(async (req) => {
     return json(401, { ok: false, error: "INVALID_PASSWORD" });
   }
 
+  const adminToken = await createAdminToken(expectedPassword);
+
   const authHeader = req.headers.get("authorization") ?? "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-  
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-  
-  if (!token || token === anonKey) {
-    return json(200, { ok: true, message: "Password verified, access granted" });
-  }
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    return json(200, { ok: true, message: "Password verified" });
+  if (!token || token === anonKey || !supabaseUrl || !serviceRoleKey) {
+    return json(200, { ok: true, adminToken });
   }
 
   try {
@@ -67,31 +90,22 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    
-    if (userErr || !userData?.user) {
-      return json(200, { ok: true, message: "Password verified" });
+    const { data: userData } = await userClient.auth.getUser();
+    if (!userData?.user) {
+      return json(200, { ok: true, adminToken });
     }
-
-    const userId = userData.user.id;
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
 
-    const { error: upsertErr } = await adminClient
+    await adminClient
       .from("user_roles")
-      .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" });
+      .upsert({ user_id: userData.user.id, role: "admin" }, { onConflict: "user_id,role" });
 
-    if (upsertErr) {
-      console.error("Failed to upsert role:", upsertErr);
-      return json(200, { ok: true, message: "Password verified, role upsert failed" });
-    }
-
-    return json(200, { ok: true, roleGranted: true });
-    
-  } catch (e) {
-    console.error("Error during role grant:", e);
-    return json(200, { ok: true, message: "Password verified" });
+    return json(200, { ok: true, adminToken, roleGranted: true });
+  } catch (error) {
+    console.error("admin-grant-role warning:", error);
+    return json(200, { ok: true, adminToken });
   }
 });
