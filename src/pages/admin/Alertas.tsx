@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle, AlertTriangle, Star, Loader2, Flag, Megaphone } from "lucide-react";
+import { AlertCircle, CheckCircle, AlertTriangle, Star, Loader2, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -19,19 +19,6 @@ const Alertas = () => {
 
   const fetchAll = async () => {
     setLoading(true);
-
-    // Fetch each independently so one failure doesn't block the others
-    try {
-      const { data, error } = await supabase
-        .from('sponsored_products')
-        .select('*, products(nome)')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-      if (error) console.error('Error fetching sponsorships:', error);
-      else setSponsorships(data || []);
-    } catch (e) {
-      console.error('Sponsorship fetch failed:', e);
-    }
 
     try {
       const { data, error } = await supabase
@@ -86,20 +73,11 @@ const Alertas = () => {
     setLoading(false);
   };
 
-  const handleSponsorshipAction = async (id: string, action: 'approved' | 'rejected') => {
-    try {
-      const { error } = await supabase.from('sponsored_products').update({ status: action } as any).eq('id', id);
-      if (error) throw error;
-      toast.success(action === 'approved' ? 'Patrocínio aprovado!' : 'Patrocínio rejeitado');
-      setSponsorships(prev => prev.filter(s => s.id !== id));
-    } catch (e) {
-      toast.error('Erro ao atualizar patrocínio');
-    }
-  };
-
   const handleReportAction = async (id: string, action: 'reviewed' | 'resolved') => {
     try {
-      const { error } = await supabase.from('reports').update({ status: action }).eq('id', id);
+      const { error } = await supabase.rpc('admin_update_report', {
+        _report_id: id, _status: action
+      });
       if (error) throw error;
       toast.success('Denúncia atualizada!');
       setReports(prev => prev.filter(r => r.id !== id));
@@ -124,45 +102,6 @@ const Alertas = () => {
         </h1>
         <p className="text-muted-foreground">Acompanhamento em tempo real da plataforma</p>
       </div>
-
-      {/* Solicitações de Patrocínio */}
-      {sponsorships.length > 0 && (
-        <div>
-          <h2 className="text-xl font-bold text-slate-50 mb-4 flex items-center gap-2">
-            <Megaphone className="h-5 w-5 text-yellow-400" />
-            Solicitações de Patrocínio Pendentes ({sponsorships.length})
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sponsorships.map((sp) => (
-              <Card key={sp.id} className="border-l-4 border-l-yellow-500 bg-yellow-50">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-base text-stone-900">
-                      {sp.products?.nome || 'Produto'}
-                    </CardTitle>
-                    <Badge variant="secondary">Pendente</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {sp.description && <p className="text-sm text-muted-foreground">{sp.description}</p>}
-                  {sp.banner_url && <img src={sp.banner_url} alt="Banner" className="w-full h-24 object-cover rounded-md" />}
-                  <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(sp.created_at), { addSuffix: true, locale: ptBR })}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleSponsorshipAction(sp.id, 'approved')}>
-                      <CheckCircle className="h-3 w-3 mr-1" />Aprovar
-                    </Button>
-                    <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleSponsorshipAction(sp.id, 'rejected')}>
-                      Rejeitar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Denúncias Recentes */}
       {reports.length > 0 && (
@@ -229,7 +168,7 @@ const Alertas = () => {
         </div>
       )}
 
-      {alerts.length === 0 && sponsorships.length === 0 && reports.length === 0 && (
+      {alerts.length === 0 && reports.length === 0 && (
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">Nenhum alerta no momento</p>
