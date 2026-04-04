@@ -176,6 +176,7 @@ const App = () => {
                 <Route path="afiliados" element={<Suspense fallback={<PageSkeleton />}><ProgramaAfiliados /></Suspense>} />
                 <Route path="afiliados/cadastro" element={<Suspense fallback={<PageSkeleton />}><AfiliadoCadastro /></Suspense>} />
                 <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
+                <Route path="solicitar-fornecedor" element={<Suspense fallback={<PageSkeleton />}><SolicitarFornecedor /></Suspense>} />
               </Route>
 
               {/* Fornecedor Panel Routes */}
