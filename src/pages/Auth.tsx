@@ -291,6 +291,43 @@ const Auth = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Forgot Password Dialog */}
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent className="bg-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-[#7C3AED]" />
+              Recuperar Senha
+            </DialogTitle>
+          </DialogHeader>
+          {resetSent ? (
+            <div className="text-center py-6 space-y-4">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+              <h3 className="text-lg font-semibold text-gray-800">E-mail enviado!</h3>
+              <p className="text-sm text-gray-500">Verifique sua caixa de entrada para redefinir sua senha.</p>
+              <Button onClick={() => setShowForgotPassword(false)} className="w-full bg-[#5B21B6] hover:bg-[#4C1D95] rounded-full">
+                Voltar ao Login
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
+                <Input type="email" placeholder="seu@email.com" value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleForgotPassword()}
+                  className="rounded-full" />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowForgotPassword(false)} className="rounded-full">Cancelar</Button>
+                <Button onClick={handleForgotPassword} disabled={resetLoading} className="bg-[#5B21B6] hover:bg-[#4C1D95] rounded-full">
+                  {resetLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</> : 'Enviar link'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
