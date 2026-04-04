@@ -11,7 +11,6 @@ import { toast } from "sonner";
 const Alertas = () => {
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<any[]>([]);
-  const [sponsorships, setSponsorships] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
 
   useEffect(() => {
