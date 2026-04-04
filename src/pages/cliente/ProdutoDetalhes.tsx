@@ -604,8 +604,6 @@ const ProdutoDetalhes = () => {
                 </div>
               </div>
             )}
-              </div>
-            )}
 
             {/* Freight Calculator */}
             {product.supplierProfileId && (
