@@ -26,7 +26,7 @@ const configItems = [{
   editable: false
 }, {
   label: "Comissão Padrão",
-  value: "5%",
+  value: "7,5%",
   editable: false
 }, {
   label: "Contato de Suporte",
