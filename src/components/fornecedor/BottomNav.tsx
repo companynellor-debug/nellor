@@ -1,4 +1,4 @@
-import { Home, Package, MessageSquare, Tag, MoreHorizontal } from "lucide-react";
+import { Home, Package, MessageSquare, Tag, MoreHorizontal, Shield, Megaphone } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import {
@@ -33,6 +33,8 @@ export const BottomNavFornecedor = () => {
     { icon: Ticket, label: "Cupons", path: "/fornecedor/cupons", badge: activeCouponsCount },
     { icon: BarChart3, label: "Estatísticas", path: "/fornecedor/estatisticas" },
     { icon: DollarSign, label: "Financeiro", path: "/fornecedor/financeiro" },
+    { icon: Shield, label: "Permissões", path: "/fornecedor/permissoes" },
+    { icon: Megaphone, label: "Patrocínio", path: "/fornecedor/patrocinio" },
     { icon: Bell, label: "Notificações", path: "/fornecedor/notificacoes" },
     { icon: Store, label: "Editar Loja", path: "/fornecedor/editar-loja" },
   ];
