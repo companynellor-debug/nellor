@@ -388,7 +388,7 @@ const ProdutoDetalhes = () => {
 
             <div>
               <h1 className="text-xl lg:text-2xl font-bold mb-3">{product.name}</h1>
-              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className={`h-4 w-4 ${i < Math.floor(realRating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
@@ -400,6 +400,20 @@ const ProdutoDetalhes = () => {
                 <Badge variant={currentStock > 0 ? "outline" : "destructive"} className="flex items-center gap-1 text-xs">
                   <Package className="h-3 w-3" />{currentStock > 0 ? `${currentStock} em estoque` : 'Sem estoque'}
                 </Badge>
+              </div>
+
+              {/* Highlight badges */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                <Badge variant="secondary" className="text-xs">
+                  {productCondition === 'new' ? '✅ Novo' : productCondition === 'refurbished' ? '🔄 Recondicionado' : '📦 Usado'}
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {productIsInternational ? '🌍 Internacional' : '🇧🇷 Nacional'}
+                </Badge>
+                {productWarrantyDays && (
+                  <Badge variant="secondary" className="text-xs">🛡️ Garantia {productWarrantyDays} dias</Badge>
+                )}
+                {productBrand && <Badge variant="outline" className="text-xs">🏷️ {productBrand}</Badge>}
               </div>
               {product.supplierUuid && <div className="mt-2"><ReportButton targetType="product" targetId={product.supplierUuid} /></div>}
             </div>
