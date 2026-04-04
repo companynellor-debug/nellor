@@ -344,7 +344,13 @@ const Carrinho = () => {
                               {formatCurrencyFromDecimal(shippingInfo.price)}
                             </span>
                           )}
-                        </div>
+                          </div>
+
+                          {shippingInfo.deliveryDaysMin != null && shippingInfo.deliveryDaysMax != null && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              📦 Prazo estimado: {shippingInfo.deliveryDaysMin} a {shippingInfo.deliveryDaysMax} dias úteis
+                            </p>
+                          )}
 
                         {shippingInfo.freeAbove && !shippingInfo.isFreeShipping && (
                           <p className="text-xs text-green-600">
