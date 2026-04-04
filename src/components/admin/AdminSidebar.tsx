@@ -13,7 +13,8 @@ import {
   Image,
   PieChart,
   UserCheck,
-  Megaphone
+  Megaphone,
+  ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

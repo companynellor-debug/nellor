@@ -89,6 +89,7 @@ const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
 // Reconciliacao removido - era dependente do Stripe
 const AdminAffiliatePrestadores = lazy(() => import("./pages/admin/AffiliatePrestadores"));
 const AdminPatrocinios = lazy(() => import("./pages/admin/Patrocinios"));
+const AdminSolicitacoesFornecedor = lazy(() => import("./pages/admin/SolicitacoesFornecedor"));
 // AdminNellorDrop removido - desativado temporariamente
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 
