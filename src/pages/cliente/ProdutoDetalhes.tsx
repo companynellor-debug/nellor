@@ -69,14 +69,19 @@ const ProdutoDetalhes = () => {
   const unitsPerSaleUnit = (supabaseProductById as any)?.units_per_sale_unit || 1;
   const minOrderQuantity = (supabaseProductById as any)?.min_order_quantity || 1;
   const productBrand = (supabaseProductById as any)?.brand || '';
+  const productModel = (supabaseProductById as any)?.model || '';
   const productMaterial = (supabaseProductById as any)?.material || '';
   const productCondition = (supabaseProductById as any)?.condition || 'new';
+  const productGender = (supabaseProductById as any)?.gender || 'none';
+  const productAgeGroup = (supabaseProductById as any)?.age_group || 'none';
   const productWeightGrams = (supabaseProductById as any)?.weight_grams;
   const productWidthCm = (supabaseProductById as any)?.width_cm;
   const productHeightCm = (supabaseProductById as any)?.height_cm;
   const productDepthCm = (supabaseProductById as any)?.depth_cm;
   const productNcm = (supabaseProductById as any)?.ncm_code;
   const productIsInternational = (supabaseProductById as any)?.is_international;
+  const productWarrantyDays = (supabaseProductById as any)?.warranty_days;
+  const productWhatIsInTheBox = (supabaseProductById as any)?.what_is_in_the_box;
 
   const productIsKit = supabaseProductById?.is_kit || false;
   const productKitItems: { name: string; quantity: number }[] = useMemo(() => (supabaseProductById?.kit_items as any[]) || [], [supabaseProductById]);
@@ -383,7 +388,7 @@ const ProdutoDetalhes = () => {
 
             <div>
               <h1 className="text-xl lg:text-2xl font-bold mb-3">{product.name}</h1>
-              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className={`h-4 w-4 ${i < Math.floor(realRating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
@@ -395,6 +400,20 @@ const ProdutoDetalhes = () => {
                 <Badge variant={currentStock > 0 ? "outline" : "destructive"} className="flex items-center gap-1 text-xs">
                   <Package className="h-3 w-3" />{currentStock > 0 ? `${currentStock} em estoque` : 'Sem estoque'}
                 </Badge>
+              </div>
+
+              {/* Highlight badges */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                <Badge variant="secondary" className="text-xs">
+                  {productCondition === 'new' ? '✅ Novo' : productCondition === 'refurbished' ? '🔄 Recondicionado' : '📦 Usado'}
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {productIsInternational ? '🌍 Internacional' : '🇧🇷 Nacional'}
+                </Badge>
+                {productWarrantyDays && (
+                  <Badge variant="secondary" className="text-xs">🛡️ Garantia {productWarrantyDays} dias</Badge>
+                )}
+                {productBrand && <Badge variant="outline" className="text-xs">🏷️ {productBrand}</Badge>}
               </div>
               {product.supplierUuid && <div className="mt-2"><ReportButton targetType="product" targetId={product.supplierUuid} /></div>}
             </div>
@@ -537,23 +556,52 @@ const ProdutoDetalhes = () => {
               </div>
             )}
 
-            {/* Product details table */}
-            {(productBrand || productMaterial || productWeightGrams || productWidthCm) && (
+            {/* Product Specifications - Shopee style */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h3 className="text-sm font-semibold mb-3">📋 Especificações do Produto</h3>
+              <Table>
+                <TableBody>
+                  {/* Informações Gerais */}
+                  {productBrand && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Marca</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productBrand}</TableCell></TableRow>}
+                  {productModel && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Modelo</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productModel}</TableCell></TableRow>}
+                  <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Condição</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productCondition === 'new' ? 'Novo' : productCondition === 'refurbished' ? 'Recondicionado' : 'Usado'}</TableCell></TableRow>
+                  <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Origem</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productIsInternational ? '🌍 Internacional' : '🇧🇷 Nacional'}</TableCell></TableRow>
+                  {productMaterial && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Material</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productMaterial}</TableCell></TableRow>}
+                  {productGender !== 'none' && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Gênero</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{{ male: 'Masculino', female: 'Feminino', unisex: 'Unissex', kids: 'Infantil' }[productGender] || productGender}</TableCell></TableRow>}
+                  {productAgeGroup !== 'none' && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Faixa Etária</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{{ adult: 'Adulto', teen: 'Adolescente', child: 'Criança', baby: 'Bebê' }[productAgeGroup] || productAgeGroup}</TableCell></TableRow>}
+                  {productWarrantyDays && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Garantia</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productWarrantyDays} dias</TableCell></TableRow>}
+                  {/* Dimensões e Peso */}
+                  {productWeightGrams && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Peso</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productWeightGrams >= 1000 ? `${(productWeightGrams / 1000).toFixed(1)} kg` : `${productWeightGrams}g`}</TableCell></TableRow>}
+                  {productWidthCm && productHeightCm && productDepthCm && (
+                    <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Dimensões (L×A×P)</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productWidthCm} × {productHeightCm} × {productDepthCm} cm</TableCell></TableRow>
+                  )}
+                  {productNcm && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">NCM</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productNcm}</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* What's in the box */}
+            {productWhatIsInTheBox && (
               <div className="bg-muted/30 rounded-lg p-4">
-                <h3 className="text-sm font-semibold mb-3">Detalhes do Produto</h3>
-                <Table>
-                  <TableBody>
-                    {productBrand && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Marca</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productBrand}</TableCell></TableRow>}
-                    {productMaterial && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Material</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productMaterial}</TableCell></TableRow>}
-                    <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Condição</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productCondition === 'new' ? 'Novo' : 'Usado'}</TableCell></TableRow>
-                    <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Origem</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productIsInternational ? 'Internacional' : 'Nacional'}</TableCell></TableRow>
-                    {productWeightGrams && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Peso</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productWeightGrams}g</TableCell></TableRow>}
-                    {productWidthCm && productHeightCm && productDepthCm && (
-                      <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Dimensões</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productWidthCm}×{productHeightCm}×{productDepthCm} cm</TableCell></TableRow>
-                    )}
-                    {productNcm && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">NCM</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productNcm}</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
+                <h3 className="text-sm font-semibold mb-2">📦 O que vem na caixa</h3>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{productWhatIsInTheBox}</p>
+              </div>
+            )}
+
+            {/* Seller info */}
+            {supplierProfile && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4" onClick={() => navigate(`/cliente/loja/${product.supplierProfileId}`)} style={{ cursor: 'pointer' }}>
+                <p className="text-xs text-muted-foreground mb-1">Vendido por</p>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8 border border-primary/20">
+                    <AvatarImage src={supplierProfile.foto_perfil_url} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">{supplierProfile.nome?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold text-primary">{supplierProfile.nome}</p>
+                    <p className="text-xs text-muted-foreground">Ver loja →</p>
+                  </div>
+                </div>
               </div>
             )}
 
