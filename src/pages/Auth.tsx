@@ -43,12 +43,7 @@ const Auth = () => {
     }
     if (serviceProviderId) {
       localStorage.setItem('nellor_service_provider_ref', serviceProviderId);
-      setTipo('fornecedor');
       setIsLogin(false);
-    }
-    const tipoParam = searchParams.get('tipo');
-    if (tipoParam === 'fornecedor') {
-      setTipo('fornecedor');
     }
   }, [serviceProviderId, nextParam, searchParams]);
 
