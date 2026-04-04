@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Store, CheckCircle2, Upload, Camera, Loader2, DollarSign, TrendingUp, Bell, MessageSquare, Sparkles, Package, MapPin } from "lucide-react";
+import { Store, CheckCircle2, Upload, Camera, Loader2, DollarSign, TrendingUp, Bell, MessageSquare, Sparkles, Package, MapPin, PartyPopper, BadgeCheck } from "lucide-react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
+import confetti from "canvas-confetti";
 
 const BRAZILIAN_STATES = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA",
