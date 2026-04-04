@@ -1403,6 +1403,7 @@ export type Database = {
       products: {
         Row: {
           affiliate_commission_percent: number | null
+          age_group: string | null
           ativo: boolean | null
           brand: string | null
           categoria_id: string | null
@@ -1414,6 +1415,7 @@ export type Database = {
           descricao_longa: string | null
           dimensoes: Json | null
           estoque: number
+          gender: string | null
           height_cm: number | null
           id: string
           imagens: string[] | null
@@ -1423,7 +1425,9 @@ export type Database = {
           keywords: string[] | null
           kit_items: Json | null
           material: string | null
+          max_order_quantity: number | null
           min_order_quantity: number | null
+          model: string | null
           ncm_code: string | null
           nome: string
           origin: string | null
@@ -1438,11 +1442,14 @@ export type Database = {
           updated_at: string | null
           variacoes: Json | null
           vendas_count: number | null
+          warranty_days: number | null
           weight_grams: number | null
+          what_is_in_the_box: string | null
           width_cm: number | null
         }
         Insert: {
           affiliate_commission_percent?: number | null
+          age_group?: string | null
           ativo?: boolean | null
           brand?: string | null
           categoria_id?: string | null
@@ -1454,6 +1461,7 @@ export type Database = {
           descricao_longa?: string | null
           dimensoes?: Json | null
           estoque?: number
+          gender?: string | null
           height_cm?: number | null
           id?: string
           imagens?: string[] | null
@@ -1463,7 +1471,9 @@ export type Database = {
           keywords?: string[] | null
           kit_items?: Json | null
           material?: string | null
+          max_order_quantity?: number | null
           min_order_quantity?: number | null
+          model?: string | null
           ncm_code?: string | null
           nome: string
           origin?: string | null
@@ -1478,11 +1488,14 @@ export type Database = {
           updated_at?: string | null
           variacoes?: Json | null
           vendas_count?: number | null
+          warranty_days?: number | null
           weight_grams?: number | null
+          what_is_in_the_box?: string | null
           width_cm?: number | null
         }
         Update: {
           affiliate_commission_percent?: number | null
+          age_group?: string | null
           ativo?: boolean | null
           brand?: string | null
           categoria_id?: string | null
@@ -1494,6 +1507,7 @@ export type Database = {
           descricao_longa?: string | null
           dimensoes?: Json | null
           estoque?: number
+          gender?: string | null
           height_cm?: number | null
           id?: string
           imagens?: string[] | null
@@ -1503,7 +1517,9 @@ export type Database = {
           keywords?: string[] | null
           kit_items?: Json | null
           material?: string | null
+          max_order_quantity?: number | null
           min_order_quantity?: number | null
+          model?: string | null
           ncm_code?: string | null
           nome?: string
           origin?: string | null
@@ -1518,7 +1534,9 @@ export type Database = {
           updated_at?: string | null
           variacoes?: Json | null
           vendas_count?: number | null
+          warranty_days?: number | null
           weight_grams?: number | null
+          what_is_in_the_box?: string | null
           width_cm?: number | null
         }
         Relationships: [
