@@ -254,14 +254,14 @@ const Dashboard = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Evolução de Pedidos */}
         <Card className="border-border hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">📈 Evolução de Pedidos ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'})</CardTitle>
+          <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
+            <CardTitle className="text-sm sm:text-lg text-foreground">📈 Pedidos ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : '30d'})</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="px-1 sm:px-6">
+            <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={salesData}>
                 <defs>
                   <linearGradient id="colorPedidos" x1="0" y1="0" x2="0" y2="1">
@@ -270,9 +270,9 @@ const Dashboard = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="date" className="fill-muted-foreground" fontSize={10} />
-                <YAxis className="fill-muted-foreground" />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
+                <XAxis dataKey="date" className="fill-muted-foreground" fontSize={9} tick={{ fontSize: 9 }} />
+                <YAxis className="fill-muted-foreground" width={30} tick={{ fontSize: 9 }} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
                 <Area type="monotone" dataKey="pedidos" name="Pedidos" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorPedidos)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -281,11 +281,11 @@ const Dashboard = () => {
 
         {/* Evolução de Receita (Comissão) */}
         <Card className="border-border hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">💰 Evolução de Receita Nellor ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'})</CardTitle>
+          <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
+            <CardTitle className="text-sm sm:text-lg text-foreground">💰 Receita Nellor ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : '30d'})</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="px-1 sm:px-6">
+            <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={revenueData}>
                 <defs>
                   <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
@@ -294,9 +294,9 @@ const Dashboard = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="date" className="fill-muted-foreground" fontSize={10} />
-                <YAxis className="fill-muted-foreground" />
-                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
+                <XAxis dataKey="date" className="fill-muted-foreground" fontSize={9} tick={{ fontSize: 9 }} />
+                <YAxis className="fill-muted-foreground" width={30} tick={{ fontSize: 9 }} />
+                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
                 <Area type="monotone" dataKey="receita" name="Receita" stroke="#10B981" fillOpacity={1} fill="url(#colorReceita)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -305,33 +305,33 @@ const Dashboard = () => {
 
         {/* Top Suppliers */}
         <Card className="border-border hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">🏆 Top 5 Fornecedores por Volume</CardTitle>
+          <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
+            <CardTitle className="text-sm sm:text-lg text-foreground">🏆 Top 5 Fornecedores</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-1 sm:px-6">
             {topSuppliers.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={topSuppliers}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="name" className="fill-muted-foreground" fontSize={10} />
-                  <YAxis className="fill-muted-foreground" />
-                  <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
+                  <XAxis dataKey="name" className="fill-muted-foreground" fontSize={8} tick={{ fontSize: 8 }} />
+                  <YAxis className="fill-muted-foreground" width={30} tick={{ fontSize: 9 }} />
+                  <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
                   <Bar dataKey="vendas" name="Vendas" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-center py-8 text-muted-foreground">Nenhum dado disponível</p>
+              <p className="text-center py-8 text-muted-foreground text-sm">Nenhum dado disponível</p>
             )}
           </CardContent>
         </Card>
 
         {/* Distribuição de Receita */}
         <Card className="border-border hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">🍰 Distribuição de Receita</CardTitle>
+          <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
+            <CardTitle className="text-sm sm:text-lg text-foreground">🍰 Distribuição de Receita</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="px-1 sm:px-6">
+            <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie 
                   data={distributionData} 
@@ -339,28 +339,55 @@ const Dashboard = () => {
                   cy="50%" 
                   labelLine={false}
                   label={({ name, value }) => value > 0 ? `${name}: R$ ${value.toFixed(0)}` : ''}
-                  outerRadius={100} 
+                  outerRadius={70} 
                   dataKey="value"
                 >
                   {distributionData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
-                <Legend />
+                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Pedidos Recentes */}
+      {/* Pedidos Recentes - Mobile: card list, Desktop: table */}
       <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="text-lg text-foreground">🔔 Pedidos Recentes</CardTitle>
+        <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
+          <CardTitle className="text-sm sm:text-lg text-foreground">🔔 Pedidos Recentes</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className="px-3 sm:px-6">
+          {/* Mobile card list */}
+          <div className="block sm:hidden space-y-3">
+            {recentOrders.length > 0 ? recentOrders.map((order: any) => (
+              <div key={order.id} className="border border-border rounded-lg p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-sm">{order.order_number}</span>
+                  <Badge 
+                    variant={order.payment_status === 'paid' ? 'default' : 'secondary'}
+                    className={`text-[10px] ${order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : ''}`}
+                  >
+                    {order.payment_status === 'paid' ? 'Pago' : order.payment_status === 'pending' ? 'Pendente' : order.payment_status}
+                  </Badge>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <span>{order.clientName}</span> → <span>{order.supplierName}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm">R$ {Number(order.total).toFixed(2)}</span>
+                  <span className="text-xs text-muted-foreground">{format(new Date(order.created_at), 'dd/MM HH:mm')}</span>
+                </div>
+              </div>
+            )) : (
+              <p className="text-center py-6 text-muted-foreground text-sm">Nenhum pedido encontrado</p>
+            )}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
