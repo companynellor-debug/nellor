@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone, CheckCircle2, Package } from "lucide-react";
+import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone, CheckCircle2, Package, Sparkles } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
