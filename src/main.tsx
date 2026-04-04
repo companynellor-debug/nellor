@@ -10,7 +10,62 @@ import { ProfileProvider } from "./hooks/useProfile";
 import { AuthProvider } from "./hooks/useAuth";
 import { SupabaseAuthProvider } from "./hooks/useSupabaseAuth";
 
-// ✅ Register SW only in production to avoid dev/runtime registration issues
+const DYNAMIC_IMPORT_RECOVERY_KEY = "nellor_dynamic_import_recovery_at";
+const DYNAMIC_IMPORT_RECOVERY_WINDOW_MS = 15000;
+
+const isDynamicImportError = (message: string) => {
+  const normalizedMessage = message.toLowerCase();
+
+  return [
+    "failed to fetch dynamically imported module",
+    "error loading dynamically imported module",
+    "importing a module script failed",
+  ].some((fragment) => normalizedMessage.includes(fragment));
+};
+
+const recoverFromDynamicImportError = () => {
+  if (typeof window === "undefined") return;
+
+  const now = Date.now();
+  const lastRecoveryAt = Number(sessionStorage.getItem(DYNAMIC_IMPORT_RECOVERY_KEY) ?? "0");
+
+  if (now - lastRecoveryAt < DYNAMIC_IMPORT_RECOVERY_WINDOW_MS) {
+    return;
+  }
+
+  sessionStorage.setItem(DYNAMIC_IMPORT_RECOVERY_KEY, String(now));
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("_reload", String(now));
+  window.location.replace(url.toString());
+};
+
+if (typeof window !== "undefined") {
+  window.addEventListener("vite:preloadError", (event) => {
+    event.preventDefault();
+    recoverFromDynamicImportError();
+  });
+
+  window.addEventListener("error", (event) => {
+    const message = event.message || (event.error instanceof Error ? event.error.message : "");
+
+    if (isDynamicImportError(message)) {
+      event.preventDefault();
+      recoverFromDynamicImportError();
+    }
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason;
+    const message = reason instanceof Error ? reason.message : typeof reason === "string" ? reason : "";
+
+    if (isDynamicImportError(message)) {
+      event.preventDefault();
+      recoverFromDynamicImportError();
+    }
+  });
+}
+
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   registerSW({
     immediate: true,
