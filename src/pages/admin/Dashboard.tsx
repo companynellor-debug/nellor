@@ -206,28 +206,29 @@ const Dashboard = () => {
 
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Dashboard
-          </h1>
-          <p className="text-muted-foreground">Visão geral da plataforma Nellor</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-          <div className="flex gap-2">
-            {(['today', '7days', '14days', '30days'] as const).map(filter => (
-              <Button
-                key={filter}
-                variant={dateFilter === filter ? 'default' : 'outline'}
-                onClick={() => setDateFilter(filter)}
-                size="sm"
-              >
-                {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : '30 dias'}
-              </Button>
-            ))}
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-1">
+              Dashboard
+            </h1>
+            <p className="text-sm text-muted-foreground">Visão geral da plataforma Nellor</p>
           </div>
+          {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+        </div>
+        <div className="grid grid-cols-4 gap-1.5 sm:flex sm:gap-2">
+          {(['today', '7days', '14days', '30days'] as const).map(filter => (
+            <Button
+              key={filter}
+              variant={dateFilter === filter ? 'default' : 'outline'}
+              onClick={() => setDateFilter(filter)}
+              size="sm"
+              className="text-xs sm:text-sm px-2 sm:px-3"
+            >
+              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7d' : filter === '14days' ? '14d' : '30d'}
+            </Button>
+          ))}
         </div>
       </div>
 
