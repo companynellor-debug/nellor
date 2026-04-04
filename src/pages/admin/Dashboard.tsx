@@ -233,20 +233,20 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {statsCards.map(stat => (
-          <Card key={stat.title} className="relative min-w-0 overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
+          <Card key={stat.title} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
             <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-            <CardHeader className="flex flex-row items-start justify-between gap-3 pb-1 px-3 pt-3 sm:px-6 sm:pt-6 sm:pb-2">
-              <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground leading-tight break-words">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 px-3 pt-3 sm:px-6 sm:pt-6 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                 {stat.title}
               </CardTitle>
               <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} />
             </CardHeader>
             <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
-              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight break-words">{stat.value}</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">{stat.value}</div>
               {stat.subtitle && (
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-snug break-words">{stat.subtitle}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">{stat.subtitle}</p>
               )}
             </CardContent>
           </Card>
