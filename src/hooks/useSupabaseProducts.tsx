@@ -42,7 +42,7 @@ export const useSupabaseProducts = () => {
 
       const { data, error } = await supabase
         .from('products')
-        .select('id, supplier_id, nome, descricao_curta, preco, estoque, categoria_id, imagens, ativo, rating_medio, total_reviews, vendas_count, tamanhos, cores, is_kit, created_at, updated_at')
+        .select('id, supplier_id, nome, descricao_curta, preco, estoque, categoria_id, imagens, ativo, rating_medio, total_reviews, vendas_count, tamanhos, cores, is_kit, created_at, updated_at, brand, model, material, gender, age_group, condition, weight_grams, width_cm, height_cm, depth_cm, ncm_code, sale_unit, units_per_sale_unit, min_order_quantity, max_order_quantity, is_cnpj_only, is_international, warranty_days, what_is_in_the_box')
         .eq('ativo', true)
         .order('created_at', { ascending: false })
         .range(from, to);
