@@ -2704,14 +2704,27 @@ export type Database = {
         Args: { _application_id: string; _reason: string }
         Returns: boolean
       }
-      admin_update_support_ticket: {
-        Args: {
-          _resposta_admin?: string
-          _status?: Database["public"]["Enums"]["support_status"]
-          _ticket_id: string
-        }
+      admin_update_report: {
+        Args: { _report_id: string; _status: string }
         Returns: boolean
       }
+      admin_update_support_ticket:
+        | {
+            Args: {
+              _resposta_admin?: string
+              _status?: Database["public"]["Enums"]["support_status"]
+              _ticket_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _resposta_admin?: string
+              _status?: string
+              _ticket_id: string
+            }
+            Returns: boolean
+          }
       bytea_to_text: { Args: { data: string }; Returns: string }
       create_affiliate_commission_for_order: {
         Args: { _order_id: string }
