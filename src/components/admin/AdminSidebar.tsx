@@ -13,7 +13,8 @@ import {
   Image,
   PieChart,
   UserCheck,
-  Megaphone
+  Megaphone,
+  ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ const menuItems = [
   { icon: PieChart, label: "Indicadores", path: "/admin/indicadores" },
   { icon: Users, label: "Usuários", path: "/admin/usuarios" },
   { icon: Store, label: "Fornecedores", path: "/admin/fornecedores" },
+  { icon: ClipboardList, label: "Solicitações Fornecedor", path: "/admin/solicitacoes-fornecedor" },
   { icon: UserCheck, label: "Afiliados & Prestadores", path: "/admin/afiliados-prestadores" },
   { icon: ShoppingCart, label: "Vendas & Pedidos", path: "/admin/vendas" },
   { icon: DollarSign, label: "Financeiro", path: "/admin/financeiro" },
