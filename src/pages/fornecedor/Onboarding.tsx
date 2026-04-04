@@ -251,6 +251,46 @@ const Onboarding = () => {
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
+  if (showCongrats) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden" style={{ minHeight: '600px' }}>
+          <WaveBackground />
+          <FloatingDots />
+          <div className="relative z-10 flex flex-col h-full items-center" style={{ minHeight: '600px' }}>
+            <div className="pt-10 pb-12 flex flex-col items-center">
+              <div className="p-4 backdrop-blur-sm rounded-2xl shadow-lg bg-primary-foreground">
+                <img src={logo} alt="Nellor" className="h-12 w-auto" />
+              </div>
+            </div>
+            <div className="flex-1 bg-white rounded-t-3xl px-6 py-10 flex flex-col items-center text-center w-full">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-green-200 animate-bounce">
+                <BadgeCheck className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-3xl font-extrabold text-foreground mb-3">Parabéns! 🎉</h2>
+              <p className="text-muted-foreground text-base mb-2">
+                Sua solicitação para se tornar <span className="font-semibold text-primary">fornecedor</span> foi <span className="font-semibold text-green-600">aprovada</span>!
+              </p>
+              <p className="text-muted-foreground text-sm mb-8 max-w-xs">
+                Agora vamos configurar sua loja para que seus produtos apareçam na plataforma.
+              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+                <PartyPopper className="h-4 w-4 text-yellow-500" />
+                <span>Faltam poucos passos para começar a vender</span>
+              </div>
+              <Button
+                onClick={() => setShowCongrats(false)}
+                className="w-full max-w-xs rounded-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white shadow-lg shadow-purple-200 text-base py-6"
+              >
+                Continuar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden" style={{ minHeight: '700px' }}>
