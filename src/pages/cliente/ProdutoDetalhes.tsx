@@ -556,23 +556,54 @@ const ProdutoDetalhes = () => {
               </div>
             )}
 
-            {/* Product details table */}
-            {(productBrand || productMaterial || productWeightGrams || productWidthCm) && (
+            {/* Product Specifications - Shopee style */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h3 className="text-sm font-semibold mb-3">📋 Especificações do Produto</h3>
+              <Table>
+                <TableBody>
+                  {/* Informações Gerais */}
+                  {productBrand && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Marca</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productBrand}</TableCell></TableRow>}
+                  {productModel && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Modelo</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productModel}</TableCell></TableRow>}
+                  <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Condição</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productCondition === 'new' ? 'Novo' : productCondition === 'refurbished' ? 'Recondicionado' : 'Usado'}</TableCell></TableRow>
+                  <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Origem</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productIsInternational ? '🌍 Internacional' : '🇧🇷 Nacional'}</TableCell></TableRow>
+                  {productMaterial && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Material</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productMaterial}</TableCell></TableRow>}
+                  {productGender !== 'none' && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Gênero</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{{ male: 'Masculino', female: 'Feminino', unisex: 'Unissex', kids: 'Infantil' }[productGender] || productGender}</TableCell></TableRow>}
+                  {productAgeGroup !== 'none' && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Faixa Etária</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{{ adult: 'Adulto', teen: 'Adolescente', child: 'Criança', baby: 'Bebê' }[productAgeGroup] || productAgeGroup}</TableCell></TableRow>}
+                  {productWarrantyDays && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Garantia</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productWarrantyDays} dias</TableCell></TableRow>}
+                  {/* Dimensões e Peso */}
+                  {productWeightGrams && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Peso</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productWeightGrams >= 1000 ? `${(productWeightGrams / 1000).toFixed(1)} kg` : `${productWeightGrams}g`}</TableCell></TableRow>}
+                  {productWidthCm && productHeightCm && productDepthCm && (
+                    <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">Dimensões (L×A×P)</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productWidthCm} × {productHeightCm} × {productDepthCm} cm</TableCell></TableRow>
+                  )}
+                  {productNcm && <TableRow className="border-b border-border/50"><TableCell className="text-muted-foreground py-2 px-2 text-xs w-1/3 bg-muted/50">NCM</TableCell><TableCell className="py-2 px-2 text-xs font-medium">{productNcm}</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* What's in the box */}
+            {productWhatIsInTheBox && (
               <div className="bg-muted/30 rounded-lg p-4">
-                <h3 className="text-sm font-semibold mb-3">Detalhes do Produto</h3>
-                <Table>
-                  <TableBody>
-                    {productBrand && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Marca</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productBrand}</TableCell></TableRow>}
-                    {productMaterial && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Material</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productMaterial}</TableCell></TableRow>}
-                    <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Condição</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productCondition === 'new' ? 'Novo' : 'Usado'}</TableCell></TableRow>
-                    <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Origem</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productIsInternational ? 'Internacional' : 'Nacional'}</TableCell></TableRow>
-                    {productWeightGrams && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Peso</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productWeightGrams}g</TableCell></TableRow>}
-                    {productWidthCm && productHeightCm && productDepthCm && (
-                      <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">Dimensões</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productWidthCm}×{productHeightCm}×{productDepthCm} cm</TableCell></TableRow>
-                    )}
-                    {productNcm && <TableRow><TableCell className="text-muted-foreground py-1.5 px-0 text-xs">NCM</TableCell><TableCell className="text-right py-1.5 px-0 text-xs font-medium">{productNcm}</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
+                <h3 className="text-sm font-semibold mb-2">📦 O que vem na caixa</h3>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{productWhatIsInTheBox}</p>
+              </div>
+            )}
+
+            {/* Seller info */}
+            {supplierProfile && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4" onClick={() => navigate(`/cliente/loja/${product.supplierProfileId}`)} style={{ cursor: 'pointer' }}>
+                <p className="text-xs text-muted-foreground mb-1">Vendido por</p>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8 border border-primary/20">
+                    <AvatarImage src={supplierProfile.foto_perfil_url} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">{supplierProfile.nome?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold text-primary">{supplierProfile.nome}</p>
+                    <p className="text-xs text-muted-foreground">Ver loja →</p>
+                  </div>
+                </div>
+              </div>
+            )}
               </div>
             )}
 
