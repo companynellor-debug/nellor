@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '@/assets/logo.png';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, CheckCircle } from 'lucide-react';
 import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
