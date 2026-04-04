@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   MessageCircle, User, Clock, ArrowLeft, Send, Loader2,
-  CheckCircle, XCircle, Flag, Megaphone, AlertTriangle, Image
+  CheckCircle, Flag
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,7 +27,6 @@ interface SupportTicket {
 
 const SuporteAdmin = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [sponsorships, setSponsorships] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -57,15 +56,6 @@ const SuporteAdmin = () => {
         profiles: { nome: t.user_name || 'Usuário', tipo: 'cliente' }
       })));
     } catch (e) { console.error('Tickets fetch failed:', e); }
-
-    // Sponsorships
-    try {
-      const { data, error } = await supabase
-        .from('sponsored_products')
-        .select('*, products(nome)')
-        .order('created_at', { ascending: false });
-      if (!error) setSponsorships(data || []);
-    } catch (e) { console.error(e); }
 
     // Reports
     try {
@@ -97,26 +87,24 @@ const SuporteAdmin = () => {
 
   const handleCloseTicket = async (ticketId: string) => {
     try {
-      const { error } = await supabase.rpc('admin_update_support_ticket', { _ticket_id: ticketId, _status: 'closed' });
+      const { error } = await supabase.rpc('admin_update_support_ticket', {
+        _ticket_id: ticketId, _status: 'closed'
+      });
       if (error) throw error;
       toast.success('Ticket fechado!');
       fetchAll();
       if (selectedTicket?.id === ticketId) setSelectedTicket(prev => prev ? { ...prev, status: 'closed' } : null);
-    } catch (e) { toast.error('Erro ao fechar ticket'); }
-  };
-
-  const handleSponsorshipAction = async (id: string, action: 'approved' | 'rejected') => {
-    try {
-      const { error } = await supabase.from('sponsored_products').update({ status: action } as any).eq('id', id);
-      if (error) throw error;
-      toast.success(action === 'approved' ? 'Patrocínio aprovado!' : 'Patrocínio rejeitado');
-      setSponsorships(prev => prev.filter(s => s.id !== id));
-    } catch (e) { toast.error('Erro ao atualizar patrocínio'); }
+    } catch (e) {
+      console.error('Close ticket error:', e);
+      toast.error('Erro ao fechar ticket');
+    }
   };
 
   const handleReportAction = async (id: string, action: 'reviewed' | 'resolved') => {
     try {
-      const { error } = await supabase.from('reports').update({ status: action }).eq('id', id);
+      const { error } = await supabase.rpc('admin_update_report', {
+        _report_id: id, _status: action
+      });
       if (error) throw error;
       toast.success('Denúncia atualizada!');
       setReports(prev => prev.filter(r => r.id !== id));
@@ -133,7 +121,6 @@ const SuporteAdmin = () => {
   };
 
   const openTickets = tickets.filter(t => t.status === 'open').length;
-  const pendingSponsorships = sponsorships.filter(s => s.status === 'pending').length;
   const pendingReports = reports.filter(r => r.status === 'pending').length;
 
   if (selectedTicket) {
@@ -199,25 +186,18 @@ const SuporteAdmin = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2 text-foreground">Suporte & Solicitações</h1>
-        <p className="text-muted-foreground">Tickets, patrocínios, banners e denúncias</p>
+        <h1 className="text-3xl font-bold mb-2 text-foreground">Suporte & Denúncias</h1>
+        <p className="text-muted-foreground">Tickets de suporte e denúncias de usuários</p>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-muted-foreground">Tickets Abertos</p>
             <Clock className="h-5 w-5 text-yellow-600" />
           </div>
           <p className="text-3xl font-bold">{openTickets}</p>
-        </Card>
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Patrocínios Pendentes</p>
-            <Megaphone className="h-5 w-5 text-orange-500" />
-          </div>
-          <p className="text-3xl font-bold">{pendingSponsorships}</p>
         </Card>
         <Card className="p-6">
           <div className="flex items-center justify-between mb-2">
@@ -230,12 +210,9 @@ const SuporteAdmin = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="tickets" className="w-full">
-        <TabsList className="w-full grid grid-cols-3">
+        <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="tickets" className="gap-1">
             <MessageCircle className="h-4 w-4" /> Tickets {openTickets > 0 && <Badge variant="destructive" className="ml-1 text-xs px-1.5 py-0">{openTickets}</Badge>}
-          </TabsTrigger>
-          <TabsTrigger value="sponsorships" className="gap-1">
-            <Megaphone className="h-4 w-4" /> Patrocínios {pendingSponsorships > 0 && <Badge variant="destructive" className="ml-1 text-xs px-1.5 py-0">{pendingSponsorships}</Badge>}
           </TabsTrigger>
           <TabsTrigger value="reports" className="gap-1">
             <Flag className="h-4 w-4" /> Denúncias {pendingReports > 0 && <Badge variant="destructive" className="ml-1 text-xs px-1.5 py-0">{pendingReports}</Badge>}
@@ -275,48 +252,6 @@ const SuporteAdmin = () => {
               ))}
             </div>
           </Card>
-        </TabsContent>
-
-        {/* Sponsorships Tab */}
-        <TabsContent value="sponsorships">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sponsorships.length === 0 ? (
-              <Card className="col-span-full">
-                <CardContent className="p-8 text-center">
-                  <Megaphone className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground">Nenhuma solicitação de patrocínio</p>
-                </CardContent>
-              </Card>
-            ) : sponsorships.map((sp) => (
-              <Card key={sp.id} className="border-l-4 border-l-orange-500">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-base">{sp.products?.nome || 'Produto'}</CardTitle>
-                    <Badge variant={sp.status === 'pending' ? 'secondary' : sp.status === 'approved' ? 'default' : 'destructive'}>
-                      {sp.status === 'pending' ? 'Pendente' : sp.status === 'approved' ? 'Aprovado' : 'Rejeitado'}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {sp.description && <p className="text-sm text-muted-foreground">{sp.description}</p>}
-                  {sp.banner_url && <img src={sp.banner_url} alt="Banner" className="w-full h-24 object-cover rounded-md" />}
-                  <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(sp.created_at), { addSuffix: true, locale: ptBR })}
-                  </p>
-                  {sp.status === 'pending' && (
-                    <div className="flex gap-2">
-                      <Button size="sm" className="flex-1" onClick={() => handleSponsorshipAction(sp.id, 'approved')}>
-                        <CheckCircle className="h-3 w-3 mr-1" />Aprovar
-                      </Button>
-                      <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleSponsorshipAction(sp.id, 'rejected')}>
-                        <XCircle className="h-3 w-3 mr-1" />Rejeitar
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </TabsContent>
 
         {/* Reports Tab */}
