@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Truck, MapPin, Package, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { Truck, MapPin, Package, Loader2, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { formatCep, fetchAddressByCep } from "@/utils/viaCep";
 import { useShippingCalculator, REGION_LABELS, ShippingRegion } from "@/hooks/useSupplierShipping";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
@@ -22,6 +22,8 @@ interface FreightResult {
   city?: string;
   state?: string;
   isFreeShipping: boolean;
+  deliveryDaysMin: number | null;
+  deliveryDaysMax: number | null;
 }
 
 export const FreightCalculator = ({ supplierId, subtotal = 0 }: FreightCalculatorProps) => {
@@ -131,6 +133,13 @@ export const FreightCalculator = ({ supplierId, subtotal = 0 }: FreightCalculato
                   </span>
                 )}
               </div>
+
+              {result.deliveryDaysMin != null && result.deliveryDaysMax != null && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>Prazo estimado: {result.deliveryDaysMin} a {result.deliveryDaysMax} dias úteis</span>
+                </div>
+              )}
 
               {result.freeAbove && !result.isFreeShipping && (
                 <p className="text-xs text-green-600">

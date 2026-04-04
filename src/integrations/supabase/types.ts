@@ -2449,10 +2449,67 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_shipping_config: {
+        Row: {
+          created_at: string
+          free_shipping_above: number | null
+          id: string
+          melhor_envio_token: string | null
+          origin_cep: string | null
+          origin_city: string | null
+          origin_state: string | null
+          supplier_id: string
+          updated_at: string
+          use_melhor_envio: boolean
+        }
+        Insert: {
+          created_at?: string
+          free_shipping_above?: number | null
+          id?: string
+          melhor_envio_token?: string | null
+          origin_cep?: string | null
+          origin_city?: string | null
+          origin_state?: string | null
+          supplier_id: string
+          updated_at?: string
+          use_melhor_envio?: boolean
+        }
+        Update: {
+          created_at?: string
+          free_shipping_above?: number | null
+          id?: string
+          melhor_envio_token?: string | null
+          origin_cep?: string | null
+          origin_city?: string | null
+          origin_state?: string | null
+          supplier_id?: string
+          updated_at?: string
+          use_melhor_envio?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_shipping_config_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_shipping_config_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: true
+            referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_shipping_regions: {
         Row: {
+          active: boolean
           allows_pickup: boolean
           created_at: string
+          delivery_days_max: number | null
+          delivery_days_min: number | null
           free_above: number | null
           id: string
           price: number
@@ -2461,8 +2518,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active?: boolean
           allows_pickup?: boolean
           created_at?: string
+          delivery_days_max?: number | null
+          delivery_days_min?: number | null
           free_above?: number | null
           id?: string
           price?: number
@@ -2471,8 +2531,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active?: boolean
           allows_pickup?: boolean
           created_at?: string
+          delivery_days_max?: number | null
+          delivery_days_min?: number | null
           free_above?: number | null
           id?: string
           price?: number
