@@ -54,6 +54,7 @@ const ClienteHome = () => {
   const { banners } = useSupabaseBanners();
   const { categories } = useSupabaseCategories();
   const { stores } = useSupabaseStores();
+  const { sponsoredIds } = useSponsoredProducts();
   const { cartItems } = useCart();
   const { canInstall, isInstalled, isIOS, installApp } = usePWA();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
