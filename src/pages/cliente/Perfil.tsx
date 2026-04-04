@@ -16,6 +16,7 @@ const Perfil = () => {
   const { profile, signOut } = useSupabaseAuth();
   const { orders } = useSupabaseOrders();
   const { canInstall, isInstalled } = usePWA();
+  const { application } = useSupplierApplication();
 
   const handleLogout = async () => {
     await signOut();
