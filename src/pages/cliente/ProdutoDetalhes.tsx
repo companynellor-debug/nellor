@@ -69,14 +69,19 @@ const ProdutoDetalhes = () => {
   const unitsPerSaleUnit = (supabaseProductById as any)?.units_per_sale_unit || 1;
   const minOrderQuantity = (supabaseProductById as any)?.min_order_quantity || 1;
   const productBrand = (supabaseProductById as any)?.brand || '';
+  const productModel = (supabaseProductById as any)?.model || '';
   const productMaterial = (supabaseProductById as any)?.material || '';
   const productCondition = (supabaseProductById as any)?.condition || 'new';
+  const productGender = (supabaseProductById as any)?.gender || 'none';
+  const productAgeGroup = (supabaseProductById as any)?.age_group || 'none';
   const productWeightGrams = (supabaseProductById as any)?.weight_grams;
   const productWidthCm = (supabaseProductById as any)?.width_cm;
   const productHeightCm = (supabaseProductById as any)?.height_cm;
   const productDepthCm = (supabaseProductById as any)?.depth_cm;
   const productNcm = (supabaseProductById as any)?.ncm_code;
   const productIsInternational = (supabaseProductById as any)?.is_international;
+  const productWarrantyDays = (supabaseProductById as any)?.warranty_days;
+  const productWhatIsInTheBox = (supabaseProductById as any)?.what_is_in_the_box;
 
   const productIsKit = supabaseProductById?.is_kit || false;
   const productKitItems: { name: string; quantity: number }[] = useMemo(() => (supabaseProductById?.kit_items as any[]) || [], [supabaseProductById]);
