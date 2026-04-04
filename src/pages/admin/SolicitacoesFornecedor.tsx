@@ -70,35 +70,10 @@ const SolicitacoesFornecedor = () => {
 
   const approveMutation = useMutation({
     mutationFn: async (appId: string) => {
-      const app = applications.find((a) => a.id === appId);
-      if (!app) throw new Error("Solicitação não encontrada");
-
-      // Update application status
-      const { error: appError } = await supabase
-        .from("supplier_applications")
-        .update({
-          status: "approved" as any,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("id", appId);
-      if (appError) throw appError;
-
-      // Update profile to supplier
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ tipo: "fornecedor" as any })
-        .eq("id", app.user_id);
-      if (profileError) throw profileError;
-
-      // Send notification
-      await supabase.from("notifications").insert({
-        user_id: app.user_id,
-        title: "🎉 Sua conta de fornecedor foi aprovada!",
-        body: "Parabéns! Sua solicitação foi aprovada. Complete o onboarding para começar a vender.",
-        type: "alert" as any,
-        sound: true,
-        data: { event: "supplier_approved", url: "/fornecedor" },
+      const { error } = await supabase.rpc("admin_approve_supplier_application", {
+        _application_id: appId,
       });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-supplier-applications"] });
@@ -110,27 +85,11 @@ const SolicitacoesFornecedor = () => {
 
   const rejectMutation = useMutation({
     mutationFn: async ({ appId, reason }: { appId: string; reason: string }) => {
-      const app = applications.find((a) => a.id === appId);
-      if (!app) throw new Error("Solicitação não encontrada");
-
-      const { error } = await supabase
-        .from("supplier_applications")
-        .update({
-          status: "rejected" as any,
-          rejection_reason: reason,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("id", appId);
-      if (error) throw error;
-
-      await supabase.from("notifications").insert({
-        user_id: app.user_id,
-        title: "❌ Solicitação de fornecedor rejeitada",
-        body: `Motivo: ${reason}. Você poderá enviar uma nova solicitação após 7 dias.`,
-        type: "alert" as any,
-        sound: true,
-        data: { event: "supplier_rejected", url: "/cliente/perfil" },
+      const { error } = await supabase.rpc("admin_reject_supplier_application", {
+        _application_id: appId,
+        _reason: reason,
       });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-supplier-applications"] });

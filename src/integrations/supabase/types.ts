@@ -2678,6 +2678,14 @@ export type Database = {
         Args: { _service_provider_id: string; _supplier_id: string }
         Returns: boolean
       }
+      admin_approve_supplier_application: {
+        Args: { _application_id: string }
+        Returns: boolean
+      }
+      admin_reject_supplier_application: {
+        Args: { _application_id: string; _reason: string }
+        Returns: boolean
+      }
       admin_update_support_ticket: {
         Args: {
           _resposta_admin?: string
