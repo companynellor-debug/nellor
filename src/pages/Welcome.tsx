@@ -103,7 +103,7 @@ const Welcome = () => {
     }} />
 
       {/* Content - compact layout */}
-      <div className="relative flex-1 flex flex-col items-center px-4 pt-1 pb-3 gap-0 sm:px-5 sm:pb-6 sm:pt-6 justify-between my-[66px]">
+      <div className="relative flex-1 flex flex-col items-center px-4 pt-1 pb-3 gap-0 sm:px-5 sm:pb-6 sm:pt-6 justify-between my-4 sm:my-6 lg:my-8">
         {/* Top section - Logo */}
         <div className="flex flex-col items-center mt-0 sm:mt-6 mb-0 sm:mb-3">
           <img src={logo} alt="Nellor" className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-lg" />
