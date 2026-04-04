@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Store, DollarSign, ShoppingCart, Percent, Loader2, TrendingUp, Clock, CheckCircle, AlertTriangle } from "lucide-react";
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
@@ -206,47 +206,47 @@ const Dashboard = () => {
 
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
+    <div className="w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="space-y-4 overflow-hidden">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-1">
               Dashboard
             </h1>
             <p className="text-sm text-muted-foreground">Visão geral da plataforma Nellor</p>
           </div>
-          {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+          {loading && <Loader2 className="h-4 w-4 animate-spin text-primary self-start sm:self-auto" />}
         </div>
-        <div className="grid grid-cols-4 gap-1.5 sm:flex sm:gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
           {(['today', '7days', '14days', '30days'] as const).map(filter => (
             <Button
               key={filter}
               variant={dateFilter === filter ? 'default' : 'outline'}
               onClick={() => setDateFilter(filter)}
               size="sm"
-              className="text-xs sm:text-sm px-2 sm:px-3"
+              className="h-10 w-full px-3 text-sm whitespace-nowrap sm:w-auto"
             >
-              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7d' : filter === '14days' ? '14d' : '30d'}
+              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : '30 dias'}
             </Button>
           ))}
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {statsCards.map(stat => (
-          <Card key={stat.title} className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
+          <Card key={stat.title} className="relative min-w-0 overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
             <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-            <CardHeader className="flex flex-row items-center justify-between pb-1 px-3 pt-3 sm:px-6 sm:pt-6 sm:pb-2">
-              <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground leading-tight">
+            <CardHeader className="flex flex-row items-start justify-between gap-3 pb-1 px-3 pt-3 sm:px-6 sm:pt-6 sm:pb-2">
+              <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground leading-tight break-words">
                 {stat.title}
               </CardTitle>
               <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} />
             </CardHeader>
             <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
-              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground truncate">{stat.value}</div>
+              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight break-words">{stat.value}</div>
               {stat.subtitle && (
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">{stat.subtitle}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-snug break-words">{stat.subtitle}</p>
               )}
             </CardContent>
           </Card>
@@ -256,13 +256,13 @@ const Dashboard = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Evolução de Pedidos */}
-        <Card className="border-border hover:shadow-lg transition-shadow">
+        <Card className="min-w-0 overflow-hidden border-border hover:shadow-lg transition-shadow">
           <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
             <CardTitle className="text-sm sm:text-lg text-foreground">📈 Pedidos ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : '30d'})</CardTitle>
           </CardHeader>
-          <CardContent className="px-1 sm:px-6">
+          <CardContent className="overflow-hidden px-1 sm:px-6">
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={salesData}>
+              <AreaChart data={salesData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorPedidos" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
@@ -280,13 +280,13 @@ const Dashboard = () => {
         </Card>
 
         {/* Evolução de Receita (Comissão) */}
-        <Card className="border-border hover:shadow-lg transition-shadow">
+        <Card className="min-w-0 overflow-hidden border-border hover:shadow-lg transition-shadow">
           <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
             <CardTitle className="text-sm sm:text-lg text-foreground">💰 Receita Nellor ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : '30d'})</CardTitle>
           </CardHeader>
-          <CardContent className="px-1 sm:px-6">
+          <CardContent className="overflow-hidden px-1 sm:px-6">
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={revenueData}>
+              <AreaChart data={revenueData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
@@ -304,16 +304,16 @@ const Dashboard = () => {
         </Card>
 
         {/* Top Suppliers */}
-        <Card className="border-border hover:shadow-lg transition-shadow">
+        <Card className="min-w-0 overflow-hidden border-border hover:shadow-lg transition-shadow">
           <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
             <CardTitle className="text-sm sm:text-lg text-foreground">🏆 Top 5 Fornecedores</CardTitle>
           </CardHeader>
-          <CardContent className="px-1 sm:px-6">
+          <CardContent className="overflow-hidden px-1 sm:px-6">
             {topSuppliers.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={topSuppliers}>
+                <BarChart data={topSuppliers} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="name" className="fill-muted-foreground" fontSize={8} tick={{ fontSize: 8 }} />
+                  <XAxis dataKey="name" className="fill-muted-foreground" fontSize={8} tick={{ fontSize: 8 }} tickFormatter={(value: string) => value.length > 10 ? `${value.slice(0, 10)}…` : value} />
                   <YAxis className="fill-muted-foreground" width={30} tick={{ fontSize: 9 }} />
                   <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
                   <Bar dataKey="vendas" name="Vendas" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
@@ -326,11 +326,11 @@ const Dashboard = () => {
         </Card>
 
         {/* Distribuição de Receita */}
-        <Card className="border-border hover:shadow-lg transition-shadow">
+        <Card className="min-w-0 overflow-hidden border-border hover:shadow-lg transition-shadow">
           <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
             <CardTitle className="text-sm sm:text-lg text-foreground">🍰 Distribuição de Receita</CardTitle>
           </CardHeader>
-          <CardContent className="px-1 sm:px-6">
+          <CardContent className="overflow-hidden px-1 sm:px-6">
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie 
@@ -338,7 +338,7 @@ const Dashboard = () => {
                   cx="50%" 
                   cy="50%" 
                   labelLine={false}
-                  label={({ name, value }) => value > 0 ? `${name}: R$ ${value.toFixed(0)}` : ''}
+                  label={false}
                   outerRadius={70} 
                   dataKey="value"
                 >
@@ -347,9 +347,16 @@ const Dashboard = () => {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              {distributionData.map((entry) => (
+                <div key={entry.name} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                  <span className="break-words">{entry.name}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -363,9 +370,9 @@ const Dashboard = () => {
           {/* Mobile card list */}
           <div className="block sm:hidden space-y-3">
             {recentOrders.length > 0 ? recentOrders.map((order: any) => (
-              <div key={order.id} className="border border-border rounded-lg p-3 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-sm">{order.order_number}</span>
+              <div key={order.id} className="border border-border rounded-lg p-3 space-y-1.5 overflow-hidden">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-sm truncate">{order.order_number}</span>
                   <Badge 
                     variant={order.payment_status === 'paid' ? 'default' : 'secondary'}
                     className={`text-[10px] ${order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : ''}`}
@@ -373,7 +380,7 @@ const Dashboard = () => {
                     {order.payment_status === 'paid' ? 'Pago' : order.payment_status === 'pending' ? 'Pendente' : order.payment_status}
                   </Badge>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-muted-foreground truncate">
                   <span>{order.clientName}</span> → <span>{order.supplierName}</span>
                 </div>
                 <div className="flex items-center justify-between">
