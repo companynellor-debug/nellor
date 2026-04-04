@@ -1,4 +1,4 @@
-import { Home, Package, MessageSquare, Tag, MoreHorizontal } from "lucide-react";
+import { Home, Package, MessageSquare, Tag, MoreHorizontal, Shield, Megaphone } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import {
