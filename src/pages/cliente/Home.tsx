@@ -21,6 +21,7 @@ import { usePWA } from "@/hooks/usePWA";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useProductVariations } from "@/hooks/useProductVariations";
 import { getColorHex } from "@/utils/colorMap";
+import { useSponsoredProducts } from "@/hooks/useSponsoredProducts";
 
 const ProductCardColorDots = ({ productId }: {productId: string;}) => {
   const { variations } = useProductVariations(productId);
