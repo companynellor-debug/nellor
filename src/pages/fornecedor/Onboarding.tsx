@@ -37,7 +37,17 @@ const WaveBackground = () => <div className="absolute top-0 left-0 right-0 h-[45
 const Onboarding = () => {
   const navigate = useNavigate();
   const { completeOnboarding, user } = useSupabaseAuth();
+  const [showCongrats, setShowCongrats] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (showCongrats) {
+      setTimeout(() => {
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      }, 400);
+    }
+  }, [showCongrats]);
   const [loading, setLoading] = useState(false);
   const [storeData, setStoreData] = useState({
     storeName: "",
