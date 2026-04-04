@@ -233,9 +233,9 @@ export default function SolicitarFornecedor() {
         {/* Progress indicator */}
         {(step === "form" || step === "documents") && (
           <div className="flex items-center gap-2">
-            {["Dados", "Documentos", "Análise"].map((label, i) => {
+        {["Dados", "Documentos", "Análise"].map((label, i) => {
               const isActive = (step === "form" && i === 0) || (step === "documents" && i === 1);
-              const isDone = (step === "documents" && i === 0) || (step === "waiting" && i <= 1);
+              const isDone = (step === "documents" && i === 0);
               return (
                 <div key={label} className="flex-1">
                   <div className={`h-1.5 rounded-full transition-colors ${isDone ? "bg-primary" : isActive ? "bg-primary" : "bg-muted"}`} />
