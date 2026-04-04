@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '@/assets/logo.png';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, CheckCircle } from 'lucide-react';
 import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -23,6 +23,10 @@ const Auth = () => {
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const {
     signIn,
@@ -133,6 +137,25 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!resetEmail.trim()) {
+      toast.error('Digite seu e-mail');
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (error: any) {
+      toast.error('Erro ao enviar: ' + error.message);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -216,6 +239,14 @@ const Auth = () => {
               <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
             </div>
 
+            {isLogin && (
+              <div className="text-right -mt-2">
+                <button type="button" onClick={() => { setShowForgotPassword(true); setResetEmail(email); setResetSent(false); }}
+                  className="text-xs text-[#7C3AED] hover:underline">
+                  Esqueci minha senha
+                </button>
+              </div>
+            )}
 
             <Button type="submit" disabled={submitting} className="w-full h-11 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-semibold rounded-full mt-4 shadow-md">
               {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'ENTRAR' : 'CRIAR CONTA'}
@@ -258,6 +289,43 @@ const Auth = () => {
               Acessar
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* Forgot Password Dialog */}
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent className="bg-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-[#7C3AED]" />
+              Recuperar Senha
+            </DialogTitle>
+          </DialogHeader>
+          {resetSent ? (
+            <div className="text-center py-6 space-y-4">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+              <h3 className="text-lg font-semibold text-gray-800">E-mail enviado!</h3>
+              <p className="text-sm text-gray-500">Verifique sua caixa de entrada para redefinir sua senha.</p>
+              <Button onClick={() => setShowForgotPassword(false)} className="w-full bg-[#5B21B6] hover:bg-[#4C1D95] rounded-full">
+                Voltar ao Login
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
+                <Input type="email" placeholder="seu@email.com" value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleForgotPassword()}
+                  className="rounded-full" />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowForgotPassword(false)} className="rounded-full">Cancelar</Button>
+                <Button onClick={handleForgotPassword} disabled={resetLoading} className="bg-[#5B21B6] hover:bg-[#4C1D95] rounded-full">
+                  {resetLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</> : 'Enviar link'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
