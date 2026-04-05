@@ -88,6 +88,7 @@ const [analytics, setAnalytics] = useState<any>(null);
 
   // Calcular data de início baseado no filtro
   const getStartDate = () => {
+    if (dateFilter === 'all') return null;
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     if (dateFilter === 'today') {
@@ -109,7 +110,7 @@ const [analytics, setAnalytics] = useState<any>(null);
 
   // Filtrar pedidos por data
   const startDate = getStartDate();
-  const filteredOrders = orders.filter(o => new Date(o.created_at) >= startDate);
+  const filteredOrders = startDate ? orders.filter(o => new Date(o.created_at) >= startDate) : orders;
   const newOrders = filteredOrders.filter(o => o.order_status === 'preparing').length;
   const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
   const totalOrders = filteredOrders.length;
