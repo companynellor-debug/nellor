@@ -260,7 +260,7 @@ const Dashboard = () => {
         {/* Evolução de Pedidos */}
         <Card className="min-w-0 overflow-hidden border-border hover:shadow-lg transition-shadow">
           <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
-            <CardTitle className="text-sm sm:text-lg text-foreground">📈 Pedidos ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : '30d'})</CardTitle>
+            <CardTitle className="text-sm sm:text-lg text-foreground">📈 Pedidos ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : dateFilter === '30days' ? '30d' : 'Total'})</CardTitle>
           </CardHeader>
           <CardContent className="overflow-hidden px-1 sm:px-6">
             <ResponsiveContainer width="100%" height={220}>
