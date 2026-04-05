@@ -18,7 +18,7 @@ const Dashboard = () => {
   const { profile } = useSupabaseAuth();
   const { products } = useSupplierProducts();
   const { statusLabel, canSell } = useIdentityVerification();
-  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('today');
+  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days' | 'all'>('today');
   const { orders } = useSupabaseOrders();
 const [analytics, setAnalytics] = useState<any>(null);
   const [testingNotification, setTestingNotification] = useState(false);
@@ -88,6 +88,7 @@ const [analytics, setAnalytics] = useState<any>(null);
 
   // Calcular data de início baseado no filtro
   const getStartDate = () => {
+    if (dateFilter === 'all') return null;
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     if (dateFilter === 'today') {
@@ -109,7 +110,7 @@ const [analytics, setAnalytics] = useState<any>(null);
 
   // Filtrar pedidos por data
   const startDate = getStartDate();
-  const filteredOrders = orders.filter(o => new Date(o.created_at) >= startDate);
+  const filteredOrders = startDate ? orders.filter(o => new Date(o.created_at) >= startDate) : orders;
   const newOrders = filteredOrders.filter(o => o.order_status === 'preparing').length;
   const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
   const totalOrders = filteredOrders.length;
@@ -179,18 +180,11 @@ const [analytics, setAnalytics] = useState<any>(null);
             {testingNotification ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Bell className="h-3 w-3 mr-1" />}
             Testar Push
           </Button>
-          <Button variant={dateFilter === 'today' ? 'default' : 'outline'} onClick={() => setDateFilter('today')} size="sm" className="text-xs sm:text-sm h-8">
-            Hoje
-          </Button>
-          <Button variant={dateFilter === '7days' ? 'default' : 'outline'} onClick={() => setDateFilter('7days')} size="sm" className="text-xs sm:text-sm h-8">
-            7 dias
-          </Button>
-          <Button variant={dateFilter === '14days' ? 'default' : 'outline'} onClick={() => setDateFilter('14days')} size="sm" className="text-xs sm:text-sm h-8">
-            14 dias
-          </Button>
-          <Button variant={dateFilter === '30days' ? 'default' : 'outline'} onClick={() => setDateFilter('30days')} size="sm" className="text-xs sm:text-sm h-8">
-            30 dias
-          </Button>
+          {(['today', '7days', '14days', '30days', 'all'] as const).map(filter => (
+            <Button key={filter} variant={dateFilter === filter ? 'default' : 'outline'} onClick={() => setDateFilter(filter)} size="sm" className="text-xs sm:text-sm h-8">
+              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : filter === '30days' ? '30 dias' : 'Total'}
+            </Button>
+          ))}
         </div>
       </div>
 

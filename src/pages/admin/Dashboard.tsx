@@ -11,7 +11,7 @@ import { formatCurrency } from "@/utils/formatCurrency";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
+  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days' | 'all'>('30days');
   
   const { orders: allOrders, loading: ordersLoading, error: ordersError, refetch: refetchOrders } = useAdminOrders();
   const { profiles: allProfiles, loading: profilesLoading, error: profilesError, refetch: refetchProfiles } = useAdminProfiles();
@@ -28,6 +28,7 @@ const Dashboard = () => {
   // ✅ Calcular tudo com useMemo para evitar recálculos desnecessários
   const { stats, salesData, revenueData, distributionData, topSuppliers, recentOrders, paidOrdersCount } = useMemo(() => {
     const getStartDate = () => {
+      if (dateFilter === 'all') return null;
       const now = new Date();
       now.setHours(0, 0, 0, 0);
       
@@ -46,9 +47,9 @@ const Dashboard = () => {
     );
     
     // Pedidos no período
-    const filteredOrders = paidOrders.filter((o) => 
-      new Date(o.created_at) >= startDate
-    );
+    const filteredOrders = startDate 
+      ? paidOrders.filter((o) => new Date(o.created_at) >= startDate)
+      : paidOrders;
     
     // Pedidos pendentes
     const pendingOrders = allOrders.filter((o) => 
@@ -60,7 +61,7 @@ const Dashboard = () => {
     const commission = gmvPeriod * 0.075;
 
     // Dados de evolução baseados no filtro selecionado
-    const daysToShow = dateFilter === 'today' ? 1 : dateFilter === '7days' ? 7 : dateFilter === '14days' ? 14 : 30;
+    const daysToShow = dateFilter === 'all' ? 90 : dateFilter === 'today' ? 1 : dateFilter === '7days' ? 7 : dateFilter === '14days' ? 14 : 30;
     const chartDays = [];
     for (let i = daysToShow - 1; i >= 0; i--) {
       const day = subDays(new Date(), i);
@@ -75,7 +76,7 @@ const Dashboard = () => {
       });
 
       chartDays.push({
-        date: format(day, 'dd/MM'),
+        date: format(day, dateFilter === 'all' ? 'dd/MM' : 'dd/MM'),
         pedidos: dayOrders.length,
         receita: dayOrders.reduce((sum, o) => sum + Number(o.total) * 0.075, 0)
       });
@@ -140,7 +141,7 @@ const Dashboard = () => {
     {
       title: "📊 GMV do Período",
       value: `R$ ${stats.gmvPeriod.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      subtitle: `GMV dos últimos ${dateFilter === 'today' ? 'hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'}`,
+      subtitle: `GMV ${dateFilter === 'all' ? 'total da plataforma' : dateFilter === 'today' ? 'de hoje' : dateFilter === '7days' ? 'dos últimos 7 dias' : dateFilter === '14days' ? 'dos últimos 14 dias' : 'dos últimos 30 dias'}`,
       icon: TrendingUp,
       color: "from-green-500 to-green-600",
     },
@@ -218,8 +219,8 @@ const Dashboard = () => {
           </div>
           {loading && <Loader2 className="h-4 w-4 animate-spin text-primary self-start sm:self-auto" />}
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
-          {(['today', '7days', '14days', '30days'] as const).map(filter => (
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+          {(['today', '7days', '14days', '30days', 'all'] as const).map(filter => (
             <Button
               key={filter}
               variant={dateFilter === filter ? 'default' : 'outline'}
@@ -227,7 +228,7 @@ const Dashboard = () => {
               size="sm"
               className="h-10 w-full px-3 text-sm whitespace-nowrap sm:w-auto"
             >
-              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : '30 dias'}
+              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : filter === '30days' ? '30 dias' : 'Total'}
             </Button>
           ))}
         </div>
@@ -259,7 +260,7 @@ const Dashboard = () => {
         {/* Evolução de Pedidos */}
         <Card className="min-w-0 overflow-hidden border-border hover:shadow-lg transition-shadow">
           <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
-            <CardTitle className="text-sm sm:text-lg text-foreground">📈 Pedidos ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : '30d'})</CardTitle>
+            <CardTitle className="text-sm sm:text-lg text-foreground">📈 Pedidos ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : dateFilter === '30days' ? '30d' : 'Total'})</CardTitle>
           </CardHeader>
           <CardContent className="overflow-hidden px-1 sm:px-6">
             <ResponsiveContainer width="100%" height={220}>
@@ -283,7 +284,7 @@ const Dashboard = () => {
         {/* Evolução de Receita (Comissão) */}
         <Card className="min-w-0 overflow-hidden border-border hover:shadow-lg transition-shadow">
           <CardHeader className="px-3 pt-3 pb-1 sm:px-6 sm:pt-6 sm:pb-2">
-            <CardTitle className="text-sm sm:text-lg text-foreground">💰 Receita Nellor ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : '30d'})</CardTitle>
+            <CardTitle className="text-sm sm:text-lg text-foreground">💰 Receita Nellor ({dateFilter === 'today' ? 'Hoje' : dateFilter === '7days' ? '7d' : dateFilter === '14days' ? '14d' : dateFilter === '30days' ? '30d' : 'Total'})</CardTitle>
           </CardHeader>
           <CardContent className="overflow-hidden px-1 sm:px-6">
             <ResponsiveContainer width="100%" height={220}>
