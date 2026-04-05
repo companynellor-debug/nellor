@@ -180,18 +180,11 @@ const [analytics, setAnalytics] = useState<any>(null);
             {testingNotification ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Bell className="h-3 w-3 mr-1" />}
             Testar Push
           </Button>
-          <Button variant={dateFilter === 'today' ? 'default' : 'outline'} onClick={() => setDateFilter('today')} size="sm" className="text-xs sm:text-sm h-8">
-            Hoje
-          </Button>
-          <Button variant={dateFilter === '7days' ? 'default' : 'outline'} onClick={() => setDateFilter('7days')} size="sm" className="text-xs sm:text-sm h-8">
-            7 dias
-          </Button>
-          <Button variant={dateFilter === '14days' ? 'default' : 'outline'} onClick={() => setDateFilter('14days')} size="sm" className="text-xs sm:text-sm h-8">
-            14 dias
-          </Button>
-          <Button variant={dateFilter === '30days' ? 'default' : 'outline'} onClick={() => setDateFilter('30days')} size="sm" className="text-xs sm:text-sm h-8">
-            30 dias
-          </Button>
+          {(['today', '7days', '14days', '30days', 'all'] as const).map(filter => (
+            <Button key={filter} variant={dateFilter === filter ? 'default' : 'outline'} onClick={() => setDateFilter(filter)} size="sm" className="text-xs sm:text-sm h-8">
+              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : filter === '30days' ? '30 dias' : 'Total'}
+            </Button>
+          ))}
         </div>
       </div>
 
