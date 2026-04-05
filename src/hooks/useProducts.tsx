@@ -82,7 +82,6 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         images: sp.imagens.length > 0 ? sp.imagens : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=600&fit=crop'],
         specs: [],
         customerReviews: [],
-        // Usar slug para filtragem (compatível com URL) e armazenar categoria_id também
         category: categoryData?.slug || 'outros',
         categoryId: sp.categoria_id,
         categoryName: categoryData?.nome || 'Outros',
@@ -91,6 +90,10 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         minValue: 0,
         supplierUuid: sp.id,
         supplierProfileId: sp.supplier_id,
+        saleUnit: sp.sale_unit || 'unit',
+        unitsPerSaleUnit: sp.units_per_sale_unit || 1,
+        baleApproxPieces: (sp.variacoes as any)?.baleApproxPieces || null,
+        kitItemsCount: sp.is_kit && sp.kit_items ? (sp.kit_items as any[]).length : 0,
       };
     });
 
