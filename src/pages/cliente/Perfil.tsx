@@ -9,7 +9,6 @@ import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { usePWA } from "@/hooks/usePWA";
 import { useSupplierApplication } from "@/hooks/useSupplierApplication";
 import CollectionsTab from "@/components/cliente/CollectionsTab";
-import SecurityTab from "@/components/cliente/SecurityTab";
 import nellorLogo from "@/assets/nellor-logo.png";
 
 const Perfil = () => {
@@ -73,18 +72,14 @@ const Perfil = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="geral" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-5">
+          <TabsList className="grid w-full grid-cols-2 mb-5">
             <TabsTrigger value="geral" className="gap-2">
               <User className="h-4 w-4" />
               Geral
             </TabsTrigger>
             <TabsTrigger value="pastas" className="gap-2">
               <Folder className="h-4 w-4" />
-              Pastas
-            </TabsTrigger>
-            <TabsTrigger value="seguranca" className="gap-2">
-              <Shield className="h-4 w-4" />
-              Segurança
+              Minhas Pastas
             </TabsTrigger>
           </TabsList>
 
@@ -152,6 +147,7 @@ const Perfil = () => {
               {[
                 { icon: MapPin, label: "Meus Endereços", route: "/cliente/enderecos" },
                 { icon: CreditCard, label: "Métodos de Pagamento", route: "/cliente/metodos-pagamento" },
+                { icon: Shield, label: "Segurança", route: "/cliente/seguranca" },
                 { icon: Bell, label: "Notificações", route: "/cliente/notificacoes" },
                 { icon: Users, label: "Programa de Afiliados", route: "/cliente/afiliados" },
               ].map((item) => {
@@ -277,10 +273,6 @@ const Perfil = () => {
 
           <TabsContent value="pastas" className="mt-0">
             <CollectionsTab />
-          </TabsContent>
-
-          <TabsContent value="seguranca" className="mt-0">
-            <SecurityTab />
           </TabsContent>
         </Tabs>
       </main>

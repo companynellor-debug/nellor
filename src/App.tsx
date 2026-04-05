@@ -36,6 +36,7 @@ const Favoritos = lazy(() => import("./pages/cliente/Favoritos"));
 const EditarPerfil = lazy(() => import("./pages/cliente/EditarPerfil"));
 const MeusPedidos = lazy(() => import("./pages/cliente/MeusPedidos"));
 const Enderecos = lazy(() => import("./pages/cliente/Enderecos"));
+const Seguranca = lazy(() => import("./pages/cliente/Seguranca"));
 const Notificacoes = lazy(() => import("./pages/cliente/Notificacoes"));
 const Produtos = lazy(() => import("./pages/cliente/Produtos"));
 const PerfilLoja = lazy(() => import("./pages/cliente/PerfilLoja"));
@@ -164,6 +165,7 @@ const App = () => {
                 <Route path="editar-perfil" element={<Suspense fallback={<PageSkeleton />}><EditarPerfil /></Suspense>} />
                 <Route path="meus-pedidos" element={<Suspense fallback={<PageSkeleton />}><MeusPedidos /></Suspense>} />
                 <Route path="enderecos" element={<Suspense fallback={<PageSkeleton />}><Enderecos /></Suspense>} />
+                <Route path="seguranca" element={<Suspense fallback={<PageSkeleton />}><Seguranca /></Suspense>} />
                 <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><Notificacoes /></Suspense>} />
                 <Route path="avaliacoes" element={<Suspense fallback={<PageSkeleton />}><Avaliacoes /></Suspense>} />
                 <Route path="avaliar-pedido/:orderId" element={<Suspense fallback={<PageSkeleton />}><AvaliarPedido /></Suspense>} />
