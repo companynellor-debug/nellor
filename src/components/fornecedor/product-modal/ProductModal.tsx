@@ -25,6 +25,29 @@ import { useProductVariations } from '@/hooks/useProductVariations';
 import { centsToDecimal, decimalToCents } from '@/utils/currency';
 import { supabase } from '@/integrations/supabase/client';
 
+function buildSaleTypeMetadata(formData: ProductFormData): any {
+  if (formData.saleType === 'closed_box') {
+    return {
+      _saleTypeMeta: 'closed_box',
+      boxSpecification: formData.boxSpecification,
+      unitsPerBox: parseInt(formData.unitsPerBox) || 0,
+      boxWeightKg: parseFloat(formData.boxWeightKg) || 0,
+    };
+  }
+  if (formData.saleType === 'bale') {
+    return {
+      _saleTypeMeta: 'bale',
+      baleType: formData.baleType,
+      baleWeightKg: parseFloat(formData.baleWeightKg) || 0,
+      baleApproxPieces: parseInt(formData.baleApproxPieces) || 0,
+      baleSizesIncluded: formData.baleSizesIncluded,
+      baleMixDescription: formData.baleMixDescription,
+      baleComposition: formData.baleComposition,
+    };
+  }
+  return null;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
