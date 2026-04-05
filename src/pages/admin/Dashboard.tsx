@@ -11,7 +11,7 @@ import { formatCurrency } from "@/utils/formatCurrency";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days'>('30days');
+  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days' | 'all'>('30days');
   
   const { orders: allOrders, loading: ordersLoading, error: ordersError, refetch: refetchOrders } = useAdminOrders();
   const { profiles: allProfiles, loading: profilesLoading, error: profilesError, refetch: refetchProfiles } = useAdminProfiles();
