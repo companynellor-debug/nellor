@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          description: string | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           city: string
@@ -828,6 +858,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      login_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -2719,6 +2773,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_info: string | null
+          id: string
+          ip_address: string | null
+          is_active: boolean
+          last_active_at: string
+          token: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean
+          last_active_at?: string
+          token?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean
+          last_active_at?: string
+          token?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       public_reviews: {
@@ -2776,6 +2863,7 @@ export type Database = {
         Returns: boolean
       }
       bytea_to_text: { Args: { data: string }; Returns: string }
+      check_login_blocked: { Args: { _email: string }; Returns: Json }
       create_affiliate_commission_for_order: {
         Args: { _order_id: string }
         Returns: undefined
@@ -3056,6 +3144,17 @@ export type Database = {
           total_sales: number
         }[]
       }
+      get_my_activity_logs: {
+        Args: never
+        Returns: {
+          action: string
+          created_at: string
+          description: string
+          id: string
+          ip_address: string
+          user_agent: string
+        }[]
+      }
       get_public_store_profile: {
         Args: { _id: string }
         Returns: {
@@ -3224,6 +3323,20 @@ export type Database = {
       is_collection_owner: {
         Args: { _collection_id: string; _user_id: string }
         Returns: boolean
+      }
+      log_activity: {
+        Args: {
+          _action: string
+          _description?: string
+          _ip_address?: string
+          _user_agent?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      record_login_attempt: {
+        Args: { _email: string; _ip_address?: string; _success: boolean }
+        Returns: undefined
       }
       regenerate_supplier_code: {
         Args: { _supplier_id: string }
