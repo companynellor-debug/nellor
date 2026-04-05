@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useRef } fro
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { logActivity } from '@/hooks/useActivityLog';
 
 interface Profile {
   id: string;
@@ -227,6 +228,14 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
 
+      // Check if login is blocked
+      const { data: blockCheck } = await supabase.rpc('check_login_blocked', { _email: email });
+      if (blockCheck && (blockCheck as any).blocked) {
+        const mins = (blockCheck as any).minutes_remaining || 15;
+        toast.error(`Conta temporariamente bloqueada. Tente novamente em ${mins} minutos ou redefina sua senha.`);
+        return { error: new Error('Account temporarily locked') };
+      }
+
       const executeSignIn = () => withTimeout(
         supabase.auth.signInWithPassword({
           email,
@@ -246,12 +255,19 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (error) {
+        // Record failed attempt
+        await supabase.rpc('record_login_attempt', { _email: email, _success: false }).catch(() => {});
         return { error };
       }
+
+      // Record successful attempt
+      await supabase.rpc('record_login_attempt', { _email: email, _success: true }).catch(() => {});
 
       // Fetch profile (non-blocking hard-fail)
       if (data.user) {
         await fetchProfile(data.user.id);
+        // Log activity
+        logActivity(data.user.id, 'login', 'Login realizado com sucesso');
       }
 
       toast.success('Login realizado! Bem-vindo de volta!');
@@ -307,6 +323,11 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
+      // Log activity before signing out
+      if (user) {
+        await logActivity(user.id, 'logout', 'Logout realizado');
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
