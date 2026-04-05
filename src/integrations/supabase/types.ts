@@ -1310,6 +1310,36 @@ export type Database = {
           },
         ]
       }
+      product_drafts: {
+        Row: {
+          created_at: string
+          current_step: number
+          draft_data: Json
+          id: string
+          sale_type: string
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_step?: number
+          draft_data?: Json
+          id?: string
+          sale_type?: string
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_step?: number
+          draft_data?: Json
+          id?: string
+          sale_type?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_drop_settings: {
         Row: {
           allow_affiliates: boolean | null
