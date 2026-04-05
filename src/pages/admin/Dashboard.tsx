@@ -61,7 +61,7 @@ const Dashboard = () => {
     const commission = gmvPeriod * 0.075;
 
     // Dados de evolução baseados no filtro selecionado
-    const daysToShow = dateFilter === 'today' ? 1 : dateFilter === '7days' ? 7 : dateFilter === '14days' ? 14 : 30;
+    const daysToShow = dateFilter === 'all' ? 90 : dateFilter === 'today' ? 1 : dateFilter === '7days' ? 7 : dateFilter === '14days' ? 14 : 30;
     const chartDays = [];
     for (let i = daysToShow - 1; i >= 0; i--) {
       const day = subDays(new Date(), i);
@@ -76,7 +76,7 @@ const Dashboard = () => {
       });
 
       chartDays.push({
-        date: format(day, 'dd/MM'),
+        date: format(day, dateFilter === 'all' ? 'dd/MM' : 'dd/MM'),
         pedidos: dayOrders.length,
         receita: dayOrders.reduce((sum, o) => sum + Number(o.total) * 0.075, 0)
       });
