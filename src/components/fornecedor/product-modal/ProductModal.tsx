@@ -309,6 +309,7 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
+          <DialogTitle className="sr-only">{editingProduct ? 'Editar Produto' : 'Cadastrar Produto'}</DialogTitle>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
             <div className="flex items-center gap-3">
