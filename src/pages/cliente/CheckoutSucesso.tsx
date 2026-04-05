@@ -8,7 +8,7 @@ import { CheckCircle, Package, Truck, ClipboardList, Home, AlertTriangle, Credit
 
 import { useCart } from "@/hooks/useCart";
 import { supabase } from "@/integrations/supabase/client";
-import confetti from "canvas-confetti";
+
 
 // Processing steps for visual feedback
 const PROCESSING_STEPS = [
@@ -87,7 +87,7 @@ const CheckoutSucesso = () => {
         await new Promise((resolve) => setTimeout(resolve, 300));
         setIsProcessing(false);
         setShowAnimation(true);
-        triggerConfetti();
+        
       } catch (err) {
         console.error("Error processing success page:", err);
         setError("Não foi possível verificar o status do pedido. Verifique em 'Meus Pedidos'.");
@@ -98,29 +98,6 @@ const CheckoutSucesso = () => {
     processOrder();
   }, [searchParams, navigate, clearCart]);
 
-  const triggerConfetti = () => {
-    // Two single bursts, max 150 particles total, auto-cleanup
-    confetti({
-      particleCount: 75,
-      spread: 100,
-      origin: { x: 0.2, y: 0.6 },
-      colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD", "#22c55e"],
-      ticks: 150,
-      disableForReducedMotion: true,
-    });
-    confetti({
-      particleCount: 75,
-      spread: 100,
-      origin: { x: 0.8, y: 0.6 },
-      colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD", "#22c55e"],
-      ticks: 150,
-      disableForReducedMotion: true,
-    });
-    // Remove confetti canvas after 3s
-    setTimeout(() => {
-      confetti.reset();
-    }, 3000);
-  };
 
    const steps = [
     {
