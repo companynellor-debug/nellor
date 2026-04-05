@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { useAdminOrders, useAdminProfiles } from "@/hooks/useAdminPrefetch";
 
 const Fornecedores = () => {
@@ -150,7 +151,7 @@ const Fornecedores = () => {
                         </div>
                       </TableCell>
                       <TableCell>{supplier.orders}</TableCell>
-                      <TableCell>R$ {supplier.revenue.toFixed(2)}</TableCell>
+                      <TableCell>{formatCurrency(supplier.revenue)}</TableCell>
                       <TableCell>
                         {supplier.ativo ? (
                           <Badge className="bg-green-100 text-green-800">Ativo</Badge>
@@ -228,7 +229,7 @@ const Fornecedores = () => {
             <CardContent>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{topSupplier?.name || 'N/A'}</div>
-                <p className="text-sm mt-2">{topSupplier ? `R$ ${topSupplier.vendas.toFixed(2)} em vendas` : 'Sem dados'}</p>
+                <p className="text-sm mt-2">{topSupplier ? `${formatCurrency(topSupplier.vendas)} em vendas` : 'Sem dados'}</p>
                 {topSupplier && (
                   <div className="flex items-center justify-center gap-2 mt-3">
                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
@@ -252,7 +253,7 @@ const Fornecedores = () => {
             <div className="space-y-4">
               <div><p className="text-sm text-muted-foreground">Fornecedor</p><p className="font-medium">{selectedFornecedor.name}</p></div>
               <div><p className="text-sm text-muted-foreground">Email</p><p className="font-medium">{selectedFornecedor.email}</p></div>
-              <div><p className="text-sm text-muted-foreground">Total Vendido</p><p className="font-medium">R$ {selectedFornecedor.revenue.toFixed(2)}</p></div>
+              <div><p className="text-sm text-muted-foreground">Total Vendido</p><p className="font-medium">{formatCurrency(selectedFornecedor.revenue)}</p></div>
               <div><p className="text-sm text-muted-foreground">Pedidos</p><p className="font-medium">{selectedFornecedor.orders}</p></div>
               <div className="flex gap-2 pt-2">
                 {selectedFornecedor.ativo ? (

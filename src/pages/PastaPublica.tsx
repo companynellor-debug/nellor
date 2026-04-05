@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -157,7 +158,7 @@ const PastaPublica = () => {
                         <div className="p-3">
                           <p className="text-sm font-medium line-clamp-2">{p.nome}</p>
                           <p className="text-primary font-bold text-sm mt-1">
-                            R$ {Number(p.preco).toFixed(2).replace(".", ",")}
+                            {formatCurrency(p.preco)}
                           </p>
                         </div>
                       </>

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,7 +136,7 @@ export const StepStripePayment = ({
           body: {
             user_id: supplierId,
             title: "🛍️ Novo Pedido Recebido!",
-            body: `Pedido ${newOrder.order_number} de ${buyerData.nome} — R$ ${total.toFixed(2).replace(".", ",")} confirmado!`,
+            body: `Pedido ${newOrder.order_number} de ${buyerData.nome} — ${formatCurrency(total)} confirmado!`,
             url: "/fornecedor/pedidos",
             type: "order_update",
             order_number: newOrder.order_number,
@@ -215,7 +216,7 @@ export const StepStripePayment = ({
                   <p className="text-sm text-green-600">
                     {appliedCoupon.coupon.tipo === "percentage"
                       ? `${appliedCoupon.coupon.valor}% de desconto`
-                      : `R$ ${appliedCoupon.coupon.valor.toFixed(2).replace(".", ",")} de desconto`}
+                      : `${formatCurrency(appliedCoupon.coupon.valor)} de desconto`}
                   </p>
                 </div>
               </div>
@@ -289,11 +290,11 @@ export const StepStripePayment = ({
               <Separator />
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>R$ {subtotal.toFixed(2).replace(".", ",")}</span>
+                <span>{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Frete</span>
-                <span>R$ {shipping.toFixed(2).replace(".", ",")}</span>
+                <span>{formatCurrency(shipping)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex items-center justify-between text-sm text-green-600">
@@ -301,13 +302,13 @@ export const StepStripePayment = ({
                     <Tag className="h-3 w-3" />
                     Desconto
                   </span>
-                  <span>- R$ {discount.toFixed(2).replace(".", ",")}</span>
+                  <span>- {formatCurrency(discount)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex items-center justify-between font-bold text-lg">
                 <span>Total</span>
-                <span className="text-primary">R$ {total.toFixed(2).replace(".", ",")}</span>
+                <span className="text-primary">{formatCurrency(total)}</span>
               </div>
             </div>
           </div>
@@ -327,7 +328,7 @@ export const StepStripePayment = ({
             ) : (
               <>
                 <CheckCircle className="h-5 w-5 mr-2" />
-                Finalizar Pedido — R$ {total.toFixed(2).replace(".", ",")}
+                Finalizar Pedido — {formatCurrency(total)}
               </>
             )}
           </Button>

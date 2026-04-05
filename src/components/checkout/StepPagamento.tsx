@@ -11,6 +11,7 @@ import { CreditCard, QrCode, ArrowLeft, Lock, ShieldCheck, Tag, X, Loader2 } fro
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
 import { useCoupons, AppliedCoupon } from "@/hooks/useCoupons";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 type PaymentMethod = "cartao" | "pix";
 
@@ -148,7 +149,7 @@ export const StepPagamento = ({
                     <p className="text-sm text-green-600">
                       {appliedCoupon.coupon.tipo === 'percentage' 
                         ? `${appliedCoupon.coupon.valor}% de desconto`
-                        : `R$ ${appliedCoupon.coupon.valor.toFixed(2).replace('.', ',')} de desconto`
+                        : `${formatCurrency(appliedCoupon.coupon.valor)} de desconto`
                       }
                     </p>
                   </div>
@@ -391,7 +392,7 @@ export const StepPagamento = ({
                       </p>
                     </div>
                     <p className="text-sm font-medium">
-                      R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}
+                      {formatCurrency(item.price * item.quantity)}
                     </p>
                   </div>
                 ))}
@@ -404,11 +405,11 @@ export const StepPagamento = ({
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>R$ {subtotal.toFixed(2).replace(".", ",")}</span>
+                <span>{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Frete</span>
-                <span>R$ {shipping.toFixed(2).replace(".", ",")}</span>
+                <span>{formatCurrency(shipping)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
@@ -416,14 +417,14 @@ export const StepPagamento = ({
                     <Tag className="h-3 w-3" />
                     Desconto
                   </span>
-                  <span>- R$ {discount.toFixed(2).replace(".", ",")}</span>
+                  <span>- {formatCurrency(discount)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
                 <span className="text-primary">
-                  R$ {total.toFixed(2).replace(".", ",")}
+                  {formatCurrency(total)}
                 </span>
               </div>
             </div>

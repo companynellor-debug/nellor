@@ -203,7 +203,7 @@ const CatalogoPDFButton = ({ storeInfo, products }: CatalogoPDFButtonProps) => {
         doc.setFont("helvetica", "bold");
         doc.setTextColor(59, 130, 246);
         doc.text(
-          `R$ ${Number(p.preco).toFixed(2).replace(".", ",")}`,
+          `R$ ${Number(p.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           curX + 2,
           curY + 57
         );

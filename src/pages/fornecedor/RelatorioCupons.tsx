@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -449,7 +450,7 @@ const RelatorioCupons = () => {
                         <td className="py-4 text-center font-medium">
                           {coupon.tipo === 'percentage' 
                             ? `${coupon.valor}%`
-                            : `R$ ${coupon.valor.toFixed(2).replace('.', ',')}`
+                            : formatCurrency(coupon.valor)
                           }
                         </td>
                         <td className="py-4 text-center">

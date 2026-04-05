@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { format, subDays } from "date-fns";
 import { useMemo } from "react";
 import { useAdminOrders } from "@/hooks/useAdminPrefetch";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const getStatusBadge = (status: string) => {
   const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; }> = {
@@ -41,7 +42,7 @@ const Vendas = () => {
       id: order.order_number,
       customer: order.buyer_name || "Cliente",
       supplier: order.supplier_name || "Fornecedor",
-      value: `R$ ${Number(order.total).toFixed(2)}`,
+      value: formatCurrency(order.total),
       status: order.order_status,
       date: format(new Date(order.created_at), "dd/MM"),
     }));
@@ -107,7 +108,7 @@ const Vendas = () => {
     },
     {
       title: "Vendas do Mês",
-      value: `R$ ${vendasMes.toFixed(2)}`,
+      value: formatCurrency(vendasMes),
       icon: DollarSign,
       color: "from-purple-500 to-purple-600"
     }

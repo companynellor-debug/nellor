@@ -240,7 +240,7 @@ const Recebimentos = () => {
           </CardHeader>
           <CardContent>
             <p className="text-lg font-bold text-orange-600">
-              {isVerified ? `R$ ${(valorLiquido * 0.3).toFixed(2)}` : "---"}
+              {isVerified ? formatCurrency(valorLiquido * 0.3) : "---"}
             </p>
             <p className="text-xs text-muted-foreground">Em processamento (até 14 dias)</p>
           </CardContent>

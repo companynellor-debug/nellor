@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
@@ -341,7 +342,7 @@ export function ProductDetailModal({
             {!isValid && (
               <p className="text-xs text-center text-muted-foreground">
                 {isPriceBelowMin
-                  ? `O preço mínimo de revenda é R$ ${minResalePrice.toFixed(2)}`
+                  ? `O preço mínimo de revenda é ${formatCurrency(minResalePrice)}`
                   : "Configure um preço válido para continuar"}
               </p>
             )}
