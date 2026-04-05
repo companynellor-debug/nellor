@@ -15,6 +15,7 @@ export default function SpecsStep({ data, onChange }: Props) {
   const [keywordInput, setKeywordInput] = useState('');
   const unitLabel = SALE_TYPE_CONFIG[data.saleType].unitLabel;
   const isPair = data.saleType === 'pair';
+  const isBox = data.saleType === 'closed_box';
 
   const addKeyword = (value: string) => {
     const word = value.trim().toLowerCase();
