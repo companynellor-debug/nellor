@@ -12,15 +12,35 @@ interface Props {
 }
 
 export default function BasicInfoStep({ data, onChange, categories, customCategories }: Props) {
-  const unitLabel = SALE_TYPE_CONFIG[data.saleType].label;
   const isBale = data.saleType === 'bale';
   const isKit = data.saleType === 'kit';
+  const isBox = data.saleType === 'closed_box';
+
+  const nameLabel = isKit ? 'do Kit' : isBale ? 'do Fardo' : isBox ? 'da Caixa' : 'do Produto';
+  const namePlaceholder = isBox
+    ? 'Ex: Caixa com 12 unidades — Camiseta Básica Branca'
+    : isKit
+      ? 'Ex: Kit Skincare Completo Premium'
+      : isBale
+        ? 'Ex: Fardo 10kg Roupas Femininas Sortidas'
+        : 'Ex: Camiseta Premium Algodão Pima Masculina';
 
   return (
     <div className="space-y-4">
+      {isBox && (
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+          <p className="text-sm text-primary font-medium">
+            📦 Na Nellor, todos os produtos dentro da caixa devem ser idênticos. Cada variação de cor, tamanho ou configuração deve ser cadastrada como uma caixa separada.
+          </p>
+        </div>
+      )}
+
       <div>
-        <Label>Nome {isKit ? 'do Kit' : isBale ? 'do Fardo' : `do Produto`} * <span className="text-xs text-muted-foreground">({data.name.length}/20 mín.)</span></Label>
-        <Input value={data.name} onChange={(e) => onChange({ name: e.target.value })} placeholder={isKit ? "Ex: Kit Skincare Completo Premium" : "Ex: Camiseta Premium Algodão Pima Masculina"} />
+        <Label>Nome {nameLabel} * <span className="text-xs text-muted-foreground">({data.name.length}/20 mín.)</span></Label>
+        <Input value={data.name} onChange={(e) => onChange({ name: e.target.value })} placeholder={namePlaceholder} />
+        {isBox && (
+          <p className="text-xs text-muted-foreground mt-1">Descreva o produto e a quantidade. Ex: "Caixa com 12 unidades — Poco X5 Pro Preto 512GB"</p>
+        )}
       </div>
       <div>
         <Label>Categoria *</Label>
@@ -76,9 +96,12 @@ export default function BasicInfoStep({ data, onChange, categories, customCatego
         </div>
       </div>
       <div>
-        <Label>Descrição detalhada * <span className="text-xs text-muted-foreground">({data.description.length}/100 mín.)</span></Label>
+        <Label>
+          {isBox ? 'Descrição detalhada do produto dentro da caixa' : 'Descrição detalhada'} * 
+          <span className="text-xs text-muted-foreground ml-1">({data.description.length}/100 mín.)</span>
+        </Label>
         <Textarea value={data.description} onChange={(e) => onChange({ description: e.target.value })}
-          placeholder={isBale ? "Descreva o mix de produtos do fardo" : isKit ? "Descreva o kit completo" : "Descreva seu produto com detalhes (mínimo 100 caracteres)"}
+          placeholder={isBale ? "Descreva o mix de produtos do fardo" : isKit ? "Descreva o kit completo" : isBox ? "Descreva detalhadamente o produto que está dentro da caixa" : "Descreva seu produto com detalhes (mínimo 100 caracteres)"}
           rows={5} />
       </div>
     </div>
