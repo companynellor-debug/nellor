@@ -123,13 +123,17 @@ const Auth = () => {
       return;
     }
 
-    // Simple admin password check - password is "admin123"
     if (adminPassword.trim() === 'admin123') {
-      // Store admin session
       sessionStorage.setItem('nellor_admin_access', 'true');
       toast.success('Acesso admin liberado!');
       setShowAdminDialog(false);
       setAdminPassword('');
+      // Log admin access if user is authenticated
+      if (user) {
+        import('@/hooks/useActivityLog').then(({ logActivity }) => {
+          logActivity(user.id, 'admin_access', 'Acesso ao painel admin via senha');
+        });
+      }
       navigate('/admin');
     } else {
       toast.error('Senha incorreta!');
