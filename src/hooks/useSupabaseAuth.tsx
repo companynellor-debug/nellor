@@ -256,12 +256,12 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         // Record failed attempt
-        await supabase.rpc('record_login_attempt', { _email: email, _success: false }).catch(() => {});
+        try { await supabase.rpc('record_login_attempt', { _email: email, _success: false }); } catch {}
         return { error };
       }
 
       // Record successful attempt
-      await supabase.rpc('record_login_attempt', { _email: email, _success: true }).catch(() => {});
+      try { await supabase.rpc('record_login_attempt', { _email: email, _success: true }); } catch {}
 
       // Fetch profile (non-blocking hard-fail)
       if (data.user) {
