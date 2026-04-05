@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, CreditCard, Plus, Trash2, QrCode, Star } from "lucide-react";
+import { ArrowLeft, CreditCard, Plus, Trash2, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,35 +15,13 @@ const MetodosPagamento = () => {
   const navigate = useNavigate();
   const { paymentMethods, addPaymentMethod, deletePaymentMethod, setDefaultPaymentMethod } = useSupabasePaymentMethods();
   
-  const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
-  const [newPixKey, setNewPixKey] = useState("");
   const [cardForm, setCardForm] = useState({
     cardNumber: "",
     cardHolder: "",
     cardExpiry: "",
     cardCVV: ""
   });
-
-  const handleSavePixKey = async () => {
-    if (!newPixKey.trim()) {
-      toast.error("Digite uma chave Pix válida");
-      return;
-    }
-
-    try {
-      await addPaymentMethod({
-        type: 'pix',
-        pix_key: newPixKey,
-        is_default: paymentMethods.length === 0
-      });
-
-      setNewPixKey("");
-      setPixDialogOpen(false);
-    } catch (error) {
-      console.error('Error adding PIX key:', error);
-    }
-  };
 
   const handleSaveCard = async () => {
     if (!cardForm.cardNumber || !cardForm.cardHolder || !cardForm.cardExpiry) {
@@ -78,12 +56,12 @@ const MetodosPagamento = () => {
 
   const handleDeleteMethod = (id: string) => {
     deletePaymentMethod(id);
-    toast.success("Método de pagamento removido!");
+    toast.success("Cartão removido!");
   };
 
   const handleSetDefault = (id: string) => {
     setDefaultPaymentMethod(id);
-    toast.success("Método padrão atualizado!");
+    toast.success("Cartão padrão atualizado!");
   };
 
   const getCardBrand = (number: string) => {
@@ -108,85 +86,25 @@ const MetodosPagamento = () => {
     return cleaned;
   };
 
-  const pixMethods = paymentMethods.filter(m => m.type === 'pix');
   const cardMethods = paymentMethods.filter(m => m.type === 'card');
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <ParticlesBackground />
 
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
           <button onClick={() => navigate("/cliente/perfil")} className="hover:bg-accent p-2 rounded-lg transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-2xl font-bold text-primary">Métodos de Pagamento</h1>
+          <h1 className="text-2xl font-bold text-primary">Cartões Salvos</h1>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10 space-y-6">
-        {/* Chaves Pix */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg">Chaves Pix</h2>
-            <Button size="sm" className="gap-2" onClick={() => setPixDialogOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Adicionar
-            </Button>
-          </div>
-          <div className="space-y-3">
-            {pixMethods.length > 0 ? (
-              pixMethods.map((method) => (
-                <Card key={method.id} className="bg-white border shadow-sm p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                        <QrCode className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">Chave Pix</p>
-                          {method.is_default && (
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{method.pix_key}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!method.is_default && (
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => handleSetDefault(method.id)}
-                        >
-                          Padrão
-                        </Button>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => handleDeleteMethod(method.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <Card className="bg-white border shadow-sm p-6 text-center">
-                <p className="text-sm text-muted-foreground">Nenhuma chave Pix cadastrada</p>
-              </Card>
-            )}
-          </div>
-        </div>
-
-        {/* Cartões Salvos */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg">Cartões</h2>
+            <h2 className="font-bold text-lg">Meus Cartões</h2>
             <Button size="sm" className="gap-2" onClick={() => setCardDialogOpen(true)}>
               <Plus className="h-4 w-4" />
               Adicionar
@@ -195,7 +113,7 @@ const MetodosPagamento = () => {
           <div className="space-y-3">
             {cardMethods.length > 0 ? (
               cardMethods.map((method) => (
-                <Card key={method.id} className="bg-white border shadow-sm p-4">
+                <Card key={method.id} className="bg-card border shadow-sm p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -205,7 +123,7 @@ const MetodosPagamento = () => {
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{method.card_brand} •••• {method.card_number_last4}</p>
                           {method.is_default && (
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">{method.card_holder}</p>
@@ -224,7 +142,7 @@ const MetodosPagamento = () => {
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => handleDeleteMethod(method.id)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -234,7 +152,8 @@ const MetodosPagamento = () => {
                 </Card>
               ))
             ) : (
-              <Card className="bg-white border shadow-sm p-6 text-center">
+              <Card className="bg-card border shadow-sm p-6 text-center">
+                <CreditCard className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Nenhum cartão cadastrado</p>
               </Card>
             )}
@@ -242,39 +161,9 @@ const MetodosPagamento = () => {
         </div>
 
         <p className="text-xs text-center text-muted-foreground">
-          Seus métodos de pagamento são armazenados de forma segura
+          Seus cartões são armazenados de forma segura
         </p>
       </main>
-
-      {/* Dialog Adicionar Pix */}
-      <Dialog open={pixDialogOpen} onOpenChange={setPixDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Adicionar Chave Pix</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Chave Pix</Label>
-              <Input
-                placeholder="email@exemplo.com, CPF, telefone ou chave aleatória"
-                value={newPixKey}
-                onChange={(e) => setNewPixKey(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Insira sua chave Pix cadastrada no banco
-              </p>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setPixDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSavePixKey}>
-                Adicionar
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Dialog Adicionar Cartão */}
       <Dialog open={cardDialogOpen} onOpenChange={setCardDialogOpen}>
