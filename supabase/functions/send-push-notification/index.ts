@@ -130,7 +130,7 @@ serve(async (req) => {
       );
     }
 
-    const { user_id, title, body, url, order_number, type, data } = await req.json();
+    const { user_id, title, body, url, order_number, type, data, skip_db_insert } = await req.json();
 
     if (!user_id || !title || !body) {
       return new Response(
@@ -139,8 +139,8 @@ serve(async (req) => {
       );
     }
 
-    // ===== DEDUP CHECK - BEFORE any push or DB insert =====
-    const notifType = (type === "order_update" || type === "order_status_changed" || type === "payment_confirmed" || type === "new_message" || type === "promotion" || type === "general")
+    // ===== DEDUP CHECK =====
+    const notifType = (type === "order_update" || type === "order_status_changed" || type === "payment_confirmed" || type === "new_message" || type === "promotion" || type === "general" || type === "alert")
       ? type
       : "order_update";
 
@@ -150,12 +150,13 @@ serve(async (req) => {
       .select("id")
       .eq("user_id", user_id)
       .eq("title", title)
-      .eq("type", notifType)
       .gte("created_at", fiveMinutesAgo)
       .limit(1);
 
-    if (existing && existing.length > 0) {
-      console.log("⏭️ Duplicate notification blocked BEFORE send for user:", user_id, title);
+    // If called from trigger (skip_db_insert=true), the notification already exists in DB
+    // Only skip if called from client and a duplicate already exists
+    if (!skip_db_insert && existing && existing.length > 0) {
+      console.log("⏭️ Duplicate notification blocked for user:", user_id, title);
       return new Response(
         JSON.stringify({ skipped: true, reason: "duplicate", sent: 0, failed: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -175,20 +176,22 @@ serve(async (req) => {
       );
     }
 
-    // Insert notification in DB first (even if no subscriptions)
-    try {
-      await supabaseAdmin.from("notifications").insert({
-        user_id,
-        title,
-        body,
-        type: notifType,
-        data: data || null,
-        sound: true,
-        read: false,
-      });
-      console.log("✅ Notification inserted in DB for user:", user_id);
-    } catch (dbErr) {
-      console.error("❌ Failed to insert notification in DB:", dbErr);
+    // Only insert into DB if NOT called from the trigger (to avoid duplicate inserts)
+    if (!skip_db_insert) {
+      try {
+        await supabaseAdmin.from("notifications").insert({
+          user_id,
+          title,
+          body,
+          type: notifType,
+          data: data || null,
+          sound: true,
+          read: false,
+        });
+        console.log("✅ Notification inserted in DB for user:", user_id);
+      } catch (dbErr) {
+        console.error("❌ Failed to insert notification in DB:", dbErr);
+      }
     }
 
     if (!subscriptions || subscriptions.length === 0) {
