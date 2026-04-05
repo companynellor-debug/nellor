@@ -8,6 +8,8 @@ export const SALE_TYPE_CONFIG: Record<SaleType, { label: string; unitLabel: stri
   pair: { label: 'Par', unitLabel: 'par', unitLabelPlural: 'pares', icon: '👟', description: 'Vendo sempre em pares. Exemplo: calçados, meias, luvas.' },
 };
 
+export type BaleType = 'single_product' | 'mixed';
+
 export interface ProductFormData {
   saleType: SaleType;
   name: string;
@@ -41,6 +43,8 @@ export interface ProductFormData {
   boxDepthCm: string;
   boxAllSame: boolean;
   boxModelDescription: string;
+  /** Free text describing what makes this box unique (color, size, config) */
+  boxSpecification: string;
   // Bale specific
   baleWeightKg: string;
   baleApproxPieces: string;
@@ -48,6 +52,10 @@ export interface ProductFormData {
   baleMixDescription: string;
   baleSizesIncluded: string[];
   baleObservations: string;
+  /** 'single_product' or 'mixed' */
+  baleType: BaleType;
+  /** Approximate composition for mixed bales, e.g. "70% feminino, 30% masculino" */
+  baleComposition: string;
   // Kit specific
   kitItems: KitItem[];
   kitWhatsIncluded: string;
@@ -93,6 +101,7 @@ export function getStepsForSaleType(saleType: SaleType): StepDef[] {
       return [
         { key: 'sale_type', label: 'Tipo de Venda' },
         { key: 'basic_info', label: 'Informações Básicas' },
+        { key: 'specs', label: 'Especificações do Produto' },
         { key: 'box_config', label: 'Configuração da Caixa' },
         { key: 'pricing', label: 'Venda e Preço' },
         { key: 'images', label: 'Imagens' },
@@ -101,7 +110,7 @@ export function getStepsForSaleType(saleType: SaleType): StepDef[] {
       return [
         { key: 'sale_type', label: 'Tipo de Venda' },
         { key: 'basic_info', label: 'Informações Básicas' },
-        { key: 'bale_config', label: 'Configuração do Fardo' },
+        { key: 'bale_config', label: 'Tipo de Fardo' },
         { key: 'pricing', label: 'Venda e Preço' },
         { key: 'images', label: 'Imagens' },
       ];
@@ -130,9 +139,9 @@ export const DEFAULT_FORM_DATA: ProductFormData = {
   minOrderQuantity: '1', maxOrderQuantity: '', isCnpjOnly: false, stock: '',
   priceTiers: [{ minQty: '1', maxQty: '', priceCents: 0 }],
   unitsPerBox: '', boxWeightKg: '', boxWidthCm: '', boxHeightCm: '', boxDepthCm: '',
-  boxAllSame: true, boxModelDescription: '',
+  boxAllSame: true, boxModelDescription: '', boxSpecification: '',
   baleWeightKg: '', baleApproxPieces: '', baleSameType: true, baleMixDescription: '',
-  baleSizesIncluded: [], baleObservations: '',
+  baleSizesIncluded: [], baleObservations: '', baleType: 'single_product', baleComposition: '',
   kitItems: [], kitWhatsIncluded: '',
   hasVariations: false,
   images: [],
