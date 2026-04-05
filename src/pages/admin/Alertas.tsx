@@ -21,14 +21,9 @@ const Alertas = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(20);
+      const { data, error } = await supabase.rpc('get_admin_reports');
       if (error) console.error('Error fetching reports:', error);
-      else setReports(data || []);
+      else setReports((data || []).filter((r: any) => r.status === 'pending'));
     } catch (e) {
       console.error('Reports fetch failed:', e);
     }
