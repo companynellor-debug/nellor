@@ -233,7 +233,8 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
       isInternational: formData.isInternational,
       gender: formData.gender, ageGroup: formData.ageGroup,
       saleUnit: saleUnitMap[formData.saleType],
-      unitsPerSaleUnit: formData.saleType === 'closed_box' ? parseInt(formData.unitsPerBox) || 1 : 1,
+      unitsPerSaleUnit: formData.saleType === 'closed_box' ? parseInt(formData.unitsPerBox) || 1 :
+        formData.saleType === 'bale' ? parseInt(formData.baleApproxPieces) || 1 : 1,
       minOrderQuantity: parseInt(formData.minOrderQuantity) || 1,
       maxOrderQuantity: formData.maxOrderQuantity ? parseInt(formData.maxOrderQuantity) : undefined,
       weightGrams: formData.weightGrams ? parseInt(formData.weightGrams) :
@@ -245,7 +246,9 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
       ncmCode: formData.ncmCode, isCnpjOnly: formData.isCnpjOnly,
       keywords: formData.keywords,
       warrantyDays: formData.warrantyDays ? parseInt(formData.warrantyDays) : undefined,
-      whatIsInTheBox: formData.kitWhatsIncluded || undefined,
+      whatIsInTheBox: formData.kitWhatsIncluded || formData.boxSpecification || undefined,
+      // Store extended sale type metadata in variacoes JSON
+      variacoes: buildSaleTypeMetadata(formData),
     };
 
     const tiersToSave = formData.priceTiers.map(t => ({
