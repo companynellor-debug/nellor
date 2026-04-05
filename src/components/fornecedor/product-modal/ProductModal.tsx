@@ -25,6 +25,29 @@ import { useProductVariations } from '@/hooks/useProductVariations';
 import { centsToDecimal, decimalToCents } from '@/utils/currency';
 import { supabase } from '@/integrations/supabase/client';
 
+function buildSaleTypeMetadata(formData: ProductFormData): any {
+  if (formData.saleType === 'closed_box') {
+    return {
+      _saleTypeMeta: 'closed_box',
+      boxSpecification: formData.boxSpecification,
+      unitsPerBox: parseInt(formData.unitsPerBox) || 0,
+      boxWeightKg: parseFloat(formData.boxWeightKg) || 0,
+    };
+  }
+  if (formData.saleType === 'bale') {
+    return {
+      _saleTypeMeta: 'bale',
+      baleType: formData.baleType,
+      baleWeightKg: parseFloat(formData.baleWeightKg) || 0,
+      baleApproxPieces: parseInt(formData.baleApproxPieces) || 0,
+      baleSizesIncluded: formData.baleSizesIncluded,
+      baleMixDescription: formData.baleMixDescription,
+      baleComposition: formData.baleComposition,
+    };
+  }
+  return null;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -140,6 +163,9 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
 
   // Validation per step key
   const validateStep = (stepKey: string): string | null => {
+    const isBox = formData.saleType === 'closed_box';
+    const isBale = formData.saleType === 'bale';
+    const minImages = (isBox || isBale) ? 2 : 3;
     switch (stepKey) {
       case 'sale_type': return null;
       case 'basic_info':
@@ -154,10 +180,12 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
         return null;
       case 'box_config':
         if (!formData.unitsPerBox || parseInt(formData.unitsPerBox) === 0) return "Quantidade por caixa não pode ser 0";
+        if (!formData.boxSpecification) return "Preencha a especificação desta caixa";
         return null;
       case 'bale_config':
         if (!formData.baleWeightKg) return "Preencha o peso do fardo";
         if (parseFloat(formData.baleWeightKg) < 1) return "O peso do fardo deve ser no mínimo 1kg";
+        if (formData.baleType === 'mixed' && !formData.baleMixDescription) return "Descreva o mix de produtos do fardo";
         return null;
       case 'kit_composition':
         if (formData.kitItems.length < 2) return "O kit precisa ter pelo menos 2 itens";
@@ -167,7 +195,7 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
         return null;
       case 'variations': return null;
       case 'images':
-        if (formData.images.length < 3) return "Adicione pelo menos 3 imagens";
+        if (formData.images.length < minImages) return `Adicione pelo menos ${minImages} imagens`;
         return null;
       default: return null;
     }
@@ -228,7 +256,8 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
       isInternational: formData.isInternational,
       gender: formData.gender, ageGroup: formData.ageGroup,
       saleUnit: saleUnitMap[formData.saleType],
-      unitsPerSaleUnit: formData.saleType === 'closed_box' ? parseInt(formData.unitsPerBox) || 1 : 1,
+      unitsPerSaleUnit: formData.saleType === 'closed_box' ? parseInt(formData.unitsPerBox) || 1 :
+        formData.saleType === 'bale' ? parseInt(formData.baleApproxPieces) || 1 : 1,
       minOrderQuantity: parseInt(formData.minOrderQuantity) || 1,
       maxOrderQuantity: formData.maxOrderQuantity ? parseInt(formData.maxOrderQuantity) : undefined,
       weightGrams: formData.weightGrams ? parseInt(formData.weightGrams) :
@@ -240,7 +269,9 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
       ncmCode: formData.ncmCode, isCnpjOnly: formData.isCnpjOnly,
       keywords: formData.keywords,
       warrantyDays: formData.warrantyDays ? parseInt(formData.warrantyDays) : undefined,
-      whatIsInTheBox: formData.kitWhatsIncluded || undefined,
+      whatIsInTheBox: formData.kitWhatsIncluded || formData.boxSpecification || undefined,
+      // Store extended sale type metadata in variations JSON field
+      variations: buildSaleTypeMetadata(formData),
     };
 
     const tiersToSave = formData.priceTiers.map(t => ({

@@ -418,21 +418,90 @@ const ProdutoDetalhes = () => {
               {product.supplierUuid && <div className="mt-2"><ReportButton targetType="product" targetId={product.supplierUuid} /></div>}
             </div>
 
-            {/* Sale unit badge */}
-            {saleUnit !== 'unit' && (
-              <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-2">
-                <Box className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">
-                  Vendido por: {SALE_UNIT_LABELS[saleUnit]}{(saleUnit === 'closed_box' || saleUnit === 'bale') && unitsPerSaleUnit > 1 ? ` com ${unitsPerSaleUnit} unidades` : ''}
-                </span>
-              </div>
-            )}
+            {/* Sale unit badge - enhanced for box/bale */}
+            {saleUnit !== 'unit' && (() => {
+              const meta = (supabaseProductById as any)?.variacoes;
+              const isBoxMeta = meta?._saleTypeMeta === 'closed_box';
+              const isBaleMeta = meta?._saleTypeMeta === 'bale';
+              const boxSpec = meta?.boxSpecification || productWhatIsInTheBox;
+              const baleType = meta?.baleType;
+              const baleWeight = meta?.baleWeightKg;
+              const balePieces = meta?.baleApproxPieces || unitsPerSaleUnit;
+              const baleSizes = meta?.baleSizesIncluded;
+              const baleMix = meta?.baleMixDescription;
+              const baleComposition = meta?.baleComposition;
+
+              return (
+                <div className="space-y-3">
+                  {/* Main badge */}
+                  <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-4 py-3">
+                    <Box className="h-5 w-5 text-primary" />
+                    <div>
+                      <span className="text-sm font-bold text-primary">
+                        {SALE_UNIT_LABELS[saleUnit]}
+                      </span>
+                      {isBoxMeta && unitsPerSaleUnit > 1 && (
+                        <p className="text-xs text-primary/80">Contém {unitsPerSaleUnit} unidades por caixa</p>
+                      )}
+                      {isBaleMeta && (
+                        <p className="text-xs text-primary/80">
+                          {baleWeight ? `${baleWeight}kg` : ''}
+                          {balePieces ? ` • ~${balePieces} peças` : ''}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Box specification highlight */}
+                  {isBoxMeta && boxSpec && (
+                    <div className="bg-primary/5 border-2 border-primary/20 rounded-lg p-4">
+                      <p className="text-xs font-semibold text-primary mb-1">📋 Especificação desta caixa</p>
+                      <p className="text-sm font-medium">{boxSpec}</p>
+                    </div>
+                  )}
+
+                  {/* Bale mix details */}
+                  {isBaleMeta && baleType === 'mixed' && (
+                    <div className="bg-primary/5 border-2 border-primary/20 rounded-lg p-4 space-y-2">
+                      <p className="text-xs font-semibold text-primary">🧺 Detalhes do Fardo Sortido</p>
+                      {baleSizes && baleSizes.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          <span className="text-xs text-muted-foreground">Tamanhos:</span>
+                          {baleSizes.map((s: string) => (
+                            <Badge key={s} variant="secondary" className="text-xs py-0">{s}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      {baleMix && <p className="text-sm text-muted-foreground">{baleMix}</p>}
+                      {baleComposition && (
+                        <p className="text-xs text-muted-foreground">📊 Composição: {baleComposition}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="py-4 border-y border-border">
               <p className="text-3xl font-bold text-primary">{displayPrice}</p>
+              {saleUnit === 'closed_box' && unitsPerSaleUnit > 1 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {formatCurrencyFromDecimal(displayPriceNumber / unitsPerSaleUnit)}/unidade
+                </p>
+              )}
+              {saleUnit === 'bale' && (() => {
+                const bw = (supabaseProductById as any)?.variacoes?.baleWeightKg;
+                return bw ? (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formatCurrencyFromDecimal(displayPriceNumber / bw)}/kg
+                  </p>
+                ) : null;
+              })()}
               {priceTiers.length > 1 && <p className="text-xs text-muted-foreground mt-1">Preço base • veja faixas de desconto abaixo</p>}
               {minOrderQuantity > 1 && (
-                <p className="text-xs text-orange-600 font-medium mt-1">Pedido mínimo: {minOrderQuantity} unidades</p>
+                <p className="text-xs text-orange-600 font-medium mt-1">
+                  Pedido mínimo: {minOrderQuantity} {SALE_UNIT_LABELS[saleUnit] ? SALE_UNIT_LABELS[saleUnit].toLowerCase() + (minOrderQuantity > 1 ? 's' : '') : 'unidades'}
+                </p>
               )}
             </div>
 
@@ -441,12 +510,39 @@ const ProdutoDetalhes = () => {
               <div className="bg-muted/30 rounded-lg p-3 border">
                 <p className="text-xs font-semibold mb-2">💰 Preços por quantidade</p>
                 <div className="space-y-1">
-                  {priceTiers.map((t, idx) => (
-                    <div key={idx} className="flex justify-between text-xs px-2 py-1">
-                      <span>{t.min_quantity}{t.max_quantity ? ` - ${t.max_quantity}` : '+'} unid.</span>
-                      <span className="font-semibold text-primary">{formatCurrencyFromDecimal(t.price_per_unit)}/un</span>
-                    </div>
-                  ))}
+                  {priceTiers.map((t, idx) => {
+                    const tierLabel = SALE_UNIT_LABELS[saleUnit]?.toLowerCase() || 'unid.';
+                    const range = `${t.min_quantity}${t.max_quantity ? ` - ${t.max_quantity}` : '+'}`;
+                    return (
+                      <div key={idx} className="flex justify-between text-xs px-2 py-1">
+                        <span>
+                          {range} {tierLabel}.
+                          {saleUnit === 'closed_box' && unitsPerSaleUnit > 1 && (
+                            <span className="text-muted-foreground ml-1">
+                              ({(parseInt(String(t.min_quantity)) || 1) * unitsPerSaleUnit}
+                              {t.max_quantity ? ` - ${parseInt(String(t.max_quantity)) * unitsPerSaleUnit}` : '+'} un)
+                            </span>
+                          )}
+                        </span>
+                        <span className="font-semibold text-primary">
+                          {formatCurrencyFromDecimal(t.price_per_unit)}/{tierLabel}
+                          {saleUnit === 'closed_box' && unitsPerSaleUnit > 1 && (
+                            <span className="text-muted-foreground font-normal ml-1">
+                              ({formatCurrencyFromDecimal(t.price_per_unit / unitsPerSaleUnit)}/un)
+                            </span>
+                          )}
+                          {saleUnit === 'bale' && (() => {
+                            const bw = (supabaseProductById as any)?.variacoes?.baleWeightKg;
+                            return bw ? (
+                              <span className="text-muted-foreground font-normal ml-1">
+                                ({formatCurrencyFromDecimal(t.price_per_unit / bw)}/kg)
+                              </span>
+                            ) : null;
+                          })()}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

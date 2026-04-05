@@ -258,11 +258,18 @@ const ClienteHome = () => {
                 <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group">
                   <div className="aspect-square overflow-hidden relative">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    {(product as any).minQuantity && (product as any).minQuantity > 1 &&
-                  <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">
-                        Mín. {(product as any).minQuantity} un.
-                      </Badge>
-                  }
+                    {(() => {
+                      const su = (product as any).saleUnit;
+                      const units = (product as any).unitsPerSaleUnit;
+                      const balePieces = (product as any).baleApproxPieces;
+                      const kitCount = (product as any).kitItemsCount;
+                      if (su === 'closed_box' && units > 1) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Caixa c/ {units} un</Badge>;
+                      if (su === 'bale') return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Fardo {balePieces ? `~${balePieces} peças` : ''}</Badge>;
+                      if (su === 'kit' && kitCount > 0) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Kit {kitCount} itens</Badge>;
+                      if (su === 'pair') return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Par</Badge>;
+                      if ((product as any).minQuantity && (product as any).minQuantity > 1) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Mín. {(product as any).minQuantity} un.</Badge>;
+                      return null;
+                    })()}
                   </div>
                   <div className="p-3">
                     <p className="text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</p>
@@ -324,11 +331,17 @@ const ClienteHome = () => {
                 <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group h-full">
                   <div className="aspect-square overflow-hidden relative">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    {(product as any).minQuantity && (product as any).minQuantity > 1 &&
-                  <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">
-                        Mín. {(product as any).minQuantity} un.
-                      </Badge>
-                  }
+                    {(() => {
+                      const su = (product as any).saleUnit;
+                      const units = (product as any).unitsPerSaleUnit;
+                      const balePieces = (product as any).baleApproxPieces;
+                      const kitCount = (product as any).kitItemsCount;
+                      if (su === 'closed_box' && units > 1) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Caixa c/ {units} un</Badge>;
+                      if (su === 'bale') return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Fardo {balePieces ? `~${balePieces} peças` : ''}</Badge>;
+                      if (su === 'kit' && kitCount > 0) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Kit {kitCount} itens</Badge>;
+                      if (su === 'pair') return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Par</Badge>;
+                      return null;
+                    })()}
                   </div>
                   <div className="p-3">
                     <h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</h3>

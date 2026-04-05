@@ -15,6 +15,7 @@ export default function SpecsStep({ data, onChange }: Props) {
   const [keywordInput, setKeywordInput] = useState('');
   const unitLabel = SALE_TYPE_CONFIG[data.saleType].unitLabel;
   const isPair = data.saleType === 'pair';
+  const isBox = data.saleType === 'closed_box';
 
   const addKeyword = (value: string) => {
     const word = value.trim().toLowerCase();
@@ -26,6 +27,13 @@ export default function SpecsStep({ data, onChange }: Props) {
 
   return (
     <div className="space-y-4">
+      {isBox && (
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+          <p className="text-sm text-primary font-medium">
+            📋 Estas especificações descrevem o <strong>produto dentro da caixa</strong>, não a caixa em si.
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Peso {isPair ? 'do par' : 'unitário'} (gramas) *</Label>
