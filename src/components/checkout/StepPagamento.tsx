@@ -148,7 +148,7 @@ export const StepPagamento = ({
                     <p className="text-sm text-green-600">
                       {appliedCoupon.coupon.tipo === 'percentage' 
                         ? `${appliedCoupon.coupon.valor}% de desconto`
-                        : `R$ ${appliedCoupon.coupon.valor.toFixed(2).replace('.', ',')} de desconto`
+                        : `${formatCurrency(appliedCoupon.coupon.valor)} de desconto`
                       }
                     </p>
                   </div>

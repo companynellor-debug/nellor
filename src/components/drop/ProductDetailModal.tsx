@@ -341,7 +341,7 @@ export function ProductDetailModal({
             {!isValid && (
               <p className="text-xs text-center text-muted-foreground">
                 {isPriceBelowMin
-                  ? `O preço mínimo de revenda é R$ ${minResalePrice.toFixed(2)}`
+                  ? `O preço mínimo de revenda é ${formatCurrency(minResalePrice)}`
                   : "Configure um preço válido para continuar"}
               </p>
             )}

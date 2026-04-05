@@ -449,7 +449,7 @@ const RelatorioCupons = () => {
                         <td className="py-4 text-center font-medium">
                           {coupon.tipo === 'percentage' 
                             ? `${coupon.valor}%`
-                            : `R$ ${coupon.valor.toFixed(2).replace('.', ',')}`
+                            : formatCurrency(coupon.valor)
                           }
                         </td>
                         <td className="py-4 text-center">

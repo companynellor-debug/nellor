@@ -157,7 +157,7 @@ const PastaPublica = () => {
                         <div className="p-3">
                           <p className="text-sm font-medium line-clamp-2">{p.nome}</p>
                           <p className="text-primary font-bold text-sm mt-1">
-                            R$ {Number(p.preco).toFixed(2).replace(".", ",")}
+                            {formatCurrency(p.preco)}
                           </p>
                         </div>
                       </>

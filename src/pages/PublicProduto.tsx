@@ -1,4 +1,5 @@
 import { useMemo, useEffect } from "react";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { ArrowLeft, Share2 } from "lucide-react";
@@ -213,7 +214,7 @@ const PublicProduto = () => {
               )}
 
               <div className="pt-2">
-                <div className="text-3xl font-bold">R$ {product.preco.toFixed(2).replace(".", ",")}</div>
+                <div className="text-3xl font-bold">{formatCurrency(product.preco)}</div>
               </div>
 
               <div className="grid gap-2 pt-4">

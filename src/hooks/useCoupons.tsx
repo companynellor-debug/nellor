@@ -81,7 +81,7 @@ export const useCoupons = () => {
       if (coupon.valor_minimo && subtotal < coupon.valor_minimo) {
         toast({
           title: 'Valor mínimo não atingido',
-          description: `Pedido mínimo de R$ ${coupon.valor_minimo.toFixed(2).replace('.', ',')} para usar este cupom.`,
+          description: `Pedido mínimo de ${formatCurrency(coupon.valor_minimo)} para usar este cupom.`,
           variant: 'destructive',
         });
         return null;
@@ -115,7 +115,7 @@ export const useCoupons = () => {
       
       toast({
         title: 'Cupom aplicado!',
-        description: `Desconto de R$ ${discount.toFixed(2).replace('.', ',')} aplicado.`,
+        description: `Desconto de ${formatCurrency(discount)} aplicado.`,
       });
 
       return appliedCoupon;

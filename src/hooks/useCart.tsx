@@ -116,7 +116,7 @@ export const useCart = () => {
       if (item.minValue) {
         const itemTotal = item.price * item.quantity;
         if (itemTotal < item.minValue) {
-          errors.push(`${item.name}: valor mínimo de R$ ${item.minValue.toFixed(2)}`);
+          errors.push(`${item.name}: valor mínimo de ${formatCurrency(item.minValue)}`);
         }
       }
     });
