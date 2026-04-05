@@ -21,6 +21,7 @@ import {
   ShoppingBag
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const marketplaces = [
   { id: "shopee", name: "Shopee", color: "bg-orange-500" },
@@ -213,19 +214,19 @@ export default function DropMeusProdutos() {
                   <div className="bg-muted/50 rounded-lg p-2">
                     <p className="text-xs text-muted-foreground">Custo</p>
                     <p className="text-sm font-semibold text-foreground">
-                      R$ {product.base_price?.toFixed(2)}
+                      {formatCurrency(product.base_price ?? 0)}
                     </p>
                   </div>
                   <div className="bg-muted/50 rounded-lg p-2">
                     <p className="text-xs text-muted-foreground">Venda</p>
                     <p className="text-sm font-semibold text-primary">
-                      R$ {product.my_price?.toFixed(2)}
+                      {formatCurrency(product.my_price ?? 0)}
                     </p>
                   </div>
                   <div className="bg-green-500/10 rounded-lg p-2">
                     <p className="text-xs text-muted-foreground">Lucro</p>
                     <p className="text-sm font-semibold text-green-600">
-                      R$ {product.margin?.toFixed(2)}
+                      {formatCurrency(product.margin ?? 0)}
                     </p>
                   </div>
                 </div>
@@ -268,7 +269,7 @@ export default function DropMeusProdutos() {
               )}
               <div>
                 <h4 className="font-medium text-foreground">{editingProduct?.product_name}</h4>
-                <p className="text-sm text-muted-foreground">Custo: R$ {editingProduct?.base_price?.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">Custo: {formatCurrency(editingProduct?.base_price ?? 0)}</p>
               </div>
             </div>
 
@@ -287,7 +288,7 @@ export default function DropMeusProdutos() {
               </div>
               {editPrice && editingProduct && (
                 <p className="text-sm text-green-600">
-                  Lucro: R$ {(parseFloat(editPrice) - editingProduct.base_price).toFixed(2)}
+                  Lucro: {formatCurrency(parseFloat(editPrice) - editingProduct.base_price)}
                 </p>
               )}
             </div>
@@ -329,7 +330,7 @@ export default function DropMeusProdutos() {
               )}
               <div>
                 <h4 className="font-medium text-foreground">{publishProduct?.product_name}</h4>
-                <p className="text-sm text-muted-foreground">Preço: R$ {publishProduct?.my_price?.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">Preço: {formatCurrency(publishProduct?.my_price ?? 0)}</p>
               </div>
             </div>
 
