@@ -98,7 +98,7 @@ const Usuarios = () => {
     { title: "Total de Clientes", value: totalClientes.toString(), icon: Users, color: "from-blue-500 to-blue-600" },
     { title: "Novos no Mês", value: novosNoMes.toString(), icon: UserPlus, color: "from-green-500 to-green-600" },
     { title: "Taxa de Retenção", value: `${taxaRetencao.toFixed(1)}%`, subtitle: "Clientes com +1 pedido", icon: Percent, color: "from-purple-500 to-purple-600" },
-    { title: "Ticket Médio", value: `R$ ${ticketMedio.toFixed(2)}`, icon: DollarSign, color: "from-orange-500 to-orange-600" },
+    { title: "Ticket Médio", value: formatCurrency(ticketMedio), icon: DollarSign, color: "from-orange-500 to-orange-600" },
   ];
 
   if (loading && clientes.length === 0) {

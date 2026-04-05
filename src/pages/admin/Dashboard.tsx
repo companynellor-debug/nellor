@@ -297,7 +297,7 @@ const Dashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="date" className="fill-muted-foreground" fontSize={9} tick={{ fontSize: 9 }} />
                 <YAxis className="fill-muted-foreground" width={30} tick={{ fontSize: 9 }} />
-                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
                 <Area type="monotone" dataKey="receita" name="Receita" stroke="#10B981" fillOpacity={1} fill="url(#colorReceita)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -347,7 +347,7 @@ const Dashboard = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))', fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
@@ -385,7 +385,7 @@ const Dashboard = () => {
                   <span>{order.clientName}</span> → <span>{order.supplierName}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm">R$ {Number(order.total).toFixed(2)}</span>
+                  <span className="font-bold text-sm">{formatCurrency(order.total)}</span>
                   <span className="text-xs text-muted-foreground">{format(new Date(order.created_at), 'dd/MM HH:mm')}</span>
                 </div>
               </div>
@@ -414,7 +414,7 @@ const Dashboard = () => {
                       <td className="py-3 px-2 font-medium">{order.order_number}</td>
                       <td className="py-3 px-2">{order.clientName}</td>
                       <td className="py-3 px-2">{order.supplierName}</td>
-                      <td className="py-3 px-2 text-right">R$ {Number(order.total).toFixed(2)}</td>
+                      <td className="py-3 px-2 text-right">{formatCurrency(order.total)}</td>
                       <td className="py-3 px-2 text-center">
                         <Badge 
                           variant={order.payment_status === 'paid' ? 'default' : 'secondary'}
