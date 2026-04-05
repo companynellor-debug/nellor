@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, Package, Truck, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import confetti from "canvas-confetti";
+
 
 interface StepConcluidoProps {
   orderNumber: string;
@@ -17,26 +17,6 @@ export const StepConcluido = ({ orderNumber, paymentMethod }: StepConcluidoProps
 
   useEffect(() => {
     setShowAnimation(true);
-    
-    // Two single bursts, max 150 particles, cleanup after 3s
-    confetti({
-      particleCount: 75,
-      spread: 120,
-      origin: { x: 0.25, y: 0.5 },
-      colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD"],
-      ticks: 150,
-      disableForReducedMotion: true,
-    });
-    confetti({
-      particleCount: 75,
-      spread: 120,
-      origin: { x: 0.75, y: 0.5 },
-      colors: ["#4B0082", "#6A0DAD", "#9370DB", "#DDA0DD"],
-      ticks: 150,
-      disableForReducedMotion: true,
-    });
-    const timer = setTimeout(() => confetti.reset(), 3000);
-    return () => clearTimeout(timer);
   }, []);
 
   const steps = [
