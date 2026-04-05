@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
 
-const ADMIN_PASSWORD = "nellor2024";
+const ADMIN_PASSWORD = "nellor2024admin";
 
 const AdminLayoutContent = () => {
   const [open, setOpen] = useState(false);

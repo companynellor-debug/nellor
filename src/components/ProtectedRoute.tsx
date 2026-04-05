@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children, requireType }: ProtectedRouteProps) => {
   const [roleLoading, setRoleLoading] = useState(false);
   const [hasAdminRole, setHasAdminRole] = useState(false);
 
-  // Check admin session storage (non-hook, safe to do before hooks)
+  // Admin access via sessionStorage kept for backward compatibility but also validates via DB
   const adminAccess = requireType === 'admin' ? sessionStorage.getItem('nellor_admin_access') === 'true' : false;
 
   useEffect(() => {
