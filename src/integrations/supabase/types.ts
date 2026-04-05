@@ -3010,6 +3010,20 @@ export type Database = {
           tipo: string
         }[]
       }
+      get_admin_reports: {
+        Args: never
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          reason: string
+          reporter_id: string
+          reporter_name: string
+          status: string
+          target_id: string
+          target_type: string
+        }[]
+      }
       get_admin_service_providers: {
         Args: never
         Returns: {
