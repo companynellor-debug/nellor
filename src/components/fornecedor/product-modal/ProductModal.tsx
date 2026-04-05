@@ -385,8 +385,10 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
       {/* Exit confirmation */}
       <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
         <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Tem certeza que quer sair?</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 text-center">
-            <h3 className="text-lg font-semibold">Tem certeza que quer sair?</h3>
             <p className="text-sm text-muted-foreground">Seu rascunho será salvo e você pode continuar de onde parou.</p>
             <div className="flex gap-2 justify-center">
               <Button variant="outline" onClick={() => setShowExitConfirm(false)}>Continuar Editando</Button>
