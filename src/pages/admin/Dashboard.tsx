@@ -141,7 +141,7 @@ const Dashboard = () => {
     {
       title: "📊 GMV do Período",
       value: `R$ ${stats.gmvPeriod.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      subtitle: `GMV dos últimos ${dateFilter === 'today' ? 'hoje' : dateFilter === '7days' ? '7 dias' : dateFilter === '14days' ? '14 dias' : '30 dias'}`,
+      subtitle: `GMV ${dateFilter === 'all' ? 'total da plataforma' : dateFilter === 'today' ? 'de hoje' : dateFilter === '7days' ? 'dos últimos 7 dias' : dateFilter === '14days' ? 'dos últimos 14 dias' : 'dos últimos 30 dias'}`,
       icon: TrendingUp,
       color: "from-green-500 to-green-600",
     },
@@ -219,8 +219,8 @@ const Dashboard = () => {
           </div>
           {loading && <Loader2 className="h-4 w-4 animate-spin text-primary self-start sm:self-auto" />}
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
-          {(['today', '7days', '14days', '30days'] as const).map(filter => (
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+          {(['today', '7days', '14days', '30days', 'all'] as const).map(filter => (
             <Button
               key={filter}
               variant={dateFilter === filter ? 'default' : 'outline'}
@@ -228,7 +228,7 @@ const Dashboard = () => {
               size="sm"
               className="h-10 w-full px-3 text-sm whitespace-nowrap sm:w-auto"
             >
-              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : '30 dias'}
+              {filter === 'today' ? 'Hoje' : filter === '7days' ? '7 dias' : filter === '14days' ? '14 dias' : filter === '30days' ? '30 dias' : 'Total'}
             </Button>
           ))}
         </div>
