@@ -15,9 +15,7 @@ const MetodosPagamento = () => {
   const navigate = useNavigate();
   const { paymentMethods, addPaymentMethod, deletePaymentMethod, setDefaultPaymentMethod } = useSupabasePaymentMethods();
   
-  const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
-  const [newPixKey, setNewPixKey] = useState("");
   const [cardForm, setCardForm] = useState({
     cardNumber: "",
     cardHolder: "",
