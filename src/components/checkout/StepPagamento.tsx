@@ -11,6 +11,7 @@ import { CreditCard, QrCode, ArrowLeft, Lock, ShieldCheck, Tag, X, Loader2 } fro
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
 import { useCoupons, AppliedCoupon } from "@/hooks/useCoupons";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 type PaymentMethod = "cartao" | "pix";
 

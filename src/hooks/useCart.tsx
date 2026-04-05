@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 export interface CartItem {
   id: number;
