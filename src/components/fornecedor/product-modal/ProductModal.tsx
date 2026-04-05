@@ -247,8 +247,8 @@ export default function ProductModal({ open, onOpenChange, editingProduct, categ
       keywords: formData.keywords,
       warrantyDays: formData.warrantyDays ? parseInt(formData.warrantyDays) : undefined,
       whatIsInTheBox: formData.kitWhatsIncluded || formData.boxSpecification || undefined,
-      // Store extended sale type metadata in variacoes JSON
-      variacoes: buildSaleTypeMetadata(formData),
+      // Store extended sale type metadata in variations JSON field
+      variations: buildSaleTypeMetadata(formData),
     };
 
     const tiersToSave = formData.priceTiers.map(t => ({
