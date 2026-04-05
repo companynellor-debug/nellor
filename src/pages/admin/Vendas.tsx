@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { format, subDays } from "date-fns";
 import { useMemo } from "react";
 import { useAdminOrders } from "@/hooks/useAdminPrefetch";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const getStatusBadge = (status: string) => {
   const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; }> = {

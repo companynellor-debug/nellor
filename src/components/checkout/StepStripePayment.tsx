@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { supabase } from "@/integrations/supabase/client";

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, Package, MapPin, User, Tag } from "lucide-react";
 import { CartItem } from "@/hooks/useCart";
 import { BuyerData } from "./StepDadosComprador";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 interface StepResumoProps {
   cartItems: CartItem[];

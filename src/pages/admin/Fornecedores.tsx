@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { useAdminOrders, useAdminProfiles } from "@/hooks/useAdminPrefetch";
 
 const Fornecedores = () => {

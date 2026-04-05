@@ -7,6 +7,7 @@ import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
 import { useAdminOrders, useAdminProfiles, useAdminStats } from "@/hooks/useAdminPrefetch";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const Dashboard = () => {
   const navigate = useNavigate();

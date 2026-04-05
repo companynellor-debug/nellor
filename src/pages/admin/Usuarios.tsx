@@ -8,6 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format, subMonths, startOfMonth } from "date-fns";
 import { useMemo, useState } from "react";
 import { useAdminOrders, useAdminProfiles } from "@/hooks/useAdminPrefetch";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
