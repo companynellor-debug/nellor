@@ -28,6 +28,7 @@ const Dashboard = () => {
   // ✅ Calcular tudo com useMemo para evitar recálculos desnecessários
   const { stats, salesData, revenueData, distributionData, topSuppliers, recentOrders, paidOrdersCount } = useMemo(() => {
     const getStartDate = () => {
+      if (dateFilter === 'all') return null;
       const now = new Date();
       now.setHours(0, 0, 0, 0);
       
@@ -46,9 +47,9 @@ const Dashboard = () => {
     );
     
     // Pedidos no período
-    const filteredOrders = paidOrders.filter((o) => 
-      new Date(o.created_at) >= startDate
-    );
+    const filteredOrders = startDate 
+      ? paidOrders.filter((o) => new Date(o.created_at) >= startDate)
+      : paidOrders;
     
     // Pedidos pendentes
     const pendingOrders = allOrders.filter((o) => 
