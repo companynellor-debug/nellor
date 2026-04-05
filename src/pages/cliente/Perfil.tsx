@@ -2,13 +2,14 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Truck, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Truck, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { usePWA } from "@/hooks/usePWA";
 import { useSupplierApplication } from "@/hooks/useSupplierApplication";
 import CollectionsTab from "@/components/cliente/CollectionsTab";
+import SecurityTab from "@/components/cliente/SecurityTab";
 import nellorLogo from "@/assets/nellor-logo.png";
 
 const Perfil = () => {
@@ -72,14 +73,18 @@ const Perfil = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="geral" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-5">
+          <TabsList className="grid w-full grid-cols-3 mb-5">
             <TabsTrigger value="geral" className="gap-2">
               <User className="h-4 w-4" />
               Geral
             </TabsTrigger>
             <TabsTrigger value="pastas" className="gap-2">
               <Folder className="h-4 w-4" />
-              Minhas Pastas
+              Pastas
+            </TabsTrigger>
+            <TabsTrigger value="seguranca" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Segurança
             </TabsTrigger>
           </TabsList>
 
@@ -272,6 +277,10 @@ const Perfil = () => {
 
           <TabsContent value="pastas" className="mt-0">
             <CollectionsTab />
+          </TabsContent>
+
+          <TabsContent value="seguranca" className="mt-0">
+            <SecurityTab />
           </TabsContent>
         </Tabs>
       </main>
