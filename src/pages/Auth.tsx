@@ -29,6 +29,7 @@ const Auth = () => {
   const [resetSent, setResetSent] = useState(false);
 
   const {
+    user,
     signIn,
     signUp,
     isAuthenticated,
