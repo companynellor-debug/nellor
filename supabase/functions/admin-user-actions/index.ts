@@ -19,8 +19,97 @@ Deno.serve(async (req) => {
 
     const { action, user_id } = await req.json();
 
-    if (!user_id || !action) {
-      return new Response(JSON.stringify({ error: "Missing user_id or action" }), {
+    if (!action) {
+      return new Response(JSON.stringify({ error: "Missing action" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Self-delete: user deletes their own account
+    if (action === "self_delete") {
+      // Verify JWT to get the requesting user
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: { user: requestingUser }, error: authError } = await supabaseAdmin.auth.getUser(
+        authHeader.replace("Bearer ", "")
+      );
+
+      if (authError || !requestingUser) {
+        return new Response(JSON.stringify({ error: "Invalid token" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const selfUserId = requestingUser.id;
+
+      // Check user is not admin
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("tipo")
+        .eq("id", selfUserId)
+        .single();
+
+      if (profile?.tipo === "admin") {
+        return new Response(JSON.stringify({ error: "Admins cannot self-delete" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Delete all user data (reuse same logic as admin delete)
+      const { data: products } = await supabaseAdmin
+        .from("products")
+        .select("id")
+        .eq("supplier_id", selfUserId);
+
+      const productIds = (products || []).map((p: any) => p.id);
+
+      if (productIds.length > 0) {
+        await supabaseAdmin.from("product_price_tiers").delete().in("product_id", productIds);
+        await supabaseAdmin.from("product_variations").delete().in("product_id", productIds);
+        await supabaseAdmin.from("product_drop_settings").delete().in("product_id", productIds);
+        await supabaseAdmin.from("client_drop_products").delete().in("product_id", productIds);
+        await supabaseAdmin.from("reviews").delete().in("product_id", productIds);
+        await supabaseAdmin.from("coupons").delete().eq("supplier_id", selfUserId);
+        await supabaseAdmin.from("products").delete().eq("supplier_id", selfUserId);
+      }
+
+      await supabaseAdmin.from("orders").delete().eq("supplier_id", selfUserId);
+      await supabaseAdmin.from("orders").delete().eq("buyer_id", selfUserId);
+      await supabaseAdmin.from("drop_orders").delete().eq("supplier_id", selfUserId);
+      await supabaseAdmin.from("drop_orders").delete().eq("client_id", selfUserId);
+      await supabaseAdmin.from("analytics").delete().eq("supplier_id", selfUserId);
+      await supabaseAdmin.from("payouts").delete().eq("supplier_id", selfUserId);
+      await supabaseAdmin.from("notifications").delete().eq("user_id", selfUserId);
+      await supabaseAdmin.from("messages").delete().or(`from_user.eq.${selfUserId},to_user.eq.${selfUserId}`);
+      await supabaseAdmin.from("push_subscriptions").delete().eq("user_id", selfUserId);
+      await supabaseAdmin.from("addresses").delete().eq("user_id", selfUserId);
+      await supabaseAdmin.from("payment_methods").delete().eq("user_id", selfUserId);
+      await supabaseAdmin.from("notification_preferences").delete().eq("user_id", selfUserId);
+      await supabaseAdmin.from("activity_logs").delete().eq("user_id", selfUserId);
+      await supabaseAdmin.from("product_drafts").delete().eq("supplier_id", selfUserId);
+      await supabaseAdmin.from("collections").delete().eq("user_id", selfUserId);
+      await supabaseAdmin.from("affiliates").delete().eq("user_id", selfUserId);
+      await supabaseAdmin.from("profiles").delete().eq("id", selfUserId);
+
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(selfUserId);
+      if (deleteError) throw deleteError;
+
+      return new Response(JSON.stringify({ success: true, action: "self_deleted" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!user_id) {
+      return new Response(JSON.stringify({ error: "Missing user_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
