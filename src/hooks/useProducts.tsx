@@ -90,8 +90,8 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         minValue: 0,
         supplierUuid: sp.id,
         supplierProfileId: sp.supplier_id,
-        saleUnit: sp.sale_unit || 'unit',
-        unitsPerSaleUnit: sp.units_per_sale_unit || 1,
+        saleUnit: (sp as any).sale_unit || 'unit',
+        unitsPerSaleUnit: (sp as any).units_per_sale_unit || 1,
         baleApproxPieces: (sp.variacoes as any)?.baleApproxPieces || null,
         kitItemsCount: sp.is_kit && sp.kit_items ? (sp.kit_items as any[]).length : 0,
       };
