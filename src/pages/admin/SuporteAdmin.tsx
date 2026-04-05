@@ -65,11 +65,7 @@ const SuporteAdmin = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+      const { data, error } = await supabase.rpc('get_admin_reports');
       if (!error) setReports(data || []);
     } catch (e) {
       console.error(e);
