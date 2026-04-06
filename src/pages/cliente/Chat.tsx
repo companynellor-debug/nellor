@@ -4,9 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { NegotiationForm } from "@/components/chat/NegotiationForm";
+import { VerifiedSupplierBadge } from "@/components/cliente/VerifiedSupplierBadge";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
@@ -14,6 +16,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "@/hooks/use-toast";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 import { useTypingPresence } from "@/hooks/useTypingPresence";
+import { supabase } from "@/integrations/supabase/client";
 
 const Chat = () => {
   const location = useLocation();
@@ -25,6 +28,7 @@ const Chat = () => {
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const [showNegotiationForm, setShowNegotiationForm] = useState(false);
+  const [messageLimitInfo, setMessageLimitInfo] = useState<{ allowed: boolean; remaining: number; verified: boolean; is_new_account?: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -92,6 +96,20 @@ const Chat = () => {
       }
     }
   }, [location.state, user]);
+
+  // Check message limit for new unverified accounts
+  useEffect(() => {
+    if (!user) return;
+    const checkLimit = async () => {
+      try {
+        const { data } = await supabase.rpc('check_chat_message_limit', { _user_id: user.id });
+        if (data) setMessageLimitInfo(data as any);
+      } catch (err) {
+        console.error('Error checking message limit:', err);
+      }
+    };
+    checkLimit();
+  }, [user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -161,6 +179,16 @@ const Chat = () => {
   const handleSend = () => {
     if (!selectedUserId) return;
     
+    // Check message limit
+    if (messageLimitInfo && !messageLimitInfo.allowed) {
+      toast({
+        title: "Limite de mensagens atingido",
+        description: "Verifique seu telefone para desbloquear o chat completo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!message.trim() && attachments.length === 0) {
       toast({
         title: "Mensagem vazia",
@@ -174,6 +202,11 @@ const Chat = () => {
     sendSupabaseMessage(selectedUserId, message.trim(), attachments.length > 0 ? attachments : undefined);
     setMessage("");
     setAttachments([]);
+    
+    // Refresh limit count
+    if (messageLimitInfo?.is_new_account && !messageLimitInfo.verified) {
+      setMessageLimitInfo(prev => prev ? { ...prev, remaining: Math.max(0, prev.remaining - 1), allowed: prev.remaining > 1 } : prev);
+    }
   };
 
   const currentMessages = selectedUserId ? getMessagesByUser(selectedUserId) : [];
@@ -198,7 +231,10 @@ const Chat = () => {
                 <img src={selectedSupplier.foto_perfil_url || '/placeholder.svg'} alt={selectedSupplier.nome} className="w-full h-full object-cover" />
               </div>
               <div>
-                <h2 className="font-bold">{selectedSupplier.nome}</h2>
+                <div className="flex items-center gap-1.5">
+                  <h2 className="font-bold">{selectedSupplier.nome}</h2>
+                  <VerifiedSupplierBadge verified={(selectedSupplier as any).verified !== false} />
+                </div>
                 {isOtherUserTyping ? (
                   <p className="text-xs text-primary animate-pulse">Digitando...</p>
                 ) : (
@@ -228,6 +264,23 @@ const Chat = () => {
 
         {/* Mensagens */}
         <main className="container mx-auto px-4 py-6 relative z-10 space-y-4" style={{ paddingBottom: "120px" }}>
+          {/* Message limit warning */}
+          {messageLimitInfo?.is_new_account && !messageLimitInfo.verified && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-medium text-orange-800">
+                  {messageLimitInfo.allowed 
+                    ? `Conta nova — ${messageLimitInfo.remaining} mensagens restantes hoje`
+                    : "Limite de mensagens atingido"}
+                </p>
+                <p className="text-[10px] text-orange-600 mt-0.5">
+                  Verifique seu telefone no perfil para desbloquear o chat completo.
+                </p>
+              </div>
+            </div>
+          )}
+
           {currentMessages.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Nenhuma mensagem ainda</p>

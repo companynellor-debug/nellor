@@ -51,6 +51,7 @@ const ProgramaAfiliados = lazy(() => import("./pages/cliente/ProgramaAfiliados")
 const AfiliadoCadastro = lazy(() => import("./pages/cliente/AfiliadoCadastro"));
 const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
 const SolicitarFornecedor = lazy(() => import("./pages/cliente/SolicitarFornecedor"));
+const MinhasNegociacoes = lazy(() => import("./pages/cliente/MinhasNegociacoes"));
 
 // Drop Mode pages removidos - Nellor Drop desativado temporariamente
 
@@ -91,7 +92,8 @@ const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
 const AdminAffiliatePrestadores = lazy(() => import("./pages/admin/AffiliatePrestadores"));
 const AdminPatrocinios = lazy(() => import("./pages/admin/Patrocinios"));
 const AdminSolicitacoesFornecedor = lazy(() => import("./pages/admin/SolicitacoesFornecedor"));
-// AdminNellorDrop removido - desativado temporariamente
+const AdminConversas = lazy(() => import("./pages/admin/Conversas"));
+const AdminDisputas = lazy(() => import("./pages/admin/Disputas"));
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 
 // Optimized QueryClient with aggressive caching
@@ -180,6 +182,7 @@ const App = () => {
                 <Route path="afiliados/cadastro" element={<Suspense fallback={<PageSkeleton />}><AfiliadoCadastro /></Suspense>} />
                 <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
                 <Route path="solicitar-fornecedor" element={<Suspense fallback={<PageSkeleton />}><SolicitarFornecedor /></Suspense>} />
+                <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><MinhasNegociacoes /></Suspense>} />
               </Route>
 
               {/* Fornecedor Panel Routes */}
@@ -238,7 +241,8 @@ const App = () => {
                 <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
                 <Route path="patrocinios" element={<Suspense fallback={<PageSkeleton />}><AdminPatrocinios /></Suspense>} />
                 <Route path="solicitacoes-fornecedor" element={<Suspense fallback={<PageSkeleton />}><AdminSolicitacoesFornecedor /></Suspense>} />
-                {/* admin nellor-drop removido temporariamente */}
+                <Route path="conversas" element={<Suspense fallback={<PageSkeleton />}><AdminConversas /></Suspense>} />
+                <Route path="disputas" element={<Suspense fallback={<PageSkeleton />}><AdminDisputas /></Suspense>} />
               </Route>
 
               {/* Catch-all - redirect to welcome */}
