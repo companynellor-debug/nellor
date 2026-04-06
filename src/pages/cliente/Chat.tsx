@@ -97,6 +97,20 @@ const Chat = () => {
     }
   }, [location.state, user]);
 
+  // Check message limit for new unverified accounts
+  useEffect(() => {
+    if (!user) return;
+    const checkLimit = async () => {
+      try {
+        const { data } = await supabase.rpc('check_chat_message_limit', { _user_id: user.id });
+        if (data) setMessageLimitInfo(data as any);
+      } catch (err) {
+        console.error('Error checking message limit:', err);
+      }
+    };
+    checkLimit();
+  }, [user]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedUserId, conversations]);
