@@ -264,6 +264,23 @@ const Chat = () => {
 
         {/* Mensagens */}
         <main className="container mx-auto px-4 py-6 relative z-10 space-y-4" style={{ paddingBottom: "120px" }}>
+          {/* Message limit warning */}
+          {messageLimitInfo?.is_new_account && !messageLimitInfo.verified && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-medium text-orange-800">
+                  {messageLimitInfo.allowed 
+                    ? `Conta nova — ${messageLimitInfo.remaining} mensagens restantes hoje`
+                    : "Limite de mensagens atingido"}
+                </p>
+                <p className="text-[10px] text-orange-600 mt-0.5">
+                  Verifique seu telefone no perfil para desbloquear o chat completo.
+                </p>
+              </div>
+            </div>
+          )}
+
           {currentMessages.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Nenhuma mensagem ainda</p>
