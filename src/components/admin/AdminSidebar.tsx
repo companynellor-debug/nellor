@@ -16,7 +16,8 @@ import {
   Megaphone,
   ClipboardList,
   MessagesSquare,
-  AlertTriangle
+  AlertTriangle,
+  CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ const menuItems = [
   { icon: Package, label: "Categorias", path: "/admin/categorias" },
   { icon: Image, label: "Banners", path: "/admin/banners" },
   { icon: Megaphone, label: "Patrocínios", path: "/admin/patrocinios" },
+  { icon: CreditCard, label: "Assinaturas", path: "/admin/assinaturas" },
   { icon: Settings, label: "Configurações", path: "/admin/configuracoes" },
 ];
 
