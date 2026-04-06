@@ -1,4 +1,4 @@
-import { Home, ShoppingCart, User, MessageCircle } from "lucide-react";
+import { Home, Heart, User, MessageCircle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 
@@ -12,7 +12,7 @@ export const BottomNav = () => {
   const navItems = [
     { icon: Home, label: "Home", path: "/cliente" },
     { icon: MessageCircle, label: "Chat", path: "/cliente/chat" },
-    { icon: ShoppingCart, label: "Carrinho", path: "/cliente/carrinho", badge: totalItems },
+    { icon: Heart, label: "Interesse", path: "/cliente/carrinho", badge: totalItems },
     { icon: User, label: "Perfil", path: "/cliente/perfil" },
   ];
 
