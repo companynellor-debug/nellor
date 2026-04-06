@@ -9,6 +9,7 @@ import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { usePWA } from "@/hooks/usePWA";
 import { useSupplierApplication } from "@/hooks/useSupplierApplication";
 import CollectionsTab from "@/components/cliente/CollectionsTab";
+import { PhoneVerification } from "@/components/cliente/PhoneVerification";
 import nellorLogo from "@/assets/nellor-logo.png";
 
 const Perfil = () => {
@@ -141,6 +142,9 @@ const Perfil = () => {
                 </button>
               </div>
             </Card>
+
+            {/* Verificação de Telefone */}
+            <PhoneVerification />
 
             {/* Menu principal */}
             <div className="space-y-1">
