@@ -231,7 +231,10 @@ const Chat = () => {
                 <img src={selectedSupplier.foto_perfil_url || '/placeholder.svg'} alt={selectedSupplier.nome} className="w-full h-full object-cover" />
               </div>
               <div>
-                <h2 className="font-bold">{selectedSupplier.nome}</h2>
+                <div className="flex items-center gap-1.5">
+                  <h2 className="font-bold">{selectedSupplier.nome}</h2>
+                  <VerifiedSupplierBadge verified={(selectedSupplier as any).verified !== false} />
+                </div>
                 {isOtherUserTyping ? (
                   <p className="text-xs text-primary animate-pulse">Digitando...</p>
                 ) : (
