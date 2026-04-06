@@ -14,7 +14,9 @@ import {
   PieChart,
   UserCheck,
   Megaphone,
-  ClipboardList
+  ClipboardList,
+  MessagesSquare,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +32,8 @@ const menuItems = [
   { icon: BarChart3, label: "Relatórios", path: "/admin/relatorios" },
   { icon: Bell, label: "Notificações", path: "/admin/notificacoes" },
   { icon: MessageCircle, label: "Suporte", path: "/admin/suporte" },
+  { icon: MessagesSquare, label: "Conversas", path: "/admin/conversas" },
+  { icon: AlertTriangle, label: "Disputas", path: "/admin/disputas" },
   { icon: Package, label: "Categorias", path: "/admin/categorias" },
   { icon: Image, label: "Banners", path: "/admin/banners" },
   { icon: Megaphone, label: "Patrocínios", path: "/admin/patrocinios" },
