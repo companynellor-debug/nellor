@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download } from "lucide-react";
+import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { NegotiationForm } from "@/components/chat/NegotiationForm";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
@@ -23,6 +24,7 @@ const Chat = () => {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
+  const [showNegotiationForm, setShowNegotiationForm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -204,8 +206,25 @@ const Chat = () => {
                 )}
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowNegotiationForm(true)}
+              className="border-primary/30 text-primary hover:bg-primary/10 gap-1 text-xs flex-shrink-0"
+            >
+              <Handshake className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Registrar Negociação</span>
+              <span className="sm:hidden">Registrar</span>
+            </Button>
           </div>
         </header>
+
+        {/* Negotiation Form */}
+        <NegotiationForm
+          supplierId={selectedUserId}
+          open={showNegotiationForm}
+          onOpenChange={setShowNegotiationForm}
+        />
 
         {/* Mensagens */}
         <main className="container mx-auto px-4 py-6 relative z-10 space-y-4" style={{ paddingBottom: "120px" }}>

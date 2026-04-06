@@ -720,15 +720,36 @@ const ProdutoDetalhes = () => {
               />
             )}
 
-            {/* Desktop buttons - show for ALL products */}
-            <div className="hidden lg:flex gap-3 pt-2">
-              <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2 h-12" disabled={currentStock === 0}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) return; validateAndAddToCart(1, '/cliente/carrinho'); }}>
-                <ShoppingCart className="h-5 w-5" />Adicionar ao Carrinho
+            {/* Negotiation info */}
+            <div className="bg-primary/5 border-2 border-primary/20 rounded-xl p-5 space-y-3">
+              <Button className="w-full bg-primary hover:bg-primary/90 text-white h-14 text-base font-bold gap-2"
+                onClick={() => {
+                  if (!product.supplierProfileId) return;
+                  navigate('/cliente/chat', {
+                    state: {
+                      supplierId: product.supplierProfileId,
+                      message: `Olá! Tenho interesse no produto ${product.name}. Podemos negociar?`
+                    }
+                  });
+                }}>
+                <MessageCircle className="h-5 w-5" />
+                Negociar com Fornecedor
               </Button>
-              <Button className="flex-1 bg-primary hover:bg-primary/90 text-white h-12" disabled={currentStock === 0}
-                onClick={(e) => { e.preventDefault(); if (currentStock === 0) return; if (hasVariations && !allVariationsSelected) { validateAndAddToCart(1); return; } setQuantity(1); setShowQuantityDialog(true); }}>
-                Comprar Agora
+              <p className="text-xs text-muted-foreground text-center">
+                Combine quantidade, preço e entrega diretamente com o fornecedor pelo chat da plataforma
+              </p>
+              <div className="flex items-center justify-center gap-2 text-xs text-primary font-medium">
+                <Badge variant="outline" className="border-primary/30 text-primary gap-1">
+                  🛡️ Negociação Segura — Conversa registrada na plataforma
+                </Badge>
+              </div>
+            </div>
+
+            {/* Desktop: Add to Interest List */}
+            <div className="hidden lg:block">
+              <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10 gap-2 h-12"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); validateAndAddToCart(1, '/cliente/carrinho'); }}>
+                <Heart className="h-5 w-5" />Salvar na Lista de Interesse
               </Button>
             </div>
           </div>
@@ -786,16 +807,24 @@ const ProdutoDetalhes = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Mobile buttons - show for ALL products */}
+        {/* Mobile buttons */}
         <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30 lg:hidden">
           <div className="container mx-auto flex gap-3">
-            <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2" disabled={currentStock === 0}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } validateAndAddToCart(1, '/cliente/carrinho'); }}>
-              <ShoppingCart className="h-5 w-5" />Adicionar
+            <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); validateAndAddToCart(1, '/cliente/carrinho'); }}>
+              <Heart className="h-5 w-5" />Salvar
             </Button>
-            <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" disabled={currentStock === 0}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (currentStock === 0) { toast({ title: 'Produto sem estoque', variant: 'destructive' }); return; } if (hasVariations && !allVariationsSelected) { validateAndAddToCart(1); return; } setQuantity(1); setShowQuantityDialog(true); }}>
-              Comprar
+            <Button className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2"
+              onClick={() => {
+                if (!product.supplierProfileId) return;
+                navigate('/cliente/chat', {
+                  state: {
+                    supplierId: product.supplierProfileId,
+                    message: `Olá! Tenho interesse no produto ${product.name}. Podemos negociar?`
+                  }
+                });
+              }}>
+              <MessageCircle className="h-5 w-5" />Negociar
             </Button>
           </div>
         </div>
