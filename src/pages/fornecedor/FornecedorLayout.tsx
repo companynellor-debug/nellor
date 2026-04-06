@@ -4,6 +4,7 @@ import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
 import { NotificationPermissionBanner } from "@/components/fornecedor/NotificationPermissionBanner";
 import { VerificationStatusBanner } from "@/components/fornecedor/VerificationStatusBanner";
+import { SubscriptionBanner } from "@/components/fornecedor/SubscriptionBanner";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -132,6 +133,9 @@ const FornecedorLayoutContent = () => {
 
             {/* Verificação de identidade */}
             <VerificationStatusBanner />
+
+            {/* Banner de assinatura */}
+            <SubscriptionBanner />
 
             {/* Main Content */}
             <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 md:pb-6">

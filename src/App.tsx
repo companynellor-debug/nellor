@@ -72,6 +72,7 @@ const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoe
 const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
 // NellorDrop removido - desativado temporariamente
 const Patrocinio = lazy(() => import("./pages/fornecedor/Patrocinio"));
+const AssinaturaFornecedor = lazy(() => import("./pages/fornecedor/Assinatura"));
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -94,6 +95,7 @@ const AdminPatrocinios = lazy(() => import("./pages/admin/Patrocinios"));
 const AdminSolicitacoesFornecedor = lazy(() => import("./pages/admin/SolicitacoesFornecedor"));
 const AdminConversas = lazy(() => import("./pages/admin/Conversas"));
 const AdminDisputas = lazy(() => import("./pages/admin/Disputas"));
+const AdminAssinaturas = lazy(() => import("./pages/admin/Assinaturas"));
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 
 // Optimized QueryClient with aggressive caching
@@ -210,6 +212,7 @@ const App = () => {
                 <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
                 <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
                 <Route path="patrocinio" element={<Suspense fallback={<PageSkeleton />}><Patrocinio /></Suspense>} />
+                <Route path="assinatura" element={<Suspense fallback={<PageSkeleton />}><AssinaturaFornecedor /></Suspense>} />
                 {/* nellor-drop removido temporariamente */}
               </Route>
 
@@ -243,6 +246,7 @@ const App = () => {
                 <Route path="solicitacoes-fornecedor" element={<Suspense fallback={<PageSkeleton />}><AdminSolicitacoesFornecedor /></Suspense>} />
                 <Route path="conversas" element={<Suspense fallback={<PageSkeleton />}><AdminConversas /></Suspense>} />
                 <Route path="disputas" element={<Suspense fallback={<PageSkeleton />}><AdminDisputas /></Suspense>} />
+                <Route path="assinaturas" element={<Suspense fallback={<PageSkeleton />}><AdminAssinaturas /></Suspense>} />
               </Route>
 
               {/* Catch-all - redirect to welcome */}

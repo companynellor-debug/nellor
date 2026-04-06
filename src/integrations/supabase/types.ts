@@ -2798,6 +2798,77 @@ export type Database = {
           },
         ]
       }
+      supplier_subscriptions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          notes: string | null
+          payment_confirmed_by: string | null
+          payment_method: string | null
+          plan_name: string
+          price: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_confirmed_by?: string | null
+          payment_method?: string | null
+          plan_name?: string
+          price?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_confirmed_by?: string | null
+          payment_method?: string | null
+          plan_name?: string
+          price?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_subscriptions_payment_confirmed_by_fkey"
+            columns: ["payment_confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_subscriptions_payment_confirmed_by_fkey"
+            columns: ["payment_confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_subscriptions_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_subscriptions_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           assunto: string
@@ -3033,6 +3104,10 @@ export type Database = {
       admin_approve_supplier_application: {
         Args: { _application_id: string }
         Returns: boolean
+      }
+      admin_confirm_subscription: {
+        Args: { _admin_id: string; _notes?: string; _subscription_id: string }
+        Returns: undefined
       }
       admin_reject_supplier_application: {
         Args: { _application_id: string; _reason: string }
@@ -3271,6 +3346,23 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_admin_subscriptions: {
+        Args: never
+        Returns: {
+          created_at: string
+          expires_at: string
+          id: string
+          notes: string
+          payment_method: string
+          plan_name: string
+          price: number
+          started_at: string
+          status: string
+          supplier_email: string
+          supplier_id: string
+          supplier_name: string
+        }[]
+      }
       get_admin_supplier_applications: {
         Args: never
         Returns: {
@@ -3431,6 +3523,18 @@ export type Database = {
           products_in_drop: number
           total_orders: number
           total_sales: number
+        }[]
+      }
+      get_supplier_subscription: {
+        Args: { _supplier_id: string }
+        Returns: {
+          days_remaining: number
+          expires_at: string
+          id: string
+          plan_name: string
+          price: number
+          started_at: string
+          status: string
         }[]
       }
       has_role: {
@@ -3649,6 +3753,7 @@ export type Database = {
       shipping_region: "norte" | "nordeste" | "centro_oeste" | "sudeste" | "sul"
       sponsorship_status: "pending" | "approved" | "rejected" | "scheduled"
       sponsorship_type: "produto_destaque" | "banner_homepage"
+      subscription_status: "active" | "pending" | "expired" | "cancelled"
       supplier_application_status:
         | "pending"
         | "under_review"
@@ -3828,6 +3933,7 @@ export const Constants = {
       shipping_region: ["norte", "nordeste", "centro_oeste", "sudeste", "sul"],
       sponsorship_status: ["pending", "approved", "rejected", "scheduled"],
       sponsorship_type: ["produto_destaque", "banner_homepage"],
+      subscription_status: ["active", "pending", "expired", "cancelled"],
       supplier_application_status: [
         "pending",
         "under_review",
