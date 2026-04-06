@@ -20,7 +20,7 @@ const Dashboard = () => {
   const { statusLabel, canSell } = useIdentityVerification();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days' | 'all'>('today');
   const { orders } = useSupabaseOrders();
-const [analytics, setAnalytics] = useState<any>(null);
+  const [testingNotification, setTestingNotification] = useState(false);
   const [testingNotification, setTestingNotification] = useState(false);
   const { toast } = useToast();
 
