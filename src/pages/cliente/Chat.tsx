@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download } from "lucide-react";
+import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { NegotiationForm } from "@/components/chat/NegotiationForm";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
@@ -23,6 +24,7 @@ const Chat = () => {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
+  const [showNegotiationForm, setShowNegotiationForm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
