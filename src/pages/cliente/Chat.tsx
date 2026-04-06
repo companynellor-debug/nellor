@@ -4,9 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { NegotiationForm } from "@/components/chat/NegotiationForm";
+import { VerifiedSupplierBadge } from "@/components/cliente/VerifiedSupplierBadge";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
@@ -14,6 +16,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "@/hooks/use-toast";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 import { useTypingPresence } from "@/hooks/useTypingPresence";
+import { supabase } from "@/integrations/supabase/client";
 
 const Chat = () => {
   const location = useLocation();
@@ -25,6 +28,7 @@ const Chat = () => {
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const [showNegotiationForm, setShowNegotiationForm] = useState(false);
+  const [messageLimitInfo, setMessageLimitInfo] = useState<{ allowed: boolean; remaining: number; verified: boolean; is_new_account?: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
