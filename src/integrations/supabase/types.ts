@@ -706,6 +706,62 @@ export type Database = {
           },
         ]
       }
+      disputes: {
+        Row: {
+          admin_notes: string | null
+          buyer_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          negotiation_id: string
+          reason: string
+          resolved_at: string | null
+          status: string
+          supplier_id: string
+          supplier_responded_at: string | null
+          supplier_response: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          buyer_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          negotiation_id: string
+          reason?: string
+          resolved_at?: string | null
+          status?: string
+          supplier_id: string
+          supplier_responded_at?: string | null
+          supplier_response?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          buyer_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          negotiation_id?: string
+          reason?: string
+          resolved_at?: string | null
+          status?: string
+          supplier_id?: string
+          supplier_responded_at?: string | null
+          supplier_response?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_negotiation_id_fkey"
+            columns: ["negotiation_id"]
+            isOneToOne: false
+            referencedRelation: "negotiations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drop_audit_log: {
         Row: {
           action: string
@@ -1333,6 +1389,36 @@ export type Database = {
           },
         ]
       }
+      phone_verification_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          phone: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          phone: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       price_history: {
         Row: {
           id: string
@@ -1724,6 +1810,8 @@ export type Database = {
           min_order_value: number | null
           nome: string
           onboarding_completed: boolean | null
+          phone_verified: boolean | null
+          phone_verified_at: string | null
           pix_key: string | null
           service_provider_code: string | null
           shipping_city: string | null
@@ -1750,6 +1838,8 @@ export type Database = {
           min_order_value?: number | null
           nome: string
           onboarding_completed?: boolean | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
           pix_key?: string | null
           service_provider_code?: string | null
           shipping_city?: string | null
@@ -1776,6 +1866,8 @@ export type Database = {
           min_order_value?: number | null
           nome?: string
           onboarding_completed?: boolean | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
           pix_key?: string | null
           service_provider_code?: string | null
           shipping_city?: string | null
@@ -2955,6 +3047,7 @@ export type Database = {
         Returns: boolean
       }
       bytea_to_text: { Args: { data: string }; Returns: string }
+      check_chat_message_limit: { Args: { _user_id: string }; Returns: Json }
       check_login_blocked: { Args: { _email: string }; Returns: Json }
       create_affiliate_commission_for_order: {
         Args: { _order_id: string }
@@ -3001,6 +3094,18 @@ export type Database = {
           user_name: string
         }[]
       }
+      get_admin_chat_messages: {
+        Args: { _chat_id: string }
+        Returns: {
+          created_at: string
+          from_name: string
+          from_user: string
+          id: string
+          text: string
+          to_name: string
+          to_user: string
+        }[]
+      }
       get_admin_commissions: {
         Args: never
         Returns: {
@@ -3032,6 +3137,40 @@ export type Database = {
           status: string
           supplier_id: string
           supplier_name: string
+        }[]
+      }
+      get_admin_conversations: {
+        Args: { _search?: string }
+        Returns: {
+          chat_id: string
+          last_message: string
+          last_message_at: string
+          message_count: number
+          user1_id: string
+          user1_name: string
+          user2_id: string
+          user2_name: string
+        }[]
+      }
+      get_admin_disputes: {
+        Args: never
+        Returns: {
+          admin_notes: string
+          agreed_price: number
+          buyer_id: string
+          buyer_name: string
+          created_at: string
+          description: string
+          id: string
+          negotiation_id: string
+          product_name: string
+          reason: string
+          resolved_at: string
+          status: string
+          supplier_id: string
+          supplier_name: string
+          supplier_responded_at: string
+          supplier_response: string
         }[]
       }
       get_admin_orders: {
@@ -3430,6 +3569,7 @@ export type Database = {
         Args: { _collection_id: string; _user_id: string }
         Returns: boolean
       }
+      is_supplier_verified: { Args: { _supplier_id: string }; Returns: boolean }
       log_activity: {
         Args: {
           _action: string
