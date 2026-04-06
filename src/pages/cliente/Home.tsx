@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Heart, Bell, ShoppingCart, ChevronRight, X, Download, Smartphone, CheckCircle2, Package, Sparkles } from "lucide-react";
+import { Search, Heart, Bell, Bookmark, ChevronRight, X, Download, Smartphone, CheckCircle2, Package, Sparkles } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -110,7 +110,7 @@ const ClienteHome = () => {
                 <Bell className="h-6 w-6 text-foreground" />
               </button>
               <button onClick={() => navigate("/cliente/carrinho")} className="relative p-2 hover:bg-muted rounded-full transition-colors">
-                <ShoppingCart className="h-6 w-6 text-foreground" />
+                <Bookmark className="h-6 w-6 text-foreground" />
                 {cartItems.length > 0 && <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">{cartItems.length}</span>}
               </button>
               <button onClick={() => navigate("/cliente/favoritos")} className="relative p-2 hover:bg-muted rounded-full transition-colors">
