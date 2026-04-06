@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, TrendingUp, MessageCircle, Star, Loader2, Eye, Bell, ShieldCheck } from "lucide-react";
+import { formatCurrencyFromDecimal } from "@/utils/currency";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
