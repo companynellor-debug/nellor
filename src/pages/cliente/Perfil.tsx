@@ -2,7 +2,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Truck, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Truck, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Handshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
@@ -149,6 +149,7 @@ const Perfil = () => {
             {/* Menu principal */}
             <div className="space-y-1">
               {[
+                { icon: Handshake, label: "Minhas Negociações", route: "/cliente/negociacoes" },
                 { icon: MapPin, label: "Meus Endereços", route: "/cliente/enderecos" },
                 { icon: CreditCard, label: "Métodos de Pagamento", route: "/cliente/metodos-pagamento" },
                 { icon: Shield, label: "Segurança", route: "/cliente/seguranca" },
