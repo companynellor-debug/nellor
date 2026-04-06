@@ -56,7 +56,6 @@ const MinhasNegociacoes = () => {
       if (selectedNegotiation.product_id) {
         await createReview({
           product_id: selectedNegotiation.product_id,
-          supplier_id: selectedNegotiation.supplier_id,
           rating,
           comment: reviewComment || undefined,
         });

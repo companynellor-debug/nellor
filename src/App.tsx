@@ -51,6 +51,7 @@ const ProgramaAfiliados = lazy(() => import("./pages/cliente/ProgramaAfiliados")
 const AfiliadoCadastro = lazy(() => import("./pages/cliente/AfiliadoCadastro"));
 const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
 const SolicitarFornecedor = lazy(() => import("./pages/cliente/SolicitarFornecedor"));
+const MinhasNegociacoes = lazy(() => import("./pages/cliente/MinhasNegociacoes"));
 
 // Drop Mode pages removidos - Nellor Drop desativado temporariamente
 
@@ -181,6 +182,7 @@ const App = () => {
                 <Route path="afiliados/cadastro" element={<Suspense fallback={<PageSkeleton />}><AfiliadoCadastro /></Suspense>} />
                 <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
                 <Route path="solicitar-fornecedor" element={<Suspense fallback={<PageSkeleton />}><SolicitarFornecedor /></Suspense>} />
+                <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><MinhasNegociacoes /></Suspense>} />
               </Route>
 
               {/* Fornecedor Panel Routes */}
