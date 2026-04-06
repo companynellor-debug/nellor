@@ -1,9 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, DollarSign, ShoppingCart, Loader2, Wallet, Percent, Bell, ShieldCheck } from "lucide-react";
+import { Package, TrendingUp, MessageCircle, Star, Loader2, Eye, Bell, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { formatCurrencyFromDecimal } from "@/utils/currency";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupplierProducts } from "@/hooks/useSupplierProducts";
 import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
@@ -67,98 +66,78 @@ const [analytics, setAnalytics] = useState<any>(null);
     }
   };
 
-  // Buscar analytics do mês atual (pedidos já vêm do hook com realtime)
+  // Fetch conversation count and negotiations
+  const [totalConversations, setTotalConversations] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [totalNegotiations, setTotalNegotiations] = useState(0);
+
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchMetrics = async () => {
       if (!profile?.id) return;
 
-      const currentMonth = new Date().toISOString().slice(0, 7) + '-01';
-      const { data: analyticsData } = await supabase
-        .from('analytics')
-        .select('*')
-        .eq('supplier_id', profile.id)
-        .eq('mes_referencia', currentMonth)
-        .single();
+      // Count unique conversations (messages where supplier is to_user or from_user)
+      const { data: msgs } = await supabase
+        .from('messages')
+        .select('from_user, to_user')
+        .or(`from_user.eq.${profile.id},to_user.eq.${profile.id}`);
+      
+      if (msgs) {
+        const uniqueUsers = new Set(msgs.map(m => m.from_user === profile.id ? m.to_user : m.from_user));
+        setTotalConversations(uniqueUsers.size);
+      }
 
-      setAnalytics(analyticsData);
+      // Count reviews for supplier products
+      const { count: reviewCount } = await supabase
+        .from('reviews' as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('supplier_id', profile.id);
+      setTotalReviews(reviewCount || 0);
+
+      // Count negotiations
+      const { count: negCount } = await supabase
+        .from('negotiations' as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('supplier_id', profile.id);
+      setTotalNegotiations(negCount || 0);
     };
 
-    fetchAnalytics();
+    fetchMetrics();
   }, [profile?.id]);
 
-  // Calcular data de início baseado no filtro
+  // Filter by date
   const getStartDate = () => {
     if (dateFilter === 'all') return null;
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    if (dateFilter === 'today') {
-      return now;
-    } else if (dateFilter === '7days') {
-      const sevenDaysAgo = new Date(now);
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      return sevenDaysAgo;
-    } else if (dateFilter === '14days') {
-      const fourteenDaysAgo = new Date(now);
-      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-      return fourteenDaysAgo;
-    } else {
-      const thirtyDaysAgo = new Date(now);
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return thirtyDaysAgo;
-    }
+    if (dateFilter === 'today') return now;
+    if (dateFilter === '7days') { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
+    if (dateFilter === '14days') { const d = new Date(now); d.setDate(d.getDate() - 14); return d; }
+    const d = new Date(now); d.setDate(d.getDate() - 30); return d;
   };
 
-  // Filtrar pedidos por data
   const startDate = getStartDate();
   const filteredOrders = startDate ? orders.filter(o => new Date(o.created_at) >= startDate) : orders;
-  const newOrders = filteredOrders.filter(o => o.order_status === 'preparing').length;
-  const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
   const totalOrders = filteredOrders.length;
-  const totalRevenue = filteredOrders
-    .filter(o => o.payment_status === 'paid')
-    .reduce((sum, o) => sum + Number(o.total || 0), 0);
+  const deliveredOrders = filteredOrders.filter(o => o.order_status === 'delivered').length;
+  const newOrders = filteredOrders.filter(o => o.order_status === 'preparing').length;
 
-  // Cálculo de comissões e valor líquido
-  const paidFilteredOrders = filteredOrders.filter(o => o.payment_status === 'paid');
-  const totalPlatformFee = paidFilteredOrders.reduce((sum, o) => {
-    // Usar valor real se disponível, senão calcular 7.5%
-    const fee = o.platform_fee ? Number(o.platform_fee) : Number(o.total || 0) * 0.075;
-    return sum + fee;
-  }, 0);
-  const totalSupplierAmount = paidFilteredOrders.reduce((sum, o) => {
-    // Usar valor real se disponível, senão calcular
-    const amount = o.supplier_amount ? Number(o.supplier_amount) : Number(o.total || 0) * 0.925;
-    return sum + amount;
-  }, 0);
-  const paidOrders = paidFilteredOrders;
-  const ticketMedio = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
-
-  // Dados de vendas ao longo do tempo (últimos 6 meses)
-  const salesData = (() => {
-    const monthsData: {
-      [key: string]: number;
-    } = {};
+  // Conversations over time (last 6 months) - use orders as proxy for activity
+  const activityData = (() => {
+    const monthsData: Record<string, number> = {};
     const now = new Date();
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = date.toLocaleDateString('pt-BR', {
-        month: 'short'
-      });
+      const monthKey = date.toLocaleDateString('pt-BR', { month: 'short' });
       monthsData[monthKey] = 0;
     }
-    orders.filter(o => o.payment_status === 'paid').forEach(order => {
+    orders.forEach(order => {
       const orderDate = new Date(order.created_at);
-      const monthKey = orderDate.toLocaleDateString('pt-BR', {
-        month: 'short'
-      });
+      const monthKey = orderDate.toLocaleDateString('pt-BR', { month: 'short' });
       if (monthsData.hasOwnProperty(monthKey)) {
-        monthsData[monthKey] += Number(order.total || 0);
+        monthsData[monthKey] += 1;
       }
     });
-    return Object.entries(monthsData).map(([month, value]) => ({
-      month,
-      vendas: value
-    }));
+    return Object.entries(monthsData).map(([month, value]) => ({ month, negociacoes: value }));
   })();
   return <div className="w-full max-w-full space-y-4 md:space-y-6">
       {/* Header */}
@@ -214,152 +193,111 @@ const [analytics, setAnalytics] = useState<any>(null);
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Receita Total
-            </CardTitle>
-            <DollarSign className="w-5 h-5 text-green-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{formatCurrencyFromDecimal(totalRevenue)}</div>
-          </CardContent>
-        </Card>
-
-        {/* Valor Líquido Card */}
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-emerald-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Valor Líquido
-            </CardTitle>
-            <Wallet className="w-5 h-5 text-emerald-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-emerald-600">{formatCurrencyFromDecimal(totalSupplierAmount)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Após taxa da plataforma</p>
-          </CardContent>
-        </Card>
-
-        {/* Comissão Plataforma Card */}
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Taxa Plataforma
+              Conversas Iniciadas
             </CardTitle>
-            <Percent className="w-5 h-5 text-purple-600" />
+            <MessageCircle className="w-5 h-5 text-purple-600" />
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-purple-600">{formatCurrencyFromDecimal(totalPlatformFee)}</div>
-            <p className="text-xs text-muted-foreground mt-1">7,5% por venda</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Pedidos Ativos
-            </CardTitle>
-            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-orange-500 to-orange-600 bg-clip-text text-transparent" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{totalOrders - deliveredOrders}</div>
+            <div className="text-2xl font-bold">{totalConversations}</div>
+            <p className="text-xs text-muted-foreground mt-1">Compradores interessados</p>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Novos Pedidos
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Negociações Registradas
             </CardTitle>
-            <Package className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-blue-500 to-blue-600 bg-clip-text text-transparent" />
+            <TrendingUp className="w-5 h-5 text-blue-600" />
           </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{newOrders}</div>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">{totalNegotiations}</div>
+            <p className="text-xs text-muted-foreground mt-1">Acordos feitos no chat</p>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity mx-0" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-yellow-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Avaliações Recebidas
+            </CardTitle>
+            <Star className="w-5 h-5 text-yellow-600" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">{totalReviews}</div>
+            <p className="text-xs text-muted-foreground mt-1">Feedback dos compradores</p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Produtos com Interesse
+            </CardTitle>
+            <Eye className="w-5 h-5 text-orange-600" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">{products.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Produtos ativos no catálogo</p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Pedidos Entregues
             </CardTitle>
-            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-purple-500 to-purple-600 bg-clip-text text-transparent" />
+            <TrendingUp className="w-5 h-5 text-green-600" />
           </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{deliveredOrders}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Total de Pedidos
-            </CardTitle>
-            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-pink-500 to-pink-600 bg-clip-text text-transparent" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{totalOrders}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-violet-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Ticket Médio
-            </CardTitle>
-            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{formatCurrencyFromDecimal(ticketMedio)}</div>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">{deliveredOrders}</div>
           </CardContent>
         </Card>
 
         <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-cyan-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Total de Produtos
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Novos Pedidos
             </CardTitle>
-            <Package className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-cyan-500 to-cyan-600 bg-clip-text text-transparent" />
+            <Package className="w-5 h-5 text-cyan-600" />
           </CardHeader>
-          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold">{products.length}</div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Produtos cadastrados</p>
+          <CardContent className="p-4 pt-0">
+            <div className="text-2xl font-bold">{newOrders}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6">
-        {/* Evolução de Vendas */}
         <Card className="border-border hover:shadow-lg transition-shadow">
           <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-sm sm:text-base md:text-lg">📈 Evolução de Vendas</CardTitle>
+            <CardTitle className="text-sm sm:text-base md:text-lg">📈 Atividade de Negociações</CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            {salesData.some(d => d.vendas > 0) ? <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={salesData}>
+            {activityData.some(d => d.negociacoes > 0) ? <ResponsiveContainer width="100%" height={250}>
+                <AreaChart data={activityData}>
                   <defs>
-                    <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="colorNeg" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
                       <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="month" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" tickFormatter={value => `R$${value}`} />
+                  <YAxis stroke="#6b7280" />
                   <Tooltip />
-                  <Area type="monotone" dataKey="vendas" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorVendas)" />
+                  <Area type="monotone" dataKey="negociacoes" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorNeg)" />
                 </AreaChart>
               </ResponsiveContainer> : <div className="h-[250px] flex items-center justify-center">
-                <p className="text-muted-foreground text-xs sm:text-sm">Nenhuma venda registrada ainda</p>
+                <p className="text-muted-foreground text-xs sm:text-sm">Nenhuma negociação registrada ainda</p>
               </div>}
           </CardContent>
         </Card>
