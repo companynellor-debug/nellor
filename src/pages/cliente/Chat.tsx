@@ -179,6 +179,16 @@ const Chat = () => {
   const handleSend = () => {
     if (!selectedUserId) return;
     
+    // Check message limit
+    if (messageLimitInfo && !messageLimitInfo.allowed) {
+      toast({
+        title: "Limite de mensagens atingido",
+        description: "Verifique seu telefone para desbloquear o chat completo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!message.trim() && attachments.length === 0) {
       toast({
         title: "Mensagem vazia",
@@ -192,6 +202,11 @@ const Chat = () => {
     sendSupabaseMessage(selectedUserId, message.trim(), attachments.length > 0 ? attachments : undefined);
     setMessage("");
     setAttachments([]);
+    
+    // Refresh limit count
+    if (messageLimitInfo?.is_new_account && !messageLimitInfo.verified) {
+      setMessageLimitInfo(prev => prev ? { ...prev, remaining: Math.max(0, prev.remaining - 1), allowed: prev.remaining > 1 } : prev);
+    }
   };
 
   const currentMessages = selectedUserId ? getMessagesByUser(selectedUserId) : [];
