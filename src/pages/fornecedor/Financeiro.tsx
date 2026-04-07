@@ -51,36 +51,36 @@ const Financeiro = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10">
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-xs text-muted-foreground">Entregues</span>
+              <span className="text-sm text-muted-foreground">Entregues</span>
             </div>
-            <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">{fmt(totalDelivered)}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-green-600 break-words">{fmt(totalDelivered)}</p>
             <p className="text-xs text-muted-foreground mt-1">{delivered.length} negociação(ões)</p>
           </CardContent>
         </Card>
 
         <Card className="border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-900/10">
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
               <Package className="h-4 w-4 text-orange-600" />
-              <span className="text-xs text-muted-foreground">Em Trânsito</span>
+              <span className="text-sm text-muted-foreground">Em Trânsito</span>
             </div>
-            <p className="text-lg sm:text-2xl font-bold text-orange-600 truncate">{fmt(totalShipped)}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-orange-600 break-words">{fmt(totalShipped)}</p>
             <p className="text-xs text-muted-foreground mt-1">{shipped.length} negociação(ões)</p>
           </CardContent>
         </Card>
 
         <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-900/10">
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-4 w-4 text-yellow-600" />
-              <span className="text-xs text-muted-foreground">Pendentes/Aceitas</span>
+              <span className="text-sm text-muted-foreground">Pendentes/Aceitas</span>
             </div>
-            <p className="text-lg sm:text-2xl font-bold text-yellow-600 truncate">{fmt(totalPending)}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-yellow-600 break-words">{fmt(totalPending)}</p>
             <p className="text-xs text-muted-foreground mt-1">{pending.length} negociação(ões)</p>
           </CardContent>
         </Card>
