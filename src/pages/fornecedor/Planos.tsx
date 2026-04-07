@@ -35,7 +35,7 @@ const Planos = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold">Planos do Fornecedor</h1>
         <p className="text-muted-foreground text-sm mt-1">

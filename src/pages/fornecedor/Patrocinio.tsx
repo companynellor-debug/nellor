@@ -177,7 +177,7 @@ const Patrocinio = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Patrocínio</h1>
