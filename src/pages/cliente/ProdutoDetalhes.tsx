@@ -51,7 +51,7 @@ const ProdutoDetalhes = () => {
   const { addToCart } = useCart();
   const { stores } = useStores();
   const { getProductById, getRelatedProducts } = useProducts();
-  const { products: supabaseProducts } = useSupabaseProducts();
+  const { products: supabaseProducts, loading: supabaseLoading } = useSupabaseProducts();
 
   const routeId = id ?? "";
   const isUuid = useMemo(() => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(routeId), [routeId]);
@@ -299,6 +299,16 @@ const ProdutoDetalhes = () => {
   }, [product?.images, variationColors]);
 
   if (!product) {
+    if (supabaseLoading) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-muted-foreground">Carregando produto...</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
