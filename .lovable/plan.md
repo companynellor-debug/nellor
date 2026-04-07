@@ -1,25 +1,66 @@
 
 
-# Plano: Adaptar "Meus Pedidos" para "Minhas Negociações" no Perfil do Cliente
+# Plano: Adicionar MRR na Dashboard e Adaptar Indicadores para Assinaturas
 
-## O que muda
+## Resumo
 
-A seção "Meus Pedidos" com os 3 ícones (A Pagar, A Enviar, A Receber) será substituída por uma seção "Minhas Negociações" com 3 status do fluxo de negociação:
+O Dashboard admin já tem o card de "Assinaturas Ativas" mas falta o **MRR (Monthly Recurring Revenue)**. A aba de Indicadores ainda está toda baseada em pedidos/GMV/comissão 7.5% — precisa ser reescrita para refletir o modelo de assinaturas (R$ 29/mês).
 
-- **Pendentes** (amarelo, ícone Clock) — negociações com status `pending` ou `accepted`
-- **Em Envio** (azul, ícone Package) — negociações com status `shipped`
-- **Concluídas** (verde, ícone CheckCircle) — negociações com status `delivered`
+---
 
-O link "Ver histórico" apontará para `/cliente/negociacoes` em vez de `/cliente/meus-pedidos`.
+## 1. Dashboard — Adicionar card de MRR
 
-## Arquivo modificado
+**Arquivo**: `src/pages/admin/Dashboard.tsx`
 
-**`src/pages/cliente/Perfil.tsx`**:
-- Importar `useNegotiations` para contar negociações por status
-- Remover importação e uso de `useSupabaseOrders` (não mais necessário)
-- Remover variáveis `pendingPayment`, `toShip`, `toReceive`
-- Substituir o card "Meus Pedidos" por "Minhas Negociações" com os 3 novos botões
-- Cada botão navega para `/cliente/negociacoes` (página já existente)
-- Trocar título de "Meus Pedidos" para "Minhas Negociações"
-- Manter o mesmo visual dos círculos coloridos com badges de contagem
+- Adicionar um novo card no `statsCards` com o **MRR**: quantidade de assinaturas ativas × R$ 29
+- O dado já está disponível via `subscriptions` (já carregado no useEffect)
+- Cálculo: `activeSubscriptions * 29`
+- Card com ícone TrendingUp, cor emerald/green, subtítulo mostrando quantidade de assinaturas ativas
+
+---
+
+## 2. Indicadores — Reescrever para modelo de assinaturas
+
+**Arquivo**: `src/pages/admin/Indicadores.tsx`
+
+Remover toda a lógica baseada em orders/GMV/comissão e substituir por métricas de assinaturas:
+
+### Dados a buscar
+- Carregar `supplier_subscriptions` via query direta (mesma abordagem do Dashboard)
+- Carregar `profiles` via `useAdminProfiles` para contar fornecedores
+
+### Cards principais (4 cards)
+1. **MRR Atual** — assinaturas ativas × R$ 29
+2. **Assinaturas Ativas** — contagem de status `active`
+3. **Assinaturas Pendentes** — contagem de status `pending`
+4. **Churn / Expiradas** — contagem de status `expired` ou `cancelled`
+
+### Seção: Valuation Estimado
+- Manter a fórmula MRR × 12 × multiplicador (ou MRR × 18 como já existe)
+- Baseado no MRR real de assinaturas
+
+### Seção: Receita do Proprietário
+- Simplificar: MRR total = receita do Natan (100%)
+
+### Gráfico: Evolução Mensal do MRR
+- Agrupar assinaturas por mês de `started_at`
+- Mostrar evolução do MRR nos últimos 6 meses
+
+### Resumo Executivo
+- Total de assinaturas (histórico)
+- MRR atual
+- ARR (MRR × 12)
+- Taxa de conversão (ativas / total)
+
+### Remover
+- Toda referência a GMV, pedidos pagos, comissão 7.5%, ticket médio baseado em orders
+- Import de `useAdminOrders`
+
+---
+
+## Detalhes técnicos
+
+- Nenhuma migração de banco necessária — os dados de `supplier_subscriptions` já existem
+- O preço fixo de R$ 29 pode ser lido do campo `price` de cada assinatura ativa (para futuro suporte a planos diferentes)
+- Filtros de período serão mantidos nos Indicadores para filtrar por `started_at` das assinaturas
 
