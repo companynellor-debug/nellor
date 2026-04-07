@@ -103,7 +103,7 @@ const Welcome = () => {
     }} />
 
       {/* Content - compact layout */}
-      <div className="relative flex-1 flex flex-col items-center px-4 pt-1 pb-3 gap-0 sm:px-5 sm:pb-6 sm:pt-6 justify-between my-4 sm:my-6 lg:my-8">
+      <div className="relative flex-1 flex flex-col items-center px-4 pt-1 pb-3 gap-0 sm:px-5 sm:pb-6 sm:pt-6 justify-between my-4 lg:my-8 sm:my-[7px]">
         {/* Top section - Logo */}
         <div className="flex flex-col items-center mt-0 sm:mt-6 mb-0 sm:mb-3">
           <img src={logo} alt="Nellor" className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-lg" />
@@ -191,7 +191,7 @@ const Welcome = () => {
         </div>
 
         {/* Bottom section - Tagline and buttons (compact) */}
-        <div className="w-full mt-0 sm:-mt-6 my-[56px]">
+        <div className="w-full mt-0 sm:-mt-6 my-[25px]">
 
           <div className="max-w-xs sm:max-w-sm mx-auto space-y-2.5">
             <Button onClick={() => navigate('/auth?modo=login')} className="w-full h-10 sm:h-11 bg-white hover:bg-white/90 text-[#11001e] font-semibold text-sm sm:text-base rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
