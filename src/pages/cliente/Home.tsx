@@ -303,7 +303,7 @@ const ClienteHome = () => {
               <h2 className="text-xl font-bold text-foreground">🏆 Fornecedores em Destaque</h2>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-              {stores.map((store) =>
+              {sortedStores.map((store) =>
             <div key={store.id} className="flex-shrink-0 w-64">
                   <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group p-4 flex items-center gap-4 cursor-pointer"
               onClick={() => navigate(`/cliente/loja/${store.id}`)}>
