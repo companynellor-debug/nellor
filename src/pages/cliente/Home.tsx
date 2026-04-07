@@ -75,8 +75,8 @@ const ClienteHome = () => {
 
   // Ordenar fornecedores por total de vendas (soma de vendas_count dos produtos)
   const sortedStores = [...stores].sort((a, b) => {
-    const salesA = products.filter(p => p.supplier_id === a.id).reduce((sum, p) => sum + (p.vendas_count || 0), 0);
-    const salesB = products.filter(p => p.supplier_id === b.id).reduce((sum, p) => sum + (p.vendas_count || 0), 0);
+    const salesA = products.filter(p => p.supplierUuid === a.id).reduce((sum, p) => sum + (p.salesCount || 0), 0);
+    const salesB = products.filter(p => p.supplierUuid === b.id).reduce((sum, p) => sum + (p.salesCount || 0), 0);
     return salesB - salesA;
   });
 
