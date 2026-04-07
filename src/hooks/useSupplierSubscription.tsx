@@ -20,11 +20,20 @@ export function useSupplierSubscription() {
     queryKey: ["supplier-subscription", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const { data, error } = await supabase.rpc("get_supplier_subscription", {
-        _supplier_id: user.id,
-      });
-      if (error) throw error;
-      return (data?.[0] as SubscriptionData) || null;
+      try {
+        const { data, error } = await supabase.rpc("get_supplier_subscription", {
+          _supplier_id: user.id,
+        });
+        if (error) {
+          console.error("Subscription RPC error:", error);
+          return null;
+        }
+        if (!data || (Array.isArray(data) && data.length === 0)) return null;
+        return (Array.isArray(data) ? data[0] : data) as SubscriptionData;
+      } catch (err) {
+        console.error("Subscription fetch error:", err);
+        return null;
+      }
     },
     enabled: !!user?.id,
   });

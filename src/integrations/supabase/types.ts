@@ -1015,7 +1015,9 @@ export type Database = {
           product_id: string | null
           product_name: string
           quantity: number
+          shipping_confirmed_at: string | null
           status: string
+          supplier_confirmed_shipping: boolean | null
           supplier_id: string
           updated_at: string
         }
@@ -1032,7 +1034,9 @@ export type Database = {
           product_id?: string | null
           product_name: string
           quantity?: number
+          shipping_confirmed_at?: string | null
           status?: string
+          supplier_confirmed_shipping?: boolean | null
           supplier_id: string
           updated_at?: string
         }
@@ -1049,7 +1053,9 @@ export type Database = {
           product_id?: string | null
           product_name?: string
           quantity?: number
+          shipping_confirmed_at?: string | null
           status?: string
+          supplier_confirmed_shipping?: boolean | null
           supplier_id?: string
           updated_at?: string
         }

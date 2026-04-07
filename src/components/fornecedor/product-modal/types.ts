@@ -104,6 +104,7 @@ export function getStepsForSaleType(saleType: SaleType): StepDef[] {
         { key: 'specs', label: 'Especificações do Produto' },
         { key: 'box_config', label: 'Configuração da Caixa' },
         { key: 'pricing', label: 'Venda e Preço' },
+        { key: 'variations', label: 'Variações' },
         { key: 'images', label: 'Imagens' },
       ];
     case 'bale':
@@ -112,6 +113,7 @@ export function getStepsForSaleType(saleType: SaleType): StepDef[] {
         { key: 'basic_info', label: 'Informações Básicas' },
         { key: 'bale_config', label: 'Tipo de Fardo' },
         { key: 'pricing', label: 'Venda e Preço' },
+        { key: 'variations', label: 'Variações' },
         { key: 'images', label: 'Imagens' },
       ];
     case 'kit':
