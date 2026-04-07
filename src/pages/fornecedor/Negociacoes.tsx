@@ -131,8 +131,8 @@ const Negociacoes = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Negociações</h1>
           <p className="text-sm text-muted-foreground mt-1">Gerencie suas negociações com compradores</p>
@@ -145,13 +145,15 @@ const Negociacoes = () => {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="w-full grid grid-cols-5 h-auto">
-          <TabsTrigger value="all" className="text-xs py-2">Todas ({statusCounts.all})</TabsTrigger>
-          <TabsTrigger value="pending" className="text-xs py-2">Pendentes ({statusCounts.pending})</TabsTrigger>
-          <TabsTrigger value="accepted" className="text-xs py-2">Aceitas ({statusCounts.accepted})</TabsTrigger>
-          <TabsTrigger value="shipped" className="text-xs py-2">Enviadas ({statusCounts.shipped})</TabsTrigger>
-          <TabsTrigger value="delivered" className="text-xs py-2">Entregues ({statusCounts.delivered})</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto -mx-1 px-1">
+          <TabsList className="inline-flex w-auto min-w-full h-auto">
+            <TabsTrigger value="all" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Todas ({statusCounts.all})</TabsTrigger>
+            <TabsTrigger value="pending" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Pendentes ({statusCounts.pending})</TabsTrigger>
+            <TabsTrigger value="accepted" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Aceitas ({statusCounts.accepted})</TabsTrigger>
+            <TabsTrigger value="shipped" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Enviadas ({statusCounts.shipped})</TabsTrigger>
+            <TabsTrigger value="delivered" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Entregues ({statusCounts.delivered})</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value={tab} className="mt-4">
           {filtered.length === 0 ? (

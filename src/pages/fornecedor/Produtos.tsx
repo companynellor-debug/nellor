@@ -76,9 +76,9 @@ const Produtos = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Produtos</h1>
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold">Produtos</h1>
         <Button onClick={() => handleOpenModal()}>
           <Plus className="h-4 w-4 mr-2" />Adicionar Produto
         </Button>
@@ -104,7 +104,7 @@ const Produtos = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {products.map((product) => {
           const categoryName = categories.find(c => c.id === product.category)?.nome || 'Sem categoria';
           return (

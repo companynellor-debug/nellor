@@ -92,7 +92,7 @@ const CuponsFornecedor = () => {
   const inactiveCoupons = coupons.filter(c => !c.ativo);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>

@@ -163,7 +163,7 @@ const Permissoes = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       <div>
         <h1 className="text-3xl font-bold mb-2">Permissões</h1>
         <p className="text-muted-foreground">
