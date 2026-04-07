@@ -73,6 +73,13 @@ const ClienteHome = () => {
   const mainBanners = banners.slice(0, 3);
   const filteredProducts = selectedCategory ? products.filter((product) => product.category === selectedCategory) : products;
 
+  // Ordenar fornecedores por total de vendas (soma de vendas_count dos produtos)
+  const sortedStores = [...stores].sort((a, b) => {
+    const salesA = products.filter(p => p.supplierUuid === a.id).reduce((sum, p) => sum + (p.salesCount || 0), 0);
+    const salesB = products.filter(p => p.supplierUuid === b.id).reduce((sum, p) => sum + (p.salesCount || 0), 0);
+    return salesB - salesA;
+  });
+
   return (
     <div className="min-h-screen bg-muted/30 pb-20 lg:pb-0">
       <ParticlesBackground />
@@ -296,7 +303,7 @@ const ClienteHome = () => {
               <h2 className="text-xl font-bold text-foreground">🏆 Fornecedores em Destaque</h2>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-              {stores.map((store) =>
+              {sortedStores.map((store) =>
             <div key={store.id} className="flex-shrink-0 w-64">
                   <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group p-4 flex items-center gap-4 cursor-pointer"
               onClick={() => navigate(`/cliente/loja/${store.id}`)}>
