@@ -22,13 +22,13 @@ export const BottomNavFornecedor = () => {
     { icon: Home, label: "Dashboard", path: "/fornecedor/dashboard" },
     { icon: Handshake, label: "Negociações", path: "/fornecedor/negociacoes" },
     { icon: MessageSquare, label: "Chat", path: "/fornecedor/chat" },
-    { icon: Tag, label: "Produtos", path: "/fornecedor/produtos" },
+    { icon: DollarSign, label: "Financeiro", path: "/fornecedor/financeiro" },
   ];
 
   const moreNavItems = [
+    { icon: Tag, label: "Produtos", path: "/fornecedor/produtos" },
     { icon: Ticket, label: "Cupons", path: "/fornecedor/cupons", badge: activeCouponsCount },
     { icon: BarChart3, label: "Estatísticas", path: "/fornecedor/estatisticas" },
-    { icon: DollarSign, label: "Financeiro", path: "/fornecedor/financeiro" },
     { icon: Megaphone, label: "Patrocínio", path: "/fornecedor/patrocinio" },
     { icon: Bell, label: "Notificações", path: "/fornecedor/notificacoes" },
     { icon: Store, label: "Editar Loja", path: "/fornecedor/editar-loja" },
