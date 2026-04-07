@@ -1,0 +1,2 @@
+ALTER TABLE public.negotiations DROP CONSTRAINT negotiations_status_check;
+ALTER TABLE public.negotiations ADD CONSTRAINT negotiations_status_check CHECK (status = ANY (ARRAY['pending'::text, 'accepted'::text, 'shipped'::text, 'delivered'::text, 'disputed'::text, 'cancelled'::text]));
