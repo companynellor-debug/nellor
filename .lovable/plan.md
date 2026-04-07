@@ -1,77 +1,79 @@
 
 
-# Plano: Corrigir Layout Mobile do Painel do Fornecedor (Todas as Abas)
+# Plano: Redesign Visual da Nellor (Inspirado nas Referências)
 
-## Problemas Identificados
+## Resumo
 
-1. **Dashboard** — Cards cortados na lateral direita (foto 2). O grid `grid-cols-2` está estourando por conta de padding/gap acumulados.
-2. **Negociações** — Cards de negociação com conteúdo vazando, botões de ação desalinhados no mobile.
-3. **Chat** — Altura do chat mobile não considera a BottomNav (64px), cortando o input.
-4. **Financeiro** — Layout ok mas cards financeiros podem melhorar no mobile (grid-cols-1 em telas pequenas já está, mas valores longos podem estourar).
-5. **Estatísticas** — Ainda usa o modelo antigo de orders/pedidos/GMV/comissão 7.5%. Precisa ser reescrito para negociações.
+Atualização visual em 4 áreas principais, mantendo a identidade Nellor mas trazendo um visual mais moderno, arredondado e polido.
 
 ---
 
-## 1. Dashboard — Corrigir cards cortados
+## 1. Home do Cliente — Visual mais arredondado e moderno
 
-**Arquivo**: `src/pages/fornecedor/Dashboard.tsx`
+**Arquivo**: `src/pages/cliente/Home.tsx`
 
-- Reduzir gap do grid de `gap-2` para `gap-1.5` no mobile
-- Garantir que cada card tenha `overflow-hidden` e todo texto com `truncate`
-- Reduzir padding interno dos cards no mobile
+### Banners
+- Aumentar border-radius para `rounded-2xl` ou `rounded-3xl`
+- Adicionar sombra suave nos banners (`shadow-lg`)
+- Adicionar indicadores de paginação (dots) abaixo do carousel
 
-## 2. Negociações — Otimizar layout mobile
+### Categorias (estilo foto 1)
+- Transformar em pills/chips horizontais com ícone + texto lado a lado (estilo `All Products | Swimming | Goggles`)
+- Background colorido na categoria ativa (bg-primary text-white), outline nas demais
+- Scroll horizontal suave com `snap-x`
 
-**Arquivo**: `src/pages/fornecedor/Negociacoes.tsx`
+### Cards de Produto
+- Aumentar arredondamento para `rounded-2xl`
+- Imagem com `rounded-xl` interno
+- Preço com badge colorido sobreposto na imagem (canto inferior esquerdo, estilo foto 1)
+- Sombra suave (`shadow-md`) e hover mais pronunciado
+- Rating e vendidos com layout mais limpo
 
-- Grid de detalhes: mudar de `grid-cols-2` para `grid-cols-1` no mobile
-- Botões de ação: empilhar verticalmente com `flex-col` no mobile
-- Textos longos (produto, comprador) com `truncate`
-- Reduzir padding dos cards
+---
 
-## 3. Chat — Ajustar altura considerando BottomNav
+## 2. Página de Detalhes do Produto — Estilo limpo e redondo (foto 2)
 
-**Arquivo**: `src/pages/fornecedor/ChatFornecedor.tsx`
+**Arquivo**: `src/pages/cliente/ProdutoDetalhes.tsx`
 
-- Mudar altura do chat mobile de `h-[calc(100vh-4rem)]` para `h-[calc(100vh-4rem-4rem)]` (desconta header + BottomNav)
-- Lista de conversas mobile: garantir `overflow-x-hidden`
+- Imagem principal com `rounded-3xl` e sem bordas duras
+- Thumbnails laterais menores e mais arredondados (`rounded-xl`)
+- Seção de tamanhos com botões pill arredondados (`rounded-full`, border quando selecionado)
+- Seletor de quantidade com botões `-` e `+` estilo minimalista com bordas arredondadas
+- Preço em destaque maior e mais limpo
+- Botão "Negociar" full-width com `rounded-2xl` e fundo escuro (estilo "Add to Bag" da foto 2)
+- Badges (Novo, Nacional, Garantia) com estilo mais pill (`rounded-full`)
 
-## 4. Financeiro — Ajustes finos mobile
+---
+
+## 3. Financeiro do Fornecedor — Estilo premium com destaque (foto 3)
 
 **Arquivo**: `src/pages/fornecedor/Financeiro.tsx`
 
-- Valores monetários grandes: usar `text-lg` ao invés de `text-xl` no mobile
-- Cards de resumo: garantir `min-w-0` e `truncate` nos valores
-- Padding bottom para BottomNav
+- Hero card no topo com gradiente primário (roxo) mostrando o **Total Negociado** em fonte grande e branca (estilo "Total spending $145,900")
+- Filtros abaixo do hero como pills/tabs arredondados (`Entregues | Em Trânsito | Pendentes`) com estilo Starter/Medium/Expert da foto 3
+- Cards de resumo abaixo com visual mais limpo, ícones maiores e arredondados
+- Lista de negociações recentes com layout tipo "transações" (data, nome, valor alinhado à direita)
 
-## 5. Estatísticas — Reescrever para modelo de negociações
+---
 
-**Arquivo**: `src/pages/fornecedor/Estatisticas.tsx`
+## 4. Dashboard do Fornecedor — Cards visuais premium (foto 4)
 
-Reescrever completamente removendo referências a orders, vendas, comissão 7.5% e saldo para saque.
+**Arquivo**: `src/pages/fornecedor/Dashboard.tsx`
 
-### Novas métricas (baseadas em negociações):
-- **Total Negociado** — soma dos valores de todas as negociações entregues
-- **Total de Negociações** — contagem total
-- **Ticket Médio** — valor médio por negociação entregue
-
-### Gráfico:
-- Trocar "Produtos Mais Vendidos" por "Negociações por Mês" (últimos 6 meses)
-
-### Remover:
-- Card "Saldo Disponível para Saque" com comissão 7.5%
-- Toda referência a `orders`, `payment_status`, `supplier_amount`
-- Buscar dados de `negotiations` ao invés de `orders`
-
-### Layout mobile:
-- Grid `grid-cols-1` no mobile, `grid-cols-3` no desktop
-- Gráfico com `min-w-0` e `overflow-hidden`
+- Cards de estatísticas com gradiente escuro ou colorido (estilo foto 4: "Total Products 345" com fundo azul/escuro)
+- Layout 2x2 no mobile com cards mais compactos mas visualmente ricos
+- Ícones maiores dentro dos cards com background circular
+- Barra de busca arredondada no topo (decorativa, link para produtos)
+- Seção "Stock Overview" / resumo rápido com indicadores coloridos inline
+- Cards de negociações recentes com visual mais limpo tipo lista
 
 ---
 
 ## Detalhes técnicos
 
-- Nenhuma migração de banco necessária
-- Todas as mudanças são de frontend (layout + dados)
-- O container pai (`FornecedorLayout`) já tem `overflow-x-hidden` — o problema está nos filhos com padding/gap que acumulam largura
+- Apenas mudanças de CSS/Tailwind e reestruturação de JSX — sem mudanças de lógica ou banco
+- Manter todas as funcionalidades existentes intactas
+- Usar as cores do tema atual (primary = roxo, etc.)
+- Todos os componentes continuam responsivos (mobile-first)
+- 4 arquivos editados, nenhum arquivo novo
 
