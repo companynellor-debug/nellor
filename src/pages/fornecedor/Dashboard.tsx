@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, MessageCircle, Star, Loader2, Eye, Bell, Handshake, Truck, CheckCircle } from "lucide-react";
+import { Package, MessageCircle, Star, Loader2, Eye, Bell, Handshake, Truck, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -11,11 +11,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { showPushNotification, getNotificationPermission, requestNotificationPermission } from "@/utils/pushNotifications";
 import { useToast } from "@/hooks/use-toast";
 
+const StatCard = ({ title, value, subtitle, icon: Icon, gradient }: {
+  title: string; value: number | string; subtitle: string;
+  icon: React.ElementType; gradient: string;
+}) => (
+  <Card className="rounded-2xl border-0 shadow-md overflow-hidden relative">
+    <div className={`absolute inset-0 opacity-10 ${gradient}`} />
+    <CardContent className="p-5 relative z-10">
+      <div className="flex items-center justify-between mb-3">
+        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-primary" />
+        </div>
+        <span className="text-3xl font-bold">{value}</span>
+      </div>
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+    </CardContent>
+  </Card>
+);
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useSupabaseAuth();
   const { products } = useSupplierProducts();
-  const [dateFilter, setDateFilter] = useState<'today' | '7days' | '14days' | '30days' | 'all'>('today');
   const [testingNotification, setTestingNotification] = useState(false);
   const { toast } = useToast();
 
@@ -103,68 +121,59 @@ const Dashboard = () => {
     return Object.entries(monthsData).map(([month, value]) => ({ month, negociacoes: value }));
   })();
 
+  const stats = [
+    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageCircle, gradient: "bg-gradient-to-br from-purple-500 to-purple-700" },
+    { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, gradient: "bg-gradient-to-br from-blue-500 to-blue-700" },
+    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, gradient: "bg-gradient-to-br from-orange-500 to-orange-700" },
+    { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, gradient: "bg-gradient-to-br from-green-500 to-green-700" },
+    { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, gradient: "bg-gradient-to-br from-yellow-500 to-yellow-700" },
+    { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Eye, gradient: "bg-gradient-to-br from-cyan-500 to-cyan-700" },
+  ];
+
   return (
-    <div className="w-full max-w-full overflow-x-hidden space-y-4 md:space-y-6">
+    <div className="w-full max-w-full overflow-x-hidden space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Visão geral do seu desempenho</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={handleTestNotification} disabled={testingNotification} size="sm" className="text-xs sm:text-sm h-8 border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20">
-            {testingNotification ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Bell className="h-3 w-3 mr-1" />}
-            Testar Push
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleTestNotification} disabled={testingNotification} size="sm" className="text-xs h-8 rounded-full border-primary/30 text-primary hover:bg-primary/10 self-start">
+          {testingNotification ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Bell className="h-3 w-3 mr-1" />}
+          Testar Push
+        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:gap-4">
-        {[
-          { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageCircle, color: "text-purple-600" },
-          { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, color: "text-blue-600" },
-          { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, color: "text-orange-600" },
-          { title: "Entregues", value: deliveredNegotiations, subtitle: "Negociações concluídas", icon: CheckCircle, color: "text-green-600" },
-          { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, color: "text-yellow-600" },
-          { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Eye, color: "text-cyan-600" },
-        ].map((card) => (
-          <Card key={card.title} className="relative overflow-hidden border-border min-w-0">
-            <CardHeader className="flex flex-row items-center justify-between p-4 pb-2 sm:p-5 sm:pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground truncate pr-3">{card.title}</CardTitle>
-              <card.icon className={`w-5 h-5 shrink-0 ${card.color}`} />
-            </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
-              <div className="text-2xl sm:text-3xl font-bold">{card.value}</div>
-              <p className="text-xs text-muted-foreground mt-1 truncate">{card.subtitle}</p>
-            </CardContent>
-          </Card>
+      {/* Stats Cards - 2x2 on mobile */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        {stats.map((card) => (
+          <StatCard key={card.title} {...card} />
         ))}
       </div>
 
       {/* Chart */}
-      <Card className="border-border hover:shadow-lg transition-shadow">
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-sm sm:text-base md:text-lg">📈 Atividade de Negociações</CardTitle>
+      <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
+        <CardHeader className="p-4 sm:p-5">
+          <CardTitle className="text-sm sm:text-base font-bold">📈 Atividade de Negociações</CardTitle>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6 pt-0">
+        <CardContent className="p-4 sm:p-5 pt-0">
           {activityData.some(d => d.negociacoes > 0) ? (
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={activityData}>
                 <defs>
                   <linearGradient id="colorNeg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="month" className="fill-muted-foreground" />
-                <YAxis className="fill-muted-foreground" />
+                <XAxis dataKey="month" className="fill-muted-foreground" tick={{ fontSize: 11 }} />
+                <YAxis className="fill-muted-foreground" tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Area type="monotone" dataKey="negociacoes" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorNeg)" />
+                <Area type="monotone" dataKey="negociacoes" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorNeg)" />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[250px] flex items-center justify-center">
+            <div className="h-[220px] flex items-center justify-center">
               <p className="text-muted-foreground text-xs sm:text-sm">Nenhuma negociação registrada ainda</p>
             </div>
           )}
@@ -172,11 +181,11 @@ const Dashboard = () => {
       </Card>
 
       {/* Recent Negotiations */}
-      <Card className="border-border hover:shadow-lg transition-shadow">
-        <CardHeader className="p-4 sm:p-6">
+      <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
+        <CardHeader className="p-4 sm:p-5">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm sm:text-base md:text-lg">🤝 Negociações Recentes</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => navigate('/fornecedor/negociacoes')} className="text-xs sm:text-sm">
+            <CardTitle className="text-sm sm:text-base font-bold">🤝 Negociações Recentes</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => navigate('/fornecedor/negociacoes')} className="text-xs rounded-full">
               Ver Todas
             </Button>
           </div>
@@ -184,27 +193,27 @@ const Dashboard = () => {
         <CardContent className="p-0">
           <div className="divide-y">
             {negotiations.length === 0 ? (
-              <div className="p-6 sm:p-8 text-center">
-                <Handshake className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+              <div className="p-8 text-center">
+                <Handshake className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-30" />
                 <p className="text-muted-foreground text-sm">Nenhuma negociação registrada</p>
               </div>
             ) : negotiations.slice(0, 5).map(neg => (
-              <div key={neg.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
-                <div className="flex items-start gap-2 sm:gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                    <Handshake className="h-5 w-5 sm:h-6 sm:w-6" />
+              <div key={neg.id} className="p-4 sm:p-5 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Handshake className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium mb-1 text-sm sm:text-base truncate">{neg.product_name}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-2">
+                    <p className="font-medium text-sm truncate">{neg.product_name}</p>
+                    <p className="text-xs text-muted-foreground">
                       {new Date(neg.created_at).toLocaleDateString('pt-BR')} • Qtd: {neg.quantity}
                     </p>
-                    <Badge variant={neg.status === 'delivered' ? 'default' : neg.status === 'cancelled' ? 'destructive' : 'secondary'} className="text-[10px] sm:text-xs">
-                      {neg.status === 'pending' ? 'Pendente' : neg.status === 'accepted' ? 'Aceita' : neg.status === 'shipped' ? 'Enviada' : neg.status === 'delivered' ? 'Entregue' : neg.status === 'cancelled' ? 'Cancelada' : neg.status}
-                    </Badge>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-semibold text-sm sm:text-base whitespace-nowrap">R$ {Number(neg.agreed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <p className="font-bold text-sm whitespace-nowrap text-primary">R$ {Number(neg.agreed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <Badge variant={neg.status === 'delivered' ? 'default' : neg.status === 'cancelled' ? 'destructive' : 'secondary'} className="text-[10px] mt-1 rounded-full">
+                      {neg.status === 'pending' ? 'Pendente' : neg.status === 'accepted' ? 'Aceita' : neg.status === 'shipped' ? 'Enviada' : neg.status === 'delivered' ? 'Entregue' : neg.status === 'cancelled' ? 'Cancelada' : neg.status}
+                    </Badge>
                   </div>
                 </div>
               </div>
