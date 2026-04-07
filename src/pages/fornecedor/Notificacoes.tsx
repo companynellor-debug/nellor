@@ -17,7 +17,7 @@ const Notificacoes = () => {
     pushPermission,
     requestPermission
   } = useSupplierNotifications();
-  return <div className="space-y-4 md:space-y-6 w-full overflow-hidden px-2 md:px-0">
+  return <div className="space-y-4 md:space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Push notification permission alert */}
       {pushPermission !== 'granted' && pushPermission !== 'unsupported' && (
         <Alert className="bg-amber-50 border-amber-200">

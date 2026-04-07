@@ -62,7 +62,7 @@ const Assinatura = () => {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
+     <div className="min-h-[80vh] flex items-center justify-center p-4 w-full max-w-full overflow-x-hidden">
       <div className="max-w-lg w-full space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-foreground">Ative sua Loja na Nellor</h1>
