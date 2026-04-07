@@ -34,7 +34,6 @@ const Estatisticas = () => {
       setTotalNegotiations(negs.length);
       setAverageTicket(count > 0 ? totalVal / count : 0);
 
-      // Monthly chart (last 6 months)
       const now = new Date();
       const months: Record<string, number> = {};
       for (let i = 5; i >= 0; i--) {
@@ -66,43 +65,50 @@ const Estatisticas = () => {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 w-full max-w-full overflow-x-hidden">
+    <div className="space-y-5 pb-20 md:pb-6 w-full max-w-full overflow-x-hidden">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Estatísticas</h1>
-        <p className="text-sm md:text-base text-muted-foreground">Análise do desempenho da sua loja</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-1">Estatísticas</h1>
+        <p className="text-sm text-muted-foreground">Análise do desempenho da sua loja</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="p-5 md:p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Total Negociado</p>
-            <DollarSign className="h-5 w-5 text-primary" />
+      {/* Hero stat */}
+      <div className="rounded-3xl p-6 text-primary-foreground relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)))' }}>
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary-foreground/10 -translate-y-8 translate-x-8" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <DollarSign className="h-5 w-5 opacity-80" />
+            <span className="text-sm opacity-80 font-medium">Total Negociado (Entregues)</span>
           </div>
-          <p className="text-2xl md:text-3xl font-bold break-words">{fmt(totalNegotiated)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Negociações entregues</p>
-        </Card>
+          <p className="text-4xl font-bold tracking-tight">{fmt(totalNegotiated)}</p>
+        </div>
+      </div>
 
-        <Card className="p-5 md:p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Total de Negociações</p>
-            <Handshake className="h-5 w-5 text-primary" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Card className="p-5 rounded-2xl border-0 shadow-md">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Handshake className="h-5 w-5 text-primary" />
+            </div>
+            <span className="text-sm text-muted-foreground font-medium">Total de Negociações</span>
           </div>
           <p className="text-2xl md:text-3xl font-bold">{totalNegotiations}</p>
           <p className="text-xs text-muted-foreground mt-1">Todas as negociações</p>
         </Card>
 
-        <Card className="p-5 md:p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">Ticket Médio</p>
-            <TrendingUp className="h-5 w-5 text-primary" />
+        <Card className="p-5 rounded-2xl border-0 shadow-md">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-primary" />
+            </div>
+            <span className="text-sm text-muted-foreground font-medium">Ticket Médio</span>
           </div>
           <p className="text-2xl md:text-3xl font-bold break-words">{fmt(averageTicket)}</p>
           <p className="text-xs text-muted-foreground mt-1">Valor médio por entrega</p>
         </Card>
       </div>
 
-      <Card className="p-4 md:p-6">
-        <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6">Negociações por Mês</h2>
+      <Card className="p-4 md:p-6 rounded-2xl border-0 shadow-md">
+        <h2 className="text-base md:text-lg font-bold mb-4">Negociações por Mês</h2>
         {monthlyData.some(d => d.negociacoes > 0) ? (
           <div className="w-full overflow-hidden">
             <ChartContainer
@@ -120,7 +126,7 @@ const Estatisticas = () => {
           </div>
         ) : (
           <div className="h-[250px] md:h-[300px] flex items-center justify-center">
-            <p className="text-sm md:text-base text-muted-foreground">Nenhuma negociação registrada ainda</p>
+            <p className="text-sm text-muted-foreground">Nenhuma negociação registrada ainda</p>
           </div>
         )}
       </Card>

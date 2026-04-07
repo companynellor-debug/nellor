@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Handshake, TrendingUp, Clock, CheckCircle, Package, Info } from "lucide-react";
+import { Handshake, TrendingUp, Clock, CheckCircle, Package, Info, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { format } from "date-fns";
@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 const Financeiro = () => {
   const { user } = useSupabaseAuth();
   const [negotiations, setNegotiations] = useState<any[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'delivered' | 'shipped' | 'pending'>('all');
 
   useEffect(() => {
     const fetch = async () => {
@@ -31,81 +32,126 @@ const Financeiro = () => {
   const totalDelivered = delivered.reduce((s, n) => s + Number(n.agreed_price) * n.quantity, 0);
   const totalPending = pending.reduce((s, n) => s + Number(n.agreed_price) * n.quantity, 0);
   const totalShipped = shipped.reduce((s, n) => s + Number(n.agreed_price) * n.quantity, 0);
+  const totalAll = totalDelivered + totalShipped + totalPending;
 
   const fmt = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
-  return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Financeiro</h1>
-        <p className="text-sm text-muted-foreground mt-1">Visão geral dos valores negociados</p>
-      </div>
+  const filteredNegotiations = activeFilter === 'all' ? negotiations
+    : activeFilter === 'delivered' ? delivered
+    : activeFilter === 'shipped' ? shipped
+    : pending;
 
-      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <div className="flex items-start gap-2">
-          <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-800 dark:text-blue-200">
-            <p className="font-medium">Pagamentos são feitos diretamente entre as partes</p>
-            <p className="text-xs mt-1 opacity-80">Os valores abaixo são referência das negociações registradas na plataforma. O pagamento e a entrega são combinados diretamente entre você e o comprador.</p>
+  const filters = [
+    { key: 'all' as const, label: 'Todas', count: negotiations.length },
+    { key: 'delivered' as const, label: 'Entregues', count: delivered.length },
+    { key: 'shipped' as const, label: 'Em Trânsito', count: shipped.length },
+    { key: 'pending' as const, label: 'Pendentes', count: pending.length },
+  ];
+
+  return (
+    <div className="space-y-5 w-full max-w-full overflow-x-hidden">
+      {/* Hero Card */}
+      <div className="rounded-3xl p-6 text-primary-foreground relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)))' }}>
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary-foreground/10 -translate-y-8 translate-x-8" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-primary-foreground/5 translate-y-6 -translate-x-6" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <DollarSign className="h-5 w-5 opacity-80" />
+            <span className="text-sm opacity-80 font-medium">Total Negociado</span>
           </div>
+          <p className="text-4xl font-bold tracking-tight">{fmt(totalAll)}</p>
+          <p className="text-sm opacity-70 mt-2">{negotiations.length} negociações registradas</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10">
+      {/* Info banner */}
+      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
+        <div className="flex items-start gap-2">
+          <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground">
+            Pagamentos são combinados diretamente entre as partes. Os valores são referência das negociações na plataforma.
+          </p>
+        </div>
+      </div>
+
+      {/* Filter pills */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+        {filters.map(f => (
+          <button key={f.key} onClick={() => setActiveFilter(f.key)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${activeFilter === f.key ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+            {f.label}
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeFilter === f.key ? 'bg-primary-foreground/20' : 'bg-background'}`}>{f.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
           <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-muted-foreground">Entregues</span>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              </div>
+              <span className="text-sm text-muted-foreground font-medium">Entregues</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-green-600 break-words">{fmt(totalDelivered)}</p>
+            <p className="text-2xl font-bold text-green-600 break-words">{fmt(totalDelivered)}</p>
             <p className="text-xs text-muted-foreground mt-1">{delivered.length} negociação(ões)</p>
           </CardContent>
         </Card>
 
-        <Card className="border-orange-200 dark:border-orange-800 bg-orange-50/30 dark:bg-orange-900/10">
+        <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
           <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Package className="h-4 w-4 text-orange-600" />
-              <span className="text-sm text-muted-foreground">Em Trânsito</span>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                <Package className="h-5 w-5 text-orange-600" />
+              </div>
+              <span className="text-sm text-muted-foreground font-medium">Em Trânsito</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-orange-600 break-words">{fmt(totalShipped)}</p>
+            <p className="text-2xl font-bold text-orange-600 break-words">{fmt(totalShipped)}</p>
             <p className="text-xs text-muted-foreground mt-1">{shipped.length} negociação(ões)</p>
           </CardContent>
         </Card>
 
-        <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-900/10">
+        <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
           <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="h-4 w-4 text-yellow-600" />
-              <span className="text-sm text-muted-foreground">Pendentes/Aceitas</span>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-yellow-600" />
+              </div>
+              <span className="text-sm text-muted-foreground font-medium">Pendentes</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-yellow-600 break-words">{fmt(totalPending)}</p>
+            <p className="text-2xl font-bold text-yellow-600 break-words">{fmt(totalPending)}</p>
             <p className="text-xs text-muted-foreground mt-1">{pending.length} negociação(ões)</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Negotiation History */}
-      <Card>
-        <CardHeader className="p-4 sm:p-6 border-b">
-          <CardTitle className="text-base sm:text-xl font-bold">Histórico de Negociações</CardTitle>
+      <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
+        <CardHeader className="p-4 sm:p-5 border-b">
+          <CardTitle className="text-base font-bold">Histórico de Negociações</CardTitle>
         </CardHeader>
         <div className="divide-y">
-          {negotiations.length > 0 ? negotiations.slice(0, 20).map(neg => (
-            <div key={neg.id} className="p-4 sm:p-6 hover:bg-muted/20 transition-colors">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm sm:text-base truncate">{neg.product_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(neg.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })} • Qtd: {neg.quantity}
-                  </p>
+          {filteredNegotiations.length > 0 ? filteredNegotiations.slice(0, 20).map(neg => (
+            <div key={neg.id} className="p-4 sm:p-5 hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Handshake className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{neg.product_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(neg.created_at), "dd MMM yyyy", { locale: ptBR })} • Qtd: {neg.quantity}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <Badge variant={neg.status === 'delivered' ? 'default' : neg.status === 'cancelled' ? 'destructive' : 'secondary'} className="text-xs">
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                  <span className="font-bold text-primary text-sm">{fmt(Number(neg.agreed_price) * neg.quantity)}</span>
+                  <Badge variant={neg.status === 'delivered' ? 'default' : neg.status === 'cancelled' ? 'destructive' : 'secondary'} className="text-[10px] rounded-full">
                     {neg.status === 'pending' ? 'Pendente' : neg.status === 'accepted' ? 'Aceita' : neg.status === 'shipped' ? 'Enviada' : neg.status === 'delivered' ? 'Entregue' : neg.status === 'cancelled' ? 'Cancelada' : neg.status}
                   </Badge>
-                  <span className="font-bold text-primary text-sm">{fmt(Number(neg.agreed_price) * neg.quantity)}</span>
                 </div>
               </div>
             </div>
