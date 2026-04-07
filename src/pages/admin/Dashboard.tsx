@@ -129,13 +129,16 @@ const Dashboard = () => {
     };
   }, [negotiations, disputes, subscriptions, conversations, statsData, allProfiles, dateFilter]);
 
+  const mrr = subscriptions.filter((s: any) => s.status === 'active').reduce((acc: number, s: any) => acc + (Number(s.price) || 29), 0);
+
   const statsCards = [
     { title: "👥 Total de Usuários", value: stats.totalUsers.toLocaleString('pt-BR'), icon: Users, color: "from-indigo-500 to-indigo-600" },
     { title: "🏪 Fornecedores Ativos", value: stats.activeSuppliers.toLocaleString('pt-BR'), icon: Store, color: "from-purple-500 to-purple-600" },
+    { title: "💰 MRR", value: `R$ ${mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, subtitle: `${stats.activeSubscriptions} assinaturas ativas`, icon: TrendingUp, color: "from-emerald-500 to-emerald-600" },
     { title: "🤝 Negociações", value: stats.totalNegotiations.toLocaleString('pt-BR'), subtitle: dateFilter === 'all' ? 'Total da plataforma' : 'No período', icon: Handshake, color: "from-blue-500 to-blue-600" },
     { title: "💬 Conversas Ativas", value: stats.totalConversations.toLocaleString('pt-BR'), icon: MessageSquare, color: "from-green-500 to-green-600" },
     { title: "⚠️ Disputas Abertas", value: stats.openDisputes.toLocaleString('pt-BR'), icon: ShieldAlert, color: "from-red-500 to-red-600" },
-    { title: "✅ Assinaturas Ativas", value: stats.activeSubscriptions.toLocaleString('pt-BR'), subtitle: `${stats.pendingSubscriptions} pendentes`, icon: CreditCard, color: "from-emerald-500 to-emerald-600" },
+    { title: "✅ Assinaturas", value: stats.activeSubscriptions.toLocaleString('pt-BR'), subtitle: `${stats.pendingSubscriptions} pendentes`, icon: CreditCard, color: "from-violet-500 to-violet-600" },
   ];
 
   const isInitialLoad = loading && negotiations.length === 0;
