@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Heart, Share2, Star, ShoppingCart, Package, Box, AlertCircle } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Star, ShoppingCart, Package, MessageCircle, Box, AlertCircle } from "lucide-react";
 import nellorIcon from "@/assets/nellor-icon.png";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
