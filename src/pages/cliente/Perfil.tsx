@@ -143,8 +143,6 @@ const Perfil = () => {
               </div>
             </Card>
 
-            {/* Verificação de Telefone */}
-            <PhoneVerification />
 
             {/* Menu principal */}
             <div className="space-y-1">
