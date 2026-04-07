@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Heart, Share2, Star, ShoppingCart, Package, MessageCircle, Box, AlertCircle } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Star, ShoppingCart, Package, Box, AlertCircle } from "lucide-react";
+import nellorIcon from "@/assets/nellor-icon.png";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useStores } from "@/hooks/useStores";
@@ -741,7 +742,7 @@ const ProdutoDetalhes = () => {
                     }
                   });
                 }}>
-                <MessageCircle className="h-5 w-5" />
+                <img src={nellorIcon} alt="Nellor" className="h-5 w-5" />
                 Negociar com Fornecedor
               </Button>
               <p className="text-xs text-muted-foreground text-center">
@@ -833,7 +834,7 @@ const ProdutoDetalhes = () => {
                   }
                 });
               }}>
-              <MessageCircle className="h-5 w-5" />Negociar
+              <img src={nellorIcon} alt="Nellor" className="h-5 w-5" />Negociar
             </Button>
           </div>
         </div>
