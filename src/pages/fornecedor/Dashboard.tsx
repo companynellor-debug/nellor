@@ -11,17 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { showPushNotification, getNotificationPermission, requestNotificationPermission } from "@/utils/pushNotifications";
 import { useToast } from "@/hooks/use-toast";
 
-const StatCard = ({ title, value, subtitle, icon: Icon, gradient }: {
+const StatCard = ({ title, value, subtitle, emoji, borderColor }: {
   title: string; value: number | string; subtitle: string;
-  icon: React.ElementType; gradient: string;
+  emoji: string; borderColor: string;
 }) => (
-  <Card className="rounded-2xl border-0 shadow-md overflow-hidden relative">
-    <div className={`absolute inset-0 opacity-10 ${gradient}`} />
-    <CardContent className="p-5 relative z-10">
+  <Card className={`rounded-2xl shadow-sm overflow-hidden border-2 ${borderColor}`}>
+    <CardContent className="p-5">
       <div className="flex items-center justify-between mb-3">
-        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-primary" />
-        </div>
+        <span className="text-2xl">{emoji}</span>
         <span className="text-3xl font-bold">{value}</span>
       </div>
       <p className="text-sm font-semibold text-foreground">{title}</p>
@@ -122,12 +119,12 @@ const Dashboard = () => {
   })();
 
   const stats = [
-    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageCircle, gradient: "bg-gradient-to-br from-purple-500 to-purple-700" },
-    { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, gradient: "bg-gradient-to-br from-blue-500 to-blue-700" },
-    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, gradient: "bg-gradient-to-br from-orange-500 to-orange-700" },
-    { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, gradient: "bg-gradient-to-br from-green-500 to-green-700" },
-    { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, gradient: "bg-gradient-to-br from-yellow-500 to-yellow-700" },
-    { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Eye, gradient: "bg-gradient-to-br from-cyan-500 to-cyan-700" },
+    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", emoji: "💬", borderColor: "border-purple-500" },
+    { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, emoji: "🤝", borderColor: "border-blue-500" },
+    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", emoji: "🚚", borderColor: "border-orange-500" },
+    { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", emoji: "✅", borderColor: "border-green-500" },
+    { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", emoji: "⭐", borderColor: "border-yellow-500" },
+    { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", emoji: "📦", borderColor: "border-cyan-500" },
   ];
 
   return (
