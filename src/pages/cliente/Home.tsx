@@ -73,6 +73,13 @@ const ClienteHome = () => {
   const mainBanners = banners.slice(0, 3);
   const filteredProducts = selectedCategory ? products.filter((product) => product.category === selectedCategory) : products;
 
+  // Ordenar fornecedores por total de vendas (soma de vendas_count dos produtos)
+  const sortedStores = [...stores].sort((a, b) => {
+    const salesA = products.filter(p => p.supplier_id === a.id).reduce((sum, p) => sum + (p.vendas_count || 0), 0);
+    const salesB = products.filter(p => p.supplier_id === b.id).reduce((sum, p) => sum + (p.vendas_count || 0), 0);
+    return salesB - salesA;
+  });
+
   return (
     <div className="min-h-screen bg-muted/30 pb-20 lg:pb-0">
       <ParticlesBackground />
