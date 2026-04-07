@@ -72,7 +72,7 @@ const Estatisticas = () => {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 max-w-full overflow-x-hidden px-4 md:px-0">
+    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 w-full max-w-full overflow-x-hidden">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Estatísticas</h1>
         <p className="text-sm md:text-base text-muted-foreground">Análise do desempenho da sua loja</p>

@@ -131,8 +131,8 @@ const Negociacoes = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Negociações</h1>
           <p className="text-sm text-muted-foreground mt-1">Gerencie suas negociações com compradores</p>
@@ -145,7 +145,7 @@ const Negociacoes = () => {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="w-full grid grid-cols-5 h-auto">
+        <TabsList className="w-full grid grid-cols-5 h-auto overflow-x-auto">
           <TabsTrigger value="all" className="text-xs py-2">Todas ({statusCounts.all})</TabsTrigger>
           <TabsTrigger value="pending" className="text-xs py-2">Pendentes ({statusCounts.pending})</TabsTrigger>
           <TabsTrigger value="accepted" className="text-xs py-2">Aceitas ({statusCounts.accepted})</TabsTrigger>

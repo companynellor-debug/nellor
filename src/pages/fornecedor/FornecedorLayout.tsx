@@ -59,7 +59,7 @@ const FornecedorLayoutContent = () => {
   };
 
   return (
-    <div className={`${darkMode ? 'dark' : ''}`}>
+    <div className={`${darkMode ? 'dark' : ''} overflow-x-hidden`}>
       <div className="min-h-screen flex w-full bg-background">
         <div className="hidden md:block"><SupplierSidebar /></div>
         
@@ -96,7 +96,7 @@ const FornecedorLayoutContent = () => {
             <NotificationPermissionBanner />
             <SubscriptionBanner />
 
-            <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
+            <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 md:pb-6 overflow-x-hidden">
               <div className="w-full max-w-full overflow-x-hidden">
                 <Outlet />
               </div>
