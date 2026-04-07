@@ -58,6 +58,7 @@ const MinhasNegociacoes = lazy(() => import("./pages/cliente/MinhasNegociacoes")
 // Lazy load fornecedor pages
 const Dashboard = lazy(() => import("./pages/fornecedor/Dashboard"));
 const Pedidos = lazy(() => import("./pages/fornecedor/Pedidos"));
+const NegociacoesFornecedor = lazy(() => import("./pages/fornecedor/Negociacoes"));
 const ChatFornecedor = lazy(() => import("./pages/fornecedor/ChatFornecedor"));
 const ProdutosFornecedor = lazy(() => import("./pages/fornecedor/Produtos"));
 const Financeiro = lazy(() => import("./pages/fornecedor/Financeiro"));
@@ -199,6 +200,7 @@ const App = () => {
                 <Route index element={<Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>} />
                 <Route path="dashboard" element={<Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>} />
                 <Route path="pedidos" element={<Suspense fallback={<PageSkeleton />}><Pedidos /></Suspense>} />
+                <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><NegociacoesFornecedor /></Suspense>} />
                 <Route path="chat" element={<Suspense fallback={<PageSkeleton />}><ChatFornecedor /></Suspense>} />
                 <Route path="produtos" element={<Suspense fallback={<PageSkeleton />}><ProdutosFornecedor /></Suspense>} />
                 <Route path="financeiro" element={<Suspense fallback={<PageSkeleton />}><Financeiro /></Suspense>} />
