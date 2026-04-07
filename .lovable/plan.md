@@ -1,73 +1,129 @@
 
 
-# Plan: Generate WebViewApp Android Project ZIP (Final Working Version)
+# Plano: Adaptar Nellor ao Modelo de Marketplace de Negociação
 
-This is a **file generation task** -- create a complete, build-ready Android Studio project as a downloadable ZIP.
+## Resumo
 
-## Root cause of previous failures
+A Nellor precisa de uma grande adaptação para alinhar todas as áreas ao modelo de negociação (sem pagamento integrado). São 5 frentes principais:
 
-The "Generate App Bundles or APKs" option was greyed out because:
-1. Missing Gradle Wrapper executables (`gradlew`, `gradlew.bat`) and the actual `gradle-wrapper.jar` binary
-2. Missing or invalid `google-services.json` -- the Google Services plugin fails without it
-3. Possible missing `local.properties` or incorrect project structure
+---
 
-## What will be different this time
+## 1. Dashboard Admin — Remover métricas financeiras e adaptar ao modelo de negociação
 
-1. **Download a real Gradle Wrapper JAR** from the official Gradle distribution (not a placeholder) -- this is the #1 reason Android Studio fails to recognize the project
-2. **Include a valid `google-services.json`** with the correct package name `com.webviewapp` so Gradle sync succeeds immediately
-3. **Include executable `gradlew` and `gradlew.bat`** scripts with correct content
-4. **Include `local.properties`** pointing to a standard SDK path (Android Studio overwrites this on open, but having it prevents sync errors)
-5. **Verify ZIP structure** -- the root folder inside the ZIP must be `WebViewApp/` with `build.gradle` and `settings.gradle` at the top level
+**Problema**: O dashboard admin ainda mostra GMV, comissão 7.5%, receita Nellor, distribuição de receita — tudo de um modelo e-commerce que não existe mais.
 
-## Files to generate
+**Solução**:
+- Substituir cards financeiros por métricas relevantes: Total de Usuários, Fornecedores Ativos, Negociações Registradas, Conversas Ativas, Disputas Abertas, Assinaturas Ativas/Pendentes
+- Gráfico de evolução: negociações por dia (não pedidos pagos)
+- Top Fornecedores por número de negociações (não por receita)
+- Remover gráfico de distribuição de receita e receita Nellor
+- Manter tabela de "Negociações Recentes" no lugar de "Pedidos Recentes"
 
-```text
-WebViewApp/
-├── gradlew                          (executable shell script)
-├── gradlew.bat                      (Windows batch script)
-├── gradle/wrapper/
-│   ├── gradle-wrapper.jar           (real binary downloaded from Gradle)
-│   └── gradle-wrapper.properties    (Gradle 8.2)
-├── build.gradle                     (root - AGP 8.2.0 + google-services 4.4.0)
-├── settings.gradle
-├── gradle.properties
-├── local.properties
-├── app/
-│   ├── build.gradle                 (module - compileSdk 34, minSdk 21)
-│   ├── proguard-rules.pro
-│   ├── google-services.json         (valid placeholder for com.webviewapp)
-│   ├── google-services.json.example
-│   └── src/main/
-│       ├── AndroidManifest.xml
-│       ├── java/com/webviewapp/
-│       │   ├── MainActivity.java
-│       │   ├── SplashActivity.java
-│       │   └── MyFirebaseMessagingService.java
-│       └── res/
-│           ├── layout/activity_main.xml
-│           ├── layout/activity_splash.xml
-│           ├── values/strings.xml
-│           ├── values/colors.xml
-│           ├── values/themes.xml
-│           ├── drawable/ic_notification.xml
-│           └── xml/network_security_config.xml
-└── README.md
+---
+
+## 2. Painel Fornecedor — Remover verificação de identidade e saque
+
+**Problema**: Dashboard do fornecedor tem card de "verificação de identidade" (localStorage), Financeiro tem sistema de saque, Recebimentos tem verificação de conta — tudo faz referência a um gateway de pagamento que não existe.
+
+**Solução**:
+- **Dashboard**: Remover card "Status de verificação de identidade" e referências a `useIdentityVerification`
+- **Financeiro**: Reescrever completamente — remover saque, saldo, verificação. Substituir por visão das negociações do fornecedor com valores acordados como referência informativa
+- **Recebimentos**: Remover ou redirecionar para Financeiro adaptado
+- **VerificationStatusBanner**: Remover do layout (já temos SubscriptionBanner para assinatura)
+- **Sidebar e BottomNav**: Remover item "Permissões" (que levava à verificação), simplificar menu
+
+---
+
+## 3. Assinatura — Corrigir banner e fluxo
+
+**Problema**: O `SubscriptionBanner` usa o hook `useSupplierSubscription` que chama RPC `get_supplier_subscription`, mas pode estar falhando silenciosamente.
+
+**Solução**:
+- Verificar e corrigir o hook para tratar caso de RPC retornando vazio
+- Garantir que o banner aparece corretamente para fornecedores sem assinatura (needsSubscription)
+- Adicionar lógica no layout para redirecionar fornecedores sem assinatura ativa para a página de assinatura
+
+---
+
+## 4. Negociações → Pedidos do Fornecedor (Fluxo Completo)
+
+**Problema**: Após registrar negociação no chat, ela aparece na dashboard do fornecedor como métrica mas não como "pedido" gerenciável. O fornecedor não consegue confirmar envio nem descontar estoque.
+
+**Solução**:
+- Criar página **"Negociações"** no painel do fornecedor (substituir ou complementar "Pedidos"):
+  - Lista todas as negociações onde `supplier_id = user.id`
+  - Status flow: `pending` → `accepted` (fornecedor aceita) → `shipped` (fornecedor confirma envio) → `delivered` (comprador confirma recebimento)
+  - Fornecedor tem botões: "Aceitar Negociação", "Confirmar Envio"
+  - Ao comprador confirmar recebimento → desconto automático do estoque na tabela `products` (campo `estoque`)
+- Adicionar campo `supplier_confirmed_shipping` e `shipping_confirmed_at` na tabela negotiations (migração)
+- Criar RPC ou trigger para descontar estoque ao status mudar para `delivered`
+- Adaptar a página existente de Pedidos do fornecedor para mostrar negociações ao invés de orders
+
+---
+
+## 5. Variações em Caixa Fechada (e outros tipos)
+
+**Problema**: Caixa fechada exige cadastro separado para cada variação. O usuário quer que um único produto "Caixa Fechada de Xiaomi" tenha variações (modelos diferentes), cada uma com foto, descrição, preço e estoque próprios.
+
+**Solução**:
+- Adicionar etapa de **Variações** ao fluxo de Caixa Fechada (atualmente não tem — `getStepsForSaleType('closed_box')` pula variações)
+- Cada variação de caixa fechada terá: nome/modelo, foto, descrição curta, preço, estoque, quantidade por caixa
+- Reutilizar e adaptar o `VariationsEditor` existente para suportar campos extras (descrição e foto por variação)
+- O mesmo se aplica a Fardo e outros tipos — adicionar step de variações onde faz sentido
+- Na página do produto no marketplace, mostrar seletor de variação com foto e descrição de cada opção
+
+---
+
+## Arquivos que serão criados/modificados
+
+### Novos:
+- `src/pages/fornecedor/Negociacoes.tsx` — Página de gestão de negociações do fornecedor
+
+### Modificados:
+- `src/pages/admin/Dashboard.tsx` — Métricas de negociação, não financeiras
+- `src/pages/fornecedor/Dashboard.tsx` — Remover verificação identidade
+- `src/pages/fornecedor/FornecedorLayout.tsx` — Remover `VerificationStatusBanner`, melhorar lógica de assinatura
+- `src/pages/fornecedor/Financeiro.tsx` — Reescrever para modelo de negociação
+- `src/pages/fornecedor/Recebimentos.tsx` — Remover ou redirecionar
+- `src/components/fornecedor/SupplierSidebar.tsx` — Trocar "Pedidos" por "Negociações", remover Permissões
+- `src/components/fornecedor/BottomNav.tsx` — Idem
+- `src/components/fornecedor/SubscriptionBanner.tsx` — Corrigir exibição
+- `src/hooks/useSupplierSubscription.tsx` — Corrigir tratamento de dados
+- `src/hooks/useNegotiations.tsx` — Adicionar status `shipped`, campos de envio
+- `src/components/fornecedor/product-modal/types.ts` — Adicionar variações para caixa fechada
+- `src/components/fornecedor/product-modal/BoxConfigStep.tsx` — Remover aviso de "cadastrar separado"
+- `src/App.tsx` — Nova rota de negociações fornecedor
+- **Migração SQL**: Adicionar campos na tabela negotiations, trigger de desconto de estoque
+
+---
+
+## Detalhes Técnicos
+
+### Migração SQL
+```sql
+ALTER TABLE negotiations ADD COLUMN IF NOT EXISTS supplier_confirmed_shipping boolean DEFAULT false;
+ALTER TABLE negotiations ADD COLUMN IF NOT EXISTS shipping_confirmed_at timestamptz;
+
+-- Trigger para descontar estoque quando status muda para 'delivered'
+CREATE OR REPLACE FUNCTION decrement_stock_on_delivery()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.status = 'delivered' AND OLD.status != 'delivered' AND NEW.product_id IS NOT NULL THEN
+    UPDATE products SET estoque = GREATEST(estoque - NEW.quantity, 0) WHERE id = NEW.product_id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_decrement_stock_on_delivery
+  BEFORE UPDATE ON negotiations
+  FOR EACH ROW EXECUTE FUNCTION decrement_stock_on_delivery();
 ```
 
-## Key implementation details
-
-- **Gradle Wrapper JAR**: Will download the real `gradle-wrapper.jar` from `https://github.com/gradle/gradle/raw/v8.2.0/gradle/wrapper/gradle-wrapper.jar` or extract it from a Gradle distribution
-- **target_url**: defaults to `https://nellor.lovable.app`
-- **Java source files**: Complete with all imports, AndroidBridge JS interface, WebChromeClient, WebViewClient, FCM service
-- **Output**: `/mnt/documents/WebViewApp.zip`
-
-## Execution steps
-
-1. Create full directory structure under `/tmp/WebViewApp/`
-2. Download real `gradle-wrapper.jar` from official source
-3. Write `gradlew` and `gradlew.bat` with correct content
-4. Write all Java source files with complete imports
-5. Write all XML resources, build files, and manifest
-6. Write valid `google-services.json`
-7. Package as ZIP and deliver
+### Fluxo de status das negociações
+```text
+pending → accepted → shipped → delivered
+                  ↘ cancelled
+                           ↘ disputed
+```
 
