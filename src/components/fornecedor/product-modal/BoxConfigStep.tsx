@@ -27,9 +27,9 @@ export default function BoxConfigStep({ data, onChange }: Props) {
     <div className="space-y-5">
       <h3 className="font-semibold text-lg">📦 Configuração da Caixa</h3>
 
-      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-        <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
-          ⚠️ Na Nellor, todos os produtos dentro da caixa devem ser idênticos. Cada variação de cor, tamanho ou configuração deve ser cadastrada como uma caixa separada.
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+        <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
+          💡 Todos os produtos dentro da caixa devem ser idênticos. Para oferecer diferentes modelos, cores ou configurações, use a etapa de Variações no próximo passo.
         </p>
       </div>
 
