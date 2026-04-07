@@ -152,13 +152,13 @@ const ClienteHome = () => {
 
         {/* Banners */}
         {banners.length > 0 &&
-        <div className="mb-4">
+        <div className="mb-6">
             <div className="max-w-6xl mx-auto">
               <Carousel opts={{ align: "center", loop: true }} plugins={[Autoplay({ delay: 4000 })]} className="w-full">
                 <CarouselContent>
                   {mainBanners.map((banner) =>
                 <CarouselItem key={banner.id}>
-                      <div className="relative overflow-hidden rounded-xl cursor-pointer" onClick={() => banner.link_url && navigate(banner.link_url)}>
+                      <div className="relative overflow-hidden rounded-3xl cursor-pointer shadow-lg hover:shadow-xl transition-shadow" onClick={() => banner.link_url && navigate(banner.link_url)}>
                         <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-56 md:h-80 lg:h-[420px] object-cover" />
                       </div>
                     </CarouselItem>
@@ -187,26 +187,24 @@ const ClienteHome = () => {
         {/* Categories */}
         {categories.length > 0 &&
         <section className="mb-8">
-            <div className="bg-background rounded-xl p-4 shadow-sm border">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-muted-foreground">Categorias</h3>
-                {selectedCategory &&
-              <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors">
-                    <X className="w-4 h-4" />Limpar filtro
-                  </button>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-sm font-medium text-muted-foreground">Categorias</h3>
+              {selectedCategory &&
+              <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors">
+                  <X className="w-3 h-3" />Limpar
+                </button>
               }
-              </div>
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide justify-start lg:justify-center">
-                {categories.map((category) =>
+            </div>
+            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x">
+              {categories.map((category) =>
               <button key={category.id} onClick={() => setSelectedCategory(selectedCategory === category.slug ? null : category.slug)}
-              className={`flex flex-col items-center gap-2 min-w-[80px] p-3 rounded-xl transition-colors group ${selectedCategory === category.slug ? 'bg-primary/20 ring-2 ring-primary' : 'hover:bg-muted'}`}>
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${selectedCategory === category.slug ? 'bg-primary/30' : 'bg-primary/10 group-hover:bg-primary/20'}`}>
-                      {category.imagem_url ? <img src={category.imagem_url} alt={category.nome} className="w-8 h-8 object-contain" /> : <span className="text-2xl">🛍️</span>}
-                    </div>
-                    <span className={`text-xs text-center font-medium whitespace-nowrap ${selectedCategory === category.slug ? 'text-primary' : 'text-foreground'}`}>{category.nome}</span>
-                  </button>
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-full border-2 transition-all whitespace-nowrap snap-start ${selectedCategory === category.slug ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-background border-border hover:border-primary/50 hover:bg-muted'}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${selectedCategory === category.slug ? 'bg-primary-foreground/20' : 'bg-primary/10'}`}>
+                    {category.imagem_url ? <img src={category.imagem_url} alt={category.nome} className="w-5 h-5 object-contain" /> : <span className="text-sm">🛍️</span>}
+                  </div>
+                  <span className="text-xs font-semibold">{category.nome}</span>
+                </button>
               )}
-              </div>
             </div>
           </section>
         }
@@ -225,16 +223,18 @@ const ClienteHome = () => {
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                 {sponsoredProducts.map((product) => (
                   <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`} className="flex-shrink-0 w-44 lg:w-52">
-                    <Card className="bg-background border-primary/30 border-2 overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group">
-                      <div className="aspect-square overflow-hidden relative">
+                    <Card className="bg-background border-primary/30 border-2 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group rounded-2xl">
+                      <div className="aspect-square overflow-hidden relative rounded-t-2xl">
                         <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] gap-1">
+                        <Badge className="absolute top-2.5 left-2.5 bg-primary text-primary-foreground text-[10px] gap-1 rounded-full px-2.5">
                           <Sparkles className="h-3 w-3" /> Patrocinado
                         </Badge>
+                        <div className="absolute bottom-2.5 left-2.5 bg-primary/90 text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-sm">
+                          {product.price}
+                        </div>
                       </div>
                       <div className="p-3">
                         <p className="text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</p>
-                        <p className="text-primary font-bold text-lg">{product.price}</p>
                         {(product as any).supplierUuid && <ProductCardColorDots productId={(product as any).supplierUuid} />}
                         <div className="flex items-center justify-between mt-1">
                           <div className="flex items-center gap-1">
@@ -262,25 +262,27 @@ const ClienteHome = () => {
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {filteredProducts.slice(0, 8).map((product) =>
             <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`} className="flex-shrink-0 w-44 lg:w-52">
-                <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group">
-                  <div className="aspect-square overflow-hidden relative">
+                <Card className="bg-background border overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group rounded-2xl shadow-md">
+                  <div className="aspect-square overflow-hidden relative rounded-t-2xl">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     {(() => {
                       const su = (product as any).saleUnit;
                       const units = (product as any).unitsPerSaleUnit;
                       const balePieces = (product as any).baleApproxPieces;
                       const kitCount = (product as any).kitItemsCount;
-                      if (su === 'closed_box' && units > 1) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Caixa c/ {units} un</Badge>;
-                      if (su === 'bale') return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Fardo {balePieces ? `~${balePieces} peças` : ''}</Badge>;
-                      if (su === 'kit' && kitCount > 0) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Kit {kitCount} itens</Badge>;
-                      if (su === 'pair') return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Par</Badge>;
-                      if ((product as any).minQuantity && (product as any).minQuantity > 1) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Mín. {(product as any).minQuantity} un.</Badge>;
+                      if (su === 'closed_box' && units > 1) return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Caixa c/ {units} un</Badge>;
+                      if (su === 'bale') return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Fardo {balePieces ? `~${balePieces}pç` : ''}</Badge>;
+                      if (su === 'kit' && kitCount > 0) return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Kit {kitCount} itens</Badge>;
+                      if (su === 'pair') return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Par</Badge>;
+                      if ((product as any).minQuantity && (product as any).minQuantity > 1) return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Mín. {(product as any).minQuantity} un.</Badge>;
                       return null;
                     })()}
+                    <div className="absolute bottom-2.5 left-2.5 bg-primary/90 text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-sm">
+                      {product.price}
+                    </div>
                   </div>
                   <div className="p-3">
-                    <p className="text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</p>
-                    <p className="text-primary font-bold text-lg">{product.price}</p>
+                    <p className="text-sm mb-1.5 line-clamp-2 text-foreground min-h-[40px]">{product.name}</p>
                     {(product as any).supplierUuid && <ProductCardColorDots productId={(product as any).supplierUuid} />}
                     <div className="flex items-center justify-between mt-1">
                       <div className="flex items-center gap-1">
@@ -305,11 +307,11 @@ const ClienteHome = () => {
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
               {sortedStores.map((store) =>
             <div key={store.id} className="flex-shrink-0 w-64">
-                  <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group p-4 flex items-center gap-4 cursor-pointer"
+                  <Card className="bg-background border overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group p-4 flex items-center gap-4 cursor-pointer rounded-2xl shadow-sm"
               onClick={() => navigate(`/cliente/loja/${store.id}`)}>
-                    <Avatar className="h-16 w-16 border-2 border-primary/20 flex-shrink-0">
-                      <AvatarImage src={store.foto_perfil_url || undefined} alt={store.nome} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">{store.nome.charAt(0)}</AvatarFallback>
+                    <Avatar className="h-16 w-16 border-2 border-primary/20 flex-shrink-0 rounded-2xl">
+                      <AvatarImage src={store.foto_perfil_url || undefined} alt={store.nome} className="rounded-2xl" />
+                      <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold rounded-2xl">{store.nome.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                       <h3 className="font-bold text-sm text-foreground truncate">{store.nome}</h3>
@@ -335,24 +337,26 @@ const ClienteHome = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {filteredProducts.map((product) =>
             <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`}>
-                <Card className="bg-background border overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 group h-full">
-                  <div className="aspect-square overflow-hidden relative">
+                <Card className="bg-background border overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group h-full rounded-2xl shadow-sm">
+                  <div className="aspect-square overflow-hidden relative rounded-t-2xl">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     {(() => {
                       const su = (product as any).saleUnit;
                       const units = (product as any).unitsPerSaleUnit;
                       const balePieces = (product as any).baleApproxPieces;
                       const kitCount = (product as any).kitItemsCount;
-                      if (su === 'closed_box' && units > 1) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Caixa c/ {units} un</Badge>;
-                      if (su === 'bale') return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Fardo {balePieces ? `~${balePieces} peças` : ''}</Badge>;
-                      if (su === 'kit' && kitCount > 0) return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Kit {kitCount} itens</Badge>;
-                      if (su === 'pair') return <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px]">Par</Badge>;
+                      if (su === 'closed_box' && units > 1) return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Caixa c/ {units} un</Badge>;
+                      if (su === 'bale') return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Fardo {balePieces ? `~${balePieces}pç` : ''}</Badge>;
+                      if (su === 'kit' && kitCount > 0) return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Kit {kitCount} itens</Badge>;
+                      if (su === 'pair') return <Badge className="absolute top-2.5 right-2.5 bg-foreground/80 text-background text-[10px] rounded-full px-2">Par</Badge>;
                       return null;
                     })()}
+                    <div className="absolute bottom-2.5 left-2.5 bg-primary/90 text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-sm">
+                      {product.price}
+                    </div>
                   </div>
                   <div className="p-3">
-                    <h3 className="font-medium text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</h3>
-                    <p className="text-primary font-bold">{product.price}</p>
+                    <h3 className="font-medium text-sm mb-1.5 line-clamp-2 text-foreground min-h-[40px]">{product.name}</h3>
                     {(product as any).supplierUuid && <ProductCardColorDots productId={(product as any).supplierUuid} />}
                     <div className="flex items-center justify-between mt-1">
                       <div className="flex items-center gap-1 text-xs">
