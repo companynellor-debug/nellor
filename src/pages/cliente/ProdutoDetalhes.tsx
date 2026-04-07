@@ -360,19 +360,19 @@ const ProdutoDetalhes = () => {
               <div className="hidden lg:flex lg:flex-col gap-2 order-1">
                 {displayImages.map((image, index) => (
                   <button key={index} onClick={() => setSelectedImage(index)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === index ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"}`}>
+                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === index ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"}`}>
                     <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
               <div className="flex-1 order-2">
-                <div className="aspect-square rounded-2xl overflow-hidden bg-muted max-w-lg mx-auto lg:max-w-none">
+                <div className="aspect-square rounded-3xl overflow-hidden bg-muted max-w-lg mx-auto lg:max-w-none shadow-lg">
                   <img src={displayImages[selectedImage] || product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex gap-2 justify-center mt-4 lg:hidden">
                   {displayImages.map((image, index) => (
                     <button key={index} onClick={() => setSelectedImage(index)}
-                      className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-primary scale-105" : "border-border"}`}>
+                      className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${selectedImage === index ? "border-primary scale-105" : "border-border"}`}>
                       <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
@@ -414,16 +414,16 @@ const ProdutoDetalhes = () => {
 
               {/* Highlight badges */}
               <div className="flex flex-wrap gap-2 mt-2">
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs rounded-full px-3 py-1">
                   {productCondition === 'new' ? '✅ Novo' : productCondition === 'refurbished' ? '🔄 Recondicionado' : '📦 Usado'}
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs rounded-full px-3 py-1">
                   {productIsInternational ? '🌍 Internacional' : '🇧🇷 Nacional'}
                 </Badge>
                 {productWarrantyDays && (
-                  <Badge variant="secondary" className="text-xs">🛡️ Garantia {productWarrantyDays} dias</Badge>
+                  <Badge variant="secondary" className="text-xs rounded-full px-3 py-1">🛡️ Garantia {productWarrantyDays} dias</Badge>
                 )}
-                {productBrand && <Badge variant="outline" className="text-xs">🏷️ {productBrand}</Badge>}
+                {productBrand && <Badge variant="outline" className="text-xs rounded-full px-3 py-1">🏷️ {productBrand}</Badge>}
               </div>
               {product.supplierUuid && <div className="mt-2"><ReportButton targetType="product" targetId={product.supplierUuid} /></div>}
             </div>
@@ -614,12 +614,11 @@ const ProdutoDetalhes = () => {
                       : variations.filter(v => (v.variation_value === size || v.size === size)).reduce((s, v) => s + v.stock, 0);
                     const outOfStock = stockForSize === 0;
                     return (
-                      <Badge key={size}
-                        variant={selectedSize === size ? "default" : "outline"}
-                        className={`cursor-pointer select-none px-3 py-1 ${outOfStock ? 'opacity-40 line-through cursor-not-allowed' : ''}`}
+                      <button key={size}
+                        className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-all ${selectedSize === size ? 'bg-primary text-primary-foreground border-primary' : outOfStock ? 'opacity-40 line-through cursor-not-allowed border-border' : 'border-border hover:border-primary/50'}`}
                         onClick={() => !outOfStock && setSelectedSize(size)}>
                         {size}
-                      </Badge>
+                      </button>
                     );
                   })}
                 </div>
@@ -731,8 +730,8 @@ const ProdutoDetalhes = () => {
             )}
 
             {/* Negotiation info */}
-            <div className="bg-primary/5 border-2 border-primary/20 rounded-xl p-5 space-y-3">
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white h-14 text-base font-bold gap-2"
+            <div className="bg-primary/5 border-2 border-primary/20 rounded-2xl p-5 space-y-3">
+              <Button className="w-full bg-foreground hover:bg-foreground/90 text-background h-14 text-base font-bold gap-2 rounded-2xl"
                 onClick={() => {
                   if (!product.supplierProfileId) return;
                   navigate('/cliente/chat', {
@@ -749,7 +748,7 @@ const ProdutoDetalhes = () => {
                 Combine quantidade, preço e entrega diretamente com o fornecedor pelo chat da plataforma
               </p>
               <div className="flex items-center justify-center gap-2 text-xs text-primary font-medium">
-                <Badge variant="outline" className="border-primary/30 text-primary gap-1">
+                <Badge variant="outline" className="border-primary/30 text-primary gap-1 rounded-full px-3">
                   🛡️ Negociação Segura — Conversa registrada na plataforma
                 </Badge>
               </div>
@@ -784,8 +783,8 @@ const ProdutoDetalhes = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {relatedProducts.map((rp) => (
                 <Card key={rp.id} onClick={() => { setSelectedImage(0); navigate(`/cliente/produto/${rp.id}`); }}
-                  className="bg-white border shadow-sm overflow-hidden hover:shadow-lg transition-all cursor-pointer group">
-                  <div className="aspect-square overflow-hidden"><img src={rp.images[0]} alt={rp.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>
+                  className="bg-background border shadow-sm overflow-hidden hover:shadow-xl transition-all cursor-pointer group rounded-2xl">
+                  <div className="aspect-square overflow-hidden rounded-t-2xl"><img src={rp.images[0]} alt={rp.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>
                   <div className="p-3"><p className="text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">{rp.name}</p><p className="text-primary font-bold">{rp.price}</p></div>
                 </Card>
               ))}
