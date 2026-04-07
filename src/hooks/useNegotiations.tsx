@@ -12,7 +12,7 @@ export interface Negotiation {
   agreed_price: number;
   payment_method: string;
   expected_delivery: string | null;
-  status: 'pending' | 'accepted' | 'delivered' | 'disputed' | 'cancelled';
+  status: 'pending' | 'accepted' | 'shipped' | 'delivered' | 'disputed' | 'cancelled';
   buyer_confirmed_delivery: boolean;
   delivery_confirmed_at: string | null;
   notes: string | null;

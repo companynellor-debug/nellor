@@ -2,10 +2,10 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, Truck, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Handshake } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Handshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
-import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
+import { useNegotiations } from "@/hooks/useNegotiations";
 import { usePWA } from "@/hooks/usePWA";
 import { useSupplierApplication } from "@/hooks/useSupplierApplication";
 import CollectionsTab from "@/components/cliente/CollectionsTab";
@@ -15,7 +15,7 @@ import nellorLogo from "@/assets/nellor-logo.png";
 const Perfil = () => {
   const navigate = useNavigate();
   const { profile, signOut } = useSupabaseAuth();
-  const { orders } = useSupabaseOrders();
+  const { negotiations } = useNegotiations();
   const { canInstall, isInstalled } = usePWA();
   const { application } = useSupplierApplication();
 
@@ -23,9 +23,9 @@ const Perfil = () => {
     await signOut();
   };
 
-  const pendingPayment = orders.filter((o: any) => o?.payment_status === "pending").length;
-  const toShip = orders.filter((o: any) => o?.order_status === "preparing").length;
-  const toReceive = orders.filter((o: any) => o?.order_status === "shipped").length;
+  const pendentes = negotiations.filter(n => n.status === 'pending' || n.status === 'accepted').length;
+  const emEnvio = negotiations.filter(n => n.status === 'shipped').length;
+  const concluidas = negotiations.filter(n => n.status === 'delivered').length;
 
   return (
     <div className="min-h-screen bg-muted/30 pb-20">
@@ -88,9 +88,9 @@ const Perfil = () => {
             {/* Meus Pedidos */}
             <Card className="p-4 border shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm">Meus Pedidos</h3>
+                <h3 className="font-semibold text-sm">Minhas Negociações</h3>
                 <button
-                  onClick={() => navigate("/cliente/meus-pedidos")}
+                  onClick={() => navigate("/cliente/negociacoes")}
                   className="text-xs text-primary font-medium flex items-center gap-0.5"
                 >
                   Ver histórico
@@ -99,46 +99,46 @@ const Perfil = () => {
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <button
-                  onClick={() => navigate("/cliente/meus-pedidos?filtro=a-pagar")}
+                  onClick={() => navigate("/cliente/negociacoes")}
                   className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center relative">
-                    <CreditCard className="h-5 w-5 text-orange-600" />
-                    {pendingPayment > 0 && (
+                  <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center relative">
+                    <Clock className="h-5 w-5 text-yellow-600" />
+                    {pendentes > 0 && (
                       <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                        {pendingPayment}
+                        {pendentes}
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground">A Pagar</span>
+                  <span className="text-xs text-muted-foreground">Pendentes</span>
                 </button>
                 <button
-                  onClick={() => navigate("/cliente/meus-pedidos?filtro=a-enviar")}
+                  onClick={() => navigate("/cliente/negociacoes")}
                   className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center relative">
                     <Package className="h-5 w-5 text-blue-600" />
-                    {toShip > 0 && (
+                    {emEnvio > 0 && (
                       <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                        {toShip}
+                        {emEnvio}
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground">A Enviar</span>
+                  <span className="text-xs text-muted-foreground">Em Envio</span>
                 </button>
                 <button
-                  onClick={() => navigate("/cliente/meus-pedidos?filtro=a-receber")}
+                  onClick={() => navigate("/cliente/negociacoes")}
                   className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center relative">
-                    <Truck className="h-5 w-5 text-purple-600" />
-                    {toReceive > 0 && (
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center relative">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    {concluidas > 0 && (
                       <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                        {toReceive}
+                        {concluidas}
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground">A Receber</span>
+                  <span className="text-xs text-muted-foreground">Concluídas</span>
                 </button>
               </div>
             </Card>
