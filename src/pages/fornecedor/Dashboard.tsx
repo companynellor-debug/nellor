@@ -104,7 +104,7 @@ const Dashboard = () => {
   })();
 
   return (
-    <div className="w-full max-w-full space-y-4 md:space-y-6">
+    <div className="w-full max-w-full overflow-x-hidden space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
