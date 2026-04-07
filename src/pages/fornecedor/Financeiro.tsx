@@ -58,7 +58,7 @@ const Financeiro = () => {
               <CheckCircle className="h-4 w-4 text-green-600" />
               <span className="text-xs text-muted-foreground">Entregues</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-green-600">{fmt(totalDelivered)}</p>
+            <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">{fmt(totalDelivered)}</p>
             <p className="text-xs text-muted-foreground mt-1">{delivered.length} negociação(ões)</p>
           </CardContent>
         </Card>
@@ -69,7 +69,7 @@ const Financeiro = () => {
               <Package className="h-4 w-4 text-orange-600" />
               <span className="text-xs text-muted-foreground">Em Trânsito</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-orange-600">{fmt(totalShipped)}</p>
+            <p className="text-lg sm:text-2xl font-bold text-orange-600 truncate">{fmt(totalShipped)}</p>
             <p className="text-xs text-muted-foreground mt-1">{shipped.length} negociação(ões)</p>
           </CardContent>
         </Card>
@@ -80,7 +80,7 @@ const Financeiro = () => {
               <Clock className="h-4 w-4 text-yellow-600" />
               <span className="text-xs text-muted-foreground">Pendentes/Aceitas</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-yellow-600">{fmt(totalPending)}</p>
+            <p className="text-lg sm:text-2xl font-bold text-yellow-600 truncate">{fmt(totalPending)}</p>
             <p className="text-xs text-muted-foreground mt-1">{pending.length} negociação(ões)</p>
           </CardContent>
         </Card>

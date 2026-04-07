@@ -175,7 +175,7 @@ const Negociacoes = () => {
                           {getStatusBadge(neg.status)}
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-xs sm:text-sm">
                           <div>
                             <span className="text-muted-foreground">Comprador:</span>
                             <span className="ml-1 font-medium">{neg.buyerName}</span>

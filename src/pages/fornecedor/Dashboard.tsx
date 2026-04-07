@@ -119,23 +119,23 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-4">
         {[
-          { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageCircle, color: "text-purple-600" },
+          { title: "Conversas", value: totalConversations, subtitle: "Compradores", icon: MessageCircle, color: "text-purple-600" },
           { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, color: "text-blue-600" },
-          { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, color: "text-orange-600" },
-          { title: "Entregues", value: deliveredNegotiations, subtitle: "Negociações concluídas", icon: CheckCircle, color: "text-green-600" },
-          { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, color: "text-yellow-600" },
-          { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Eye, color: "text-cyan-600" },
+          { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas/enviadas", icon: Truck, color: "text-orange-600" },
+          { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, color: "text-green-600" },
+          { title: "Avaliações", value: totalReviews, subtitle: "Feedback", icon: Star, color: "text-yellow-600" },
+          { title: "Produtos", value: products.length, subtitle: "No catálogo", icon: Eye, color: "text-cyan-600" },
         ].map((card) => (
           <Card key={card.title} className="relative overflow-hidden border-border min-w-0">
-            <CardHeader className="flex flex-row items-center justify-between pb-1 p-3 sm:p-4 sm:pb-2">
-              <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground truncate mr-1">{card.title}</CardTitle>
-              <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 ${card.color}`} />
+            <CardHeader className="flex flex-row items-center justify-between pb-0.5 p-2 sm:p-4 sm:pb-2">
+              <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate mr-1">{card.title}</CardTitle>
+              <card.icon className={`w-3.5 h-3.5 sm:w-5 sm:h-5 shrink-0 ${card.color}`} />
             </CardHeader>
-            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-              <div className="text-xl sm:text-2xl font-bold">{card.value}</div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">{card.subtitle}</p>
+            <CardContent className="p-2 pt-0 sm:p-4 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{card.value}</div>
+              <p className="text-[9px] sm:text-xs text-muted-foreground mt-0.5 truncate">{card.subtitle}</p>
             </CardContent>
           </Card>
         ))}
