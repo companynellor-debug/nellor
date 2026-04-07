@@ -3,7 +3,6 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
 import { NotificationPermissionBanner } from "@/components/fornecedor/NotificationPermissionBanner";
-import { VerificationStatusBanner } from "@/components/fornecedor/VerificationStatusBanner";
 import { SubscriptionBanner } from "@/components/fornecedor/SubscriptionBanner";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,10 +20,7 @@ const OnboardingTour = lazy(() => import("@/components/fornecedor/OnboardingTour
 const FornecedorLayoutContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    signOut,
-    profile
-  } = useSupabaseAuth();
+  const { signOut, profile } = useSupabaseAuth();
   const { unreadCount } = useSupplierNotifications();
   const { subscribe, isSubscribed } = usePushSubscription();
   const [darkMode, setDarkMode] = useState(() => {
@@ -32,24 +28,17 @@ const FornecedorLayoutContent = () => {
     return saved ? JSON.parse(saved) : false;
   });
 
-  // Auto-subscribe to push notifications when permission is granted
   useEffect(() => {
     const autoSubscribe = async () => {
       if ('Notification' in window && Notification.permission === 'granted' && !isSubscribed) {
-        console.log('📱 Auto-subscribing to push notifications...');
         const success = await subscribe();
-        if (success) {
-          console.log('✅ Auto-subscribed to push notifications');
-        }
+        if (success) console.log('✅ Auto-subscribed to push notifications');
       }
     };
-    
-    // Small delay to ensure everything is loaded
     const timeout = setTimeout(autoSubscribe, 2000);
     return () => clearTimeout(timeout);
   }, [subscribe, isSubscribed]);
 
-  // Redirecionar para onboarding se não completou (só após profile ser carregado)
   const { loading: authLoading } = useSupabaseAuth();
   useEffect(() => {
     if (!authLoading && profile && profile.tipo === 'fornecedor' && profile.onboarding_completed === false && location.pathname !== '/fornecedor/onboarding') {
@@ -57,13 +46,9 @@ const FornecedorLayoutContent = () => {
     }
   }, [profile, authLoading, navigate, location.pathname]);
 
-  // Apply dark mode class to document
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    if (darkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
     localStorage.setItem("fornecedor-dark-mode", JSON.stringify(darkMode));
   }, [darkMode]);
 
@@ -76,43 +61,24 @@ const FornecedorLayoutContent = () => {
   return (
     <div className={`${darkMode ? 'dark' : ''}`}>
       <div className="min-h-screen flex w-full bg-background">
-        {/* Desktop Sidebar - hidden on mobile */}
-        <div className="hidden md:block">
-          <SupplierSidebar />
-        </div>
+        <div className="hidden md:block"><SupplierSidebar /></div>
         
         <div className="flex-1 md:ml-64">
           <div className="flex flex-col min-h-screen">
-            {/* Header */}
             <header className="h-14 border-b border-border bg-card flex items-center justify-between sm:px-4 md:px-6 sticky top-0 z-40 shadow-sm px-4">
-              {/* Left side - Logo for mobile */}
               <div className="flex items-center md:hidden">
                 <img src={logo} alt="Logo" className="h-8" />
               </div>
-              
-              {/* Right side - Theme, Notifications and Logout */}
               <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
                 <div className="hidden sm:flex items-center gap-2 mr-2">
                   <Sun className="h-4 w-4 text-purple-400" />
-                  <Switch 
-                    checked={darkMode} 
-                    onCheckedChange={setDarkMode} 
-                    className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-purple-300"
-                  />
+                  <Switch checked={darkMode} onCheckedChange={setDarkMode} className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-purple-300" />
                   <Moon className="h-4 w-4 text-purple-400" />
                 </div>
-                
-                {/* Mobile theme toggle - icon only */}
                 <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="h-8 w-8 sm:hidden">
                   {darkMode ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
                 </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => navigate('/fornecedor/notificacoes')} 
-                  className="h-8 w-8 sm:h-9 sm:w-9 relative"
-                >
+                <Button variant="ghost" size="icon" onClick={() => navigate('/fornecedor/notificacoes')} className="h-8 w-8 sm:h-9 sm:w-9 relative">
                   <Bell className="h-4 w-4 text-foreground" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
@@ -120,7 +86,6 @@ const FornecedorLayoutContent = () => {
                     </span>
                   )}
                 </Button>
-                
                 <Button variant="ghost" onClick={handleLogout} size="icon" className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3">
                   <LogOut className="h-4 w-4 text-foreground" />
                   <span className="hidden sm:inline ml-2 text-foreground">Sair</span>
@@ -128,16 +93,9 @@ const FornecedorLayoutContent = () => {
               </div>
             </header>
 
-            {/* Notification Permission Banner */}
             <NotificationPermissionBanner />
-
-            {/* Verificação de identidade */}
-            <VerificationStatusBanner />
-
-            {/* Banner de assinatura */}
             <SubscriptionBanner />
 
-            {/* Main Content */}
             <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
               <div className="w-full max-w-full overflow-x-hidden">
                 <Outlet />
@@ -146,13 +104,8 @@ const FornecedorLayoutContent = () => {
           </div>
         </div>
 
-        {/* Mobile Bottom Navigation */}
         <BottomNavFornecedor />
-
-        {/* Onboarding Tour */}
-        <Suspense fallback={null}>
-          <OnboardingTourContent />
-        </Suspense>
+        <Suspense fallback={null}><OnboardingTourContent /></Suspense>
       </div>
     </div>
   );
@@ -160,19 +113,15 @@ const FornecedorLayoutContent = () => {
 
 const OnboardingTourContent = () => {
   const { shouldShowTour, forceRestart, endTour } = useOnboardingTour();
-  // Always render - the component handles its own visibility
   return <OnboardingTour onComplete={endTour} forceStart={forceRestart} />;
 };
 
-// Wrapper com prefetch provider
-const FornecedorLayout = () => {
-  return (
-    <FornecedorPrefetchProvider>
-      <OnboardingTourProvider>
-        <FornecedorLayoutContent />
-      </OnboardingTourProvider>
-    </FornecedorPrefetchProvider>
-  );
-};
+const FornecedorLayout = () => (
+  <FornecedorPrefetchProvider>
+    <OnboardingTourProvider>
+      <FornecedorLayoutContent />
+    </OnboardingTourProvider>
+  </FornecedorPrefetchProvider>
+);
 
 export default FornecedorLayout;

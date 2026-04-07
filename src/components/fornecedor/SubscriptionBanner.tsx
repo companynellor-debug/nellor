@@ -1,11 +1,30 @@
 import { useSupplierSubscription } from "@/hooks/useSupplierSubscription";
-import { AlertTriangle, Clock, XCircle } from "lucide-react";
+import { AlertTriangle, Clock, XCircle, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export const SubscriptionBanner = () => {
-  const { subscription, isActive, isPending, isExpired, daysRemaining } = useSupplierSubscription();
+  const { subscription, isLoading, isActive, isPending, isExpired, needsSubscription, daysRemaining } = useSupplierSubscription();
   const navigate = useNavigate();
+
+  if (isLoading) return null;
+
+  // No subscription at all
+  if (needsSubscription && !isPending) {
+    return (
+      <div className="bg-destructive/10 border-b border-destructive/30 px-4 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <CreditCard className="w-4 h-4 text-destructive flex-shrink-0" />
+          <p className="text-sm text-destructive truncate">
+            Sua loja precisa de uma assinatura ativa para funcionar. Assine agora por R$ 29/mês.
+          </p>
+        </div>
+        <Button size="sm" variant="destructive" onClick={() => navigate("/fornecedor/assinatura")} className="flex-shrink-0">
+          Assinar
+        </Button>
+      </div>
+    );
+  }
 
   if (isPending) {
     return (
@@ -13,7 +32,7 @@ export const SubscriptionBanner = () => {
         <div className="flex items-center gap-2 min-w-0">
           <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
           <p className="text-sm text-amber-800 dark:text-amber-200 truncate">
-            Sua assinatura está pendente de confirmação.
+            Sua assinatura está pendente de confirmação pelo administrador.
           </p>
         </div>
       </div>
@@ -26,7 +45,7 @@ export const SubscriptionBanner = () => {
         <div className="flex items-center gap-2 min-w-0">
           <XCircle className="w-4 h-4 text-destructive flex-shrink-0" />
           <p className="text-sm text-destructive truncate">
-            Sua assinatura expirou. Seus produtos estão ocultos.
+            Sua assinatura expirou. Seus produtos estão ocultos. Renove agora.
           </p>
         </div>
         <Button size="sm" variant="destructive" onClick={() => navigate("/fornecedor/assinatura")} className="flex-shrink-0">
