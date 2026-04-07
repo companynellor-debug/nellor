@@ -72,31 +72,31 @@ const Estatisticas = () => {
         <p className="text-sm md:text-base text-muted-foreground">Análise do desempenho da sua loja</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
-        <Card className="p-4 md:p-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="p-5 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs md:text-sm text-muted-foreground">Total Negociado</p>
-            <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <p className="text-sm text-muted-foreground">Total Negociado</p>
+            <DollarSign className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-xl md:text-3xl font-bold truncate">{fmt(totalNegotiated)}</p>
+          <p className="text-2xl md:text-3xl font-bold break-words">{fmt(totalNegotiated)}</p>
           <p className="text-xs text-muted-foreground mt-1">Negociações entregues</p>
         </Card>
 
-        <Card className="p-4 md:p-6">
+        <Card className="p-5 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs md:text-sm text-muted-foreground">Total de Negociações</p>
-            <Handshake className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <p className="text-sm text-muted-foreground">Total de Negociações</p>
+            <Handshake className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-xl md:text-3xl font-bold">{totalNegotiations}</p>
+          <p className="text-2xl md:text-3xl font-bold">{totalNegotiations}</p>
           <p className="text-xs text-muted-foreground mt-1">Todas as negociações</p>
         </Card>
 
-        <Card className="p-4 md:p-6">
+        <Card className="p-5 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs md:text-sm text-muted-foreground">Ticket Médio</p>
-            <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <p className="text-sm text-muted-foreground">Ticket Médio</p>
+            <TrendingUp className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-xl md:text-3xl font-bold truncate">{fmt(averageTicket)}</p>
+          <p className="text-2xl md:text-3xl font-bold break-words">{fmt(averageTicket)}</p>
           <p className="text-xs text-muted-foreground mt-1">Valor médio por entrega</p>
         </Card>
       </div>
