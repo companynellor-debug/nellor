@@ -119,78 +119,26 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Conversas</CardTitle>
-            <MessageCircle className="w-5 h-5 text-purple-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{totalConversations}</div>
-            <p className="text-xs text-muted-foreground mt-1">Compradores interessados</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Negociações</CardTitle>
-            <Handshake className="w-5 h-5 text-blue-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{negotiations.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">{pendingNegotiations} pendentes</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Em Envio</CardTitle>
-            <Truck className="w-5 h-5 text-orange-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{acceptedNegotiations + shippedNegotiations}</div>
-            <p className="text-xs text-muted-foreground mt-1">Aceitas ou enviadas</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Entregues</CardTitle>
-            <CheckCircle className="w-5 h-5 text-green-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{deliveredNegotiations}</div>
-            <p className="text-xs text-muted-foreground mt-1">Negociações concluídas</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-yellow-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Avaliações</CardTitle>
-            <Star className="w-5 h-5 text-yellow-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{totalReviews}</div>
-            <p className="text-xs text-muted-foreground mt-1">Feedback recebido</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-cyan-600 opacity-0 group-hover:opacity-5 transition-opacity" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Produtos</CardTitle>
-            <Eye className="w-5 h-5 text-cyan-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{products.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Ativos no catálogo</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+        {[
+          { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageCircle, color: "text-purple-600" },
+          { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, color: "text-blue-600" },
+          { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, color: "text-orange-600" },
+          { title: "Entregues", value: deliveredNegotiations, subtitle: "Negociações concluídas", icon: CheckCircle, color: "text-green-600" },
+          { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, color: "text-yellow-600" },
+          { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Eye, color: "text-cyan-600" },
+        ].map((card) => (
+          <Card key={card.title} className="relative overflow-hidden border-border min-w-0">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 p-3 sm:p-4 sm:pb-2">
+              <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground truncate mr-1">{card.title}</CardTitle>
+              <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 ${card.color}`} />
+            </CardHeader>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <div className="text-xl sm:text-2xl font-bold">{card.value}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">{card.subtitle}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Chart */}
