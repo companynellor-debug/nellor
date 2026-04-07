@@ -172,7 +172,7 @@ const ChatFornecedor = () => {
     return (
       <>
       {/* Mobile Chat View */}
-      <div className="md:hidden flex flex-col h-[calc(100vh-4rem)] bg-muted/30">
+      <div className="md:hidden flex flex-col h-[calc(100vh-8rem)] bg-muted/30">
         {/* Header */}
         <div className="bg-primary text-primary-foreground p-3 flex items-center gap-3 shadow-md">
           <button 
