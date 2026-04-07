@@ -108,7 +108,7 @@ const TesteNotificacoes = () => {
   const isAndroid = /Android/.test(navigator.userAgent);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       <div>
         <h1 className="text-2xl font-bold">🔔 Teste de Notificações Push</h1>
         <p className="text-muted-foreground">
