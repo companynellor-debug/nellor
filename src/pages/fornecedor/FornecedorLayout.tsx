@@ -60,25 +60,25 @@ const FornecedorLayoutContent = () => {
 
   return (
     <div className={`${darkMode ? 'dark' : ''} overflow-x-hidden`}>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background">
         <div className="hidden md:block"><SupplierSidebar /></div>
         
-        <div className="flex-1 md:ml-64">
-          <div className="flex flex-col min-h-screen">
-            <header className="h-14 border-b border-border bg-card flex items-center justify-between sm:px-4 md:px-6 sticky top-0 z-40 shadow-sm px-4">
-              <div className="flex items-center md:hidden">
-                <img src={logo} alt="Logo" className="h-8" />
+        <div className="min-w-0 max-w-full flex-1 md:ml-64">
+          <div className="flex min-h-screen min-w-0 max-w-full flex-col overflow-x-hidden">
+            <header className="sticky top-0 z-40 flex h-14 w-full max-w-full items-center gap-2 overflow-hidden border-b border-border bg-card px-3 shadow-sm sm:px-4 md:px-6">
+              <div className="flex min-w-0 flex-1 items-center md:hidden">
+                <img src={logo} alt="Nellor" className="h-7 w-auto max-w-[108px] object-contain object-left sm:h-8 sm:max-w-[140px]" />
               </div>
-              <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+              <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
                 <div className="hidden sm:flex items-center gap-2 mr-2">
-                  <Sun className="h-4 w-4 text-purple-400" />
-                  <Switch checked={darkMode} onCheckedChange={setDarkMode} className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-purple-300" />
-                  <Moon className="h-4 w-4 text-purple-400" />
+                  <Sun className="h-4 w-4 text-muted-foreground" />
+                  <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+                  <Moon className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="h-8 w-8 sm:hidden">
+                <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="h-8 w-8 shrink-0 sm:hidden">
                   {darkMode ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => navigate('/fornecedor/notificacoes')} className="h-8 w-8 sm:h-9 sm:w-9 relative">
+                <Button variant="ghost" size="icon" onClick={() => navigate('/fornecedor/notificacoes')} className="relative h-8 w-8 shrink-0 sm:h-9 sm:w-9">
                   <Bell className="h-4 w-4 text-foreground" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
@@ -86,7 +86,7 @@ const FornecedorLayoutContent = () => {
                     </span>
                   )}
                 </Button>
-                <Button variant="ghost" onClick={handleLogout} size="icon" className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3">
+                <Button variant="ghost" onClick={handleLogout} size="icon" className="h-8 w-8 shrink-0 sm:h-9 sm:w-auto sm:px-3">
                   <LogOut className="h-4 w-4 text-foreground" />
                   <span className="hidden sm:inline ml-2 text-foreground">Sair</span>
                 </Button>
@@ -96,8 +96,8 @@ const FornecedorLayoutContent = () => {
             <NotificationPermissionBanner />
             <SubscriptionBanner />
 
-            <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 md:pb-6 overflow-x-hidden">
-              <div className="w-full max-w-full overflow-x-hidden">
+            <main className="flex-1 min-w-0 overflow-x-hidden p-3 pb-20 sm:p-4 md:p-6 md:pb-6">
+              <div className="w-full min-w-0 max-w-full overflow-x-hidden">
                 <Outlet />
               </div>
             </main>
