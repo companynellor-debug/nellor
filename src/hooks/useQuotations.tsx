@@ -199,8 +199,14 @@ export function useCreateProposal() {
 
 export function useAcceptProposal() {
   const qc = useQueryClient();
+  const { user } = useSupabaseAuth();
   return useMutation({
-    mutationFn: async ({ proposalId, requestId }: { proposalId: string; requestId: string }) => {
+    mutationFn: async ({ proposalId, requestId, proposal, request }: { 
+      proposalId: string; 
+      requestId: string;
+      proposal: { supplier_id: string; unit_price: number; freight: number; notes?: string | null };
+      request: { title: string; quantity: number; unit: string };
+    }) => {
       // Accept this proposal
       const { error: e1 } = await supabase
         .from("quotation_proposals" as any)
@@ -220,11 +226,29 @@ export function useAcceptProposal() {
         .update({ status: "closed" } as any)
         .eq("id", requestId);
       if (e3) throw e3;
+      // Create a negotiation from the accepted proposal
+      const totalPrice = proposal.unit_price * request.quantity + (proposal.freight || 0);
+      const { data: neg, error: e4 } = await supabase
+        .from("negotiations")
+        .insert({
+          buyer_id: user!.id,
+          supplier_id: proposal.supplier_id,
+          product_name: `${request.title} (${request.quantity} ${request.unit})`,
+          quantity: request.quantity,
+          agreed_price: totalPrice,
+          notes: proposal.notes ? `Via cotação: ${proposal.notes}` : `Negociação originada de cotação`,
+          status: "pending",
+        })
+        .select("id")
+        .single();
+      if (e4) throw e4;
+      return neg;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quotation"] });
       qc.invalidateQueries({ queryKey: ["quotations"] });
-      toast({ title: "Proposta aceita!" });
+      qc.invalidateQueries({ queryKey: ["negotiations"] });
+      toast({ title: "Proposta aceita! Negociação criada." });
     },
   });
 }
