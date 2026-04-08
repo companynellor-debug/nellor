@@ -18,6 +18,7 @@ import {
   Package,
   FileText
 } from "lucide-react";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { ServiceProviderCodePanel } from "@/components/fornecedor/ServiceProviderCodePanel";
 import { ServiceProviderRequestsPanel } from "@/components/fornecedor/ServiceProviderRequestsPanel";
 import { ContractApprovalPanel } from "@/components/fornecedor/ContractApprovalPanel";
@@ -187,9 +188,7 @@ const Permissoes = () => {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
+                <DarkGlassIcon icon={Users} size="lg" />
                 <div>
                   <h2 className="text-xl font-bold">Programa de Afiliados</h2>
                   <p className="text-sm text-muted-foreground">
@@ -291,9 +290,7 @@ const Permissoes = () => {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Briefcase className="h-6 w-6 text-primary" />
-                </div>
+                <DarkGlassIcon icon={Briefcase} size="lg" />
                 <div>
                   <h2 className="text-xl font-bold">Permissões de Prestadores</h2>
                   <p className="text-sm text-muted-foreground">
