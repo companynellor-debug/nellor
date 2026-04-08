@@ -303,6 +303,9 @@ const ClienteHome = () => {
         <section className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">🏆 Fornecedores em Destaque</h2>
+              <button onClick={() => navigate("/cliente/comparar-fornecedores")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
+                Comparar <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
               {sortedStores.map((store) =>
