@@ -37,7 +37,7 @@ const Cotacoes = () => {
         offer_validity_days: Number(form.offer_validity_days) || 7,
         notes: form.notes || undefined,
       },
-      { onSuccess: () => { setSelectedRequest(null); setForm({ unit_price: "", freight: "0", offer_validity_days: "7", notes: "" }); } }
+      { onSuccess: () => { setSelectedRequest(null); setForm({ unit_price: "", freight: "0,00", offer_validity_days: "7", notes: "" }); } }
     );
   };
 
