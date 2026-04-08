@@ -117,9 +117,36 @@ const MinhasNegociacoes = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-primary">Minhas Negociações</h1>
-          <p className="text-sm text-muted-foreground">{myNegotiations.length} negociações</p>
+        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
+          <button onClick={() => navigate("/cliente/perfil")} className="hover:bg-accent p-2 rounded-xl transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <DarkGlassIcon icon={Package} size="md" />
+          <div>
+            <h1 className="text-lg font-bold">Minhas Negociações</h1>
+            <p className="text-xs text-muted-foreground">{myNegotiations.length} negociações</p>
+          </div>
+        </div>
+        {/* Filter pills */}
+        <div className="container mx-auto px-4 pb-3 flex gap-2 overflow-x-auto no-scrollbar">
+          {filters.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setSearchParams(f.key === "todas" ? {} : { filtro: f.key })}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                activeFilter === f.key
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {f.label}
+              {f.count > 0 && (
+                <span className={`text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center ${
+                  activeFilter === f.key ? "bg-white/20" : "bg-primary/10 text-primary"
+                }`}>{f.count}</span>
+              )}
+            </button>
+          ))}
         </div>
       </header>
 
