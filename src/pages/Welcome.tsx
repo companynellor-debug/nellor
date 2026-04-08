@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import logo from '@/assets/nellor-logo.png';
-import heroImage from '@/assets/nellor-3d-icon.png';
+import heroImage from '@/assets/hero-v2.png';
 import { Loader2 } from 'lucide-react';
 
 const Welcome = () => {
@@ -57,7 +57,7 @@ const Welcome = () => {
           <img
             src={heroImage}
             alt="Nellor"
-            className="w-[85vw] max-w-[380px] object-contain"
+            className="w-[85vw] max-w-[380px] object-contain px-0 text-right mx-0"
             style={{
               filter: 'drop-shadow(0 20px 50px rgba(124,58,237,0.45))',
             }}
