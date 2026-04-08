@@ -18,6 +18,8 @@ import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 
 const MinhasNegociacoes = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeFilter = searchParams.get("filtro") || "todas";
   const { user } = useSupabaseAuth();
   const { negotiations, updateNegotiationStatus } = useNegotiations();
   const { createDispute } = useDisputes();
@@ -30,7 +32,21 @@ const MinhasNegociacoes = () => {
   const [reviewComment, setReviewComment] = useState("");
   const [disputeDescription, setDisputeDescription] = useState("");
 
-  const myNegotiations = negotiations.filter(n => n.buyer_id === user?.id);
+  const allMyNegotiations = negotiations.filter(n => n.buyer_id === user?.id);
+
+  const myNegotiations = allMyNegotiations.filter(n => {
+    if (activeFilter === "pendentes") return n.status === "pending" || n.status === "accepted";
+    if (activeFilter === "envio") return n.status === "shipped";
+    if (activeFilter === "concluidas") return n.status === "delivered";
+    return true;
+  });
+
+  const filters = [
+    { key: "todas", label: "Todas", icon: Package, color: "purple" as const, count: allMyNegotiations.length },
+    { key: "pendentes", label: "Pendentes", icon: Clock, color: "amber" as const, count: allMyNegotiations.filter(n => n.status === "pending" || n.status === "accepted").length },
+    { key: "envio", label: "Em Envio", icon: Package, color: "blue" as const, count: allMyNegotiations.filter(n => n.status === "shipped").length },
+    { key: "concluidas", label: "Concluídas", icon: CheckCircle, color: "emerald" as const, count: allMyNegotiations.filter(n => n.status === "delivered").length },
+  ];
 
   const handleConfirmDelivery = async (neg: any) => {
     setSelectedNegotiation(neg);
