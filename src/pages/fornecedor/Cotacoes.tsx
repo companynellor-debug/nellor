@@ -23,7 +23,7 @@ const Cotacoes = () => {
   const createProposal = useCreateProposal();
 
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
-  const [form, setForm] = useState({ unit_price: "", freight: "0", offer_validity_days: "7", notes: "" });
+  const [form, setForm] = useState({ unit_price: "", freight: "0,00", offer_validity_days: "7", notes: "" });
 
   const alreadyProposed = new Set((myProposals || []).map((p: any) => p.request_id));
 
