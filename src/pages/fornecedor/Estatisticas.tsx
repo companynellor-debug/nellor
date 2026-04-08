@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Handshake, TrendingUp, DollarSign, Loader2 } from "lucide-react";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,9 +87,7 @@ const Estatisticas = () => {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Card className="p-5 rounded-2xl border-0 shadow-md">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Handshake className="h-5 w-5 text-primary" />
-            </div>
+            <DarkGlassIcon icon={Handshake} size="sm" />
             <span className="text-sm text-muted-foreground font-medium">Total de Negociações</span>
           </div>
           <p className="text-2xl md:text-3xl font-bold">{totalNegotiations}</p>
@@ -97,9 +96,7 @@ const Estatisticas = () => {
 
         <Card className="p-5 rounded-2xl border-0 shadow-md">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-primary" />
-            </div>
+            <DarkGlassIcon icon={TrendingUp} size="sm" />
             <span className="text-sm text-muted-foreground font-medium">Ticket Médio</span>
           </div>
           <p className="text-2xl md:text-3xl font-bold break-words">{fmt(averageTicket)}</p>

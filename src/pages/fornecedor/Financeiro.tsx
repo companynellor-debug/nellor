@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Handshake, TrendingUp, Clock, CheckCircle, Package, Info, DollarSign } from "lucide-react";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { format } from "date-fns";
@@ -137,9 +138,7 @@ const Financeiro = () => {
             <div key={neg.id} className="p-4 sm:p-5 hover:bg-muted/30 transition-colors">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Handshake className="h-5 w-5 text-primary" />
-                  </div>
+                  <DarkGlassIcon icon={Handshake} size="sm" />
                   <div className="min-w-0">
                     <p className="font-semibold text-sm truncate">{neg.product_name}</p>
                     <p className="text-xs text-muted-foreground">
