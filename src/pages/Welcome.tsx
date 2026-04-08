@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import logo from '@/assets/nellor-logo.png';
+import heroImage from '@/assets/hero-welcome.png';
 
 import { Loader2 } from 'lucide-react';
 
@@ -55,7 +56,7 @@ const Welcome = () => {
         {/* Center - Hero image, flush to edges */}
         <div className="flex-1 flex items-center justify-center w-full overflow-hidden my-4">
           <img
-            src="39fc4b30-0bf9-46e2-bb17-8ac018be9fd9.png"
+            src={heroImage}
             alt="Nellor"
             className="w-[85vw] max-w-[380px] object-contain px-0 text-right mx-0"
             style={{
