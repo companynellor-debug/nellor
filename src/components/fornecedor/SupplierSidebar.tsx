@@ -1,4 +1,4 @@
-import { Home, Handshake, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Megaphone, BookOpen } from "lucide-react";
+import { Home, Handshake, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Megaphone, BookOpen, FileText } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
@@ -7,6 +7,7 @@ import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 
 const menuItems = [
   { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
+  { title: "Cotações", url: "/fornecedor/cotacoes", icon: FileText },
   { title: "Negociações", url: "/fornecedor/negociacoes", icon: Handshake },
   { title: "Chat", url: "/fornecedor/chat", icon: MessageSquare },
   { title: "Produtos", url: "/fornecedor/produtos", icon: Tag },

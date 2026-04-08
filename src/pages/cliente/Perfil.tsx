@@ -2,7 +2,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Lightbulb, Compass, MessageCircleHeart, PackageCheck, Trophy, Handshake, GitCompareArrows } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Lightbulb, Compass, MessageCircleHeart, PackageCheck, Trophy, Handshake, GitCompareArrows, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useNegotiations } from "@/hooks/useNegotiations";
@@ -147,6 +147,7 @@ const Perfil = () => {
             {/* Menu principal */}
             <div className="space-y-1">
               {[
+                { icon: FileText, label: "Minhas Cotações", route: "/cliente/cotacoes" },
                 { icon: Handshake, label: "Minhas Negociações", route: "/cliente/negociacoes" },
                 { icon: GitCompareArrows, label: "Comparar Fornecedores", route: "/cliente/comparar-fornecedores" },
                 { icon: MapPin, label: "Meus Endereços", route: "/cliente/enderecos" },

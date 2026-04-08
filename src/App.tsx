@@ -54,6 +54,7 @@ const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos")
 const SolicitarFornecedor = lazy(() => import("./pages/cliente/SolicitarFornecedor"));
 const MinhasNegociacoes = lazy(() => import("./pages/cliente/MinhasNegociacoes"));
 const CompararFornecedores = lazy(() => import("./pages/cliente/CompararFornecedores"));
+const ClienteCotacoes = lazy(() => import("./pages/cliente/Cotacoes"));
 
 // Drop Mode pages removidos - Nellor Drop desativado temporariamente
 
@@ -74,6 +75,7 @@ const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoe
 const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
 // NellorDrop removido - desativado temporariamente
 const Patrocinio = lazy(() => import("./pages/fornecedor/Patrocinio"));
+const FornecedorCotacoes = lazy(() => import("./pages/fornecedor/Cotacoes"));
 const AssinaturaFornecedor = lazy(() => import("./pages/fornecedor/Assinatura"));
 
 // Lazy load admin pages
@@ -189,6 +191,7 @@ const App = () => {
                 <Route path="solicitar-fornecedor" element={<Suspense fallback={<PageSkeleton />}><SolicitarFornecedor /></Suspense>} />
                 <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><MinhasNegociacoes /></Suspense>} />
                 <Route path="comparar-fornecedores" element={<Suspense fallback={<PageSkeleton />}><CompararFornecedores /></Suspense>} />
+                <Route path="cotacoes" element={<Suspense fallback={<PageSkeleton />}><ClienteCotacoes /></Suspense>} />
               </Route>
 
               {/* Fornecedor Panel Routes */}
@@ -217,6 +220,7 @@ const App = () => {
                 <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
                 <Route path="patrocinio" element={<Suspense fallback={<PageSkeleton />}><Patrocinio /></Suspense>} />
                 <Route path="assinatura" element={<Suspense fallback={<PageSkeleton />}><AssinaturaFornecedor /></Suspense>} />
+                <Route path="cotacoes" element={<Suspense fallback={<PageSkeleton />}><FornecedorCotacoes /></Suspense>} />
                 {/* nellor-drop removido temporariamente */}
               </Route>
 
