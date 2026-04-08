@@ -53,6 +53,7 @@ const AfiliadoCadastro = lazy(() => import("./pages/cliente/AfiliadoCadastro"));
 const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
 const SolicitarFornecedor = lazy(() => import("./pages/cliente/SolicitarFornecedor"));
 const MinhasNegociacoes = lazy(() => import("./pages/cliente/MinhasNegociacoes"));
+const CompararFornecedores = lazy(() => import("./pages/cliente/CompararFornecedores"));
 
 // Drop Mode pages removidos - Nellor Drop desativado temporariamente
 
