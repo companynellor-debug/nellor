@@ -15,65 +15,55 @@ export const BottomNav = () => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const activeIndex = navItems.findIndex((item) => location.pathname === item.path);
-  // Each item occupies 25% of width, center of item = (index * 25) + 12.5
-  const bubbleLeftPercent = activeIndex >= 0 ? activeIndex * 25 + 12.5 : 12.5;
 
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50">
       <div className="relative max-w-md mx-auto">
-        <div className="relative flex items-end h-[72px] rounded-2xl bg-white/60 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)] overflow-visible">
-          
-          {/* Sliding bubble - absolutely positioned, centered via translate */}
-          <div
-            className="absolute -top-5 w-[52px] h-[52px] rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-[0_4px_16px_hsl(var(--primary)/0.35)] z-0"
-            style={{
-              left: `${bubbleLeftPercent}%`,
-              transform: "translateX(-50%)",
-              transition: "left 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            }}
-          />
-
-          {/* Nav items */}
+        <div className="flex items-center justify-around h-16 px-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const active = activeIndex === index;
+
+            if (active) {
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="relative -mt-10 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-[0_4px_20px_hsl(var(--primary)/0.4)] transition-all duration-300 ease-out active:scale-95 animate-[bounce-in_0.35s_ease-out]"
+                >
+                  <Icon className="h-6 w-6 text-white transition-transform duration-300" strokeWidth={1.8} />
+                  {item.path === "/cliente/carrinho" && totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {totalItems > 9 ? "9+" : totalItems}
+                    </span>
+                  )}
+                </Link>
+              );
+            }
 
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className="relative z-10 flex-1 flex flex-col items-center justify-center pb-3"
-                style={{
-                  paddingTop: active ? "0px" : "12px",
-                  marginTop: active ? "-16px" : "0px",
-                  transition: "margin-top 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), padding-top 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                }}
+                className="flex flex-col items-center gap-1.5 transition-all duration-300"
               >
                 <Icon
-                  className={`h-[22px] w-[22px] ${active ? "text-white" : "text-muted-foreground/60"}`}
-                  strokeWidth={active ? 2 : 1.5}
-                  style={{
-                    transition: "color 0.3s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                    transform: active ? "scale(1.15)" : "scale(1)",
-                  }}
+                  className="h-[22px] w-[22px] text-muted-foreground/70 transition-colors duration-300"
+                  strokeWidth={1.6}
                 />
-                {/* Dot indicator for inactive */}
-                {!active && (
-                  <span
-                    className="mt-1.5 w-1 h-1 rounded-full bg-transparent"
-                  />
-                )}
-                {/* Badge for carrinho */}
-                {item.path === "/cliente/carrinho" && totalItems > 0 && !active && (
-                  <span className="absolute top-1 right-1/4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
-                    {totalItems > 9 ? "9+" : totalItems}
-                  </span>
-                )}
               </Link>
             );
           })}
         </div>
       </div>
+
+      <style>{`
+        @keyframes bounce-in {
+          0% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+          50% { transform: translateY(-6px) scale(1.05); }
+          100% { transform: translateY(-40px) scale(1); opacity: 1; }
+        }
+      `}</style>
     </nav>
   );
 };
