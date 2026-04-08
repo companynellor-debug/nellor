@@ -67,8 +67,7 @@ const EditarLoja = lazy(() => import("./pages/fornecedor/EditarLoja"));
 const Estatisticas = lazy(() => import("./pages/fornecedor/Estatisticas"));
 const Recebimentos = lazy(() => import("./pages/fornecedor/Recebimentos"));
 // PlanosFornecedor removido (Stripe/planos desativados)
-const CuponsFornecedor = lazy(() => import("./pages/fornecedor/Cupons"));
-const RelatorioCupons = lazy(() => import("./pages/fornecedor/RelatorioCupons"));
+const ComoUsarFornecedor = lazy(() => import("./pages/fornecedor/ComoUsar"));
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
 const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
 // NellorDrop removido - desativado temporariamente
@@ -208,8 +207,7 @@ const App = () => {
                 <Route path="editar-loja" element={<Suspense fallback={<PageSkeleton />}><EditarLoja /></Suspense>} />
                 <Route path="estatisticas" element={<Suspense fallback={<PageSkeleton />}><Estatisticas /></Suspense>} />
                 <Route path="recebimentos" element={<Suspense fallback={<PageSkeleton />}><Recebimentos /></Suspense>} />
-                <Route path="cupons" element={<Suspense fallback={<PageSkeleton />}><CuponsFornecedor /></Suspense>} />
-                <Route path="cupons/relatorio" element={<Suspense fallback={<PageSkeleton />}><RelatorioCupons /></Suspense>} />
+                <Route path="como-usar" element={<Suspense fallback={<PageSkeleton />}><ComoUsarFornecedor /></Suspense>} />
                 <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
                 <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
                 <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />

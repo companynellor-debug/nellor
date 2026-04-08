@@ -2,7 +2,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Handshake } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Handshake, Lightbulb, Search, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useNegotiations } from "@/hooks/useNegotiations";
@@ -253,6 +253,33 @@ const Perfil = () => {
                 })}
               </Card>
             </div>
+
+            {/* Como funciona a Nellor */}
+            <Card className="p-5 border shadow-sm">
+              <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-primary" />
+                Como funciona a Nellor?
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: Search, title: "Encontre", desc: "Navegue pelo marketplace e encontre fornecedores" },
+                  { icon: Handshake, title: "Negocie", desc: "Inicie uma conversa e negocie preço e quantidade" },
+                  { icon: CheckCircle, title: "Feche", desc: "Combine pagamento e entrega com o fornecedor" },
+                  { icon: Star, title: "Avalie", desc: "Deixe sua avaliação para ajudar outros compradores" },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.title} className="flex flex-col items-center text-center p-3 rounded-xl bg-muted/30">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                        <Icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <p className="text-xs font-semibold">{item.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{item.desc}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
 
             {/* Suporte */}
             <Button

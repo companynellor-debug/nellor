@@ -1,22 +1,14 @@
-import { Home, Handshake, MessageSquare, Tag, MoreHorizontal, Megaphone } from "lucide-react";
+import { Home, Handshake, MessageSquare, Tag, MoreHorizontal, Megaphone, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { DollarSign, Bell, Store, BarChart3, Ticket } from "lucide-react";
-import { useSupplierCoupons } from "@/hooks/useSupplierCoupons";
+import { DollarSign, Bell, Store, BarChart3 } from "lucide-react";
 
 export const BottomNavFornecedor = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const { coupons } = useSupplierCoupons();
-  
-  const activeCouponsCount = coupons.filter(c => 
-    c.ativo && 
-    (!c.expira_em || new Date(c.expira_em) > new Date()) &&
-    (!c.uso_maximo || c.uso_atual < c.uso_maximo)
-  ).length;
 
   const mainNavItems = [
     { icon: Home, label: "Dashboard", path: "/fornecedor/dashboard" },
@@ -27,11 +19,11 @@ export const BottomNavFornecedor = () => {
 
   const moreNavItems = [
     { icon: Tag, label: "Produtos", path: "/fornecedor/produtos" },
-    { icon: Ticket, label: "Cupons", path: "/fornecedor/cupons", badge: activeCouponsCount },
     { icon: BarChart3, label: "Estatísticas", path: "/fornecedor/estatisticas" },
     { icon: Megaphone, label: "Patrocínio", path: "/fornecedor/patrocinio" },
     { icon: Bell, label: "Notificações", path: "/fornecedor/notificacoes" },
     { icon: Store, label: "Editar Loja", path: "/fornecedor/editar-loja" },
+    { icon: BookOpen, label: "Como Usar", path: "/fornecedor/como-usar" },
   ];
 
   return (
@@ -63,14 +55,7 @@ export const BottomNavFornecedor = () => {
                 const isActive = location.pathname === item.path;
                 return (
                   <Link key={item.path} to={item.path} onClick={() => setOpen(false)} className={`flex items-center gap-4 p-4 rounded-lg transition-all ${isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50"}`}>
-                    <div className="relative">
-                      <Icon className="h-6 w-6" />
-                      {item.badge && item.badge > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 min-w-5 flex items-center justify-center px-1">
-                          {item.badge > 99 ? '99+' : item.badge}
-                        </span>
-                      )}
-                    </div>
+                    <Icon className="h-6 w-6" />
                     <span className="text-base">{item.label}</span>
                   </Link>
                 );
