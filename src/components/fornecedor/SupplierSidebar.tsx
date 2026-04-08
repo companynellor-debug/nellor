@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
+import { Icon3D, type Icon3DName } from "@/components/ui/icon-3d";
 
 const menuItems = [
   { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
