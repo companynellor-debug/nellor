@@ -18,6 +18,7 @@ export const BottomNavFornecedor = () => {
   ];
 
   const moreNavItems = [
+    { icon: FileText, label: "Cotações", path: "/fornecedor/cotacoes" },
     { icon: Tag, label: "Produtos", path: "/fornecedor/produtos" },
     { icon: BarChart3, label: "Estatísticas", path: "/fornecedor/estatisticas" },
     { icon: Megaphone, label: "Patrocínio", path: "/fornecedor/patrocinio" },
