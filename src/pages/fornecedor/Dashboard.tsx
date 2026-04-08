@@ -198,9 +198,7 @@ const Dashboard = () => {
             ) : negotiations.slice(0, 5).map(neg => (
               <div key={neg.id} className="p-4 sm:p-5 hover:bg-muted/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Handshake className="h-5 w-5 text-primary" />
-                  </div>
+                   <DarkGlassIcon icon={Handshake} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{neg.product_name}</p>
                     <p className="text-xs text-muted-foreground">
