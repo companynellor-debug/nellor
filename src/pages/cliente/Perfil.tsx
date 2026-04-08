@@ -2,7 +2,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Lightbulb, Compass, MessageCircleHeart, PackageCheck, Trophy } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Lightbulb, Compass, MessageCircleHeart, PackageCheck, Trophy, Handshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useNegotiations } from "@/hooks/useNegotiations";
@@ -262,10 +262,10 @@ const Perfil = () => {
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: Search, title: "Encontre", desc: "Navegue pelo marketplace e encontre fornecedores" },
-                  { icon: Handshake, title: "Negocie", desc: "Inicie uma conversa e negocie preço e quantidade" },
-                  { icon: CheckCircle, title: "Feche", desc: "Combine pagamento e entrega com o fornecedor" },
-                  { icon: Star, title: "Avalie", desc: "Deixe sua avaliação para ajudar outros compradores" },
+                  { icon: Compass, title: "Encontre", desc: "Navegue pelo marketplace e encontre fornecedores" },
+                  { icon: MessageCircleHeart, title: "Negocie", desc: "Inicie uma conversa e negocie preço e quantidade" },
+                  { icon: PackageCheck, title: "Feche", desc: "Combine pagamento e entrega com o fornecedor" },
+                  { icon: Trophy, title: "Avalie", desc: "Deixe sua avaliação para ajudar outros compradores" },
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
