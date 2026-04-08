@@ -182,7 +182,7 @@ const Cotacoes = () => {
 
       <main className="container mx-auto px-4 py-4">
         {viewingId && viewingQuotation ? (
-          <ProposalsView requestId={viewingId} requestTitle={viewingQuotation.title} onBack={() => setViewingId(null)} isOpen={viewingQuotation.status === "open"} />
+          <ProposalsView requestId={viewingId} requestTitle={viewingQuotation.title} requestQuantity={viewingQuotation.quantity} requestUnit={viewingQuotation.unit} onBack={() => setViewingId(null)} isOpen={viewingQuotation.status === "open"} />
         ) : isLoading ? (
           <p className="text-center text-muted-foreground py-12">Carregando...</p>
         ) : !quotations?.length ? (
