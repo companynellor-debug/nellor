@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Bell, Handshake } from "lucide-react";
+import { Loader2, Bell, Handshake, MessageSquare, Truck, CheckCircle, Star, Package } from "lucide-react";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -11,14 +12,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { showPushNotification, getNotificationPermission, requestNotificationPermission } from "@/utils/pushNotifications";
 import { useToast } from "@/hooks/use-toast";
 
-const StatCard = ({ title, value, subtitle, emoji, borderColor }: {
+const StatCard = ({ title, value, subtitle, icon, borderColor }: {
   title: string; value: number | string; subtitle: string;
-  emoji: string; borderColor: string;
+  icon: React.ElementType; borderColor: string;
 }) => (
   <Card className={`rounded-2xl shadow-sm overflow-hidden border-2 ${borderColor}`}>
     <CardContent className="p-5">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-2xl">{emoji}</span>
+        <DarkGlassIcon icon={icon} size="md" />
         <span className="text-3xl font-bold">{value}</span>
       </div>
       <p className="text-sm font-semibold text-foreground">{title}</p>
@@ -119,12 +120,12 @@ const Dashboard = () => {
   })();
 
   const stats = [
-    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", emoji: "💬", borderColor: "border-purple-500" },
-    { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, emoji: "🤝", borderColor: "border-blue-500" },
-    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", emoji: "🚚", borderColor: "border-orange-500" },
-    { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", emoji: "✅", borderColor: "border-green-500" },
-    { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", emoji: "⭐", borderColor: "border-yellow-500" },
-    { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", emoji: "📦", borderColor: "border-cyan-500" },
+    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageSquare, borderColor: "border-purple-500" },
+    { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, borderColor: "border-blue-500" },
+    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, borderColor: "border-orange-500" },
+    { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, borderColor: "border-green-500" },
+    { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, borderColor: "border-yellow-500" },
+    { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Package, borderColor: "border-cyan-500" },
   ];
 
   return (
@@ -197,9 +198,7 @@ const Dashboard = () => {
             ) : negotiations.slice(0, 5).map(neg => (
               <div key={neg.id} className="p-4 sm:p-5 hover:bg-muted/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Handshake className="h-5 w-5 text-primary" />
-                  </div>
+                   <DarkGlassIcon icon={Handshake} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{neg.product_name}</p>
                     <p className="text-xs text-muted-foreground">

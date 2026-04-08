@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Copy, Clock, CreditCard, MessageCircle, ShieldCheck, Store, Package, Headphones } from "lucide-react";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { toast } from "sonner";
 import { useSupplierSubscription } from "@/hooks/useSupplierSubscription";
 
@@ -83,9 +84,7 @@ const Assinatura = () => {
           <ul className="space-y-3">
             {benefits.map((b, i) => (
               <li key={i} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <b.icon className="w-4 h-4 text-primary" />
-                </div>
+                <DarkGlassIcon icon={b.icon} size="xs" />
                 <span className="text-sm text-foreground">{b.text}</span>
               </li>
             ))}
