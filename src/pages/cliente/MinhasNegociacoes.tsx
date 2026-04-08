@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Star, Package, AlertTriangle, CheckCircle, Clock, MessageCircle, FileText } from "lucide-react";
+import { Star, Package, AlertTriangle, CheckCircle, Clock, MessageCircle, FileText, ArrowLeft } from "lucide-react";
 import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { useNegotiations } from "@/hooks/useNegotiations";
 import { useDisputes } from "@/hooks/useDisputes";
@@ -13,10 +13,13 @@ import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 
 const MinhasNegociacoes = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeFilter = searchParams.get("filtro") || "todas";
   const { user } = useSupabaseAuth();
   const { negotiations, updateNegotiationStatus } = useNegotiations();
   const { createDispute } = useDisputes();
@@ -29,7 +32,21 @@ const MinhasNegociacoes = () => {
   const [reviewComment, setReviewComment] = useState("");
   const [disputeDescription, setDisputeDescription] = useState("");
 
-  const myNegotiations = negotiations.filter(n => n.buyer_id === user?.id);
+  const allMyNegotiations = negotiations.filter(n => n.buyer_id === user?.id);
+
+  const myNegotiations = allMyNegotiations.filter(n => {
+    if (activeFilter === "pendentes") return n.status === "pending" || n.status === "accepted";
+    if (activeFilter === "envio") return n.status === "shipped";
+    if (activeFilter === "concluidas") return n.status === "delivered";
+    return true;
+  });
+
+  const filters = [
+    { key: "todas", label: "Todas", icon: Package, color: "purple" as const, count: allMyNegotiations.length },
+    { key: "pendentes", label: "Pendentes", icon: Clock, color: "amber" as const, count: allMyNegotiations.filter(n => n.status === "pending" || n.status === "accepted").length },
+    { key: "envio", label: "Em Envio", icon: Package, color: "blue" as const, count: allMyNegotiations.filter(n => n.status === "shipped").length },
+    { key: "concluidas", label: "Concluídas", icon: CheckCircle, color: "emerald" as const, count: allMyNegotiations.filter(n => n.status === "delivered").length },
+  ];
 
   const handleConfirmDelivery = async (neg: any) => {
     setSelectedNegotiation(neg);
@@ -100,9 +117,36 @@ const MinhasNegociacoes = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-primary">Minhas Negociações</h1>
-          <p className="text-sm text-muted-foreground">{myNegotiations.length} negociações</p>
+        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
+          <button onClick={() => navigate("/cliente/perfil")} className="hover:bg-accent p-2 rounded-xl transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <DarkGlassIcon icon={Package} size="md" />
+          <div>
+            <h1 className="text-lg font-bold">Minhas Negociações</h1>
+            <p className="text-xs text-muted-foreground">{myNegotiations.length} negociações</p>
+          </div>
+        </div>
+        {/* Filter pills */}
+        <div className="container mx-auto px-4 pb-3 flex gap-2 overflow-x-auto no-scrollbar">
+          {filters.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setSearchParams(f.key === "todas" ? {} : { filtro: f.key })}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                activeFilter === f.key
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {f.label}
+              {f.count > 0 && (
+                <span className={`text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center ${
+                  activeFilter === f.key ? "bg-white/20" : "bg-primary/10 text-primary"
+                }`}>{f.count}</span>
+              )}
+            </button>
+          ))}
         </div>
       </header>
 
