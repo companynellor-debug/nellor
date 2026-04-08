@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Heart, Bell, Bookmark, ChevronRight, X, Download, Smartphone, CheckCircle2, Package, Sparkles } from "lucide-react";
+import { Search, Heart, Bell, Bookmark, ChevronRight, X, Download, Smartphone, CheckCircle2, Package, Sparkles, HelpCircle, FileText } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -168,6 +168,22 @@ const ClienteHome = () => {
             </div>
           </div>
         }
+
+        {/* Cotações CTA */}
+        <div className="mb-6">
+          <Card className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors" onClick={() => navigate("/cliente/cotacoes")}>
+            <div className="flex items-center gap-3 p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm text-foreground">Painel de Cotações</p>
+                <p className="text-xs text-muted-foreground">Publique o que precisa e receba propostas de fornecedores</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            </div>
+          </Card>
+        </div>
 
         {/* B2B Banner Strip */}
         <div className="mb-6 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270 60% 50%) 100%)' }}>
@@ -403,6 +419,15 @@ const ClienteHome = () => {
           </Card>
         </div>
       }
+
+      {/* Botão "Preciso de ajuda" */}
+      <button
+        onClick={() => navigate("/cliente/suporte")}
+        className="fixed bottom-24 right-4 z-50 lg:bottom-6 lg:right-6 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center"
+        title="Preciso de ajuda para encontrar um produto"
+      >
+        <HelpCircle className="h-6 w-6" />
+      </button>
 
       <BottomNav />
     </div>);
