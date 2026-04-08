@@ -100,11 +100,11 @@ const Perfil = () => {
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <button
-                  onClick={() => navigate("/cliente/negociacoes")}
+                  onClick={() => navigate("/cliente/negociacoes?filtro=pendentes")}
                   className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center relative">
-                    <Clock className="h-5 w-5 text-yellow-600" />
+                  <div className="relative">
+                    <DarkGlassIcon icon={Clock} size="md" color="amber" />
                     {pendentes > 0 && (
                       <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                         {pendentes}
@@ -114,11 +114,11 @@ const Perfil = () => {
                   <span className="text-xs text-muted-foreground">Pendentes</span>
                 </button>
                 <button
-                  onClick={() => navigate("/cliente/negociacoes")}
+                  onClick={() => navigate("/cliente/negociacoes?filtro=envio")}
                   className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center relative">
-                    <Package className="h-5 w-5 text-blue-600" />
+                  <div className="relative">
+                    <DarkGlassIcon icon={Package} size="md" color="blue" />
                     {emEnvio > 0 && (
                       <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                         {emEnvio}
@@ -128,11 +128,11 @@ const Perfil = () => {
                   <span className="text-xs text-muted-foreground">Em Envio</span>
                 </button>
                 <button
-                  onClick={() => navigate("/cliente/negociacoes")}
+                  onClick={() => navigate("/cliente/negociacoes?filtro=concluidas")}
                   className="flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center relative">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div className="relative">
+                    <DarkGlassIcon icon={CheckCircle} size="md" color="emerald" />
                     {concluidas > 0 && (
                       <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                         {concluidas}

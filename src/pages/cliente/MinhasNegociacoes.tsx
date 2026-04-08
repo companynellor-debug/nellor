@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Star, Package, AlertTriangle, CheckCircle, Clock, MessageCircle, FileText } from "lucide-react";
+import { Star, Package, AlertTriangle, CheckCircle, Clock, MessageCircle, FileText, ArrowLeft } from "lucide-react";
 import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { useNegotiations } from "@/hooks/useNegotiations";
 import { useDisputes } from "@/hooks/useDisputes";
@@ -13,7 +13,8 @@ import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 
 const MinhasNegociacoes = () => {
   const navigate = useNavigate();
