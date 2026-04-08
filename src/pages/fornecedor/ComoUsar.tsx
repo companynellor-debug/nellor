@@ -1,12 +1,37 @@
-import { Package, MessageSquare, Users, Star, Truck, ChevronDown, BookOpen, Lightbulb, Camera, FileText, Clock, ThumbsUp } from "lucide-react";
+import { Package, MessageSquare, Users, Star, Truck, BookOpen, Lightbulb, Camera, FileText, Clock, ThumbsUp } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
+
+const GlassIcon = ({ icon: Icon, gradient }: { icon: React.ElementType; gradient: string }) => (
+  <div className="relative w-12 h-12 flex-shrink-0">
+    {/* Back layer - colored shape */}
+    <div className={`absolute inset-0 rounded-xl ${gradient} opacity-80`} />
+    {/* Glass overlay */}
+    <div className="absolute inset-0 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg" />
+    {/* Shine effect */}
+    <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl bg-gradient-to-b from-white/30 to-transparent" />
+    {/* Icon */}
+    <div className="relative z-10 w-full h-full flex items-center justify-center">
+      <Icon className="h-5 w-5 text-white drop-shadow-md" strokeWidth={1.8} />
+    </div>
+  </div>
+);
+
+const GlassStepIcon = ({ icon: Icon }: { icon: React.ElementType }) => (
+  <div className="relative w-9 h-9 flex-shrink-0 mt-0.5">
+    <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10" />
+    <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-lg bg-gradient-to-b from-white/40 to-transparent" />
+    <div className="relative z-10 w-full h-full flex items-center justify-center">
+      <Icon className="h-4 w-4 text-primary/80" strokeWidth={1.8} />
+    </div>
+  </div>
+);
 
 const guides = [
   {
     id: "produtos",
     icon: Package,
-    color: "bg-primary/10 text-primary",
+    gradient: "bg-gradient-to-br from-violet-500 to-purple-700",
     title: "Como cadastrar produtos corretamente",
     steps: [
       { icon: Camera, text: "Use fotos de alta qualidade com fundo limpo. Adicione pelo menos 3 fotos mostrando diferentes ângulos." },
@@ -18,7 +43,7 @@ const guides = [
   {
     id: "negociacao",
     icon: MessageSquare,
-    color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30",
+    gradient: "bg-gradient-to-br from-blue-400 to-indigo-600",
     title: "Como negociar pelo chat",
     steps: [
       { icon: Clock, text: "Responda rápido! Fornecedores que respondem em até 1 hora têm 3x mais chances de fechar negócio." },
@@ -30,7 +55,7 @@ const guides = [
   {
     id: "clientes",
     icon: Users,
-    color: "bg-green-100 text-green-600 dark:bg-green-900/30",
+    gradient: "bg-gradient-to-br from-emerald-400 to-teal-600",
     title: "Técnicas para conseguir mais clientes",
     steps: [
       { icon: Camera, text: "Complete 100% do seu perfil: foto, banner, bio, cidade e estado. Perfis completos aparecem primeiro nas buscas." },
@@ -42,7 +67,7 @@ const guides = [
   {
     id: "avaliacoes",
     icon: Star,
-    color: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30",
+    gradient: "bg-gradient-to-br from-amber-400 to-orange-500",
     title: "Como funciona o sistema de avaliação",
     steps: [
       { icon: Star, text: "Clientes avaliam de 1 a 5 estrelas após a entrega. Sua nota média aparece no perfil da loja." },
@@ -54,7 +79,7 @@ const guides = [
   {
     id: "frete",
     icon: Truck,
-    color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30",
+    gradient: "bg-gradient-to-br from-rose-400 to-pink-600",
     title: "Como configurar frete",
     steps: [
       { icon: Truck, text: "Acesse 'Editar Loja' e configure suas regiões de entrega e valores de frete por região." },
@@ -92,36 +117,26 @@ const ComoUsar = () => {
       </Card>
 
       <Accordion type="multiple" className="space-y-3">
-        {guides.map((guide) => {
-          const Icon = guide.icon;
-          return (
-            <AccordionItem key={guide.id} value={guide.id} className="border rounded-xl overflow-hidden">
-              <AccordionTrigger className="px-4 py-4 hover:no-underline hover:bg-muted/30 [&[data-state=open]]:bg-muted/30">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${guide.color}`}>
-                    <Icon className="h-5 w-5" />
+        {guides.map((guide) => (
+          <AccordionItem key={guide.id} value={guide.id} className="border rounded-xl overflow-hidden">
+            <AccordionTrigger className="px-4 py-4 hover:no-underline hover:bg-muted/30 [&[data-state=open]]:bg-muted/30">
+              <div className="flex items-center gap-3">
+                <GlassIcon icon={guide.icon} gradient={guide.gradient} />
+                <span className="text-sm font-semibold text-left">{guide.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <div className="space-y-3 pt-2">
+                {guide.steps.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <GlassStepIcon icon={step.icon} />
+                    <p className="text-sm text-muted-foreground leading-relaxed">{step.text}</p>
                   </div>
-                  <span className="text-sm font-semibold text-left">{guide.title}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <div className="space-y-3 pt-2">
-                  {guide.steps.map((step, idx) => {
-                    const StepIcon = step.icon;
-                    return (
-                      <div key={idx} className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <StepIcon className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{step.text}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
       </Accordion>
     </div>
   );
