@@ -10,6 +10,25 @@ import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+const FloatingParticles = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {[...Array(18)].map((_, i) => (
+      <div
+        key={i}
+        className="absolute rounded-full bg-white/20"
+        style={{
+          width: `${4 + Math.random() * 8}px`,
+          height: `${4 + Math.random() * 8}px`,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          animation: `floatParticle ${6 + Math.random() * 8}s ease-in-out infinite`,
+          animationDelay: `${Math.random() * 5}s`,
+        }}
+      />
+    ))}
+  </div>
+);
+
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const modoParam = searchParams.get('modo');
@@ -37,8 +56,7 @@ const Auth = () => {
     loading,
   } = useSupabaseAuth();
   const navigate = useNavigate();
-  
-  // Service provider referral + post-auth redirect
+
   const serviceProviderId = searchParams.get('provider') ?? searchParams.get('sp');
   const nextParam = searchParams.get('next');
 
@@ -88,10 +106,7 @@ const Auth = () => {
         _service_provider_id: spId,
         _supplier_id: supplierId,
       });
-
-      if (error) {
-        console.error('Error accepting service provider invite:', error);
-      }
+      if (error) console.error('Error accepting service provider invite:', error);
     } catch (error) {
       console.error('Error in acceptServiceProviderInvite:', error);
     }
@@ -99,7 +114,7 @@ const Auth = () => {
 
   if (loading || (isAuthenticated && profile)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9]">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(263,70%,10%)] via-[hsl(263,84%,30%)] to-[hsl(263,84%,42%)]">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
@@ -108,7 +123,6 @@ const Auth = () => {
   const handleLogoClick = () => {
     setLogoClickCount(prev => {
       const newCount = prev + 1;
-      console.log('Logo clicks:', newCount); // Debug
       if (newCount === 5) {
         setShowAdminDialog(true);
         return 0;
@@ -123,13 +137,11 @@ const Auth = () => {
       toast.error('Digite a senha de administrador.');
       return;
     }
-
     if (adminPassword.trim() === 'admin123') {
       sessionStorage.setItem('nellor_admin_access', 'true');
       toast.success('Acesso admin liberado!');
       setShowAdminDialog(false);
       setAdminPassword('');
-      // Log admin access if user is authenticated
       if (user) {
         import('@/hooks/useActivityLog').then(({ logActivity }) => {
           logActivity(user.id, 'admin_access', 'Acesso ao painel admin via senha');
@@ -184,99 +196,128 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9] px-4 bg-secondary">
-      <div className="relative w-full max-w-sm h-[640px] rounded-[36px] overflow-hidden shadow-2xl bg-white">
-        {/* Top purple wave area */}
-        <div className="absolute inset-x-0 top-0 h-[42%] bg-gradient-to-br from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9]">
-          <svg className="absolute bottom-0 left-0 right-0 w-full" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ height: '120px' }}>
-            <path fill="#7C3AED" fillOpacity="0.8" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,197.3C960,213,1056,203,1152,176C1248,149,1344,107,1392,85.3L1440,64L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z" />
-          </svg>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(263,70%,10%)] via-[hsl(263,84%,30%)] to-[hsl(263,84%,42%)] px-4 relative overflow-hidden">
+      {/* Animated floating particles */}
+      <FloatingParticles />
 
-          {/* Confetti dots */}
-          <div className="absolute top-[18%] left-[10%] w-2.5 h-2.5 rounded-full bg-white/40" />
-          <div className="absolute top-[25%] right-[12%] w-2 h-2 rounded-full bg-yellow-300" />
-          <div className="absolute top-[35%] left-[20%] w-2 h-2 rounded-full bg-pink-400" />
-          <div className="absolute top-[12%] right-[28%] w-1.5 h-1.5 rounded-full bg-blue-300" />
-
-          {/* Logo + title */}
-          <div className="relative flex flex-col items-center justify-center pt-10">
-            <div onClick={handleLogoClick} className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 cursor-pointer hover:scale-105 transition-transform shadow-md bg-primary-foreground">
-              <img src={logo} alt="Nellor" className="w-12 h-12 object-contain" />
-            </div>
-            <h1 className="text-2xl font-bold text-white">
-              {isLogin ? 'Bem-vindo' : 'Criar conta'}
-            </h1>
+      {/* Glassmorphism card */}
+      <div className="relative w-full max-w-[420px] rounded-[2.5rem] overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)] animate-scale-in">
+        {/* Top purple area with logo */}
+        <div className="relative bg-gradient-to-br from-[hsl(263,84%,42%)] to-[hsl(271,81%,56%)] px-8 pt-10 pb-8 flex flex-col items-center">
+          <FloatingParticles />
+          <div
+            onClick={handleLogoClick}
+            className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center mb-4 cursor-pointer hover:scale-105 transition-transform shadow-lg"
+          >
+            <img src={logo} alt="Nellor" className="w-12 h-12 object-contain" />
           </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            {isLogin ? 'Bem-vindo' : 'Criar conta'}
+          </h1>
+          <p className="text-white/60 text-sm mt-1">
+            {isLogin ? 'Entre na sua conta Nellor' : 'Crie sua conta gratuitamente'}
+          </p>
         </div>
 
-        {/* Bottom white form area */}
-        <div className="absolute inset-x-0 bottom-0 top-[35%] bg-white pt-8 px-6">
+        {/* Glass form area */}
+        <div className="backdrop-blur-xl bg-white/80 px-8 py-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <>
                 <div className="relative">
-                  <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white">
+                  <span className="absolute -top-2.5 left-4 px-1.5 text-xs text-muted-foreground bg-white/90 rounded z-10">
                     Nome
                   </span>
-                  <Input type="text" value={nome} onChange={e => setNome(e.target.value)} required={!isLogin} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
+                  <Input
+                    type="text"
+                    value={nome}
+                    onChange={e => setNome(e.target.value)}
+                    required={!isLogin}
+                    className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
+                  />
                 </div>
-
                 <div className="relative">
-                  <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white">
+                  <span className="absolute -top-2.5 left-4 px-1.5 text-xs text-muted-foreground bg-white/90 rounded z-10">
                     Sobrenome
                   </span>
-                  <Input type="text" value={sobrenome} onChange={e => setSobrenome(e.target.value)} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
+                  <Input
+                    type="text"
+                    value={sobrenome}
+                    onChange={e => setSobrenome(e.target.value)}
+                    className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
+                  />
                 </div>
               </>
             )}
 
             <div className="relative">
-              <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white z-10">
+              <span className="absolute -top-2.5 left-4 px-1.5 text-xs text-muted-foreground bg-white/90 rounded z-10">
                 Email
               </span>
-              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
+              <Input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
+              />
             </div>
 
             <div className="relative">
-              <span className="absolute -top-2.5 left-4 px-1 text-xs text-gray-500 bg-white z-10">
+              <span className="absolute -top-2.5 left-4 px-1.5 text-xs text-muted-foreground bg-white/90 rounded z-10">
                 Senha
               </span>
-              <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="h-11 bg-white border border-gray-200 text-gray-800 rounded-full px-5 focus:border-purple-400 focus:ring-purple-400" />
+              <Input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
+              />
             </div>
 
             {isLogin && (
               <div className="text-right -mt-2">
-                <button type="button" onClick={() => { setShowForgotPassword(true); setResetEmail(email); setResetSent(false); }}
-                  className="text-xs text-[#7C3AED] hover:underline">
+                <button
+                  type="button"
+                  onClick={() => { setShowForgotPassword(true); setResetEmail(email); setResetSent(false); }}
+                  className="text-xs text-primary hover:underline"
+                >
                   Esqueci minha senha
                 </button>
               </div>
             )}
 
-            <Button type="submit" disabled={submitting} className="w-full h-11 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-semibold rounded-full mt-4 shadow-md">
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-12 bg-[hsl(263,70%,35%)] hover:bg-[hsl(263,70%,28%)] text-white font-semibold rounded-2xl mt-2 shadow-lg text-base tracking-wide"
+            >
               {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'ENTRAR' : 'CRIAR CONTA'}
             </Button>
           </form>
 
-          {/* Toggle login/signup */}
-          <div className="text-center mt-5">
-            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-gray-600 hover:text-purple-600 font-medium uppercase text-sm tracking-wide">
+          <div className="text-center mt-6">
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-primary hover:text-primary/80 font-semibold uppercase text-sm tracking-wide transition-colors"
+            >
               {isLogin ? 'CRIAR CONTA' : 'ENTRAR'}
             </button>
           </div>
 
-          {/* Back to welcome */}
-          <div className="text-center mt-3">
-            <button type="button" onClick={() => navigate('/')} className="text-gray-400 hover:text-gray-600 text-sm">
+          <div className="text-center mt-3 pb-2">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            >
               ← Voltar
             </button>
           </div>
         </div>
-
-        {/* Extra confetti on very bottom */}
-        <div className="absolute bottom-6 left-6 w-2 h-2 rounded-full bg-purple-300" />
-        <div className="absolute bottom-10 right-8 w-2 h-2 rounded-full bg-yellow-300" />
-        <div className="absolute bottom-4 right-1/2 w-1.5 h-1.5 rounded-full bg-pink-400" />
       </div>
 
       {/* Admin Dialog */}
@@ -284,48 +325,40 @@ const Auth = () => {
         <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle>Acesso Admin</DialogTitle>
-            <DialogDescription>
-              Digite a senha de administrador.
-            </DialogDescription>
+            <DialogDescription>Digite a senha de administrador.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <Input type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAdminAccess()} placeholder="Senha" className="rounded-full" />
-            <Button onClick={handleAdminAccess} className="w-full bg-[#6D28D9] hover:bg-[#5B21B6] rounded-full">
-              Acessar
-            </Button>
+            <Button onClick={handleAdminAccess} className="w-full bg-[hsl(263,84%,42%)] hover:bg-[hsl(263,70%,35%)] rounded-full">Acessar</Button>
           </div>
         </DialogContent>
       </Dialog>
+
       {/* Forgot Password Dialog */}
       <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
         <DialogContent className="bg-white sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-[#7C3AED]" />
+              <Mail className="h-5 w-5 text-primary" />
               Recuperar Senha
             </DialogTitle>
           </DialogHeader>
           {resetSent ? (
             <div className="text-center py-6 space-y-4">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              <h3 className="text-lg font-semibold text-gray-800">E-mail enviado!</h3>
-              <p className="text-sm text-gray-500">Verifique sua caixa de entrada para redefinir sua senha.</p>
-              <Button onClick={() => setShowForgotPassword(false)} className="w-full bg-[#5B21B6] hover:bg-[#4C1D95] rounded-full">
-                Voltar ao Login
-              </Button>
+              <h3 className="text-lg font-semibold text-foreground">E-mail enviado!</h3>
+              <p className="text-sm text-muted-foreground">Verifique sua caixa de entrada para redefinir sua senha.</p>
+              <Button onClick={() => setShowForgotPassword(false)} className="w-full bg-[hsl(263,70%,35%)] hover:bg-[hsl(263,70%,28%)] rounded-full">Voltar ao Login</Button>
             </div>
           ) : (
             <>
               <div className="space-y-4">
-                <p className="text-sm text-gray-500">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
-                <Input type="email" placeholder="seu@email.com" value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleForgotPassword()}
-                  className="rounded-full" />
+                <p className="text-sm text-muted-foreground">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
+                <Input type="email" placeholder="seu@email.com" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleForgotPassword()} className="rounded-full" />
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowForgotPassword(false)} className="rounded-full">Cancelar</Button>
-                <Button onClick={handleForgotPassword} disabled={resetLoading} className="bg-[#5B21B6] hover:bg-[#4C1D95] rounded-full">
+                <Button onClick={handleForgotPassword} disabled={resetLoading} className="bg-[hsl(263,70%,35%)] hover:bg-[hsl(263,70%,28%)] rounded-full">
                   {resetLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</> : 'Enviar link'}
                 </Button>
               </DialogFooter>
@@ -333,6 +366,16 @@ const Auth = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Particle animation keyframes */}
+      <style>{`
+        @keyframes floatParticle {
+          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
+          25% { transform: translateY(-20px) translateX(10px); opacity: 0.5; }
+          50% { transform: translateY(-10px) translateX(-10px); opacity: 0.3; }
+          75% { transform: translateY(-30px) translateX(5px); opacity: 0.6; }
+        }
+      `}</style>
     </div>
   );
 };
