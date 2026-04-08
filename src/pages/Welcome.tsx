@@ -33,8 +33,8 @@ const Welcome = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden">
-      {/* Background gradient */}
+    <div className="h-[100dvh] flex flex-col relative overflow-hidden">
+      {/* Background gradient - full bleed */}
       <div
         className="absolute inset-0"
         style={{
@@ -42,55 +42,46 @@ const Welcome = () => {
         }}
       />
 
-      {/* Subtle glow */}
-      <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] opacity-30"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.7) 0%, transparent 65%)',
-        }}
-      />
-
-      {/* Content */}
-      <div className="relative flex-1 flex flex-col items-center justify-between px-6 py-10 sm:py-14">
+      {/* Content - edge to edge, safe area aware */}
+      <div className="relative flex-1 flex flex-col items-center justify-between pt-10 pb-8"
+        style={{ paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)', paddingBottom: 'max(env(safe-area-inset-bottom), 2rem)' }}>
+        
         {/* Top - Logo */}
         <div className="flex items-center gap-2.5">
-          <img src={logo} alt="Nellor" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
-          <span className="text-white text-xl sm:text-2xl font-bold tracking-tight">Nellor</span>
+          <img src={logo} alt="Nellor" className="w-10 h-10 object-contain" />
+          <span className="text-white text-xl font-bold tracking-tight">Nellor</span>
         </div>
 
-        {/* Center - Hero image */}
-        <div className="flex-1 flex items-center justify-center w-full max-w-xs sm:max-w-sm">
+        {/* Center - Hero image, flush to edges */}
+        <div className="flex-1 flex items-center justify-center w-full overflow-hidden my-4">
           <img
             src={heroImage}
             alt="Nellor"
-            className="w-full max-w-[280px] sm:max-w-[340px] object-contain drop-shadow-2xl"
+            className="w-[85vw] max-w-[380px] object-contain"
             style={{
-              filter: 'drop-shadow(0 20px 40px rgba(124,58,237,0.4))',
+              filter: 'drop-shadow(0 20px 50px rgba(124,58,237,0.45))',
             }}
           />
         </div>
 
         {/* Bottom - Text + Buttons */}
-        <div className="w-full max-w-xs sm:max-w-sm space-y-6">
-          {/* Description */}
+        <div className="w-full px-6 space-y-5">
           <div className="text-center space-y-2">
-            <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight">
-              Marketplace{'\n'}atacadista digital
+            <h2 className="text-white text-[1.65rem] font-bold leading-tight">
+              Marketplace atacadista digital
             </h2>
-            <p className="text-white/70 text-sm sm:text-base leading-relaxed">
+            <p className="text-white/65 text-sm leading-relaxed">
               Conecte-se com fornecedores verificados, negocie preços e compre no atacado com segurança e praticidade.
             </p>
           </div>
 
-          {/* Buttons */}
           <div className="space-y-3">
             <Button
               onClick={() => navigate('/auth?modo=cadastro')}
-              className="w-full h-12 bg-white hover:bg-white/90 text-[#11001e] font-semibold text-base rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200"
+              className="w-full h-12 bg-white hover:bg-white/90 text-[#11001e] font-semibold text-base rounded-2xl shadow-lg transition-all duration-200"
             >
               Criar conta
             </Button>
-
             <Button
               onClick={() => navigate('/auth?modo=login')}
               variant="outline"
