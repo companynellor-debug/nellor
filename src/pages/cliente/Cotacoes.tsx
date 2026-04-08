@@ -76,8 +76,15 @@ const ProposalsView = ({ requestId, requestTitle, requestQuantity, requestUnit, 
                 </div>
                 {p.notes && <p className="text-xs text-muted-foreground mb-3">"{p.notes}"</p>}
                 {isOpen && p.status === "pending" && (
-                  <Button size="sm" className="w-full" onClick={() => acceptProposal.mutate({ proposalId: p.id, requestId })} disabled={acceptProposal.isPending}>
-                    <CheckCircle2 className="h-4 w-4 mr-1" /> Aceitar Proposta
+                  <Button size="sm" className="w-full" onClick={() => acceptProposal.mutate({ 
+                    proposalId: p.id, 
+                    requestId,
+                    proposal: { supplier_id: p.supplier_id, unit_price: p.unit_price, freight: p.freight, notes: p.notes },
+                    request: { title: requestTitle, quantity: requestQuantity, unit: requestUnit },
+                  }, {
+                    onSuccess: () => navigate("/cliente/negociacoes"),
+                  })} disabled={acceptProposal.isPending}>
+                    <CheckCircle2 className="h-4 w-4 mr-1" /> Aceitar e Negociar
                   </Button>
                 )}
               </Card>
