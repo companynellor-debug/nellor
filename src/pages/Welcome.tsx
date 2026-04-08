@@ -55,9 +55,9 @@ const Welcome = () => {
         {/* Center - Hero image, flush to edges */}
         <div className="flex-1 flex items-center justify-center w-full overflow-hidden my-4">
           <img
-            src={heroImage}
+            src="/bf0eac17-8afb-4225-a40b-edc88fc2c7d9.png"
             alt="Nellor"
-            className="w-[85vw] max-w-[380px] object-contain px-0 text-right mx-0"
+            className="w-[85vw] max-w-[380px] object-contain px-0 text-right mx-0 my-0"
             style={{
               filter: 'drop-shadow(0 20px 50px rgba(124,58,237,0.45))',
             }}
@@ -67,7 +67,7 @@ const Welcome = () => {
         {/* Bottom - Text + Buttons */}
         <div className="w-full px-6 space-y-5">
           <div className="text-center space-y-2">
-            <h2 className="text-white text-[1.65rem] font-bold leading-tight">
+            <h2 className="text-white text-[1.65rem] font-bold leading-tight my-0 py-0">
               Marketplace atacadista digital
             </h2>
             <p className="text-white/65 text-sm leading-relaxed">
