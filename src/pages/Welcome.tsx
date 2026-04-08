@@ -65,9 +65,9 @@ const Welcome = () => {
             />
             {/* Gradient fade at the bottom to blend reflection with background */}
             <div
-              className="absolute bottom-0 left-0 right-0 h-[40%] pointer-events-none"
+              className="absolute bottom-0 left-0 right-0 h-[20%] pointer-events-none"
               style={{
-                background: 'linear-gradient(to top, #2d0060 0%, rgba(45,0,96,0.85) 30%, rgba(45,0,96,0.4) 60%, transparent 100%)',
+                background: 'linear-gradient(to top, rgba(45,0,96,1) 0%, rgba(45,0,96,0.6) 40%, transparent 100%)',
               }}
             />
           </div>
