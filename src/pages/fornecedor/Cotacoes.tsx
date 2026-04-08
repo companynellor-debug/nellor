@@ -23,7 +23,7 @@ const Cotacoes = () => {
   const createProposal = useCreateProposal();
 
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
-  const [form, setForm] = useState({ unit_price: "", freight: "0", offer_validity_days: "7", notes: "" });
+  const [form, setForm] = useState({ unit_price: "", freight: "0,00", offer_validity_days: "7", notes: "" });
 
   const alreadyProposed = new Set((myProposals || []).map((p: any) => p.request_id));
 
@@ -32,12 +32,12 @@ const Cotacoes = () => {
     createProposal.mutate(
       {
         request_id: selectedRequest.id,
-        unit_price: Number(form.unit_price),
-        freight: Number(form.freight) || 0,
+        unit_price: parseFloat(form.unit_price.replace(',', '.')) || 0,
+        freight: parseFloat(form.freight.replace(',', '.')) || 0,
         offer_validity_days: Number(form.offer_validity_days) || 7,
         notes: form.notes || undefined,
       },
-      { onSuccess: () => { setSelectedRequest(null); setForm({ unit_price: "", freight: "0", offer_validity_days: "7", notes: "" }); } }
+      { onSuccess: () => { setSelectedRequest(null); setForm({ unit_price: "", freight: "0,00", offer_validity_days: "7", notes: "" }); } }
     );
   };
 
@@ -155,11 +155,11 @@ const Cotacoes = () => {
               </Card>
               <div>
                 <Label>Preço Unitário (R$) *</Label>
-                <Input type="number" step="0.01" min="0" placeholder="0,00" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
+                <Input type="text" inputMode="decimal" placeholder="0,00" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value.replace(/[^0-9.,]/g, '') })} onBlur={(e) => { const v = parseFloat(e.target.value.replace(',', '.')); if (!isNaN(v)) setForm(f => ({ ...f, unit_price: v.toFixed(2).replace('.', ',') })); }} />
               </div>
               <div>
                 <Label>Frete (R$)</Label>
-                <Input type="number" step="0.01" min="0" value={form.freight} onChange={(e) => setForm({ ...form, freight: e.target.value })} />
+                <Input type="text" inputMode="decimal" placeholder="0,00" value={form.freight} onChange={(e) => setForm({ ...form, freight: e.target.value.replace(/[^0-9.,]/g, '') })} onBlur={(e) => { const v = parseFloat(e.target.value.replace(',', '.')); if (!isNaN(v)) setForm(f => ({ ...f, freight: v.toFixed(2).replace('.', ',') })); }} />
               </div>
               <div>
                 <Label>Validade da Oferta (dias)</Label>
