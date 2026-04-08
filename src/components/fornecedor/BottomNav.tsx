@@ -55,14 +55,7 @@ export const BottomNavFornecedor = () => {
                 const isActive = location.pathname === item.path;
                 return (
                   <Link key={item.path} to={item.path} onClick={() => setOpen(false)} className={`flex items-center gap-4 p-4 rounded-lg transition-all ${isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50"}`}>
-                    <div className="relative">
-                      <Icon className="h-6 w-6" />
-                      {item.badge && item.badge > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 min-w-5 flex items-center justify-center px-1">
-                          {item.badge > 99 ? '99+' : item.badge}
-                        </span>
-                      )}
-                    </div>
+                    <Icon className="h-6 w-6" />
                     <span className="text-base">{item.label}</span>
                   </Link>
                 );
