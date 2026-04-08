@@ -2,7 +2,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Handshake } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Handshake, Lightbulb, Search, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useNegotiations } from "@/hooks/useNegotiations";
