@@ -270,13 +270,8 @@ const Perfil = () => {
                   const Icon = item.icon;
                   return (
                     <div key={item.title} className="flex flex-col items-center text-center p-3 rounded-xl bg-muted/30">
-                      <div className="relative w-10 h-10 mb-2">
-                        <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-purple-500/30 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),0_4px_12px_rgba(0,0,0,0.4)]" />
-                        <div className="absolute top-0 left-[10%] right-[10%] h-[45%] rounded-t-full bg-gradient-to-b from-white/15 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 h-1/2 rounded-b-full bg-gradient-to-tr from-purple-600/20 to-transparent" />
-                        <div className="relative z-10 w-full h-full flex items-center justify-center">
-                          <Icon className="h-4 w-4 text-purple-400 drop-shadow-[0_0_6px_rgba(168,85,247,0.5)]" strokeWidth={1.8} />
-                        </div>
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                        <Icon className="h-4 w-4 text-primary" />
                       </div>
                       <p className="text-xs font-semibold">{item.title}</p>
                       <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{item.desc}</p>

@@ -3,6 +3,11 @@ import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
+import { NavLink, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
+import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 
 const menuItems = [
   { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
