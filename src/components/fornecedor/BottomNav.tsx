@@ -1,10 +1,10 @@
-import { Home, Handshake, MessageSquare, Tag, MoreHorizontal, Megaphone, BookOpen } from "lucide-react";
+import { Home, Handshake, MessageSquare, MoreHorizontal, Megaphone, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { DollarSign, Bell, Store, BarChart3 } from "lucide-react";
+import { DollarSign, Bell, Store, BarChart3, Tag } from "lucide-react";
 
 export const BottomNavFornecedor = () => {
   const location = useLocation();
@@ -26,43 +26,79 @@ export const BottomNavFornecedor = () => {
     { icon: BookOpen, label: "Como Usar", path: "/fornecedor/como-usar" },
   ];
 
+  const isMoreActive = moreNavItems.some(item => location.pathname === item.path);
+  const activeMainIndex = mainNavItems.findIndex(item => location.pathname === item.path);
+  // If a "more" item is active or the sheet is open, highlight "Mais"
+  const maisHighlighted = open || isMoreActive;
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 border-t shadow-lg z-50 backdrop-blur-lg md:hidden">
-      <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-4">
-        {mainNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          return (
-            <Link key={item.path} to={item.path} className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-              <Icon className={`h-6 w-6 ${isActive ? "scale-110" : ""}`} />
-              <span className="text-xs font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
-        
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <button className={`flex flex-col items-center gap-1 transition-all duration-300 ${moreNavItems.some(item => location.pathname === item.path) ? "text-primary" : "text-muted-foreground"}`}>
-              <MoreHorizontal className="h-6 w-6" />
-              <span className="text-xs font-medium">Mais</span>
-            </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto">
-            <SheetHeader><SheetTitle>Mais Opções</SheetTitle></SheetHeader>
-            <div className="flex flex-col gap-2 mt-4">
-              {moreNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                return (
-                  <Link key={item.path} to={item.path} onClick={() => setOpen(false)} className={`flex items-center gap-4 p-4 rounded-lg transition-all ${isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50"}`}>
-                    <Icon className="h-6 w-6" />
-                    <span className="text-base">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </SheetContent>
-        </Sheet>
+    <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
+      <div className="relative max-w-md mx-auto">
+        <div className="flex items-center justify-around h-16 px-4 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+          {mainNavItems.map((item, index) => {
+            const Icon = item.icon;
+            const active = activeMainIndex === index && !open;
+
+            if (active) {
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="relative -mt-10 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-[0_4px_20px_hsl(var(--primary)/0.4)]"
+                >
+                  <Icon className="h-6 w-6 text-white" strokeWidth={1.8} />
+                </Link>
+              );
+            }
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="flex flex-col items-center gap-1.5"
+              >
+                <Icon
+                  className="h-[22px] w-[22px] text-muted-foreground/70"
+                  strokeWidth={1.6}
+                />
+              </Link>
+            );
+          })}
+
+          {/* Mais button */}
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              {maisHighlighted && !open ? (
+                <button className="relative -mt-10 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-[0_4px_20px_hsl(var(--primary)/0.4)]">
+                  <MoreHorizontal className="h-6 w-6 text-white" strokeWidth={1.8} />
+                </button>
+              ) : open ? (
+                <button className="relative -mt-10 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-[0_4px_20px_hsl(var(--primary)/0.4)]">
+                  <MoreHorizontal className="h-6 w-6 text-white" strokeWidth={1.8} />
+                </button>
+              ) : (
+                <button className="flex flex-col items-center gap-1.5">
+                  <MoreHorizontal className="h-[22px] w-[22px] text-muted-foreground/70" strokeWidth={1.6} />
+                </button>
+              )}
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-auto rounded-t-2xl">
+              <SheetHeader><SheetTitle>Mais Opções</SheetTitle></SheetHeader>
+              <div className="flex flex-col gap-2 mt-4">
+                {moreNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link key={item.path} to={item.path} onClick={() => setOpen(false)} className={`flex items-center gap-4 p-4 rounded-xl transition-all ${isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50"}`}>
+                      <Icon className="h-6 w-6" />
+                      <span className="text-base">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </nav>
   );
