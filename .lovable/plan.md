@@ -1,79 +1,36 @@
 
 
-# Plano: Redesign Visual da Nellor (Inspirado nas Referências)
+## Redesign da Tela de Login (Auth.tsx)
 
-## Resumo
+A tela de login atual usa um card branco com onda roxa no topo. A referência mostra um design mais elegante com efeito glassmorphism e partículas flutuantes no fundo.
 
-Atualização visual em 4 áreas principais, mantendo a identidade Nellor mas trazendo um visual mais moderno, arredondado e polido.
+### Mudancas Planejadas
 
----
+**1. Background com particulas animadas**
+- Manter o gradiente roxo como fundo
+- Adicionar pontos/particulas flutuantes animados (como na referência) usando CSS animations
 
-## 1. Home do Cliente — Visual mais arredondado e moderno
+**2. Card com efeito Glassmorphism**
+- Desktop: card centralizado com fundo semi-transparente branco/frosted (backdrop-blur), bordas arredondadas grandes
+- Mobile: layout mais cheio na tela, mas mantendo o mesmo estilo glass
+- Remover a onda SVG atual e substituir por um topo roxo com gradiente suave que faz transicao para a area glass branca
 
-**Arquivo**: `src/pages/cliente/Home.tsx`
+**3. Layout do card**
+- Topo: area roxa com logo (quadrado arredondado branco com logo dentro) + titulo "Bem-vindo" / "Criar conta"
+- Area do formulário: fundo branco semi-transparente com campos de input com bordas arredondadas e labels flutuantes
+- "Esqueci minha senha" alinhado a direita
+- Botao "ENTRAR" roxo escuro arredondado
+- "CRIAR CONTA" e "Voltar" abaixo
 
-### Banners
-- Aumentar border-radius para `rounded-2xl` ou `rounded-3xl`
-- Adicionar sombra suave nos banners (`shadow-lg`)
-- Adicionar indicadores de paginação (dots) abaixo do carousel
+**4. Responsividade**
+- Desktop (md+): card com max-width ~420px centralizado, sombra forte
+- Mobile: card ocupa quase toda a tela com padding lateral minimo, mesmo estilo visual
 
-### Categorias (estilo foto 1)
-- Transformar em pills/chips horizontais com ícone + texto lado a lado (estilo `All Products | Swimming | Goggles`)
-- Background colorido na categoria ativa (bg-primary text-white), outline nas demais
-- Scroll horizontal suave com `snap-x`
+### Detalhes Tecnicos
 
-### Cards de Produto
-- Aumentar arredondamento para `rounded-2xl`
-- Imagem com `rounded-xl` interno
-- Preço com badge colorido sobreposto na imagem (canto inferior esquerdo, estilo foto 1)
-- Sombra suave (`shadow-md`) e hover mais pronunciado
-- Rating e vendidos com layout mais limpo
-
----
-
-## 2. Página de Detalhes do Produto — Estilo limpo e redondo (foto 2)
-
-**Arquivo**: `src/pages/cliente/ProdutoDetalhes.tsx`
-
-- Imagem principal com `rounded-3xl` e sem bordas duras
-- Thumbnails laterais menores e mais arredondados (`rounded-xl`)
-- Seção de tamanhos com botões pill arredondados (`rounded-full`, border quando selecionado)
-- Seletor de quantidade com botões `-` e `+` estilo minimalista com bordas arredondadas
-- Preço em destaque maior e mais limpo
-- Botão "Negociar" full-width com `rounded-2xl` e fundo escuro (estilo "Add to Bag" da foto 2)
-- Badges (Novo, Nacional, Garantia) com estilo mais pill (`rounded-full`)
-
----
-
-## 3. Financeiro do Fornecedor — Estilo premium com destaque (foto 3)
-
-**Arquivo**: `src/pages/fornecedor/Financeiro.tsx`
-
-- Hero card no topo com gradiente primário (roxo) mostrando o **Total Negociado** em fonte grande e branca (estilo "Total spending $145,900")
-- Filtros abaixo do hero como pills/tabs arredondados (`Entregues | Em Trânsito | Pendentes`) com estilo Starter/Medium/Expert da foto 3
-- Cards de resumo abaixo com visual mais limpo, ícones maiores e arredondados
-- Lista de negociações recentes com layout tipo "transações" (data, nome, valor alinhado à direita)
-
----
-
-## 4. Dashboard do Fornecedor — Cards visuais premium (foto 4)
-
-**Arquivo**: `src/pages/fornecedor/Dashboard.tsx`
-
-- Cards de estatísticas com gradiente escuro ou colorido (estilo foto 4: "Total Products 345" com fundo azul/escuro)
-- Layout 2x2 no mobile com cards mais compactos mas visualmente ricos
-- Ícones maiores dentro dos cards com background circular
-- Barra de busca arredondada no topo (decorativa, link para produtos)
-- Seção "Stock Overview" / resumo rápido com indicadores coloridos inline
-- Cards de negociações recentes com visual mais limpo tipo lista
-
----
-
-## Detalhes técnicos
-
-- Apenas mudanças de CSS/Tailwind e reestruturação de JSX — sem mudanças de lógica ou banco
-- Manter todas as funcionalidades existentes intactas
-- Usar as cores do tema atual (primary = roxo, etc.)
-- Todos os componentes continuam responsivos (mobile-first)
-- 4 arquivos editados, nenhum arquivo novo
+- Arquivo editado: `src/pages/Auth.tsx`
+- Usar `backdrop-blur-xl` e `bg-white/80` para efeito glass na area do form
+- Particulas via divs absolutas com `@keyframes` animation para flutuacao
+- Manter toda a logica de autenticacao, admin dialog e forgot password intacta
+- Apenas reestruturar o JSX de apresentacao
 
