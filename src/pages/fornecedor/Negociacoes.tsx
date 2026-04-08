@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Handshake, Search, Truck, CheckCircle, Clock, XCircle, Loader2, Package } from "lucide-react";
+import { Handshake, Search, Truck, CheckCircle, Clock, XCircle, Loader2, Package, FileText } from "lucide-react";
+import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -224,10 +225,25 @@ const Negociacoes = () => {
                           </>
                         )}
                         {neg.status === 'accepted' && (
-                          <Button size="sm" onClick={() => handleShip(neg.id)} className="bg-orange-600 hover:bg-orange-700">
-                            <Truck className="h-4 w-4 mr-1" />
-                            Confirmar Envio
-                          </Button>
+                          <>
+                            <Button size="sm" onClick={() => handleShip(neg.id)} className="bg-orange-600 hover:bg-orange-700">
+                              <Truck className="h-4 w-4 mr-1" />
+                              Confirmar Envio
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1"
+                              onClick={() => generateNegotiationPDF({
+                                ...neg,
+                                buyerName: neg.buyerName,
+                                supplierName: user?.email || 'Fornecedor',
+                              })}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              PDF do Acordo
+                            </Button>
+                          </>
                         )}
                         {neg.status === 'shipped' && (
                           <div className="text-xs text-muted-foreground text-center bg-muted/50 rounded p-2">
