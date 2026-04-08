@@ -23,9 +23,10 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
   cancelled: { label: "Cancelada", color: "bg-red-100 text-red-700 border-red-200", icon: XCircle },
 };
 
-const ProposalsView = ({ requestId, requestTitle, onBack, isOpen }: { requestId: string; requestTitle: string; onBack: () => void; isOpen: boolean }) => {
+const ProposalsView = ({ requestId, requestTitle, requestQuantity, requestUnit, onBack, isOpen }: { requestId: string; requestTitle: string; requestQuantity: number; requestUnit: string; onBack: () => void; isOpen: boolean }) => {
   const { data: proposals, isLoading } = useQuotationProposals(requestId);
   const acceptProposal = useAcceptProposal();
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -75,8 +76,15 @@ const ProposalsView = ({ requestId, requestTitle, onBack, isOpen }: { requestId:
                 </div>
                 {p.notes && <p className="text-xs text-muted-foreground mb-3">"{p.notes}"</p>}
                 {isOpen && p.status === "pending" && (
-                  <Button size="sm" className="w-full" onClick={() => acceptProposal.mutate({ proposalId: p.id, requestId })} disabled={acceptProposal.isPending}>
-                    <CheckCircle2 className="h-4 w-4 mr-1" /> Aceitar Proposta
+                  <Button size="sm" className="w-full" onClick={() => acceptProposal.mutate({ 
+                    proposalId: p.id, 
+                    requestId,
+                    proposal: { supplier_id: p.supplier_id, unit_price: p.unit_price, freight: p.freight, notes: p.notes },
+                    request: { title: requestTitle, quantity: requestQuantity, unit: requestUnit },
+                  }, {
+                    onSuccess: () => navigate("/cliente/negociacoes"),
+                  })} disabled={acceptProposal.isPending}>
+                    <CheckCircle2 className="h-4 w-4 mr-1" /> Aceitar e Negociar
                   </Button>
                 )}
               </Card>
@@ -174,7 +182,7 @@ const Cotacoes = () => {
 
       <main className="container mx-auto px-4 py-4">
         {viewingId && viewingQuotation ? (
-          <ProposalsView requestId={viewingId} requestTitle={viewingQuotation.title} onBack={() => setViewingId(null)} isOpen={viewingQuotation.status === "open"} />
+          <ProposalsView requestId={viewingId} requestTitle={viewingQuotation.title} requestQuantity={viewingQuotation.quantity} requestUnit={viewingQuotation.unit} onBack={() => setViewingId(null)} isOpen={viewingQuotation.status === "open"} />
         ) : isLoading ? (
           <p className="text-center text-muted-foreground py-12">Carregando...</p>
         ) : !quotations?.length ? (
