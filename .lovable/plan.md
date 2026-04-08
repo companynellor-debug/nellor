@@ -1,89 +1,40 @@
 
 
-## Adaptacao Geral ao Modelo de Negociacao + Conteudo Informativo
+## Aplicar Estilo de Icones 3D Dark Glass na Plataforma
 
-Sao 6 frentes de trabalho:
+A referencia mostra icones com estetica "dark glass" - fundo escuro (charcoal/slate-900) com acentos em roxo/violeta, efeito de brilho e profundidade 3D. Nao da para recortar da imagem (sao raster e ficariam pixelados), mas da para recriar esse estilo com CSS nos icones Lucide existentes.
 
----
+### O que muda
 
-### 1. Remover aba de Cupons do painel fornecedor
+**Criar componente reutilizavel `DarkGlassIcon`** que aplica o estilo da referencia:
+- Fundo escuro (`bg-slate-900`) com borda sutil roxa
+- Gradiente de brilho no topo (efeito glass 3D)
+- Icone em roxo/violeta ao inves de branco
+- Sombra interna para profundidade
 
-- **SupplierSidebar.tsx**: Remover item "Cupons" do array `menuItems`
-- **BottomNav.tsx (fornecedor)**: Remover "Cupons" do `moreNavItems` e remover import/uso do `useSupplierCoupons`
-- **App.tsx**: Remover rotas `/fornecedor/cupons` e `/fornecedor/cupons/relatorio` e seus lazy imports
+### Onde aplicar
 
----
+**1. Fornecedor - Como Usar (`ComoUsar.tsx`)**
+- Trocar `GlassIcon` (fundo colorido com icone branco) por novo estilo dark glass
+- Trocar `GlassStepIcon` pelo mesmo estilo em tamanho menor
+- Icones dos accordions: fundo escuro com icone roxo brilhante
 
-### 2. Adaptar Onboarding do fornecedor (remover referencia a financeiro)
+**2. Cliente - Perfil (`Perfil.tsx`)**
+- Secao "Como funciona a Nellor?" - trocar os icones circulares `bg-primary/10` pelo estilo dark glass
+- Manter o grid 2x2 mas com icones mais impactantes
 
-- **Onboarding.tsx**: No step de boas-vindas (step 0), substituir os cards:
-  - Remover "Financeiro - Acompanhe suas vendas e receitas"
-  - Substituir por cards relevantes ao modelo de negociacao: "Negociacoes - Receba e gerencie propostas de clientes", "Avaliacao - Construa sua reputacao na plataforma"
-  - Manter: Produtos, Dashboard, Chat, Notificacoes
-- Ajustar texto do step final de "pronta para vender" para "pronta para receber negociacoes"
+### Estilo CSS do componente
 
----
+```text
+Camadas do icone (de tras pra frente):
+1. Fundo: bg-slate-900/90 rounded-full
+2. Borda: border border-purple-500/30
+3. Brilho topo: gradiente branco 15% -> transparente
+4. Reflexo lateral: gradiente roxo sutil na lateral
+5. Icone: cor purple-400, drop-shadow roxo
+```
 
-### 3. Adaptar Tutorial interativo (OnboardingTour) ao modelo de negociacao
-
-- **OnboardingTour.tsx**: Atualizar os TOUR_STEPS:
-  - Remover step de "Faixas de Preco" (id 6, referencia a DollarSign)
-  - Atualizar descricoes para mencionar negociacoes ao inves de vendas
-  - Step do Dashboard: "Acompanha suas negociacoes, conversas e desempenho"
-  - Step final: "Aguardar as primeiras negociacoes" ao inves de "pedidos"
-
----
-
-### 4. Tela de Login (Auth.tsx) - Adicionar informacoes da plataforma
-
-- Adicionar um banner/secao acima do formulario com:
-  - Frase de impacto: "O marketplace atacadista que conecta voce aos melhores fornecedores"
-  - 3-4 palavras-chave visuais em badges/chips: "Fornecedores Verificados", "Negociacao Direta", "Atacado com Seguranca", "Sem Intermediarios"
-- Manter o layout glassmorphism existente, apenas expandir a area do header roxo para incluir essas informacoes
-- Mobile: badges empilhados em 2 colunas; Desktop: linha unica
-
----
-
-### 5. Aba "Como Usar" para fornecedores
-
-- **Criar nova pagina**: `src/pages/fornecedor/ComoUsar.tsx`
-- Layout em cards/accordion com guia visual passo a passo cobrindo:
-  1. Como cadastrar produtos corretamente (fotos, descricoes, variacoes)
-  2. Como negociar pelo chat (responder rapido, fazer contra-propostas)
-  3. Tecnicas para conseguir mais clientes (perfil completo, fotos de qualidade, precos competitivos)
-  4. Como funciona o sistema de avaliacao (importancia, como receber boas avaliacoes)
-  5. Como configurar frete (regioes, valores, prazos)
-- Cada topico com icone, titulo, e descricao expandivel
-- **SupplierSidebar.tsx**: Adicionar item "Como Usar" com icone HelpCircle (substituir o link "Ver tutorial novamente" por este item no menu principal)
-- **BottomNav.tsx (fornecedor)**: Adicionar "Como Usar" no menu "Mais"
-- **App.tsx**: Adicionar rota `/fornecedor/como-usar`
-
----
-
-### 6. Secao informativa no Perfil do cliente
-
-- **Perfil.tsx**: Adicionar uma nova secao/card no final da pagina (antes do botao de logout) com:
-  - Titulo: "Como funciona a Nellor?"
-  - Cards informativos com icones explicando:
-    1. Encontre produtos - Navegue pelo marketplace e encontre fornecedores
-    2. Negocie direto - Inicie uma conversa e negocie preco e quantidade
-    3. Feche o negocio - Combine pagamento e entrega diretamente com o fornecedor
-    4. Avalie - Deixe sua avaliacao para ajudar outros compradores
-  - Botao "Ver tutorial" que redireciona para uma visao guiada ou abre um modal explicativo
-
----
-
-### Detalhes Tecnicos
-
-**Arquivos editados:**
-- `src/components/fornecedor/SupplierSidebar.tsx` - remover Cupons, adicionar Como Usar
-- `src/components/fornecedor/BottomNav.tsx` - remover Cupons, adicionar Como Usar
-- `src/App.tsx` - remover rotas de cupons, adicionar rota como-usar
-- `src/pages/fornecedor/Onboarding.tsx` - adaptar cards ao modelo negociacao
-- `src/components/fornecedor/OnboardingTour.tsx` - atualizar steps
-- `src/pages/Auth.tsx` - adicionar banner informativo
-- `src/pages/cliente/Perfil.tsx` - adicionar secao "Como funciona"
-
-**Arquivo criado:**
-- `src/pages/fornecedor/ComoUsar.tsx` - pagina de guia para fornecedores
+### Arquivos editados
+- `src/pages/fornecedor/ComoUsar.tsx` - substituir GlassIcon e GlassStepIcon pelo estilo dark glass
+- `src/pages/cliente/Perfil.tsx` - aplicar estilo dark glass nos icones da secao "Como funciona"
 
