@@ -1,22 +1,14 @@
-import { Home, Handshake, MessageSquare, Tag, MoreHorizontal, Megaphone } from "lucide-react";
+import { Home, Handshake, MessageSquare, Tag, MoreHorizontal, Megaphone, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { DollarSign, Bell, Store, BarChart3, Ticket } from "lucide-react";
-import { useSupplierCoupons } from "@/hooks/useSupplierCoupons";
+import { DollarSign, Bell, Store, BarChart3 } from "lucide-react";
 
 export const BottomNavFornecedor = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const { coupons } = useSupplierCoupons();
-  
-  const activeCouponsCount = coupons.filter(c => 
-    c.ativo && 
-    (!c.expira_em || new Date(c.expira_em) > new Date()) &&
-    (!c.uso_maximo || c.uso_atual < c.uso_maximo)
-  ).length;
 
   const mainNavItems = [
     { icon: Home, label: "Dashboard", path: "/fornecedor/dashboard" },
@@ -27,11 +19,11 @@ export const BottomNavFornecedor = () => {
 
   const moreNavItems = [
     { icon: Tag, label: "Produtos", path: "/fornecedor/produtos" },
-    { icon: Ticket, label: "Cupons", path: "/fornecedor/cupons", badge: activeCouponsCount },
     { icon: BarChart3, label: "Estatísticas", path: "/fornecedor/estatisticas" },
     { icon: Megaphone, label: "Patrocínio", path: "/fornecedor/patrocinio" },
     { icon: Bell, label: "Notificações", path: "/fornecedor/notificacoes" },
     { icon: Store, label: "Editar Loja", path: "/fornecedor/editar-loja" },
+    { icon: BookOpen, label: "Como Usar", path: "/fornecedor/como-usar" },
   ];
 
   return (

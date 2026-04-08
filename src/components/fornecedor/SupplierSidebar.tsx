@@ -1,4 +1,4 @@
-import { Home, Handshake, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Ticket, Megaphone, HelpCircle } from "lucide-react";
+import { Home, Handshake, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Megaphone, BookOpen } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
@@ -9,12 +9,12 @@ const menuItems = [
   { title: "Negociações", url: "/fornecedor/negociacoes", icon: Handshake },
   { title: "Chat", url: "/fornecedor/chat", icon: MessageSquare },
   { title: "Produtos", url: "/fornecedor/produtos", icon: Tag },
-  { title: "Cupons", url: "/fornecedor/cupons", icon: Ticket },
   { title: "Estatísticas", url: "/fornecedor/estatisticas", icon: BarChart3 },
   { title: "Financeiro", url: "/fornecedor/financeiro", icon: DollarSign },
   { title: "Patrocínio", url: "/fornecedor/patrocinio", icon: Megaphone },
   { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
+  { title: "Como Usar", url: "/fornecedor/como-usar", icon: BookOpen },
 ];
 
 export function SupplierSidebar() {
@@ -51,8 +51,7 @@ export function SupplierSidebar() {
 
       <div className="p-4 border-t border-purple-800/30">
         <button onClick={triggerRestart} className="flex items-center gap-2 text-xs text-purple-400 hover:text-purple-200 transition-colors w-full px-4 py-2">
-          <HelpCircle className="w-4 h-4" />
-          Ver tutorial novamente
+          🔄 Ver tutorial novamente
         </button>
       </div>
     </aside>

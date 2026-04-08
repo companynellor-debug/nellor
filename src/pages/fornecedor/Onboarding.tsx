@@ -67,10 +67,10 @@ const Onboarding = () => {
         <div className="space-y-4">
           {[
             { icon: Package, title: "Produtos", desc: "Adicione e gerencie seus produtos facilmente", color: "bg-purple-500" },
-            { icon: DollarSign, title: "Financeiro", desc: "Acompanhe suas vendas e receitas", color: "bg-green-500" },
             { icon: TrendingUp, title: "Dashboard", desc: "Visualize suas métricas em tempo real", color: "bg-blue-500" },
-            { icon: Bell, title: "Notificações", desc: "Receba alertas sobre novos pedidos", color: "bg-orange-500" },
-            { icon: MessageSquare, title: "Chat", desc: "Converse diretamente com seus clientes", color: "bg-pink-500" },
+            { icon: MessageSquare, title: "Chat & Negociações", desc: "Receba propostas e negocie diretamente", color: "bg-pink-500" },
+            { icon: Bell, title: "Notificações", desc: "Receba alertas sobre novas negociações", color: "bg-orange-500" },
+            { icon: Store, title: "Avaliação", desc: "Construa sua reputação na plataforma", color: "bg-green-500" },
           ].map((item, idx) => (
             <div key={idx} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
               <div className={`p-3 ${item.color} rounded-xl`}>
@@ -173,7 +173,7 @@ const Onboarding = () => {
     {
       title: "Tudo pronto!",
       icon: CheckCircle2,
-      description: "Sua loja está configurada e pronta para vender",
+      description: "Sua loja está configurada e pronta para receber negociações",
       content: (
         <div className="text-center space-y-6 py-4">
           <div className="mx-auto w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-200">
@@ -276,7 +276,7 @@ const Onboarding = () => {
               </p>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
                 <PartyPopper className="h-4 w-4 text-yellow-500" />
-                <span>Faltam poucos passos para começar a vender</span>
+                <span>Faltam poucos passos para começar a receber negociações</span>
               </div>
               <Button
                 onClick={() => setShowCongrats(false)}

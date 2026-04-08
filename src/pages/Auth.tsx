@@ -214,9 +214,19 @@ const Auth = () => {
           <h1 className="text-2xl font-bold text-white tracking-tight">
             {isLogin ? 'Bem-vindo' : 'Criar conta'}
           </h1>
-          <p className="text-white/60 text-sm mt-1">
+          <p className="text-white/60 text-sm mt-1 mb-4">
             {isLogin ? 'Entre na sua conta Nellor' : 'Crie sua conta gratuitamente'}
           </p>
+          <p className="text-white/80 text-xs text-center leading-relaxed max-w-[280px] mb-3">
+            O marketplace atacadista que conecta você aos melhores fornecedores
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {["Fornecedores Verificados", "Negociação Direta", "Atacado Seguro", "Sem Intermediários"].map((tag) => (
+              <span key={tag} className="text-[10px] font-medium text-white/90 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/20">
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Glass form area */}
