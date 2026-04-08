@@ -29,7 +29,7 @@ export const BottomNav = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="relative -mt-10 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-[0_4px_20px_hsl(var(--primary)/0.4)] transition-all duration-300 ease-out active:scale-95 animate-[bounce-in_0.35s_ease-out]"
+                  className="relative -mt-10 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-[0_4px_20px_hsl(var(--primary)/0.4)] active:scale-95"
                 >
                   <Icon className="h-6 w-6 text-white transition-transform duration-300" strokeWidth={1.8} />
                   {item.path === "/cliente/carrinho" && totalItems > 0 && (
