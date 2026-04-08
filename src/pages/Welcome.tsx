@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import logo from '@/assets/nellor-logo.png';
-import heroImage from '@/assets/hero-v5.png';
+
 import { Loader2 } from 'lucide-react';
 
 const Welcome = () => {
@@ -55,7 +55,7 @@ const Welcome = () => {
         {/* Center - Hero image, flush to edges */}
         <div className="flex-1 flex items-center justify-center w-full overflow-hidden my-4">
           <img
-            src={heroImage}
+            src="39fc4b30-0bf9-46e2-bb17-8ac018be9fd9.png"
             alt="Nellor"
             className="w-[85vw] max-w-[380px] object-contain px-0 text-right mx-0"
             style={{
@@ -67,10 +67,10 @@ const Welcome = () => {
         {/* Bottom - Text + Buttons */}
         <div className="w-full px-6 space-y-5">
           <div className="text-center space-y-2">
-            <h2 className="text-white text-[1.65rem] font-bold leading-tight">
+            <h2 className="text-white text-[1.65rem] font-bold leading-tight py-[12px] pb-[25px]">
               Marketplace atacadista digital
             </h2>
-            <p className="text-white/65 text-sm leading-relaxed">
+            <p className="text-white/65 text-sm leading-relaxed py-0 pb-[2px]">
               Conecte-se com fornecedores verificados, negocie preços e compre no atacado com segurança e praticidade.
             </p>
           </div>
