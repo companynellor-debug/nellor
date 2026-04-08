@@ -32,8 +32,8 @@ const Cotacoes = () => {
     createProposal.mutate(
       {
         request_id: selectedRequest.id,
-        unit_price: Number(form.unit_price),
-        freight: Number(form.freight) || 0,
+        unit_price: parseFloat(form.unit_price.replace(',', '.')) || 0,
+        freight: parseFloat(form.freight.replace(',', '.')) || 0,
         offer_validity_days: Number(form.offer_validity_days) || 7,
         notes: form.notes || undefined,
       },
