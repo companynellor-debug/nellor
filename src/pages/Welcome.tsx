@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import logo from '@/assets/nellor-logo.png';
-import heroImage from '@/assets/hero-v3.png';
+import heroImage from '@/assets/hero-v4.png';
 import { Loader2 } from 'lucide-react';
 
 const Welcome = () => {
