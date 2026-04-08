@@ -1987,6 +1987,109 @@ export type Database = {
           },
         ]
       }
+      quotation_proposals: {
+        Row: {
+          created_at: string
+          freight: number | null
+          id: string
+          notes: string | null
+          offer_validity_days: number | null
+          request_id: string
+          status: Database["public"]["Enums"]["proposal_status"]
+          supplier_id: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          freight?: number | null
+          id?: string
+          notes?: string | null
+          offer_validity_days?: number | null
+          request_id: string
+          status?: Database["public"]["Enums"]["proposal_status"]
+          supplier_id: string
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          freight?: number | null
+          id?: string
+          notes?: string | null
+          offer_validity_days?: number | null
+          request_id?: string
+          status?: Database["public"]["Enums"]["proposal_status"]
+          supplier_id?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_proposals_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "quotation_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotation_requests: {
+        Row: {
+          buyer_id: string
+          category_id: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          proposals_count: number
+          quantity: number
+          specs_file_url: string | null
+          status: Database["public"]["Enums"]["quotation_status"]
+          title: string
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          category_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          proposals_count?: number
+          quantity?: number
+          specs_file_url?: string | null
+          status?: Database["public"]["Enums"]["quotation_status"]
+          title: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          category_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          proposals_count?: number
+          quantity?: number
+          specs_file_url?: string | null
+          status?: Database["public"]["Enums"]["quotation_status"]
+          title?: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_requests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       refund_requests: {
         Row: {
           buyer_id: string
@@ -3755,6 +3858,8 @@ export type Database = {
       payment_method: "pix" | "boleto" | "cartao"
       payment_status: "pending" | "paid" | "refunded" | "cancelled"
       payout_status: "requested" | "approved" | "paid" | "rejected"
+      proposal_status: "pending" | "accepted" | "rejected"
+      quotation_status: "open" | "closed" | "cancelled"
       service_provider_status: "pending" | "active" | "suspended"
       shipping_region: "norte" | "nordeste" | "centro_oeste" | "sudeste" | "sul"
       sponsorship_status: "pending" | "approved" | "rejected" | "scheduled"
@@ -3935,6 +4040,8 @@ export const Constants = {
       payment_method: ["pix", "boleto", "cartao"],
       payment_status: ["pending", "paid", "refunded", "cancelled"],
       payout_status: ["requested", "approved", "paid", "rejected"],
+      proposal_status: ["pending", "accepted", "rejected"],
+      quotation_status: ["open", "closed", "cancelled"],
       service_provider_status: ["pending", "active", "suspended"],
       shipping_region: ["norte", "nordeste", "centro_oeste", "sudeste", "sul"],
       sponsorship_status: ["pending", "approved", "rejected", "scheduled"],
