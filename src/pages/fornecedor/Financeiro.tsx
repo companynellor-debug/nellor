@@ -91,12 +91,10 @@ const Financeiro = () => {
         <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
+              <DarkGlassIcon icon={CheckCircle} size="sm" />
               <span className="text-sm text-muted-foreground font-medium">Entregues</span>
             </div>
-            <p className="text-2xl font-bold text-green-600 break-words">{fmt(totalDelivered)}</p>
+            <p className="text-2xl font-bold text-foreground break-words">{fmt(totalDelivered)}</p>
             <p className="text-xs text-muted-foreground mt-1">{delivered.length} negociação(ões)</p>
           </CardContent>
         </Card>
@@ -104,12 +102,10 @@ const Financeiro = () => {
         <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                <Package className="h-5 w-5 text-orange-600" />
-              </div>
+              <DarkGlassIcon icon={Package} size="sm" />
               <span className="text-sm text-muted-foreground font-medium">Em Trânsito</span>
             </div>
-            <p className="text-2xl font-bold text-orange-600 break-words">{fmt(totalShipped)}</p>
+            <p className="text-2xl font-bold text-foreground break-words">{fmt(totalShipped)}</p>
             <p className="text-xs text-muted-foreground mt-1">{shipped.length} negociação(ões)</p>
           </CardContent>
         </Card>
@@ -117,12 +113,10 @@ const Financeiro = () => {
         <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
           <CardContent className="p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-yellow-600" />
-              </div>
+              <DarkGlassIcon icon={Clock} size="sm" />
               <span className="text-sm text-muted-foreground font-medium">Pendentes</span>
             </div>
-            <p className="text-2xl font-bold text-yellow-600 break-words">{fmt(totalPending)}</p>
+            <p className="text-2xl font-bold text-foreground break-words">{fmt(totalPending)}</p>
             <p className="text-xs text-muted-foreground mt-1">{pending.length} negociação(ões)</p>
           </CardContent>
         </Card>
