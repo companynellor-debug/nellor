@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "@/hooks/use-toast";
 
 export interface QuotationRequest {
@@ -41,7 +41,7 @@ export interface QuotationProposal {
 // ── Buyer hooks ──
 
 export function useMyQuotations() {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   return useQuery({
     queryKey: ["quotations", "mine", user?.id],
     enabled: !!user,
@@ -62,7 +62,7 @@ export function useMyQuotations() {
 
 export function useCreateQuotation() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   return useMutation({
     mutationFn: async (payload: {
       title: string;
@@ -155,7 +155,7 @@ export function useOpenQuotations(categoryId?: string) {
 }
 
 export function useMyProposals() {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   return useQuery({
     queryKey: ["quotation-proposals", "mine", user?.id],
     enabled: !!user,
@@ -173,7 +173,7 @@ export function useMyProposals() {
 
 export function useCreateProposal() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   return useMutation({
     mutationFn: async (payload: {
       request_id: string;
