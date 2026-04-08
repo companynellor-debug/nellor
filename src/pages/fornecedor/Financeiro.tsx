@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Handshake, TrendingUp, Clock, CheckCircle, Package, Info, DollarSign } from "lucide-react";
 import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
+import { Icon3D } from "@/components/ui/icon-3d";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { format } from "date-fns";
@@ -57,7 +58,7 @@ const Financeiro = () => {
         <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-primary-foreground/5 translate-y-6 -translate-x-6" />
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
-            <DollarSign className="h-5 w-5 opacity-80" />
+            <Icon3D name="dollar" size="sm" />
             <span className="text-sm opacity-80 font-medium">Total Negociado</span>
           </div>
           <p className="text-4xl font-bold tracking-tight">{fmt(totalAll)}</p>
