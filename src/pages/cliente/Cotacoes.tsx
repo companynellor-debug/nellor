@@ -23,9 +23,10 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
   cancelled: { label: "Cancelada", color: "bg-red-100 text-red-700 border-red-200", icon: XCircle },
 };
 
-const ProposalsView = ({ requestId, requestTitle, onBack, isOpen }: { requestId: string; requestTitle: string; onBack: () => void; isOpen: boolean }) => {
+const ProposalsView = ({ requestId, requestTitle, requestQuantity, requestUnit, onBack, isOpen }: { requestId: string; requestTitle: string; requestQuantity: number; requestUnit: string; onBack: () => void; isOpen: boolean }) => {
   const { data: proposals, isLoading } = useQuotationProposals(requestId);
   const acceptProposal = useAcceptProposal();
+  const navigate = useNavigate();
 
   return (
     <div>
