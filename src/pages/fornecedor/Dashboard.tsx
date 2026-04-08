@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Bell, Handshake, MessageSquare, Truck, CheckCircle, Star, Package } from "lucide-react";
 import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
-import { Icon3D, type Icon3DName } from "@/components/ui/icon-3d";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -13,14 +12,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { showPushNotification, getNotificationPermission, requestNotificationPermission } from "@/utils/pushNotifications";
 import { useToast } from "@/hooks/use-toast";
 
-const StatCard = ({ title, value, subtitle, icon, borderColor, icon3d }: {
+const StatCard = ({ title, value, subtitle, icon, borderColor }: {
   title: string; value: number | string; subtitle: string;
-  icon: React.ElementType; borderColor: string; icon3d?: Icon3DName;
+  icon: React.ElementType; borderColor: string;
 }) => (
   <Card className={`rounded-2xl shadow-sm overflow-hidden border-2 ${borderColor}`}>
     <CardContent className="p-5">
       <div className="flex items-center justify-between mb-3">
-        {icon3d ? <Icon3D name={icon3d} size="md" /> : <DarkGlassIcon icon={icon} size="md" />}
+        <DarkGlassIcon icon={icon} size="md" />
         <span className="text-3xl font-bold">{value}</span>
       </div>
       <p className="text-sm font-semibold text-foreground">{title}</p>
@@ -121,11 +120,11 @@ const Dashboard = () => {
   })();
 
   const stats = [
-    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageSquare, borderColor: "border-purple-500", icon3d: "chat" as Icon3DName },
+    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageSquare, borderColor: "border-purple-500" },
     { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, borderColor: "border-blue-500" },
-    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, borderColor: "border-orange-500", icon3d: "upload" as Icon3DName },
+    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, borderColor: "border-orange-500" },
     { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, borderColor: "border-green-500" },
-    { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, borderColor: "border-yellow-500", icon3d: "heart" as Icon3DName },
+    { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, borderColor: "border-yellow-500" },
     { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Package, borderColor: "border-cyan-500" },
   ];
 
