@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Star, Package, AlertTriangle, CheckCircle, Clock, MessageCircle } from "lucide-react";
+import { Star, Package, AlertTriangle, CheckCircle, Clock, MessageCircle, FileText } from "lucide-react";
+import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { useNegotiations } from "@/hooks/useNegotiations";
 import { useDisputes } from "@/hooks/useDisputes";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -168,6 +169,22 @@ const MinhasNegociacoes = () => {
                     <Clock className="h-3.5 w-3.5" />
                     Aguardando data de entrega
                   </div>
+                )}
+
+                {(neg.status === 'accepted' || neg.status === 'shipped' || neg.status === 'delivered') && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 mt-2"
+                    onClick={() => generateNegotiationPDF({
+                      ...neg,
+                      buyerName: user?.email || 'Comprador',
+                      supplierName: 'Fornecedor',
+                    })}
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    Gerar Resumo do Acordo
+                  </Button>
                 )}
               </Card>
             );

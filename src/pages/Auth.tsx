@@ -6,6 +6,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '@/assets/logo.png';
 import { Loader2, Mail, CheckCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -46,6 +47,7 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const {
     user,
@@ -299,9 +301,27 @@ const Auth = () => {
               </div>
             )}
 
+            {!isLogin && (
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="terms"
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                  Li e concordo com os{' '}
+                  <a href="/termos-de-uso" target="_blank" className="text-primary font-medium hover:underline">
+                    Termos de Uso
+                  </a>{' '}
+                  da plataforma Nellor
+                </label>
+              </div>
+            )}
+
             <Button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || (!isLogin && !termsAccepted)}
               className="w-full h-12 bg-[hsl(263,70%,35%)] hover:bg-[hsl(263,70%,28%)] text-white font-semibold rounded-2xl mt-2 shadow-lg text-base tracking-wide"
             >
               {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'ENTRAR' : 'CRIAR CONTA'}
