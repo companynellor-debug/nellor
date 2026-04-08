@@ -1,4 +1,4 @@
-import { Home, Handshake, MessageSquare, MoreHorizontal, Megaphone, BookOpen } from "lucide-react";
+import { Home, Handshake, MessageSquare, MoreHorizontal, Megaphone, BookOpen, FileText } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import {
@@ -18,6 +18,7 @@ export const BottomNavFornecedor = () => {
   ];
 
   const moreNavItems = [
+    { icon: FileText, label: "Cotações", path: "/fornecedor/cotacoes" },
     { icon: Tag, label: "Produtos", path: "/fornecedor/produtos" },
     { icon: BarChart3, label: "Estatísticas", path: "/fornecedor/estatisticas" },
     { icon: Megaphone, label: "Patrocínio", path: "/fornecedor/patrocinio" },
