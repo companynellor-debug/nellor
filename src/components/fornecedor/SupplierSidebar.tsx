@@ -39,8 +39,11 @@ export function SupplierSidebar() {
               "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm relative",
               isActive ? "bg-purple-600/40 text-white shadow-lg shadow-purple-500/20 border border-purple-500/30" : "text-purple-200 hover:bg-purple-800/30 hover:text-white"
             )}>
-              <DarkGlassIcon icon={item.icon} size="xs" />
-              <span className="font-medium">{item.title}</span>
+              {item.icon3d ? (
+                <Icon3D name={item.icon3d} size="xs" />
+              ) : (
+                <DarkGlassIcon icon={item.icon} size="xs" />
+              )}
               {item.title === "Notificações" && unreadCount > 0 && (
                 <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
