@@ -4,13 +4,9 @@ import { Card } from "@/components/ui/card";
 
 const GlassIcon = ({ icon: Icon, gradient }: { icon: React.ElementType; gradient: string }) => (
   <div className="relative w-12 h-12 flex-shrink-0">
-    {/* Back layer - colored shape */}
-    <div className={`absolute inset-0 rounded-xl ${gradient} opacity-80`} />
-    {/* Glass overlay */}
-    <div className="absolute inset-0 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg" />
-    {/* Shine effect */}
-    <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-xl bg-gradient-to-b from-white/30 to-transparent" />
-    {/* Icon */}
+    <div className={`absolute inset-0 rounded-full ${gradient} opacity-80`} />
+    <div className="absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg" />
+    <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/30 to-transparent" />
     <div className="relative z-10 w-full h-full flex items-center justify-center">
       <Icon className="h-5 w-5 text-white drop-shadow-md" strokeWidth={1.8} />
     </div>
@@ -19,8 +15,8 @@ const GlassIcon = ({ icon: Icon, gradient }: { icon: React.ElementType; gradient
 
 const GlassStepIcon = ({ icon: Icon }: { icon: React.ElementType }) => (
   <div className="relative w-9 h-9 flex-shrink-0 mt-0.5">
-    <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10" />
-    <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-lg bg-gradient-to-b from-white/40 to-transparent" />
+    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10" />
+    <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/40 to-transparent" />
     <div className="relative z-10 w-full h-full flex items-center justify-center">
       <Icon className="h-4 w-4 text-primary/80" strokeWidth={1.8} />
     </div>
