@@ -155,11 +155,11 @@ const Cotacoes = () => {
               </Card>
               <div>
                 <Label>Preço Unitário (R$) *</Label>
-                <Input type="number" step="0.01" min="0" placeholder="0,00" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} />
+                <Input type="text" inputMode="decimal" placeholder="0,00" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value.replace(/[^0-9.,]/g, '') })} onBlur={(e) => { const v = parseFloat(e.target.value.replace(',', '.')); if (!isNaN(v)) setForm(f => ({ ...f, unit_price: v.toFixed(2).replace('.', ',') })); }} />
               </div>
               <div>
                 <Label>Frete (R$)</Label>
-                <Input type="number" step="0.01" min="0" value={form.freight} onChange={(e) => setForm({ ...form, freight: e.target.value })} />
+                <Input type="text" inputMode="decimal" placeholder="0,00" value={form.freight} onChange={(e) => setForm({ ...form, freight: e.target.value.replace(/[^0-9.,]/g, '') })} onBlur={(e) => { const v = parseFloat(e.target.value.replace(',', '.')); if (!isNaN(v)) setForm(f => ({ ...f, freight: v.toFixed(2).replace('.', ',') })); }} />
               </div>
               <div>
                 <Label>Validade da Oferta (dias)</Label>
