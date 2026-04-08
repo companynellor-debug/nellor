@@ -2,26 +2,32 @@ import { Package, MessageSquare, Users, Star, Truck, BookOpen, Lightbulb, Camera
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 
-const DarkGlassIcon = ({ icon: Icon, size = "lg" }: { icon: React.ElementType; size?: "lg" | "sm" }) => {
-  const dims = size === "lg" ? "w-12 h-12" : "w-9 h-9";
-  const iconSize = size === "lg" ? "h-5 w-5" : "h-4 w-4";
-  return (
-    <div className={`relative ${dims} flex-shrink-0 ${size === "sm" ? "mt-0.5" : ""}`}>
-      <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-purple-500/30 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),0_4px_12px_rgba(0,0,0,0.4)]" />
-      <div className="absolute top-0 left-[10%] right-[10%] h-[45%] rounded-t-full bg-gradient-to-b from-white/15 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 h-1/2 rounded-b-full bg-gradient-to-tr from-purple-600/20 to-transparent" />
-      <div className="relative z-10 w-full h-full flex items-center justify-center">
-        <Icon className={`${iconSize} text-purple-400 drop-shadow-[0_0_6px_rgba(168,85,247,0.5)]`} strokeWidth={1.8} />
-      </div>
+const GlassIcon = ({ icon: Icon, gradient }: { icon: React.ElementType; gradient: string }) => (
+  <div className="relative w-12 h-12 flex-shrink-0">
+    <div className={`absolute inset-0 rounded-full ${gradient} opacity-80`} />
+    <div className="absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg" />
+    <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/30 to-transparent" />
+    <div className="relative z-10 w-full h-full flex items-center justify-center">
+      <Icon className="h-5 w-5 text-white drop-shadow-md" strokeWidth={1.8} />
     </div>
-  );
-};
+  </div>
+);
+
+const GlassStepIcon = ({ icon: Icon }: { icon: React.ElementType }) => (
+  <div className="relative w-9 h-9 flex-shrink-0 mt-0.5">
+    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10" />
+    <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/40 to-transparent" />
+    <div className="relative z-10 w-full h-full flex items-center justify-center">
+      <Icon className="h-4 w-4 text-primary/80" strokeWidth={1.8} />
+    </div>
+  </div>
+);
 
 const guides = [
   {
     id: "produtos",
     icon: Package,
-    
+    gradient: "bg-gradient-to-br from-violet-500 to-purple-700",
     title: "Como cadastrar produtos corretamente",
     steps: [
       { icon: Camera, text: "Use fotos de alta qualidade com fundo limpo. Adicione pelo menos 3 fotos mostrando diferentes ângulos." },
@@ -33,7 +39,7 @@ const guides = [
   {
     id: "negociacao",
     icon: MessageSquare,
-    
+    gradient: "bg-gradient-to-br from-blue-400 to-indigo-600",
     title: "Como negociar pelo chat",
     steps: [
       { icon: Clock, text: "Responda rápido! Fornecedores que respondem em até 1 hora têm 3x mais chances de fechar negócio." },
@@ -45,7 +51,7 @@ const guides = [
   {
     id: "clientes",
     icon: Users,
-    
+    gradient: "bg-gradient-to-br from-emerald-400 to-teal-600",
     title: "Técnicas para conseguir mais clientes",
     steps: [
       { icon: Camera, text: "Complete 100% do seu perfil: foto, banner, bio, cidade e estado. Perfis completos aparecem primeiro nas buscas." },
@@ -57,7 +63,7 @@ const guides = [
   {
     id: "avaliacoes",
     icon: Star,
-    
+    gradient: "bg-gradient-to-br from-amber-400 to-orange-500",
     title: "Como funciona o sistema de avaliação",
     steps: [
       { icon: Star, text: "Clientes avaliam de 1 a 5 estrelas após a entrega. Sua nota média aparece no perfil da loja." },
@@ -69,7 +75,7 @@ const guides = [
   {
     id: "frete",
     icon: Truck,
-    
+    gradient: "bg-gradient-to-br from-rose-400 to-pink-600",
     title: "Como configurar frete",
     steps: [
       { icon: Truck, text: "Acesse 'Editar Loja' e configure suas regiões de entrega e valores de frete por região." },
@@ -111,7 +117,7 @@ const ComoUsar = () => {
           <AccordionItem key={guide.id} value={guide.id} className="border rounded-xl overflow-hidden">
             <AccordionTrigger className="px-4 py-4 hover:no-underline hover:bg-muted/30 [&[data-state=open]]:bg-muted/30">
               <div className="flex items-center gap-3">
-                <DarkGlassIcon icon={guide.icon} size="lg" />
+                <GlassIcon icon={guide.icon} gradient={guide.gradient} />
                 <span className="text-sm font-semibold text-left">{guide.title}</span>
               </div>
             </AccordionTrigger>
@@ -119,7 +125,7 @@ const ComoUsar = () => {
               <div className="space-y-3 pt-2">
                 {guide.steps.map((step, idx) => (
                   <div key={idx} className="flex items-start gap-3">
-                    <DarkGlassIcon icon={step.icon} size="sm" />
+                    <GlassStepIcon icon={step.icon} />
                     <p className="text-sm text-muted-foreground leading-relaxed">{step.text}</p>
                   </div>
                 ))}
