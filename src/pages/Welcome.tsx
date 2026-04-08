@@ -54,23 +54,14 @@ const Welcome = () => {
 
         {/* Center - Hero image, flush to edges */}
         <div className="flex-1 flex items-center justify-center w-full overflow-hidden my-4">
-          <div className="relative w-[85vw] max-w-[380px]">
-            <img
-              src={heroImage}
-              alt="Nellor"
-              className="w-full object-contain"
-              style={{
-                filter: 'drop-shadow(0 20px 50px rgba(124,58,237,0.45))',
-              }}
-            />
-            {/* Gradient fade at the bottom to blend reflection with background */}
-            <div
-              className="absolute bottom-0 left-0 right-0 h-[20%] pointer-events-none"
-              style={{
-                background: 'linear-gradient(to top, rgba(45,0,96,1) 0%, rgba(45,0,96,0.6) 40%, transparent 100%)',
-              }}
-            />
-          </div>
+          <img
+            src={heroImage}
+            alt="Nellor"
+            className="w-[85vw] max-w-[380px] object-contain px-0 text-right mx-0"
+            style={{
+              filter: 'drop-shadow(0 20px 50px rgba(124,58,237,0.45))',
+            }}
+          />
         </div>
 
         {/* Bottom - Text + Buttons */}
