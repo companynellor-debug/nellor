@@ -7,14 +7,14 @@ import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { Icon3D, type Icon3DName } from "@/components/ui/icon-3d";
 
 const menuItems = [
-  { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
+  { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home, icon3d: "home" as Icon3DName },
   { title: "Negociações", url: "/fornecedor/negociacoes", icon: Handshake },
-  { title: "Chat", url: "/fornecedor/chat", icon: MessageSquare },
+  { title: "Chat", url: "/fornecedor/chat", icon: MessageSquare, icon3d: "chat" as Icon3DName },
   { title: "Produtos", url: "/fornecedor/produtos", icon: Tag },
   { title: "Estatísticas", url: "/fornecedor/estatisticas", icon: BarChart3 },
-  { title: "Financeiro", url: "/fornecedor/financeiro", icon: DollarSign },
+  { title: "Financeiro", url: "/fornecedor/financeiro", icon: DollarSign, icon3d: "dollar" as Icon3DName },
   { title: "Patrocínio", url: "/fornecedor/patrocinio", icon: Megaphone },
-  { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },
+  { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell, icon3d: "bell" as Icon3DName },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
   { title: "Como Usar", url: "/fornecedor/como-usar", icon: BookOpen },
 ];
