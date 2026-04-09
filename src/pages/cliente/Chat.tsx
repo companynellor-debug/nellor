@@ -160,9 +160,9 @@ const Chat = () => {
     const presenceText = isOtherUserTyping ? 'Digitando...' : getLastSeenText(selectedUserId);
 
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="flex flex-col h-[100dvh] bg-background">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg">
+        <header className="flex-shrink-0 bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg z-40">
           <div className="px-4 py-3 flex items-center gap-3">
             <button onClick={() => setSelectedUserId(null)} className="p-1.5 hover:bg-white/10 rounded-full"><ArrowLeft className="h-5 w-5" /></button>
             <div onClick={() => navigate(`/cliente/loja/${selectedUserId}`)} className="flex items-center gap-3 flex-1 cursor-pointer">
@@ -187,7 +187,7 @@ const Chat = () => {
         <NegotiationForm supplierId={selectedUserId} open={showNegotiationForm} onOpenChange={setShowNegotiationForm} />
 
         {/* Messages */}
-        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gradient-to-b from-primary/5 to-background" style={{ paddingBottom: "100px" }}>
+        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gradient-to-b from-primary/5 to-background">
           {messageLimitInfo?.is_new_account && !messageLimitInfo.verified && (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
@@ -229,8 +229,8 @@ const Chat = () => {
           <div ref={messagesEndRef} />
         </main>
 
-        {/* Input */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t p-3 z-30">
+        {/* Input - in flex flow, not fixed */}
+        <div className="flex-shrink-0 bg-white/95 backdrop-blur-lg border-t p-3 z-30">
           {attachments.length > 0 && (
             <div className="mb-2 flex gap-2 overflow-x-auto pb-2">
               {attachments.map((att, idx) => (
@@ -276,8 +276,6 @@ const Chat = () => {
             </div>
           </DialogContent>
         </Dialog>
-
-        <BottomNav />
       </div>
     );
   }
