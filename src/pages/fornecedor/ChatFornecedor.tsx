@@ -37,7 +37,7 @@ const ChatFornecedor = () => {
 
   const { sendMessage: sendSupabaseMessage, getConversations, getMessagesByUser, markAsRead } = useSupabaseMessages(user?.id);
   const { isUserOnline, getLastSeenText, fetchLastSeen } = usePresence(user?.id);
-  const { getGroupedStories, markAsViewed, createStory, getMyStories } = useSupplierStories();
+  const { getGroupedStories, markAsViewed, createStory, deleteStory, getMyStories } = useSupplierStories();
 
   const chatId = selectedCustomerId && user?.id ? [user.id, selectedCustomerId].sort().join('_') : '';
   const { isOtherUserTyping, startTyping, stopTyping } = useTypingPresence(chatId, user?.id);
@@ -321,7 +321,15 @@ const ChatFornecedor = () => {
             }}
             onSearchClick={() => {}}
             showAddButton
-            onAddClick={() => setShowCreateStory(true)}
+            onAddClick={() => {
+              if (myStories.length > 0) {
+                const myGroup = groupedStories.find(g => g.supplierId === user?.id);
+                if (myGroup) setViewingStorySupplier(myGroup);
+                else setShowCreateStory(true);
+              } else {
+                setShowCreateStory(true);
+              }
+            }}
             myStories={myStories}
           />
         </div>
@@ -406,7 +414,7 @@ const ChatFornecedor = () => {
 
       {/* Story Viewer */}
       {viewingStorySupplier && (
-        <StoryViewer supplier={viewingStorySupplier} onClose={() => setViewingStorySupplier(null)} onContact={(id) => { setViewingStorySupplier(null); setSelectedCustomerId(id); }} onViewed={markAsViewed} />
+        <StoryViewer supplier={viewingStorySupplier} onClose={() => setViewingStorySupplier(null)} onContact={(id) => { setViewingStorySupplier(null); setSelectedCustomerId(id); }} onViewed={markAsViewed} onDelete={deleteStory} isOwnStory={viewingStorySupplier.supplierId === user?.id} />
       )}
 
       {/* Create Story Modal */}

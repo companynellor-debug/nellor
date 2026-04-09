@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
-import { Handshake, TrendingUp, DollarSign, Loader2 } from "lucide-react";
+import { Handshake, TrendingUp, DollarSign, Loader2, Eye, Radio, BarChart3 } from "lucide-react";
 import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import { useSupplierStories } from "@/hooks/useSupplierStories";
 
 const Estatisticas = () => {
   const [loading, setLoading] = useState(true);
@@ -12,6 +13,11 @@ const Estatisticas = () => {
   const [totalNegotiations, setTotalNegotiations] = useState(0);
   const [averageTicket, setAverageTicket] = useState(0);
   const [monthlyData, setMonthlyData] = useState<{ month: string; negociacoes: number }[]>([]);
+  const [storyStats, setStoryStats] = useState({ activeCount: 0, totalViews: 0, avgViews: 0 });
+  const [storyViewCounts, setStoryViewCounts] = useState<Record<string, number>>({});
+
+  const { getMyStories, getMyStoryStats, getStoryViewCount } = useSupplierStories();
+  const myStories = getMyStories();
 
   const fetchStats = useCallback(async () => {
     try {
@@ -53,7 +59,20 @@ const Estatisticas = () => {
     }
   }, []);
 
+  const fetchStoryStats = useCallback(async () => {
+    const stats = await getMyStoryStats();
+    setStoryStats(stats);
+
+    // Fetch individual view counts
+    const counts: Record<string, number> = {};
+    for (const s of myStories) {
+      counts[s.id] = await getStoryViewCount(s.id);
+    }
+    setStoryViewCounts(counts);
+  }, [getMyStoryStats, getStoryViewCount, myStories.length]);
+
   useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => { fetchStoryStats(); }, [myStories.length]);
 
   const fmt = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
@@ -103,6 +122,67 @@ const Estatisticas = () => {
           <p className="text-xs text-muted-foreground mt-1">Valor médio por entrega</p>
         </Card>
       </div>
+
+      {/* Story Stats Section */}
+      <Card className="p-4 md:p-6 rounded-2xl border-0 shadow-md">
+        <h2 className="text-base md:text-lg font-bold mb-4 flex items-center gap-2">
+          <Radio className="h-5 w-5 text-primary" />
+          Meus Status
+        </h2>
+
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="bg-primary/5 rounded-xl p-3 text-center">
+            <p className="text-2xl font-bold text-primary">{storyStats.activeCount}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Ativos</p>
+          </div>
+          <div className="bg-primary/5 rounded-xl p-3 text-center">
+            <p className="text-2xl font-bold text-primary">{storyStats.totalViews}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Views total</p>
+          </div>
+          <div className="bg-primary/5 rounded-xl p-3 text-center">
+            <p className="text-2xl font-bold text-primary">{storyStats.avgViews}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Média/story</p>
+          </div>
+        </div>
+
+        {myStories.length > 0 ? (
+          <div className="space-y-2">
+            {myStories.map(story => (
+              <div key={story.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                  {story.type === 'text' ? (
+                    <div className="w-full h-full flex items-center justify-center text-white text-[8px] font-bold p-1 leading-tight" style={{ backgroundColor: story.bg_color || '#7c3aed' }}>
+                      {(story.caption || '').slice(0, 30)}
+                    </div>
+                  ) : story.media_url ? (
+                    story.type === 'video' ? (
+                      <video src={story.media_url} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={story.media_url} alt="" className="w-full h-full object-cover" />
+                    )
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{story.caption || (story.type === 'text' ? 'Status de texto' : 'Mídia')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(story.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Eye className="h-4 w-4" />
+                  <span className="text-sm font-medium">{storyViewCounts[story.id] || 0}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-4">Nenhum status ativo. Publique pelo chat!</p>
+        )}
+      </Card>
 
       <Card className="p-4 md:p-6 rounded-2xl border-0 shadow-md">
         <h2 className="text-base md:text-lg font-bold mb-4">Negociações por Mês</h2>
