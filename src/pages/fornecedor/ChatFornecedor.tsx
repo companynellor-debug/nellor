@@ -8,7 +8,7 @@ import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { usePresence } from "@/hooks/usePresence";
-import { useSupplierStories } from "@/hooks/useSupplierStories";
+import { useSupplierStories, SupplierWithStories } from "@/hooks/useSupplierStories";
 import { SupplierStories } from "@/components/chat/SupplierStories";
 import { StoryViewer } from "@/components/chat/StoryViewer";
 import { CreateStoryModal } from "@/components/chat/CreateStoryModal";
