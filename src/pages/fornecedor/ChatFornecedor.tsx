@@ -412,11 +412,4 @@ const ChatFornecedor = () => {
   );
 };
 
-// Need state for story viewer
-const ChatFornecedorWrapper = () => {
-  const [viewingStorySupplier, setViewingStorySupplier] = useState<any>(null);
-  // Pass via context or just use inline - the component already handles it
-  return <ChatFornecedor />;
-};
-
 export default ChatFornecedor;
