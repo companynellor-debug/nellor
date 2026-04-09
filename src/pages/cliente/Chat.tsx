@@ -170,16 +170,16 @@ const Chat = () => {
                 <img src={supplierAvatar} alt={supplierName} className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h2 className="font-semibold text-sm truncate">{supplierName}</h2>
+                <h2 className="font-semibold text-sm truncate">{supplierName}</h2>
+                <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                  <p className={`text-[11px] ${isOtherUserTyping ? 'animate-pulse' : 'opacity-80'}`}>{presenceText}</p>
                   <VerifiedSupplierBadge verified={(selectedSupplier as any)?.verified !== false} />
                 </div>
-                <p className={`text-[11px] ${isOtherUserTyping ? 'animate-pulse' : 'opacity-80'}`}>{presenceText}</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setShowNegotiationForm(true)} className="text-white hover:bg-white/10 gap-1 text-xs">
+            <Button variant="ghost" size="sm" onClick={() => setShowNegotiationForm(true)} className="shrink-0 gap-1.5 text-xs text-white hover:bg-white/10" title="Negociar">
               <Handshake className="h-4 w-4" />
-              <span className="hidden sm:inline">Negociar</span>
+              <span>Negociar</span>
             </Button>
           </div>
         </header>

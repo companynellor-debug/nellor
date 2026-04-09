@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +20,14 @@ interface SupplierProduct {
   preco: number;
 }
 
+const paymentMethodOptions = [
+  { value: 'pix', label: 'PIX' },
+  { value: 'transferencia', label: 'Transferência bancária' },
+  { value: 'boleto', label: 'Boleto' },
+  { value: 'dinheiro', label: 'Dinheiro' },
+  { value: 'outro', label: 'Outro' },
+];
+
 export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationFormProps) => {
   const { createNegotiation } = useNegotiations(supplierId);
   const [products, setProducts] = useState<SupplierProduct[]>([]);
@@ -34,8 +41,38 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
   const [submitting, setSubmitting] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
+  const resetForm = () => {
+    setSelectedProductId('');
+    setProductName('');
+    setQuantity(1);
+    setAgreedPrice('');
+    setPaymentMethod('pix');
+    setExpectedDelivery('');
+    setNotes('');
+  };
+
+  const handleProductSelect = (productId: string) => {
+    setSelectedProductId(productId);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      setProductName(product.nome);
+      setAgreedPrice(String(product.preco));
+    }
+  };
+
+  useEffect(() => {
+    if (!open) {
+      resetForm();
+      setProducts([]);
+      setLoadingProducts(false);
+    }
+  }, [open, supplierId]);
+
   useEffect(() => {
     if (!open || !supplierId) return;
+
+    let isActive = true;
+
     const fetchProducts = async () => {
       setLoadingProducts(true);
       try {
@@ -48,37 +85,41 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
         if (error) {
           console.error('Error fetching products:', error);
         }
-        setProducts((data || []) as SupplierProduct[]);
+
+        if (!isActive) return;
+
+        const nextProducts = (data || []) as SupplierProduct[];
+        setProducts(nextProducts);
+
+        if (nextProducts.length > 0) {
+          const firstProduct = nextProducts[0];
+          setSelectedProductId(firstProduct.id);
+          setProductName(firstProduct.nome);
+          setAgreedPrice(String(firstProduct.preco));
+        }
       } catch (err) {
         console.error('Error fetching products:', err);
       } finally {
-        setLoadingProducts(false);
+        if (isActive) {
+          setLoadingProducts(false);
+        }
       }
     };
+
     fetchProducts();
+
+    return () => {
+      isActive = false;
+    };
   }, [open, supplierId]);
 
-  const handleProductSelect = (productId: string) => {
-    setSelectedProductId(productId);
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      setProductName(product.nome);
-      if (!agreedPrice) setAgreedPrice(String(product.preco));
-    }
-  };
-
-  const resetForm = () => {
-    setSelectedProductId('');
-    setProductName('');
-    setQuantity(1);
-    setAgreedPrice('');
-    setPaymentMethod('pix');
-    setExpectedDelivery('');
-    setNotes('');
-  };
-
   const handleSubmit = async () => {
-    if (!productName.trim() || !agreedPrice || quantity < 1) return;
+    const normalizedPrice = Number(agreedPrice);
+
+    if (!productName.trim() || Number.isNaN(normalizedPrice) || normalizedPrice <= 0 || quantity < 1) {
+      return;
+    }
+
     setSubmitting(true);
     try {
       await createNegotiation({
@@ -86,7 +127,7 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
         product_id: selectedProductId || undefined,
         product_name: productName,
         quantity,
-        agreed_price: parseFloat(agreedPrice),
+        agreed_price: normalizedPrice,
         payment_method: paymentMethod,
         expected_delivery: expectedDelivery || undefined,
         notes: notes || undefined,
@@ -99,6 +140,8 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
       setSubmitting(false);
     }
   };
+
+  const canSubmit = productName.trim().length > 0 && Number(agreedPrice) > 0 && quantity >= 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -119,16 +162,17 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
                 Carregando produtos...
               </div>
             ) : products.length > 0 ? (
-              <Select value={selectedProductId} onValueChange={handleProductSelect}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o produto" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                value={selectedProductId}
+                onChange={e => handleProductSelect(e.target.value)}
+                className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {products.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome}
+                  </option>
+                ))}
+              </select>
             ) : (
               <Input
                 value={productName}
@@ -136,8 +180,8 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
                 placeholder="Nome do produto"
               />
             )}
-            {products.length > 0 && !selectedProductId && (
-              <p className="text-xs text-muted-foreground mt-1">Selecione um produto para continuar</p>
+            {products.length > 0 && selectedProductId && (
+              <p className="text-xs text-muted-foreground mt-1">Produto e valor inicial preenchidos automaticamente.</p>
             )}
           </div>
 
@@ -166,18 +210,17 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
 
           <div>
             <Label>Forma de pagamento combinada</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="transferencia">Transferência bancária</SelectItem>
-                <SelectItem value="boleto">Boleto</SelectItem>
-                <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              value={paymentMethod}
+              onChange={e => setPaymentMethod(e.target.value)}
+              className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              {paymentMethodOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
             <p className="text-[10px] text-muted-foreground mt-1">Apenas informativo — pagamento feito diretamente entre as partes</p>
           </div>
 
@@ -200,7 +243,7 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
             />
           </div>
 
-          <Button onClick={handleSubmit} disabled={submitting || !productName.trim() || !agreedPrice} className="w-full">
+          <Button onClick={handleSubmit} disabled={submitting || !canSubmit} className="w-full">
             {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
             Registrar Negociação
           </Button>
