@@ -42,13 +42,10 @@ export const useSupplierStories = () => {
       // Fetch profiles for suppliers
       const supplierIds = [...new Set((data || []).map(s => s.supplier_id))];
       if (supplierIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, nome, foto_perfil_url')
-          .in('id', supplierIds);
+        const { data: profiles } = await supabase.rpc('get_chat_participant_profiles', { _user_ids: supplierIds });
         
         const profileMap: Record<string, { nome: string; foto_perfil_url: string | null }> = {};
-        profiles?.forEach(p => { profileMap[p.id] = { nome: p.nome || 'Fornecedor', foto_perfil_url: p.foto_perfil_url }; });
+        (profiles as any[] || []).forEach((p: any) => { profileMap[p.id] = { nome: p.nome || 'Fornecedor', foto_perfil_url: p.foto_perfil_url }; });
         setSupplierProfiles(profileMap);
       }
 

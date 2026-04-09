@@ -122,6 +122,23 @@ export const StoryViewer = ({ supplier, onClose, onContact, onViewed, onPrev, on
               </div>
             )}
           </div>
+        ) : story.type === 'video' && story.media_url ? (
+          <div className="w-full h-full relative flex items-center justify-center bg-black">
+            <video
+              src={story.media_url}
+              autoPlay
+              playsInline
+              muted={false}
+              className="max-w-full max-h-full object-contain"
+            />
+            {story.caption && (
+              <div className="absolute bottom-24 left-0 right-0 px-6">
+                <p className="text-white text-center text-lg font-medium bg-black/40 rounded-xl px-4 py-3">
+                  {story.caption}
+                </p>
+              </div>
+            )}
+          </div>
         ) : null}
       </div>
 
