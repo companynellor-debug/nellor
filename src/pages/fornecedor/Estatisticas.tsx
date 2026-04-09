@@ -16,7 +16,7 @@ const Estatisticas = () => {
   const [storyStats, setStoryStats] = useState({ activeCount: 0, totalViews: 0, avgViews: 0 });
   const [storyViewCounts, setStoryViewCounts] = useState<Record<string, number>>({});
 
-  const { getMyStories, getMyStoryStats, getStoryViewCount } = useSupplierStories();
+  const { getMyStories, getMyStoryStats, getStoryViewCount, storyViewsVersion } = useSupplierStories();
   const myStories = getMyStories();
 
   const fetchStats = useCallback(async () => {
@@ -69,7 +69,7 @@ const Estatisticas = () => {
       counts[s.id] = await getStoryViewCount(s.id);
     }
     setStoryViewCounts(counts);
-  }, [getMyStoryStats, getStoryViewCount, myStories.length]);
+  }, [getMyStoryStats, getStoryViewCount, myStories.length, storyViewsVersion]);
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { fetchStoryStats(); }, [myStories.length]);

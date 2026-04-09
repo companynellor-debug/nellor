@@ -34,6 +34,7 @@ const ChatFornecedor = () => {
   const [showSearchActive, setShowSearchActive] = useState(false);
   const [viewingStorySupplier, setViewingStorySupplier] = useState<SupplierWithStories | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { sendMessage: sendSupabaseMessage, getConversations, getMessagesByUser, markAsRead } = useSupabaseMessages(user?.id);
@@ -130,6 +131,11 @@ const ChatFornecedor = () => {
     const name = getCustomerName(conv.userId).toLowerCase();
     return name.includes(searchTerm.toLowerCase());
   });
+
+  const focusSearchInput = () => {
+    setShowSearchActive(true);
+    requestAnimationFrame(() => searchInputRef.current?.focus());
+  };
 
   // ============== CHAT VIEW (Mobile) ==============
   if (selectedCustomerId) {
@@ -309,7 +315,7 @@ const ChatFornecedor = () => {
         </div>
 
         <div className="p-2 bg-white sticky top-[68px] z-10 border-b">
-          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full h-9" /></div>
+          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input ref={searchInputRef} placeholder="Pesquisar clientes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full h-9" /></div>
         </div>
 
         {/* My Stories */}
@@ -320,7 +326,7 @@ const ChatFornecedor = () => {
               const s = groupedStories.find(g => g.supplierId === id);
               if (s) setViewingStorySupplier(s);
             }}
-            onSearchClick={() => {}}
+            onSearchClick={focusSearchInput}
             showAddButton
             onAddClick={() => {
               if (myStories.length > 0) {
@@ -396,7 +402,7 @@ const ChatFornecedor = () => {
                 const s = groupedStories.find(g => g.supplierId === id);
                 if (s) setViewingStorySupplier(s);
               }}
-              onSearchClick={() => setShowSearchActive((prev) => !prev)}
+              onSearchClick={focusSearchInput}
               showAddButton
               onAddClick={() => {
                 if (myStories.length > 0) {
@@ -411,7 +417,7 @@ const ChatFornecedor = () => {
             />
           </div>
           <div className="p-2 border-b">
-            <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Pesquisar clientes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full" /></div>
+            <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input ref={searchInputRef} placeholder="Pesquisar clientes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full" /></div>
           </div>
           <div className="flex-1 overflow-y-auto divide-y">
             {filteredConversations.map((conv) => {
