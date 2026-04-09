@@ -1,9 +1,5 @@
-import { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Image, Type, Loader2, Video, Upload } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, Type, Image as ImageIcon, Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -23,7 +19,7 @@ interface CreateStoryModalProps {
 
 export const CreateStoryModal = ({ open, onOpenChange, onCreateStory }: CreateStoryModalProps) => {
   const { user } = useSupabaseAuth();
-  const [mode, setMode] = useState<'choose' | 'text' | 'media'>('choose');
+  const [tab, setTab] = useState<'text' | 'media'>('text');
   const [caption, setCaption] = useState('');
   const [bgColor, setBgColor] = useState(BG_COLORS[0]);
   const [customColor, setCustomColor] = useState('#7c3aed');
@@ -32,6 +28,15 @@ export const CreateStoryModal = ({ open, onOpenChange, onCreateStory }: CreateSt
   const [fileType, setFileType] = useState<'image' | 'video'>('image');
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (open && tab === 'text') {
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    }
+  }, [open, tab]);
+
+  if (!open) return null;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -42,41 +47,39 @@ export const CreateStoryModal = ({ open, onOpenChange, onCreateStory }: CreateSt
     }
     setFile(selected);
     setFileType(selected.type.startsWith('video/') ? 'video' : 'image');
-    const url = URL.createObjectURL(selected);
-    setFilePreview(url);
+    setFilePreview(URL.createObjectURL(selected));
   };
 
-  const uploadFile = async (file: File): Promise<string> => {
+  const uploadFile = async (f: File): Promise<string> => {
     if (!user) throw new Error('Not authenticated');
-    const ext = file.name.split('.').pop() || 'jpg';
+    const ext = f.name.split('.').pop() || 'jpg';
     const path = `${user.id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('supplier-stories').upload(path, file, { contentType: file.type });
+    const { error } = await supabase.storage.from('supplier-stories').upload(path, f, { contentType: f.type });
     if (error) throw error;
     const { data: urlData } = supabase.storage.from('supplier-stories').getPublicUrl(path);
     return urlData.publicUrl;
   };
 
   const handleCreate = async () => {
-    if (mode === 'text' && !caption.trim()) {
+    if (tab === 'text' && !caption.trim()) {
       toast.error('Digite algo para o status');
       return;
     }
-    if (mode === 'media' && !file) {
+    if (tab === 'media' && !file) {
       toast.error('Selecione uma foto ou vídeo');
       return;
     }
-
     setLoading(true);
     try {
       let mediaUrl: string | undefined;
-      if (mode === 'media' && file) {
+      if (tab === 'media' && file) {
         mediaUrl = await uploadFile(file);
       }
       await onCreateStory({
-        type: mode === 'media' ? fileType : 'text',
+        type: tab === 'media' ? fileType : 'text',
         caption: caption || undefined,
         media_url: mediaUrl,
-        bg_color: mode === 'text' ? bgColor : undefined,
+        bg_color: tab === 'text' ? bgColor : undefined,
       });
       toast.success('Status publicado!');
       onOpenChange(false);
@@ -89,94 +92,56 @@ export const CreateStoryModal = ({ open, onOpenChange, onCreateStory }: CreateSt
   };
 
   const reset = () => {
-    setMode('choose');
+    setTab('text');
     setCaption('');
     setFile(null);
     setFilePreview(null);
+    setBgColor(BG_COLORS[0]);
+  };
+
+  const switchToMedia = () => {
+    setTab('media');
+    setTimeout(() => fileInputRef.current?.click(), 150);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Criar Status</DialogTitle>
-        </DialogHeader>
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-black/80 z-10">
+        <button onClick={() => { reset(); onOpenChange(false); }} className="p-1.5 text-white hover:bg-white/10 rounded-full">
+          <X className="h-6 w-6" />
+        </button>
+        <span className="text-white font-semibold text-base">Criar Status</span>
+        <button
+          onClick={handleCreate}
+          disabled={loading || (tab === 'text' && !caption.trim()) || (tab === 'media' && !file)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-purple-500 text-white font-semibold text-sm disabled:opacity-40 transition-opacity"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Publicar
+        </button>
+      </div>
 
-        {mode === 'choose' && (
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setMode('text')}
-              className="flex flex-col items-center gap-2 p-6 rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <Type className="h-8 w-8 text-primary" />
-              <span className="font-medium">Texto</span>
-            </button>
-            <button
-              onClick={() => setMode('media')}
-              className="flex flex-col items-center gap-2 p-6 rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <Upload className="h-8 w-8 text-primary" />
-              <span className="font-medium">Foto / Vídeo</span>
-            </button>
-          </div>
-        )}
-
-        {mode === 'text' && (
-          <div className="space-y-4">
-            {/* Preview */}
-            <div
-              className="w-full aspect-[9/16] max-h-64 rounded-2xl flex items-center justify-center p-6"
-              style={{ backgroundColor: bgColor }}
-            >
-              <p className="text-white text-lg font-bold text-center">
-                {caption || 'Seu texto aqui...'}
-              </p>
-            </div>
-
-            {/* Color grid + custom picker */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2 justify-center">
-                {BG_COLORS.map(color => (
-                  <button
-                    key={color}
-                    onClick={() => setBgColor(color)}
-                    className={`w-7 h-7 rounded-full border-2 transition-all ${bgColor === color ? 'border-foreground scale-110 ring-2 ring-primary/30' : 'border-transparent'}`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-                {/* Custom color picker */}
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={customColor}
-                    onChange={(e) => { setCustomColor(e.target.value); setBgColor(e.target.value); }}
-                    className="absolute inset-0 w-7 h-7 opacity-0 cursor-pointer"
-                  />
-                  <div
-                    className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${!BG_COLORS.includes(bgColor) ? 'border-foreground scale-110 ring-2 ring-primary/30' : 'border-muted-foreground/30'}`}
-                    style={{ background: `conic-gradient(red, yellow, lime, aqua, blue, magenta, red)` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Textarea
+      {/* Preview Area */}
+      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
+        {tab === 'text' ? (
+          <div
+            className="w-full h-full flex items-center justify-center p-8 transition-colors duration-300"
+            style={{ backgroundColor: bgColor }}
+          >
+            <textarea
+              ref={textareaRef}
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Digite seu status..."
               maxLength={200}
-              className="min-h-20"
+              className="bg-transparent text-white text-2xl font-bold text-center w-full max-w-md resize-none border-none outline-none placeholder:text-white/40 leading-relaxed"
+              rows={5}
+              style={{ caretColor: 'white' }}
             />
-
-            <Button onClick={handleCreate} disabled={loading} className="w-full gap-2">
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Publicar Status
-            </Button>
           </div>
-        )}
-
-        {mode === 'media' && (
-          <div className="space-y-4">
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-zinc-900">
             <input
               ref={fileInputRef}
               type="file"
@@ -184,43 +149,94 @@ export const CreateStoryModal = ({ open, onOpenChange, onCreateStory }: CreateSt
               onChange={handleFileSelect}
               className="hidden"
             />
-            
             {!filePreview ? (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full aspect-video rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-3 transition-all"
+                className="flex flex-col items-center gap-4 text-white/60 hover:text-white/80 transition-colors"
               >
-                <Upload className="h-10 w-10 text-primary/60" />
-                <span className="text-sm text-muted-foreground">Toque para selecionar foto ou vídeo</span>
+                <div className="w-20 h-20 rounded-full border-2 border-dashed border-white/30 flex items-center justify-center">
+                  <ImageIcon className="h-8 w-8" />
+                </div>
+                <span className="text-sm font-medium">Toque para selecionar</span>
               </button>
             ) : (
-              <div className="w-full aspect-video rounded-2xl overflow-hidden bg-muted relative">
+              <div className="w-full h-full relative flex items-center justify-center">
                 {fileType === 'video' ? (
-                  <video src={filePreview} controls className="w-full h-full object-cover" />
+                  <video src={filePreview} controls className="max-w-full max-h-full object-contain" />
                 ) : (
-                  <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={filePreview} alt="" className="max-w-full max-h-full object-contain" />
                 )}
                 <button
                   onClick={() => { setFile(null); setFilePreview(null); }}
-                  className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80"
+                  className="absolute top-4 right-4 bg-black/60 text-white rounded-full p-2 hover:bg-black/80"
                 >
-                  ✕
+                  <X className="h-5 w-5" />
                 </button>
               </div>
             )}
-
-            <Input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder="Legenda (opcional)"
-            />
-            <Button onClick={handleCreate} disabled={loading || !file} className="w-full gap-2">
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Publicar Status
-            </Button>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {/* Caption for media mode */}
+      {tab === 'media' && filePreview && (
+        <div className="px-4 py-3 bg-black/80">
+          <input
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Adicionar legenda..."
+            maxLength={200}
+            className="w-full bg-white/10 text-white rounded-full px-4 py-2.5 text-sm border-none outline-none placeholder:text-white/40"
+          />
+        </div>
+      )}
+
+      {/* Bottom Controls */}
+      <div className="bg-black/90 px-4 pt-3 pb-6 space-y-3">
+        {/* Color palette (text mode only) */}
+        {tab === 'text' && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {BG_COLORS.map(color => (
+              <button
+                key={color}
+                onClick={() => setBgColor(color)}
+                className={`w-8 h-8 rounded-full flex-shrink-0 border-2 transition-all ${bgColor === color ? 'border-white scale-110 ring-2 ring-white/30' : 'border-transparent'}`}
+                style={{ backgroundColor: color }}
+              />
+            ))}
+            <div className="relative flex-shrink-0">
+              <input
+                type="color"
+                value={customColor}
+                onChange={(e) => { setCustomColor(e.target.value); setBgColor(e.target.value); }}
+                className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer"
+              />
+              <div
+                className={`w-8 h-8 rounded-full border-2 transition-all ${!BG_COLORS.includes(bgColor) ? 'border-white scale-110' : 'border-white/30'}`}
+                style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Tab switcher */}
+        <div className="flex items-center justify-center gap-1 bg-white/10 rounded-full p-1">
+          <button
+            onClick={() => setTab('text')}
+            className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${tab === 'text' ? 'bg-white text-black' : 'text-white/70 hover:text-white'}`}
+          >
+            <Type className="h-4 w-4" />
+            Texto
+          </button>
+          <button
+            onClick={switchToMedia}
+            className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all ${tab === 'media' ? 'bg-white text-black' : 'text-white/70 hover:text-white'}`}
+          >
+            <ImageIcon className="h-4 w-4" />
+            Mídia
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };

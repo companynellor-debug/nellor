@@ -39,23 +39,19 @@ export const useSupplierStories = () => {
       if (error) throw error;
       setStories(data || []);
 
-      // Fetch profiles for suppliers
       const supplierIds = [...new Set((data || []).map(s => s.supplier_id))];
       if (supplierIds.length > 0) {
         const { data: profiles } = await supabase.rpc('get_chat_participant_profiles', { _user_ids: supplierIds });
-        
         const profileMap: Record<string, { nome: string; foto_perfil_url: string | null }> = {};
         (profiles as any[] || []).forEach((p: any) => { profileMap[p.id] = { nome: p.nome || 'Fornecedor', foto_perfil_url: p.foto_perfil_url }; });
         setSupplierProfiles(profileMap);
       }
 
-      // Fetch viewed stories
       if (user) {
         const { data: views } = await supabase
           .from('story_views')
           .select('story_id')
           .eq('viewer_id', user.id);
-        
         setViewedStoryIds(new Set((views || []).map(v => v.story_id)));
       }
     } catch (err) {
@@ -67,14 +63,12 @@ export const useSupplierStories = () => {
 
   useEffect(() => {
     fetchStories();
-
     const channel = supabase
       .channel('stories-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'supplier_stories' }, () => {
         fetchStories();
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [fetchStories]);
 
@@ -114,12 +108,39 @@ export const useSupplierStories = () => {
 
   const deleteStory = useCallback(async (storyId: string) => {
     await supabase.from('supplier_stories').delete().eq('id', storyId);
+    setStories(prev => prev.filter(s => s.id !== storyId));
   }, []);
 
   const getMyStories = useCallback(() => {
     if (!user) return [];
     return stories.filter(s => s.supplier_id === user.id);
   }, [stories, user]);
+
+  const getMyStoryStats = useCallback(async () => {
+    if (!user) return { activeCount: 0, totalViews: 0, avgViews: 0 };
+    const myStories = stories.filter(s => s.supplier_id === user.id);
+    if (myStories.length === 0) return { activeCount: 0, totalViews: 0, avgViews: 0 };
+
+    const { count } = await supabase
+      .from('story_views')
+      .select('*', { count: 'exact', head: true })
+      .in('story_id', myStories.map(s => s.id));
+
+    const totalViews = count || 0;
+    return {
+      activeCount: myStories.length,
+      totalViews,
+      avgViews: myStories.length > 0 ? Math.round(totalViews / myStories.length) : 0,
+    };
+  }, [stories, user]);
+
+  const getStoryViewCount = useCallback(async (storyId: string) => {
+    const { count } = await supabase
+      .from('story_views')
+      .select('*', { count: 'exact', head: true })
+      .eq('story_id', storyId);
+    return count || 0;
+  }, []);
 
   return {
     stories,
@@ -130,5 +151,7 @@ export const useSupplierStories = () => {
     deleteStory,
     getMyStories,
     fetchStories,
+    getMyStoryStats,
+    getStoryViewCount,
   };
 };
