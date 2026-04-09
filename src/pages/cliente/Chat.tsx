@@ -1,14 +1,15 @@
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake, ShieldCheck, AlertTriangle } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake, AlertTriangle, Search, Pin } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { NegotiationForm } from "@/components/chat/NegotiationForm";
 import { VerifiedSupplierBadge } from "@/components/cliente/VerifiedSupplierBadge";
+import { SupplierStories } from "@/components/chat/SupplierStories";
+import { StoryViewer } from "@/components/chat/StoryViewer";
+import { SearchSuppliersSheet } from "@/components/chat/SearchSuppliersSheet";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
@@ -16,6 +17,8 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "@/hooks/use-toast";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 import { useTypingPresence } from "@/hooks/useTypingPresence";
+import { usePresence } from "@/hooks/usePresence";
+import { useSupplierStories, SupplierWithStories } from "@/hooks/useSupplierStories";
 import { supabase } from "@/integrations/supabase/client";
 
 const Chat = () => {
@@ -29,84 +32,64 @@ const Chat = () => {
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const [showNegotiationForm, setShowNegotiationForm] = useState(false);
   const [messageLimitInfo, setMessageLimitInfo] = useState<{ allowed: boolean; remaining: number; verified: boolean; is_new_account?: boolean } | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSearchSheet, setShowSearchSheet] = useState(false);
+  const [viewingStorySupplier, setViewingStorySupplier] = useState<SupplierWithStories | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  const { 
-    sendMessage: sendSupabaseMessage, 
-    getConversations, 
-    getMessagesByUser, 
-    markAsRead,
-    getUnreadCount 
-  } = useSupabaseMessages();
 
-  // Typing presence - only active when a supplier is selected
+  const { sendMessage: sendSupabaseMessage, getConversations, getMessagesByUser, markAsRead, getUnreadCount } = useSupabaseMessages();
+  const { isUserOnline, getLastSeenText, fetchLastSeen } = usePresence(user?.id);
+  const { getGroupedStories, markAsViewed } = useSupplierStories();
+
   const chatId = selectedUserId && user?.id ? [user.id, selectedUserId].sort().join('_') : '';
   const { isOtherUserTyping, startTyping, stopTyping } = useTypingPresence(chatId, user?.id);
 
+  const conversations = getConversations();
+  const groupedStories = getGroupedStories();
+
+  // Fetch last seen for all conversation partners
+  useEffect(() => {
+    const ids = conversations.map(c => c.userId);
+    if (ids.length > 0) fetchLastSeen(ids);
+  }, [conversations.length]);
+
   const handleDownloadImage = () => {
     if (!viewingImage) return;
-    
     const link = document.createElement('a');
     link.href = viewingImage.url;
     link.download = viewingImage.name || 'imagem.jpg';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    toast({
-      title: "Download iniciado",
-      description: "A imagem está sendo baixada"
-    });
   };
-  
-  const conversations = getConversations();
 
   useEffect(() => {
     if (location.state?.supplierId) {
       const supplierId = location.state.supplierId;
-      const message = location.state.message;
-      
+      const msg = location.state.message;
       setSelectedUserId(supplierId);
       markAsRead(supplierId);
-      
-      // Se veio com mensagem, envia automaticamente
-      if (message && user) {
+      if (msg && user) {
         setTimeout(async () => {
           try {
-            await sendSupabaseMessage(supplierId, message);
-            toast({
-              title: "Mensagem enviada",
-              description: "Sua mensagem foi enviada com sucesso"
-            });
-            // Limpa o state para não reenviar
-            navigate('/cliente/chat', { 
-              state: { supplierId },
-              replace: true 
-            });
-          } catch (error) {
-            console.error('Erro ao enviar mensagem automática:', error);
-            toast({
-              title: "Erro ao enviar mensagem",
-              description: "Tente novamente",
-              variant: "destructive"
-            });
+            await sendSupabaseMessage(supplierId, msg);
+            navigate('/cliente/chat', { state: { supplierId }, replace: true });
+          } catch {
+            toast({ title: "Erro ao enviar mensagem", variant: "destructive" });
           }
         }, 1000);
       }
     }
   }, [location.state, user]);
 
-  // Check message limit for new unverified accounts
   useEffect(() => {
     if (!user) return;
     const checkLimit = async () => {
       try {
         const { data } = await supabase.rpc('check_chat_message_limit', { _user_id: user.id });
         if (data) setMessageLimitInfo(data as any);
-      } catch (err) {
-        console.error('Error checking message limit:', err);
-      }
+      } catch (err) { console.error('Error checking message limit:', err); }
     };
     checkLimit();
   }, [user]);
@@ -118,226 +101,124 @@ const Chat = () => {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
-    const fileArray = Array.from(files);
     const newAttachments: MessageAttachment[] = [];
-
-    // Processa todos os arquivos
-    for (const file of fileArray) {
-      const fileType = file.type.startsWith('image/') ? 'image' 
-        : file.type.startsWith('video/') ? 'video' 
-        : 'file';
-
-      // Validação de tamanho (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "Arquivo muito grande",
-          description: `${file.name} excede 10MB`,
-          variant: "destructive"
-        });
-        continue;
-      }
-
+    for (const file of Array.from(files)) {
+      const fileType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'file';
+      if (file.size > 10 * 1024 * 1024) { toast({ title: `${file.name} excede 10MB`, variant: "destructive" }); continue; }
       try {
         const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
+          const reader = new FileReader(); reader.onload = () => resolve(reader.result as string); reader.onerror = reject; reader.readAsDataURL(file);
         });
-
-        newAttachments.push({
-          type: fileType,
-          url: base64,
-          name: file.name
-        });
-      } catch (error) {
-        console.error('Erro ao ler arquivo:', error);
-        toast({
-          title: "Erro ao processar arquivo",
-          description: `Não foi possível processar ${file.name}`,
-          variant: "destructive"
-        });
-      }
+        newAttachments.push({ type: fileType, url: base64, name: file.name });
+      } catch { toast({ title: `Erro ao processar ${file.name}`, variant: "destructive" }); }
     }
-
-    if (newAttachments.length > 0) {
-      setAttachments(prev => [...prev, ...newAttachments]);
-      toast({
-        title: "Arquivos anexados",
-        description: `${newAttachments.length} arquivo(s) anexado(s) com sucesso`
-      });
-    }
-
+    if (newAttachments.length > 0) setAttachments(prev => [...prev, ...newAttachments]);
     e.target.value = '';
   };
 
-  const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
-  };
+  const removeAttachment = (index: number) => setAttachments(prev => prev.filter((_, i) => i !== index));
 
   const handleSend = () => {
     if (!selectedUserId) return;
-    
-    // Check message limit
-    if (messageLimitInfo && !messageLimitInfo.allowed) {
-      toast({
-        title: "Limite de mensagens atingido",
-        description: "Verifique seu telefone para desbloquear o chat completo.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!message.trim() && attachments.length === 0) {
-      toast({
-        title: "Mensagem vazia",
-        description: "Digite uma mensagem ou anexe um arquivo",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    if (messageLimitInfo && !messageLimitInfo.allowed) { toast({ title: "Limite de mensagens atingido", variant: "destructive" }); return; }
+    if (!message.trim() && attachments.length === 0) return;
     stopTyping();
     sendSupabaseMessage(selectedUserId, message.trim(), attachments.length > 0 ? attachments : undefined);
     setMessage("");
     setAttachments([]);
-    
-    // Refresh limit count
     if (messageLimitInfo?.is_new_account && !messageLimitInfo.verified) {
       setMessageLimitInfo(prev => prev ? { ...prev, remaining: Math.max(0, prev.remaining - 1), allowed: prev.remaining > 1 } : prev);
     }
   };
 
+  const handleStoryClick = (supplierId: string) => {
+    const supplier = groupedStories.find(s => s.supplierId === supplierId);
+    if (supplier) setViewingStorySupplier(supplier);
+  };
+
+  const handleStoryContact = (supplierId: string) => {
+    setViewingStorySupplier(null);
+    setSelectedUserId(supplierId);
+    markAsRead(supplierId);
+  };
+
   const currentMessages = selectedUserId ? getMessagesByUser(selectedUserId) : [];
   const selectedSupplier = selectedUserId ? stores.find(s => s.id === selectedUserId) : null;
 
-  if (selectedUserId && selectedSupplier) {
-    return (
-      <div className="min-h-screen bg-background pb-20">
-        <ParticlesBackground />
+  const filteredConversations = useMemo(() => {
+    if (!searchTerm) return conversations;
+    return conversations.filter(conv => {
+      const supplier = stores.find(s => s.id === conv.userId);
+      return supplier?.nome?.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }, [conversations, searchTerm, stores]);
 
-        {/* Header do Chat */}
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-          <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-            <button onClick={() => setSelectedUserId(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-            <div 
-              onClick={() => navigate(`/cliente/loja/${selectedSupplier.id}`)}
-              className="flex items-center gap-3 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              <div className="w-12 h-12 rounded-full overflow-hidden">
-                <img src={selectedSupplier.foto_perfil_url || '/placeholder.svg'} alt={selectedSupplier.nome} className="w-full h-full object-cover" />
+  // ============== CHAT VIEW ==============
+  if (selectedUserId) {
+    const supplierName = selectedSupplier?.nome || 'Fornecedor';
+    const supplierAvatar = selectedSupplier?.foto_perfil_url || '/placeholder.svg';
+    const presenceText = isOtherUserTyping ? 'Digitando...' : getLastSeenText(selectedUserId);
+
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-40 bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg">
+          <div className="px-4 py-3 flex items-center gap-3">
+            <button onClick={() => setSelectedUserId(null)} className="p-1.5 hover:bg-white/10 rounded-full"><ArrowLeft className="h-5 w-5" /></button>
+            <div onClick={() => navigate(`/cliente/loja/${selectedUserId}`)} className="flex items-center gap-3 flex-1 cursor-pointer">
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
+                <img src={supplierAvatar} alt={supplierName} className="w-full h-full object-cover" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h2 className="font-bold">{selectedSupplier.nome}</h2>
-                  <VerifiedSupplierBadge verified={(selectedSupplier as any).verified !== false} />
+                  <h2 className="font-semibold text-sm truncate">{supplierName}</h2>
+                  <VerifiedSupplierBadge verified={(selectedSupplier as any)?.verified !== false} />
                 </div>
-                {isOtherUserTyping ? (
-                  <p className="text-xs text-primary animate-pulse">Digitando...</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Online</p>
-                )}
+                <p className={`text-[11px] ${isOtherUserTyping ? 'animate-pulse' : 'opacity-80'}`}>{presenceText}</p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowNegotiationForm(true)}
-              className="border-primary/30 text-primary hover:bg-primary/10 gap-1 text-xs flex-shrink-0"
-            >
-              <Handshake className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Registrar Negociação</span>
-              <span className="sm:hidden">Registrar</span>
+            <Button variant="ghost" size="sm" onClick={() => setShowNegotiationForm(true)} className="text-white hover:bg-white/10 gap-1 text-xs">
+              <Handshake className="h-4 w-4" />
+              <span className="hidden sm:inline">Negociar</span>
             </Button>
           </div>
         </header>
 
-        {/* Negotiation Form */}
-        <NegotiationForm
-          supplierId={selectedUserId}
-          open={showNegotiationForm}
-          onOpenChange={setShowNegotiationForm}
-        />
+        <NegotiationForm supplierId={selectedUserId} open={showNegotiationForm} onOpenChange={setShowNegotiationForm} />
 
-        {/* Mensagens */}
-        <main className="container mx-auto px-4 py-6 relative z-10 space-y-4" style={{ paddingBottom: "120px" }}>
-          {/* Message limit warning */}
+        {/* Messages */}
+        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gradient-to-b from-primary/5 to-background" style={{ paddingBottom: "100px" }}>
           {messageLimitInfo?.is_new_account && !messageLimitInfo.verified && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-start gap-2">
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-xs font-medium text-orange-800">
-                  {messageLimitInfo.allowed 
-                    ? `Conta nova — ${messageLimitInfo.remaining} mensagens restantes hoje`
-                    : "Limite de mensagens atingido"}
-                </p>
-                <p className="text-[10px] text-orange-600 mt-0.5">
-                  Verifique seu telefone no perfil para desbloquear o chat completo.
-                </p>
-              </div>
+              <p className="text-xs text-orange-800">{messageLimitInfo.allowed ? `${messageLimitInfo.remaining} mensagens restantes` : "Limite atingido"} — verifique seu telefone.</p>
             </div>
           )}
-
           {currentMessages.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhuma mensagem ainda</p>
-              <p className="text-sm text-muted-foreground mt-2">Envie uma mensagem para começar a conversa</p>
-            </div>
+            <div className="text-center py-12"><p className="text-muted-foreground">Envie uma mensagem para começar</p></div>
           ) : (
             currentMessages.map((msg) => {
               const isFromMe = msg.from_user === user?.id;
               return (
                 <div key={msg.id} className={`flex ${isFromMe ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[75%] ${
-                    isFromMe
-                      ? "bg-primary text-white" 
-                      : "bg-white border shadow-sm"
-                  } rounded-2xl px-4 py-3`}>
+                  <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm ${isFromMe ? "bg-primary text-white rounded-tr-md" : "bg-white border rounded-tl-md"}`}>
                     {msg.text && <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>}
-                    
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div className="space-y-2 mt-2">
-                        {msg.attachments.map((attachmentUrl, idx) => {
-                          const isImage = attachmentUrl.startsWith('data:image') || /\.(jpg|jpeg|png|gif|webp)$/i.test(attachmentUrl);
-                          const isVideo = attachmentUrl.startsWith('data:video') || /\.(mp4|webm|ogg)$/i.test(attachmentUrl);
-                          
+                        {msg.attachments.map((url, idx) => {
+                          const isImage = url.startsWith('data:image') || /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                          const isVideo = url.startsWith('data:video') || /\.(mp4|webm|ogg)$/i.test(url);
                           return (
-                            <div key={idx} className="rounded-lg overflow-hidden">
-                              {isImage && (
-                                <img 
-                                  src={attachmentUrl} 
-                                  alt="Anexo"
-                                  className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() => setViewingImage({ url: attachmentUrl, name: `anexo-${idx}` })}
-                                />
-                              )}
-                              {isVideo && (
-                                <video 
-                                  src={attachmentUrl} 
-                                  controls 
-                                  className="max-w-full h-auto rounded-lg"
-                                />
-                              )}
-                              {!isImage && !isVideo && (
-                                <a 
-                                  href={attachmentUrl} 
-                                  download={`arquivo-${idx}`}
-                                  className="flex items-center gap-2 p-2 bg-accent rounded-lg hover:bg-accent/80"
-                                >
-                                  <FileText className="h-4 w-4" />
-                                  <span className="text-xs truncate">Arquivo anexo</span>
-                                </a>
-                              )}
+                            <div key={idx}>
+                              {isImage && <img src={url} alt="" className="max-w-full rounded-lg cursor-pointer" onClick={() => setViewingImage({ url, name: `anexo-${idx}` })} />}
+                              {isVideo && <video src={url} controls className="max-w-full rounded-lg" />}
+                              {!isImage && !isVideo && <a href={url} download className="flex items-center gap-2 p-2 bg-accent rounded-lg"><FileText className="h-4 w-4" /><span className="text-xs">Arquivo</span></a>}
                             </div>
                           );
                         })}
                       </div>
                     )}
-                    
-                    <p className="text-xs opacity-70 mt-1">
+                    <p className={`text-[10px] mt-1 ${isFromMe ? 'text-white/70' : 'text-muted-foreground'}`}>
                       {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -348,110 +229,48 @@ const Chat = () => {
           <div ref={messagesEndRef} />
         </main>
 
-        {/* Input de Mensagem */}
-        <div className="fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30">
-          <div className="container mx-auto">
-            {/* Preview de Anexos */}
-            {attachments.length > 0 && (
-              <div className="mb-3 flex gap-2 overflow-x-auto pb-2">
-                {attachments.map((attachment, idx) => (
-                  <div key={idx} className="relative flex-shrink-0">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-accent flex items-center justify-center">
-                      {attachment.type === 'image' && (
-                        <img src={attachment.url} alt="" className="w-full h-full object-cover" />
-                      )}
-                      {attachment.type === 'video' && (
-                        <Video className="h-8 w-8 text-muted-foreground" />
-                      )}
-                      {attachment.type === 'file' && (
-                        <FileText className="h-8 w-8 text-muted-foreground" />
-                      )}
-                    </div>
-                    <button
-                      onClick={() => removeAttachment(idx)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
+        {/* Input */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t p-3 z-30">
+          {attachments.length > 0 && (
+            <div className="mb-2 flex gap-2 overflow-x-auto pb-2">
+              {attachments.map((att, idx) => (
+                <div key={idx} className="relative flex-shrink-0">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-muted flex items-center justify-center">
+                    {att.type === 'image' ? <img src={att.url} alt="" className="w-full h-full object-cover" /> : att.type === 'video' ? <Video className="h-6 w-6 text-muted-foreground" /> : <FileText className="h-6 w-6 text-muted-foreground" />}
                   </div>
-                ))}
-              </div>
-            )}
-            
-            {/* Input */}
-            <div className="flex gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*,.pdf,.doc,.docx"
-                multiple
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-shrink-0"
-              >
-                <Paperclip className="h-5 w-5" />
-              </Button>
-              <Input
-                value={message}
-                onChange={(e) => {
-                  setMessage(e.target.value);
-                  startTyping();
-                }}
-                onBlur={stopTyping}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    stopTyping();
-                    handleSend();
-                  }
-                }}
-                placeholder="Digite sua mensagem..."
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSend}
-                className="bg-primary hover:bg-primary/90 text-white flex-shrink-0"
-              >
-                <Send className="h-5 w-5" />
-              </Button>
+                  <button onClick={() => removeAttachment(idx)} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5"><X className="h-3 w-3" /></button>
+                </div>
+              ))}
             </div>
+          )}
+          <div className="flex items-center gap-2">
+            <input ref={fileInputRef} type="file" accept="image/*,video/*,.pdf,.doc,.docx" multiple onChange={handleFileSelect} className="hidden" />
+            <button onClick={() => fileInputRef.current?.click()} className="p-2 text-muted-foreground hover:text-foreground"><Paperclip className="h-5 w-5" /></button>
+            <Input
+              value={message}
+              onChange={(e) => { setMessage(e.target.value); startTyping(); }}
+              onBlur={stopTyping}
+              onKeyPress={(e) => { if (e.key === "Enter" && !e.shiftKey) { stopTyping(); handleSend(); } }}
+              placeholder="Mensagem..."
+              className="flex-1 rounded-full bg-muted border-0"
+            />
+            <button onClick={handleSend} className="p-2.5 bg-primary text-white rounded-full hover:bg-primary/90 disabled:opacity-50" disabled={!message.trim() && attachments.length === 0}>
+              <Send className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
-        {/* Modal de Visualização de Imagem */}
+        {/* Image viewer */}
         <Dialog open={!!viewingImage} onOpenChange={(open) => !open && setViewingImage(null)}>
           <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-black/95">
             <div className="relative w-full h-full flex items-center justify-center">
               {viewingImage && (
                 <>
-                  <img 
-                    src={viewingImage.url} 
-                    alt={viewingImage.name}
-                    className="max-w-full max-h-full object-contain"
-                  />
+                  <img src={viewingImage.url} alt="" className="max-w-full max-h-full object-contain" />
                   <div className="absolute top-4 right-4 flex gap-2">
-                    <Button
-                      onClick={handleDownloadImage}
-                      className="bg-primary hover:bg-primary/90 gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      Baixar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setViewingImage(null)}
-                      className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <Button onClick={handleDownloadImage} className="bg-primary gap-2"><Download className="h-4 w-4" />Baixar</Button>
+                    <Button variant="outline" onClick={() => setViewingImage(null)} className="bg-white/10 text-white border-white/20"><X className="h-4 w-4" /></Button>
                   </div>
-                  <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-4 py-2 rounded-full">
-                    {viewingImage.name}
-                  </p>
                 </>
               )}
             </div>
@@ -463,66 +282,96 @@ const Chat = () => {
     );
   }
 
+  // ============== CONVERSATIONS LIST ==============
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ParticlesBackground />
-
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-primary">Conversas</h1>
-          <p className="text-sm text-muted-foreground">{conversations.length} conversas ativas</p>
+      <header className="sticky top-0 z-40 bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg">
+        <div className="px-4 py-4">
+          <h1 className="text-xl font-bold">Mensagens</h1>
+          <p className="text-xs text-white/70">{conversations.length} conversas ativas</p>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 relative z-10">
-        <div className="space-y-3">
-          {conversations.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhuma conversa ainda</p>
-              <p className="text-sm text-muted-foreground mt-2">Converse com lojas através dos produtos</p>
-            </div>
-          ) : (
-            conversations.map((conv) => {
-              const supplier = stores.find(s => s.id === conv.userId);
-              if (!supplier) return null;
-              
-              return (
-                <Card
-                  key={conv.userId}
-                  onClick={() => {
-                    setSelectedUserId(conv.userId);
-                    markAsRead(conv.userId);
-                  }}
-                  className="bg-white border shadow-sm p-4 cursor-pointer hover:shadow-md transition-all"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
+      {/* Search */}
+      <div className="px-4 py-2 bg-white sticky top-[68px] z-30 border-b">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Pesquisar conversas..." className="pl-9 rounded-full bg-muted border-0 h-9" />
+        </div>
+      </div>
+
+      {/* Stories */}
+      {(groupedStories.length > 0 || true) && (
+        <div className="bg-white border-b">
+          <SupplierStories suppliers={groupedStories} onStoryClick={handleStoryClick} onSearchClick={() => setShowSearchSheet(true)} />
+        </div>
+      )}
+
+      {/* Conversations */}
+      <div className="divide-y">
+        {filteredConversations.length === 0 ? (
+          <div className="text-center py-12 px-4">
+            <p className="text-muted-foreground">Nenhuma conversa ainda</p>
+            <p className="text-sm text-muted-foreground mt-2">Use a busca acima para encontrar fornecedores</p>
+          </div>
+        ) : (
+          filteredConversations.map((conv) => {
+            const supplier = stores.find(s => s.id === conv.userId);
+            if (!supplier) return null;
+            const online = isUserOnline(conv.userId);
+            return (
+              <div
+                key={conv.userId}
+                onClick={() => { setSelectedUserId(conv.userId); markAsRead(conv.userId); }}
+                className="px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors active:bg-muted"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-14 h-14 rounded-full overflow-hidden">
                       <img src={supplier.foto_perfil_url || '/placeholder.svg'} alt={supplier.nome} className="w-full h-full object-cover" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold truncate">{supplier.nome}</h3>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(conv.lastMessage.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    {online && <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <h3 className="font-semibold truncate text-[15px]">{supplier.nome}</h3>
+                      <span className="text-[11px] text-muted-foreground flex-shrink-0 ml-2">
+                        {new Date(conv.lastMessage.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground truncate pr-2">{conv.lastMessage.text || 'Anexo'}</p>
+                      {conv.unreadCount > 0 && (
+                        <span className="bg-primary text-white text-[11px] rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 flex-shrink-0">
+                          {conv.unreadCount}
                         </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground truncate">{conv.lastMessage.text}</p>
-                        {conv.unreadCount > 0 && (
-                          <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ml-2">
-                            {conv.unreadCount}
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                </Card>
-              );
-            })
-          )}
-        </div>
-      </main>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Story Viewer */}
+      {viewingStorySupplier && (
+        <StoryViewer
+          supplier={viewingStorySupplier}
+          onClose={() => setViewingStorySupplier(null)}
+          onContact={handleStoryContact}
+          onViewed={markAsViewed}
+        />
+      )}
+
+      {/* Search Suppliers Sheet */}
+      <SearchSuppliersSheet
+        open={showSearchSheet}
+        onOpenChange={setShowSearchSheet}
+        onSelectSupplier={(id) => { setSelectedUserId(id); markAsRead(id); }}
+      />
 
       <BottomNav />
     </div>
