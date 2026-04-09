@@ -1,45 +1,49 @@
 
 
-## Correções do Chat: 4 Problemas Identificados
+## Redesign do Fluxo de Status + Estatísticas de Stories
 
-### Problema 1: Nomes "Cliente" e sem foto no chat do fornecedor
-O `useEffect` que busca perfis dos clientes depende de `conversations` como dependência, mas usa `customerProfiles` no filtro de `missingIds` sem incluí-lo como dependência — isso causa uma condição de corrida onde o fetch só roda uma vez e pode falhar silenciosamente. Além disso, o `useSupabaseMessages` é chamado com `user?.id` no fornecedor mas sem parâmetro no cliente, causando inconsistência.
+### Problema Atual
+1. O fluxo de criação de status é um modal genérico com 2 passos (escolher tipo → preencher). Não tem o feel do Instagram Stories.
+2. Não existe nenhum lugar para o fornecedor ver estatísticas dos seus stories (quem visualizou, quantas views, etc.).
 
-**Correção:** Refatorar o `useEffect` de fetch de perfis para usar um `useCallback` estável e garantir que rode sempre que novas conversas aparecerem. Adicionar retry e logs de erro mais claros.
+### Solução
 
-### Problema 2: Status usa link em vez de upload de arquivo
-O `CreateStoryModal` pede uma URL colada manualmente. Precisa ser convertido para upload real via Supabase Storage.
+#### 1. Redesign do CreateStoryModal — Fluxo estilo Instagram
+Reescrever `src/components/chat/CreateStoryModal.tsx` com um fluxo mais imersivo:
 
-**Correção:**
-- Adicionar modo `video` além de `image` e `text`
-- Substituir o input de URL por um `<input type="file">` que aceita `image/*,video/*`
-- Fazer upload do arquivo para o bucket `supplier-stories` no Supabase Storage
-- Salvar a URL pública gerada no campo `media_url`
-- Manter preview antes de publicar
+- **Tela inicial**: Preview fullscreen (aspect 9:16) com abas na parte inferior: "Texto" e "Mídia"
+- **Modo Texto**: Preview em tempo real ocupando a tela toda do modal, campo de texto sobreposto ao preview, paleta de cores na parte inferior como botões circulares + color picker
+- **Modo Mídia**: Ao selecionar a aba, abre direto o file picker. Preview fullscreen com a mídia. Campo de legenda sobreposto embaixo
+- **Botão "Publicar"** fixo no rodapé, estilo Instagram (gradiente, arredondado)
+- **Botão de voltar** no topo para trocar de modo
+- Layout escuro (fundo preto/cinza escuro) para dar o feel de criação de story
 
-### Problema 3: Barra de navegação sobrepõe o input de digitação
-No chat do cliente (foto 3), o input está fixo no `bottom-0` mas o `BottomNav` também está fixo no bottom. Ambos competem pelo mesmo espaço.
+#### 2. Melhorar o StoryViewer
+Em `src/components/chat/StoryViewer.tsx`:
+- Para stories do próprio fornecedor (quando clica em "Meu Status"), mostrar no rodapé o **número de visualizações** e um botão "Ver quem viu"
+- Ao clicar, abre uma lista (sheet) com os nomes e fotos de quem visualizou, usando o RPC `get_story_views` que já existe
+- Botão de deletar story (ícone lixeira no header) para os próprios stories
 
-**Correção:**
-- **Cliente:** Quando estiver na view de conversa individual, o `BottomNav` já não aparece (o componente retorna antes do `<BottomNav />`). O problema é o `padding-bottom: 100px` no main que não é suficiente, e o input fixo precisa considerar o safe-area. Ajustar o layout para `flex flex-col h-[100dvh]` com o input como parte do fluxo (não fixo), eliminando o conflito.
-- **Fornecedor:** O mobile chat view usa `h-[calc(100vh-4rem)]` mas o `BottomNavFornecedor` fica visível por cima. Esconder o BottomNav quando em conversa individual ou ajustar a altura para `h-[calc(100dvh-8rem)]`.
+#### 3. Página de Estatísticas de Stories
+Adicionar uma seção de Stories na página `src/pages/fornecedor/Estatisticas.tsx`:
+- Card "Meus Status" com: total de stories ativos, total de visualizações, média de views por story
+- Lista dos stories ativos com thumbnail, caption, e contagem de views
+- Cada item clicável para ver quem visualizou
 
-### Problema 4: Paleta de cores limitada no status de texto
-Apenas 8 cores predefinidas. Precisa de um color picker mais completo.
-
-**Correção:**
-- Expandir a paleta para ~20 cores populares organizadas em grade
-- Adicionar um input `type="color"` como última opção para cor personalizada
-- Manter o preview em tempo real
+#### 4. Ajustes no SupplierStories
+Em `src/components/chat/SupplierStories.tsx`:
+- Quando o fornecedor clica em "Meu Status" e já tem stories, abrir o StoryViewer com os próprios stories (mostrando views)
+- Se não tem stories, abrir o CreateStoryModal
 
 ---
 
-### Arquivos a editar
+### Arquivos a Editar
 
 | Arquivo | Mudança |
 |---|---|
-| `src/pages/fornecedor/ChatFornecedor.tsx` | Fix profile fetch (useEffect deps), esconder BottomNav no chat view, ajustar altura mobile |
-| `src/pages/cliente/Chat.tsx` | Remover input fixo, usar layout flex sem sobreposição, ajustar para `100dvh` |
-| `src/components/chat/CreateStoryModal.tsx` | Upload real via file input + Supabase Storage, modo vídeo, paleta expandida + color picker |
-| `src/hooks/useSupplierStories.tsx` | Atualizar `createStory` para receber File e fazer upload ao Storage |
+| `src/components/chat/CreateStoryModal.tsx` | Redesign completo — layout escuro fullscreen, abas Texto/Mídia, preview imersivo |
+| `src/components/chat/StoryViewer.tsx` | Mostrar contagem de views e lista de quem viu nos stories próprios, botão deletar |
+| `src/pages/fornecedor/Estatisticas.tsx` | Adicionar seção "Meus Status" com stats de views |
+| `src/hooks/useSupplierStories.tsx` | Adicionar função `getStoryViews(storyId)` usando o RPC existente |
+| `src/pages/fornecedor/ChatFornecedor.tsx` | Ajustar lógica do botão "Meu Status" para abrir viewer quando tem stories |
 
