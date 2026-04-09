@@ -5,8 +5,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Star, MapPin, Package, X, Plus, Store } from "lucide-react";
+import { ArrowLeft, Star, X, Plus, Store, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
 import { Helmet } from "react-helmet";
@@ -18,9 +17,6 @@ interface SupplierData {
   nome: string;
   foto_perfil_url: string | null;
   descricao_loja: string | null;
-  shipping_city: string | null;
-  shipping_state: string | null;
-  created_at: string | null;
   avg_rating: number;
   total_reviews: number;
   total_products: number;
@@ -55,29 +51,40 @@ const CompararFornecedores = () => {
 
   const fetchAllSuppliers = async () => {
     try {
-      // Fetch supplier profiles
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, nome, foto_perfil_url, descricao_loja, shipping_city, shipping_state, created_at")
-        .eq("tipo", "fornecedor")
-        .eq("ativo", true);
+      // Use public view (bypasses RLS)
+      const { data: profiles, error: profilesError } = await supabase
+        .from("public_supplier_profiles")
+        .select("id, nome, foto_perfil_url, descricao_loja");
 
-      if (!profiles) { setLoading(false); return; }
+      if (profilesError) {
+        console.error("Error fetching supplier profiles:", profilesError);
+        setLoading(false);
+        return;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      const validProfiles = profiles.filter(
+        (p): p is typeof p & { id: string; nome: string } => p.id !== null && p.nome !== null
+      );
 
       // Fetch products for stats
       const { data: products } = await supabase
         .from("products")
-        .select("supplier_id, preco, rating_medio, total_reviews")
+        .select("supplier_id, preco")
         .eq("ativo", true);
 
-      // Fetch reviews count per supplier
+      // Fetch reviews with product join to get supplier
       const { data: reviews } = await supabase
         .from("reviews")
-        .select("supplier_id, rating");
+        .select("rating, product_id, products!inner(supplier_id)");
 
-      const suppliersData: SupplierData[] = profiles.map(p => {
+      const suppliersData: SupplierData[] = validProfiles.map(p => {
         const supplierProducts = (products || []).filter(pr => pr.supplier_id === p.id);
-        const supplierReviews = (reviews || []).filter((r: any) => r.supplier_id === p.id);
+        const supplierReviews = (reviews || []).filter((r: any) => r.products?.supplier_id === p.id);
         const prices = supplierProducts.map(pr => pr.preco).filter(Boolean);
         const ratings = supplierReviews.map((r: any) => r.rating).filter(Boolean);
 
@@ -86,9 +93,6 @@ const CompararFornecedores = () => {
           nome: p.nome,
           foto_perfil_url: p.foto_perfil_url,
           descricao_loja: p.descricao_loja,
-          shipping_city: p.shipping_city,
-          shipping_state: p.shipping_state,
-          created_at: p.created_at,
           avg_rating: ratings.length > 0 ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : 0,
           total_reviews: supplierReviews.length,
           total_products: supplierProducts.length,
@@ -107,8 +111,7 @@ const CompararFornecedores = () => {
   };
 
   const addSupplier = (index: number, supplier: SupplierData) => {
-    const alreadyAdded = suppliers.some(s => s?.id === supplier.id);
-    if (alreadyAdded) {
+    if (suppliers.some(s => s?.id === supplier.id)) {
       toast.error("Este fornecedor já está na comparação");
       return;
     }
@@ -117,8 +120,6 @@ const CompararFornecedores = () => {
     setSuppliers(next);
     setShowPicker(null);
     setPickerSearch("");
-
-    // Update URL
     const ids = next.filter(Boolean).map(s => s!.id).join(",");
     setSearchParams({ ids });
   };
@@ -227,21 +228,16 @@ const CompararFornecedores = () => {
               Comparativo
             </h2>
 
-            {/* Rating */}
             <ComparisonRow
               label="Avaliação"
               values={suppliers.map(s => s ? `${s.avg_rating.toFixed(1)} ★ (${s.total_reviews})` : null)}
               highlights={suppliers.map(s => s?.id === bestRating)}
             />
-
-            {/* Avg Price */}
             <ComparisonRow
               label="Preço Médio"
               values={suppliers.map(s => s ? formatCurrencyFromDecimal(s.avg_price) : null)}
               highlights={suppliers.map(s => s?.id === bestPrice)}
             />
-
-            {/* Price Range */}
             <ComparisonRow
               label="Faixa de Preço"
               values={suppliers.map(s => s && s.min_price > 0
@@ -250,25 +246,12 @@ const CompararFornecedores = () => {
               )}
               highlights={[false, false, false]}
             />
-
-            {/* Products */}
             <ComparisonRow
               label="Produtos"
               values={suppliers.map(s => s ? `${s.total_products}` : null)}
               highlights={suppliers.map(s => s?.id === bestProducts)}
             />
 
-            {/* Location */}
-            <ComparisonRow
-              label="Localização"
-              values={suppliers.map(s => s
-                ? (s.shipping_city && s.shipping_state ? `${s.shipping_city}/${s.shipping_state}` : "Não informado")
-                : null
-              )}
-              highlights={[false, false, false]}
-            />
-
-            {/* Actions */}
             <div className="grid grid-cols-3 gap-3 pt-2">
               {suppliers.map((s, i) =>
                 s ? (
@@ -345,15 +328,6 @@ const CompararFornecedores = () => {
                         </span>
                         <span>•</span>
                         <span>{s.total_products} produtos</span>
-                        {s.shipping_state && (
-                          <>
-                            <span>•</span>
-                            <span className="flex items-center gap-0.5">
-                              <MapPin className="h-3 w-3" />
-                              {s.shipping_state}
-                            </span>
-                          </>
-                        )}
                       </div>
                     </div>
                   </button>
