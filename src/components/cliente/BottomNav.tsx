@@ -16,7 +16,7 @@ export const BottomNav = () => {
 
   const activeIndex = navItems.findIndex((item) => location.pathname === item.path);
 
-  if (location.pathname === '/cliente/chat') return null;
+  // BottomNav stays visible on the chat list; the conversation overlay covers it when open
 
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50">
