@@ -1812,12 +1812,14 @@ export type Database = {
           endereco_principal: Json | null
           foto_perfil_url: string | null
           id: string
+          last_seen_at: string | null
           min_order_quantity: number | null
           min_order_value: number | null
           nome: string
           onboarding_completed: boolean | null
           phone_verified: boolean | null
           phone_verified_at: string | null
+          pinned_suppliers: Json | null
           pix_key: string | null
           service_provider_code: string | null
           shipping_city: string | null
@@ -1840,12 +1842,14 @@ export type Database = {
           endereco_principal?: Json | null
           foto_perfil_url?: string | null
           id: string
+          last_seen_at?: string | null
           min_order_quantity?: number | null
           min_order_value?: number | null
           nome: string
           onboarding_completed?: boolean | null
           phone_verified?: boolean | null
           phone_verified_at?: string | null
+          pinned_suppliers?: Json | null
           pix_key?: string | null
           service_provider_code?: string | null
           shipping_city?: string | null
@@ -1868,12 +1872,14 @@ export type Database = {
           endereco_principal?: Json | null
           foto_perfil_url?: string | null
           id?: string
+          last_seen_at?: string | null
           min_order_quantity?: number | null
           min_order_value?: number | null
           nome?: string
           onboarding_completed?: boolean | null
           phone_verified?: boolean | null
           phone_verified_at?: string | null
+          pinned_suppliers?: Json | null
           pix_key?: string | null
           service_provider_code?: string | null
           shipping_city?: string | null
@@ -2571,6 +2577,49 @@ export type Database = {
           },
         ]
       }
+      story_views: {
+        Row: {
+          id: string
+          story_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          id?: string
+          story_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          id?: string
+          story_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_affiliate_settings: {
         Row: {
           allow_affiliates: boolean | null
@@ -2900,6 +2949,54 @@ export type Database = {
           },
           {
             foreignKeyName: "supplier_shipping_regions_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_stories: {
+        Row: {
+          bg_color: string | null
+          caption: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          media_url: string | null
+          supplier_id: string
+          type: string
+        }
+        Insert: {
+          bg_color?: string | null
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_url?: string | null
+          supplier_id: string
+          type?: string
+        }
+        Update: {
+          bg_color?: string | null
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_url?: string | null
+          supplier_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_stories_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_stories_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "public_supplier_profiles"
@@ -3623,6 +3720,15 @@ export type Database = {
           foto_perfil_url: string
           id: string
           nome: string
+        }[]
+      }
+      get_story_views: {
+        Args: { _story_id: string }
+        Returns: {
+          viewed_at: string
+          viewer_id: string
+          viewer_name: string
+          viewer_photo: string
         }[]
       }
       get_supplier_drop_stats: {
