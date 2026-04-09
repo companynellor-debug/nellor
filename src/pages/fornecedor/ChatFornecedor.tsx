@@ -54,13 +54,12 @@ const ChatFornecedor = () => {
     const ids = conversationUserIds.split(',');
     const fetchAll = async () => {
       try {
-        const { data, error } = await supabase.from('profiles').select('id, nome, foto_perfil_url').in('id', ids);
+        const { data, error } = await supabase.rpc('get_chat_participant_profiles', { _user_ids: ids });
         if (error) throw error;
         const newProfiles: Record<string, CustomerProfile> = {};
-        data?.forEach(profile => { newProfiles[profile.id] = profile; });
+        (data as any[] || []).forEach((profile: any) => { newProfiles[profile.id] = { id: profile.id, nome: profile.nome, foto_perfil_url: profile.foto_perfil_url }; });
         setCustomerProfiles(prev => {
           const merged = { ...prev, ...newProfiles };
-          // Only update if something actually changed
           const changed = ids.some(id => prev[id]?.nome !== merged[id]?.nome || prev[id]?.foto_perfil_url !== merged[id]?.foto_perfil_url);
           return changed ? merged : prev;
         });

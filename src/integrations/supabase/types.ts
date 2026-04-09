@@ -3619,6 +3619,14 @@ export type Database = {
           user_name: string
         }[]
       }
+      get_chat_participant_profiles: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          foto_perfil_url: string
+          id: string
+          nome: string
+        }[]
+      }
       get_client_drop_stats: {
         Args: { _client_id: string }
         Returns: {
