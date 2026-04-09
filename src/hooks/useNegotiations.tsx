@@ -15,12 +15,14 @@ export interface Negotiation {
   status: 'pending' | 'accepted' | 'shipped' | 'delivered' | 'disputed' | 'cancelled';
   buyer_confirmed_delivery: boolean;
   delivery_confirmed_at: string | null;
+  supplier_confirmed_shipping: boolean;
+  shipping_confirmed_at: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export const useNegotiations = () => {
+export const useNegotiations = (filterSupplierId?: string) => {
   const [negotiations, setNegotiations] = useState<Negotiation[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -28,19 +30,25 @@ export const useNegotiations = () => {
   const fetchNegotiations = useCallback(async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('negotiations' as any)
+      let query = supabase
+        .from('negotiations')
         .select('*')
         .order('created_at', { ascending: false });
 
+      if (filterSupplierId) {
+        query = query.eq('supplier_id', filterSupplierId);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
-      setNegotiations((data || []) as any as Negotiation[]);
+      setNegotiations((data || []) as unknown as Negotiation[]);
     } catch (error: any) {
       console.error('Error fetching negotiations:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filterSupplierId]);
 
   useEffect(() => {
     fetchNegotiations();
@@ -60,19 +68,21 @@ export const useNegotiations = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      const insertData = {
+        buyer_id: user.id,
+        supplier_id: data.supplier_id,
+        product_id: data.product_id || null,
+        product_name: data.product_name,
+        quantity: data.quantity,
+        agreed_price: data.agreed_price,
+        payment_method: data.payment_method,
+        expected_delivery: data.expected_delivery || null,
+        notes: data.notes || null,
+      };
+
       const { data: result, error } = await supabase
-        .from('negotiations' as any)
-        .insert([{
-          buyer_id: user.id,
-          supplier_id: data.supplier_id,
-          product_id: data.product_id || null,
-          product_name: data.product_name,
-          quantity: data.quantity,
-          agreed_price: data.agreed_price,
-          payment_method: data.payment_method,
-          expected_delivery: data.expected_delivery || null,
-          notes: data.notes || null,
-        }] as any)
+        .from('negotiations')
+        .insert(insertData)
         .select()
         .single();
 
@@ -88,15 +98,22 @@ export const useNegotiations = () => {
     }
   };
 
-  const updateNegotiationStatus = async (id: string, status: string) => {
+  const updateNegotiationStatus = async (id: string, status: string, extraFields?: Record<string, any>) => {
     try {
+      const updateData: Record<string, any> = { 
+        status, 
+        updated_at: new Date().toISOString(),
+        ...extraFields,
+      };
+
+      if (status === 'delivered') {
+        updateData.buyer_confirmed_delivery = true;
+        updateData.delivery_confirmed_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
-        .from('negotiations' as any)
-        .update({ 
-          status, 
-          updated_at: new Date().toISOString(),
-          ...(status === 'delivered' ? { buyer_confirmed_delivery: true, delivery_confirmed_at: new Date().toISOString() } : {})
-        } as any)
+        .from('negotiations')
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
