@@ -47,23 +47,27 @@ const ChatFornecedor = () => {
   const myStories = getMyStories();
   const groupedStories = getGroupedStories();
 
-  // Fetch customer profiles
+  // Fetch customer profiles - track conversation user IDs as a string key to avoid stale closures
+  const conversationUserIds = conversations.map(c => c.userId).sort().join(',');
   useEffect(() => {
-    const fetchCustomerProfiles = async () => {
-      if (conversations.length === 0) return;
-      const customerIds = conversations.map(c => c.userId);
-      const missingIds = customerIds.filter(id => !customerProfiles[id]);
-      if (missingIds.length === 0) return;
+    if (!conversationUserIds) return;
+    const ids = conversationUserIds.split(',');
+    const fetchAll = async () => {
       try {
-        const { data, error } = await supabase.from('profiles').select('id, nome, foto_perfil_url').in('id', missingIds);
+        const { data, error } = await supabase.from('profiles').select('id, nome, foto_perfil_url').in('id', ids);
         if (error) throw error;
         const newProfiles: Record<string, CustomerProfile> = {};
         data?.forEach(profile => { newProfiles[profile.id] = profile; });
-        setCustomerProfiles(prev => ({ ...prev, ...newProfiles }));
+        setCustomerProfiles(prev => {
+          const merged = { ...prev, ...newProfiles };
+          // Only update if something actually changed
+          const changed = ids.some(id => prev[id]?.nome !== merged[id]?.nome || prev[id]?.foto_perfil_url !== merged[id]?.foto_perfil_url);
+          return changed ? merged : prev;
+        });
       } catch (error) { console.error('Error fetching customer profiles:', error); }
     };
-    fetchCustomerProfiles();
-  }, [conversations]);
+    fetchAll();
+  }, [conversationUserIds]);
 
   // Fetch last seen
   useEffect(() => {
@@ -206,7 +210,7 @@ const ChatFornecedor = () => {
     return (
       <>
         {/* Mobile */}
-        <div className="md:hidden flex flex-col h-[calc(100vh-4rem)]">
+        <div className="md:hidden flex flex-col h-[100dvh]">
           {renderHeader()}
           {attachments.length > 0 && (
             <div className="bg-white border-t p-2 flex gap-2 overflow-x-auto">
