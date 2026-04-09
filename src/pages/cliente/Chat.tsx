@@ -160,7 +160,7 @@ const Chat = () => {
     const presenceText = isOtherUserTyping ? 'Digitando...' : getLastSeenText(selectedUserId);
 
     return (
-      <div className="flex flex-col h-[100dvh] bg-background">
+      <div className="fixed inset-0 z-50 flex flex-col bg-background">
         {/* Header */}
         <header className="flex-shrink-0 bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg z-40">
           <div className="px-4 py-3 flex items-center gap-3">

@@ -208,11 +208,11 @@ const ChatFornecedor = () => {
 
     return (
       <>
-        {/* Mobile */}
-        <div className="md:hidden flex flex-col h-[100dvh]">
+        {/* Mobile — fixed fullscreen to escape layout padding/nav */}
+        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-background">
           {renderHeader()}
           {attachments.length > 0 && (
-            <div className="bg-white border-t p-2 flex gap-2 overflow-x-auto">
+            <div className="bg-white border-t p-2 flex gap-2 overflow-x-auto flex-shrink-0">
               {attachments.map((att, idx) => (
                 <div key={idx} className="relative flex-shrink-0">
                   {att.type === 'image' ? <img src={att.url} alt="" className="h-16 w-16 object-cover rounded-xl" /> : <div className="h-16 w-16 bg-muted rounded-xl flex items-center justify-center">{att.type === 'video' ? <Video className="h-6 w-6" /> : <FileText className="h-6 w-6" />}</div>}
@@ -222,7 +222,7 @@ const ChatFornecedor = () => {
             </div>
           )}
           {renderMessages()}
-          {renderInput()}
+          <div className="flex-shrink-0">{renderInput()}</div>
         </div>
 
         {/* Desktop */}
