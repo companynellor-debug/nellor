@@ -31,6 +31,7 @@ const ChatFornecedor = () => {
   const [customerProfiles, setCustomerProfiles] = useState<Record<string, CustomerProfile>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateStory, setShowCreateStory] = useState(false);
+  const [showSearchActive, setShowSearchActive] = useState(false);
   const [viewingStorySupplier, setViewingStorySupplier] = useState<SupplierWithStories | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -171,18 +172,18 @@ const ChatFornecedor = () => {
     );
 
     const renderInput = () => (
-      <div className="bg-muted/50 p-2 flex items-center gap-2 border-t">
+      <div className="bg-background/95 backdrop-blur-xl px-3 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] flex items-center gap-2 border-t shadow-[0_-8px_24px_hsl(var(--foreground)/0.06)]">
         <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" multiple accept="image/*,video/*,.pdf,.doc,.docx" />
-        <button onClick={() => fileInputRef.current?.click()} className="p-2 text-muted-foreground hover:text-foreground"><Paperclip className="h-5 w-5" /></button>
+        <button onClick={() => fileInputRef.current?.click()} className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted"><Paperclip className="h-5 w-5" /></button>
         <Input
           placeholder="Mensagem..."
           value={message}
           onChange={(e) => { setMessage(e.target.value); startTyping(); }}
           onBlur={stopTyping}
           onKeyPress={(e) => { if (e.key === 'Enter') { stopTyping(); handleSend(); } }}
-          className="flex-1 rounded-full bg-white border-0"
+          className="flex-1 rounded-full bg-muted border-0 h-11"
         />
-        <button onClick={handleSend} disabled={!message.trim() && attachments.length === 0} className="p-2.5 bg-primary text-white rounded-full disabled:opacity-50 hover:bg-primary/90">
+        <button onClick={handleSend} disabled={!message.trim() && attachments.length === 0} className="p-2.5 bg-primary text-white rounded-full disabled:opacity-50 hover:bg-primary/90 shadow-sm">
           <Send className="h-5 w-5" />
         </button>
       </div>
@@ -209,10 +210,10 @@ const ChatFornecedor = () => {
     return (
       <>
         {/* Mobile — fixed fullscreen to escape layout padding/nav */}
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-background">
+        <div className="md:hidden fixed inset-0 z-[60] flex flex-col bg-background">
           {renderHeader()}
           {attachments.length > 0 && (
-            <div className="bg-white border-t p-2 flex gap-2 overflow-x-auto flex-shrink-0">
+            <div className="bg-background border-t p-2 flex gap-2 overflow-x-auto flex-shrink-0">
               {attachments.map((att, idx) => (
                 <div key={idx} className="relative flex-shrink-0">
                   {att.type === 'image' ? <img src={att.url} alt="" className="h-16 w-16 object-cover rounded-xl" /> : <div className="h-16 w-16 bg-muted rounded-xl flex items-center justify-center">{att.type === 'video' ? <Video className="h-6 w-6" /> : <FileText className="h-6 w-6" />}</div>}
@@ -335,6 +336,9 @@ const ChatFornecedor = () => {
         </div>
 
         <div className="divide-y pb-20">
+          {showSearchActive && (
+            <div className="px-4 py-2 border-b bg-muted/30 text-xs text-muted-foreground">A busca filtra as conversas pelo nome real do cliente.</div>
+          )}
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground"><p className="text-lg">Nenhuma conversa</p><p className="text-sm mt-2">Mensagens dos clientes aparecerão aqui</p></div>
           ) : (
@@ -375,10 +379,39 @@ const ChatFornecedor = () => {
         <Card className="w-80 flex-shrink-0 flex flex-col overflow-hidden">
           <div className="p-4 border-b bg-gradient-to-r from-primary to-primary/80 text-white flex items-center justify-between">
             <h2 className="font-semibold text-lg">Conversas</h2>
-            <button onClick={() => setShowCreateStory(true)} className="p-1.5 hover:bg-white/10 rounded-full"><Plus className="h-5 w-5" /></button>
+            <button onClick={() => {
+              if (myStories.length > 0) {
+                const myGroup = groupedStories.find(g => g.supplierId === user?.id);
+                if (myGroup) setViewingStorySupplier(myGroup);
+                else setShowCreateStory(true);
+              } else {
+                setShowCreateStory(true);
+              }
+            }} className="p-1.5 hover:bg-white/10 rounded-full"><Plus className="h-5 w-5" /></button>
+          </div>
+          <div className="border-b bg-card">
+            <SupplierStories
+              suppliers={groupedStories.filter(s => s.supplierId !== user?.id)}
+              onStoryClick={(id) => {
+                const s = groupedStories.find(g => g.supplierId === id);
+                if (s) setViewingStorySupplier(s);
+              }}
+              onSearchClick={() => setShowSearchActive((prev) => !prev)}
+              showAddButton
+              onAddClick={() => {
+                if (myStories.length > 0) {
+                  const myGroup = groupedStories.find(g => g.supplierId === user?.id);
+                  if (myGroup) setViewingStorySupplier(myGroup);
+                  else setShowCreateStory(true);
+                } else {
+                  setShowCreateStory(true);
+                }
+              }}
+              myStories={myStories}
+            />
           </div>
           <div className="p-2 border-b">
-            <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full" /></div>
+            <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Pesquisar clientes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full" /></div>
           </div>
           <div className="flex-1 overflow-y-auto divide-y">
             {filteredConversations.map((conv) => {
