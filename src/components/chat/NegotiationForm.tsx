@@ -22,7 +22,7 @@ interface SupplierProduct {
 }
 
 export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationFormProps) => {
-  const { createNegotiation } = useNegotiations();
+  const { createNegotiation } = useNegotiations(supplierId);
   const [products, setProducts] = useState<SupplierProduct[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [productName, setProductName] = useState('');
@@ -32,17 +32,28 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
   const [expectedDelivery, setExpectedDelivery] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   useEffect(() => {
     if (!open || !supplierId) return;
     const fetchProducts = async () => {
-      const { data } = await supabase
-        .from('products')
-        .select('id, nome, preco')
-        .eq('supplier_id', supplierId)
-        .eq('ativo', true)
-        .order('nome');
-      setProducts((data || []) as SupplierProduct[]);
+      setLoadingProducts(true);
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, nome, preco')
+          .eq('supplier_id', supplierId)
+          .eq('ativo', true)
+          .order('nome');
+        if (error) {
+          console.error('Error fetching products:', error);
+        }
+        setProducts((data || []) as SupplierProduct[]);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoadingProducts(false);
+      }
     };
     fetchProducts();
   }, [open, supplierId]);
@@ -54,6 +65,16 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
       setProductName(product.nome);
       if (!agreedPrice) setAgreedPrice(String(product.preco));
     }
+  };
+
+  const resetForm = () => {
+    setSelectedProductId('');
+    setProductName('');
+    setQuantity(1);
+    setAgreedPrice('');
+    setPaymentMethod('pix');
+    setExpectedDelivery('');
+    setNotes('');
   };
 
   const handleSubmit = async () => {
@@ -71,14 +92,7 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
         notes: notes || undefined,
       });
       onOpenChange(false);
-      // Reset form
-      setSelectedProductId('');
-      setProductName('');
-      setQuantity(1);
-      setAgreedPrice('');
-      setPaymentMethod('pix');
-      setExpectedDelivery('');
-      setNotes('');
+      resetForm();
     } catch {
       // error handled by hook
     } finally {
@@ -99,7 +113,12 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
         <div className="space-y-4">
           <div>
             <Label>Produto negociado</Label>
-            {products.length > 0 ? (
+            {loadingProducts ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Carregando produtos...
+              </div>
+            ) : products.length > 0 ? (
               <Select value={selectedProductId} onValueChange={handleProductSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o produto" />
@@ -116,6 +135,9 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
                 onChange={e => setProductName(e.target.value)}
                 placeholder="Nome do produto"
               />
+            )}
+            {products.length > 0 && !selectedProductId && (
+              <p className="text-xs text-muted-foreground mt-1">Selecione um produto para continuar</p>
             )}
           </div>
 
