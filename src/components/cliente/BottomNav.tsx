@@ -16,6 +16,8 @@ export const BottomNav = () => {
 
   const activeIndex = navItems.findIndex((item) => location.pathname === item.path);
 
+  if (location.pathname === '/cliente/chat') return null;
+
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50">
       <div className="relative max-w-md mx-auto">

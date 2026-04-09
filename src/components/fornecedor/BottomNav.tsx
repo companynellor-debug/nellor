@@ -32,6 +32,8 @@ export const BottomNavFornecedor = () => {
   // If a "more" item is active or the sheet is open, highlight "Mais"
   const maisHighlighted = open || isMoreActive;
 
+  if (location.pathname === '/fornecedor/chat') return null;
+
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
       <div className="relative max-w-md mx-auto">
