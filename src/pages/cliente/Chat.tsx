@@ -184,7 +184,9 @@ const Chat = () => {
           </div>
         </header>
 
-        <NegotiationForm supplierId={selectedUserId} open={showNegotiationForm} onOpenChange={setShowNegotiationForm} />
+        <div className="relative z-[70]">
+          <NegotiationForm supplierId={selectedUserId} open={showNegotiationForm} onOpenChange={setShowNegotiationForm} />
+        </div>
 
         {/* Messages */}
         <main className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gradient-to-b from-primary/5 to-background">
