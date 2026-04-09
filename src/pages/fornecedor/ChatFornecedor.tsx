@@ -31,6 +31,7 @@ const ChatFornecedor = () => {
   const [customerProfiles, setCustomerProfiles] = useState<Record<string, CustomerProfile>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateStory, setShowCreateStory] = useState(false);
+  const [viewingStorySupplier, setViewingStorySupplier] = useState<SupplierWithStories | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
