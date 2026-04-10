@@ -128,12 +128,88 @@ const Negociacoes = () => {
     }
   };
 
+  const handleAcceptWithPayment = async (id: string) => {
+    try {
+      // First confirm payment, then accept
+      const { error: payError } = await supabase
+        .from('negotiations' as any)
+        .update({
+          payment_state: 'confirmed_by_supplier',
+          payment_confirmed_at: new Date().toISOString(),
+          status: 'accepted',
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', id);
+      if (payError) throw payError;
+      toast({ title: 'Pagamento confirmado e pedido aceito!', description: 'O pedido não pode mais ser cancelado.' });
+      fetchNegotiations();
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
   const handleAccept = (id: string) => updateStatus(id, 'accepted');
   const handleShip = (id: string) => updateStatus(id, 'shipped', {
     supplier_confirmed_shipping: true,
     shipping_confirmed_at: new Date().toISOString(),
   });
-  const handleCancel = (id: string) => updateStatus(id, 'cancelled');
+
+  const handleCancelWithReason = async () => {
+    if (!cancelNegId) return;
+    const neg = negotiations.find(n => n.id === cancelNegId);
+    const needsReason = neg && neg.payment_state === 'reported_by_buyer';
+    
+    if (needsReason && !cancelReason.trim()) {
+      toast({ title: 'Motivo obrigatório', description: 'Informe o motivo do cancelamento.', variant: 'destructive' });
+      return;
+    }
+
+    const isFakeProof = cancelReason === 'comprovante_falso';
+    const reasonText = isFakeProof ? 'Comprovante falso' : cancelReason;
+
+    try {
+      const extra: Record<string, any> = { cancel_reason: reasonText };
+      if (needsReason && !isFakeProof) {
+        extra.refund_state = 'pending';
+      }
+
+      await updateStatus(cancelNegId, 'cancelled', extra);
+
+      // If fake proof, auto-create dispute
+      if (isFakeProof && neg && user) {
+        await supabase
+          .from('disputes' as any)
+          .insert([{
+            negotiation_id: cancelNegId,
+            buyer_id: neg.buyer_id,
+            supplier_id: user.id,
+            reason: 'fake_payment',
+            description: `Fornecedor alega comprovante falso. Motivo: ${cancelReason}. Comprovante: ${neg.payment_proof_url || 'N/A'}`,
+          }] as any);
+        toast({ title: 'Disputa criada', description: 'O administrador foi notificado sobre o comprovante falso.' });
+      }
+
+      setCancelDialog(false);
+      setCancelNegId(null);
+      setCancelReason('');
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleConfirmRefund = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('negotiations' as any)
+        .update({ refund_state: 'supplier_confirmed', updated_at: new Date().toISOString() } as any)
+        .eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Reembolso informado!', description: 'O comprador será notificado para confirmar.' });
+      fetchNegotiations();
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
 
   const handleConfirmPayment = async (id: string) => {
     try {
