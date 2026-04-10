@@ -109,33 +109,8 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
     return notifications || [];
   }, []);
 
-  const fetchCoupons = useCallback(async (uid: string) => {
-    const { data: coupons } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("supplier_id", uid)
-      .order("created_at", { ascending: false });
-    return coupons || [];
-  }, []);
 
-  const fetchTransactions = useCallback(async (uid: string) => {
-    const { data: transactions } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("supplier_id", uid)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    return transactions || [];
-  }, []);
 
-  const fetchPayouts = useCallback(async (uid: string) => {
-    const { data: payouts } = await supabase
-      .from("payouts")
-      .select("*")
-      .eq("supplier_id", uid)
-      .order("created_at", { ascending: false });
-    return payouts || [];
-  }, []);
 
   const fetchAnalytics = useCallback(async (uid: string) => {
     const { data: analytics } = await supabase
