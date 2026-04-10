@@ -450,10 +450,22 @@ const Pedidos = () => {
                         Aguardando o cliente confirmar o recebimento
                       </div>
                     )}
-                    {!['delivered', 'cancelled'].includes(selectedOrder.order_status) && (
+                    {!['delivered', 'cancelled', 'shipped'].includes(selectedOrder.order_status) && selectedOrder.payment_status === 'pending' && (
                       <Button variant="outline" className="w-full text-destructive hover:text-destructive" onClick={() => handleStatusChange(selectedOrder.id, 'cancelled')}>
                         <XCircle className="h-4 w-4 mr-2" />Cancelar Pedido
                       </Button>
+                    )}
+                    {!['delivered', 'cancelled', 'shipped'].includes(selectedOrder.order_status) && selectedOrder.payment_status !== 'pending' && (
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-sm text-amber-700">
+                        <Info className="h-4 w-4 inline mr-1" />
+                        Pedido já pago — cancelamento não permitido. Solicite reembolso ao administrador.
+                      </div>
+                    )}
+                    {selectedOrder.order_status === 'shipped' && selectedOrder.payment_status !== 'pending' && (
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-sm text-amber-700">
+                        <Info className="h-4 w-4 inline mr-1" />
+                        Pedido já enviado — abra uma disputa para resolver problemas.
+                      </div>
                     )}
                   </div>
                 </div>
