@@ -1005,61 +1005,91 @@ export type Database = {
         Row: {
           agreed_price: number
           buyer_confirmed_delivery: boolean | null
+          buyer_data: Json | null
           buyer_id: string
           created_at: string
           delivery_check_sent: boolean | null
           delivery_confirmed_at: string | null
           expected_delivery: string | null
           id: string
+          invoice_url: string | null
           notes: string | null
+          payment_confirmed_at: string | null
+          payment_contested_reason: string | null
           payment_method: string
+          payment_proof_url: string | null
+          payment_reference: string | null
+          payment_reported_at: string | null
+          payment_state: string
           product_id: string | null
           product_name: string
           quantity: number
+          sale_unit: string | null
           shipping_confirmed_at: string | null
           status: string
           supplier_confirmed_shipping: boolean | null
           supplier_id: string
+          unit_price: number | null
           updated_at: string
         }
         Insert: {
           agreed_price: number
           buyer_confirmed_delivery?: boolean | null
+          buyer_data?: Json | null
           buyer_id: string
           created_at?: string
           delivery_check_sent?: boolean | null
           delivery_confirmed_at?: string | null
           expected_delivery?: string | null
           id?: string
+          invoice_url?: string | null
           notes?: string | null
+          payment_confirmed_at?: string | null
+          payment_contested_reason?: string | null
           payment_method?: string
+          payment_proof_url?: string | null
+          payment_reference?: string | null
+          payment_reported_at?: string | null
+          payment_state?: string
           product_id?: string | null
           product_name: string
           quantity?: number
+          sale_unit?: string | null
           shipping_confirmed_at?: string | null
           status?: string
           supplier_confirmed_shipping?: boolean | null
           supplier_id: string
+          unit_price?: number | null
           updated_at?: string
         }
         Update: {
           agreed_price?: number
           buyer_confirmed_delivery?: boolean | null
+          buyer_data?: Json | null
           buyer_id?: string
           created_at?: string
           delivery_check_sent?: boolean | null
           delivery_confirmed_at?: string | null
           expected_delivery?: string | null
           id?: string
+          invoice_url?: string | null
           notes?: string | null
+          payment_confirmed_at?: string | null
+          payment_contested_reason?: string | null
           payment_method?: string
+          payment_proof_url?: string | null
+          payment_reference?: string | null
+          payment_reported_at?: string | null
+          payment_state?: string
           product_id?: string | null
           product_name?: string
           quantity?: number
+          sale_unit?: string | null
           shipping_confirmed_at?: string | null
           status?: string
           supplier_confirmed_shipping?: boolean | null
           supplier_id?: string
+          unit_price?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1202,7 +1232,13 @@ export type Database = {
           order_number: string
           order_status: Database["public"]["Enums"]["order_status"] | null
           paid_at: string | null
+          payment_confirmed_at: string | null
+          payment_contested_reason: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_proof_url: string | null
+          payment_reference: string | null
+          payment_reported_at: string | null
+          payment_state: string
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           payment_status_label: string | null
           platform_fee: number | null
@@ -1231,7 +1267,13 @@ export type Database = {
           order_number: string
           order_status?: Database["public"]["Enums"]["order_status"] | null
           paid_at?: string | null
+          payment_confirmed_at?: string | null
+          payment_contested_reason?: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_proof_url?: string | null
+          payment_reference?: string | null
+          payment_reported_at?: string | null
+          payment_state?: string
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           payment_status_label?: string | null
           platform_fee?: number | null
@@ -1260,7 +1302,13 @@ export type Database = {
           order_number?: string
           order_status?: Database["public"]["Enums"]["order_status"] | null
           paid_at?: string | null
+          payment_confirmed_at?: string | null
+          payment_contested_reason?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_proof_url?: string | null
+          payment_reference?: string | null
+          payment_reported_at?: string | null
+          payment_state?: string
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           payment_status_label?: string | null
           platform_fee?: number | null
