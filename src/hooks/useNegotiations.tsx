@@ -23,6 +23,45 @@ export interface Negotiation {
   updated_at: string;
 }
 
+// Minimum time intervals (in ms) for anti-fraud
+const MIN_INTERVALS = {
+  pending_to_accepted: 60 * 60 * 1000,       // 1 hour
+  accepted_to_shipped: 24 * 60 * 60 * 1000,  // 24 hours
+  shipped_to_delivered: 48 * 60 * 60 * 1000,  // 48 hours
+};
+
+export function getTimeUntilAllowed(neg: Negotiation): { allowed: boolean; remainingMs: number; label: string } {
+  const now = Date.now();
+
+  if (neg.status === 'pending') {
+    const since = new Date(neg.created_at).getTime();
+    const remaining = (since + MIN_INTERVALS.pending_to_accepted) - now;
+    return { allowed: remaining <= 0, remainingMs: Math.max(0, remaining), label: 'aceitar' };
+  }
+
+  if (neg.status === 'accepted') {
+    const since = new Date(neg.updated_at).getTime();
+    const remaining = (since + MIN_INTERVALS.accepted_to_shipped) - now;
+    return { allowed: remaining <= 0, remainingMs: Math.max(0, remaining), label: 'marcar envio' };
+  }
+
+  if (neg.status === 'shipped') {
+    const since = neg.shipping_confirmed_at ? new Date(neg.shipping_confirmed_at).getTime() : new Date(neg.updated_at).getTime();
+    const remaining = (since + MIN_INTERVALS.shipped_to_delivered) - now;
+    return { allowed: remaining <= 0, remainingMs: Math.max(0, remaining), label: 'confirmar entrega' };
+  }
+
+  return { allowed: true, remainingMs: 0, label: '' };
+}
+
+export function formatCountdown(ms: number): string {
+  if (ms <= 0) return '';
+  const hours = Math.floor(ms / (60 * 60 * 1000));
+  const mins = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+  if (hours > 0) return `${hours}h ${mins}min`;
+  return `${mins}min`;
+}
+
 export const useNegotiations = (filterSupplierId?: string) => {
   const [negotiations, setNegotiations] = useState<Negotiation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +151,18 @@ export const useNegotiations = (filterSupplierId?: string) => {
         .update(updateData)
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        // Parse DB trigger error messages for user-friendly display
+        if (error.message?.includes('Aguarde pelo menos')) {
+          toast({ title: 'Ação bloqueada por segurança', description: error.message, variant: 'destructive' });
+          return;
+        }
+        if (error.message?.includes('Transição inválida') || error.message?.includes('Apenas o')) {
+          toast({ title: 'Ação não permitida', description: error.message, variant: 'destructive' });
+          return;
+        }
+        throw error;
+      }
       toast({ title: 'Status atualizado', description: 'Status da negociação atualizado.' });
       await fetchNegotiations();
     } catch (error: any) {
@@ -121,11 +171,24 @@ export const useNegotiations = (filterSupplierId?: string) => {
     }
   };
 
-  // Only buyer can call this - confirms delivery bilaterally
   const confirmDelivery = async (id: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
+
+      // Find the negotiation to check timing
+      const neg = negotiations.find(n => n.id === id);
+      if (neg) {
+        const timing = getTimeUntilAllowed(neg);
+        if (!timing.allowed) {
+          toast({ 
+            title: 'Aguarde para confirmar', 
+            description: `Você poderá confirmar a entrega em ${formatCountdown(timing.remainingMs)}`,
+            variant: 'destructive' 
+          });
+          return;
+        }
+      }
 
       const { error } = await supabase
         .from('negotiations')
@@ -136,9 +199,15 @@ export const useNegotiations = (filterSupplierId?: string) => {
           updated_at: new Date().toISOString(),
         } as any)
         .eq('id', id)
-        .eq('buyer_id', user.id); // Ensure only buyer can confirm
+        .eq('buyer_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('Aguarde pelo menos')) {
+          toast({ title: 'Ação bloqueada por segurança', description: error.message, variant: 'destructive' });
+          return;
+        }
+        throw error;
+      }
       toast({ title: 'Entrega confirmada!', description: 'Obrigado por confirmar o recebimento.' });
       await fetchNegotiations();
     } catch (error: any) {
@@ -147,12 +216,35 @@ export const useNegotiations = (filterSupplierId?: string) => {
     }
   };
 
-  // Supplier actions only
   const supplierAccept = async (id: string) => {
+    const neg = negotiations.find(n => n.id === id);
+    if (neg) {
+      const timing = getTimeUntilAllowed(neg);
+      if (!timing.allowed) {
+        toast({ 
+          title: 'Aguarde para aceitar', 
+          description: `Você poderá aceitar em ${formatCountdown(timing.remainingMs)}`,
+          variant: 'destructive' 
+        });
+        return;
+      }
+    }
     return updateNegotiationStatus(id, 'accepted');
   };
 
   const supplierShip = async (id: string) => {
+    const neg = negotiations.find(n => n.id === id);
+    if (neg) {
+      const timing = getTimeUntilAllowed(neg);
+      if (!timing.allowed) {
+        toast({ 
+          title: 'Aguarde para confirmar envio', 
+          description: `Você poderá confirmar o envio em ${formatCountdown(timing.remainingMs)}`,
+          variant: 'destructive' 
+        });
+        return;
+      }
+    }
     return updateNegotiationStatus(id, 'shipped', {
       supplier_confirmed_shipping: true,
       shipping_confirmed_at: new Date().toISOString(),
