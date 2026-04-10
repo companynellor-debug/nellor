@@ -15,7 +15,6 @@ import {
   MessageSquare,
   Star,
   ExternalLink,
-  CreditCard,
   MapPin,
   ChefHat,
   PackageCheck,
