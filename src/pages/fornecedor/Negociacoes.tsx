@@ -146,19 +146,40 @@ const Negociacoes = () => {
     }
   };
 
-  const handleContestPayment = async () => {
+  const handleContestPayment = async (isFakePayment = false) => {
     if (!contestNegId || !contestReason.trim()) return;
     try {
+      const reason = isFakePayment ? `[COMPROVANTE FALSO] ${contestReason}` : contestReason;
       const { error } = await supabase
         .from('negotiations' as any)
         .update({
           payment_state: 'contested_by_supplier',
-          payment_contested_reason: contestReason,
+          payment_contested_reason: reason,
           updated_at: new Date().toISOString(),
         } as any)
         .eq('id', contestNegId);
       if (error) throw error;
-      toast({ title: 'Pagamento contestado', description: 'A contestação foi registrada.' });
+
+      // If fake payment, auto-create dispute for admin
+      if (isFakePayment) {
+        const neg = negotiations.find(n => n.id === contestNegId);
+        if (neg && user) {
+          await supabase
+            .from('disputes' as any)
+            .insert([{
+              negotiation_id: contestNegId,
+              buyer_id: neg.buyer_id,
+              supplier_id: user.id,
+              reason: 'fake_payment',
+              description: reason,
+            }] as any);
+        }
+      }
+
+      toast({ 
+        title: isFakePayment ? 'Comprovante falso reportado' : 'Pagamento contestado', 
+        description: isFakePayment ? 'A disputa foi escalada para o administrador.' : 'A contestação foi registrada.' 
+      });
       setContestDialog(false);
       setContestReason('');
       setContestNegId(null);
@@ -424,10 +445,16 @@ const Negociacoes = () => {
               placeholder="Ex: Não localizei o PIX na conta informada..."
               rows={3}
             />
-            <Button onClick={handleContestPayment} variant="destructive" className="w-full gap-1" disabled={!contestReason.trim()}>
-              <AlertTriangle className="h-4 w-4" />
-              Confirmar Contestação
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button onClick={() => handleContestPayment(false)} variant="outline" className="w-full gap-1 border-orange-300 text-orange-700" disabled={!contestReason.trim()}>
+                <AlertTriangle className="h-4 w-4" />
+                Não localizei o pagamento
+              </Button>
+              <Button onClick={() => handleContestPayment(true)} variant="destructive" className="w-full gap-1" disabled={!contestReason.trim()}>
+                <ShieldAlert className="h-4 w-4" />
+                Alegar comprovante falso (escalar para admin)
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
