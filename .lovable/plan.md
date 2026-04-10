@@ -1,60 +1,33 @@
 
 
-## Fluxo Seguro de Pedidos: Confirmação Bilateral
+## Adaptação: Remover Lógica de Pagamento e Simplificar Cancelamento
 
-### Problema Atual
-O fornecedor pode marcar qualquer status livremente, inclusive "Entregue", sem confirmação do comprador. Isso é inseguro.
+### Contexto
+A plataforma não processa pagamentos — são feitos diretamente entre as partes. O código atual tem referências a `payment_status`, taxas da plataforma, e regras de cancelamento baseadas em pagamento que não se aplicam.
 
-### Novo Fluxo
+### Mudanças
 
-```text
-pending → preparing → shipped → delivered
-   │          │           │          │
-Comprador  Fornecedor  Fornecedor  COMPRADOR
- criou     aprova e    marca       confirma
- pedido    prepara     envio +     recebimento
-                       rastreio
-```
+**1. Migração SQL — Simplificar trigger de cancelamento**
+- Remover checagem de `payment_status` do trigger `validate_order_status_transition`
+- Novas regras de cancelamento:
+  - **Comprador**: pode cancelar se status é `pending` (antes do fornecedor aceitar)
+  - **Fornecedor**: pode cancelar se status é `pending` ou `preparing` (antes de enviar)
+  - **Ninguém** cancela após `shipped` ou `delivered`
 
-- **pending**: Pedido criado, aguardando fornecedor aprovar
-- **preparing**: Fornecedor aceitou e está preparando
-- **shipped**: Fornecedor marcou como enviado (rastreio obrigatório)
-- **delivered**: Somente o COMPRADOR pode confirmar recebimento
+**2. Fornecedor (`Pedidos.tsx`)**
+- Remover toda seção de `payment_status` (badges, resumo financeiro, taxa Nellor, valor líquido)
+- Remover `getPaymentStatusBadge`, `getTransferStatus`, `calculateOrderBreakdown`
+- Simplificar botão de cancelar: mostrar quando status é `pending` ou `preparing`, sem checagem de pagamento
+- Remover mensagens sobre "pedido já pago"
 
-### Alterações
-
-**1. Migração SQL - Trigger de validação**
-- Criar função `validate_order_status_transition` que:
-  - Impede pular etapas (ex: pending direto para delivered)
-  - Impede fornecedor de marcar `delivered` (só buyer pode)
-  - Impede buyer de marcar `preparing` ou `shipped` (só fornecedor pode)
-  - Exige `tracking_code` ao mudar para `shipped`
-
-**2. Frontend - Fornecedor (`Pedidos.tsx`)**
-- Remover botão "Entregue" dos controles do fornecedor
-- Manter apenas: Preparando, Enviado, Cancelar
-- Ao clicar "Enviado", exigir código de rastreio antes
-- Labels atualizados: `pending` = "Aguardando Aprovação"
-
-**3. Frontend - Cliente (`MeusPedidos.tsx`)**
-- Adicionar botão "Confirmar Recebimento" quando status = `shipped`
-- Diálogo de confirmação antes de confirmar
-- Atualizar ORDER_STEPS labels
+**3. Cliente (`MeusPedidos.tsx`)**
+- Remover referências a `payment_status` e `getPaymentStatusInfo`
+- Manter botão "Cancelar Pedido" apenas quando `pending`
+- Remover ícone/import `CreditCard` se não usado em outro lugar
 
 **4. Hook (`useSupabaseOrders.tsx`)**
-- Adicionar função `confirmDelivery(orderId)` exclusiva para buyers
-- Atualizar labels de status
+- Remover referências desnecessárias a `payment_status` na lógica de UI (manter o campo no tipo caso o banco tenha)
 
-**5. Segurança**
-- O trigger SQL garante no nível do banco que:
-  - Transições inválidas são bloqueadas
-  - Apenas o buyer pode marcar `delivered`
-  - Apenas o supplier pode marcar `preparing`/`shipped`
-  - Rastreio obrigatório para envio
-
-### Arquivos Modificados
-1. Nova migração SQL (trigger de validação)
-2. `src/hooks/useSupabaseOrders.tsx` (adicionar `confirmDelivery`)
-3. `src/pages/fornecedor/Pedidos.tsx` (remover botão Entregue, exigir rastreio)
-4. `src/pages/cliente/MeusPedidos.tsx` (botão Confirmar Recebimento)
+### Resultado
+Interface limpa, sem campos de pagamento irrelevantes, com regras de cancelamento simples e claras baseadas apenas no status do pedido.
 
