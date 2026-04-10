@@ -486,6 +486,18 @@ const MeusPedidos = () => {
                 </div>
               </div>
 
+              {/* Confirmar Recebimento no dialog */}
+              {selectedOrder.order_status === 'shipped' && (
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  disabled={confirmingDelivery}
+                  onClick={() => handleConfirmDelivery(selectedOrder.id)}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Confirmar Recebimento
+                </Button>
+              )}
+
               {/* Ações */}
               <div className="flex gap-2">
                 <Button 
