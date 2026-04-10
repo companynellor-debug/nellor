@@ -147,7 +147,7 @@ const Checkout = () => {
           )}
           
           {currentStep === 3 && buyerData && (
-            <StepConcluido />
+            <StepConcluido orderNumber="" paymentMethod="pix" />
           )}
         </div>
       </main>

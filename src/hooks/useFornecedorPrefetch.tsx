@@ -210,35 +210,8 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
     });
   }, [userId, fetchProfile]);
 
-  const refetchCoupons = useCallback(async () => {
-    if (!userId) return;
-    const coupons = await fetchCoupons(userId);
-    setData((prev) => {
-      const newData = { ...prev, coupons };
-      globalCache = newData;
-      return newData;
-    });
-  }, [userId, fetchCoupons]);
 
-  const refetchTransactions = useCallback(async () => {
-    if (!userId) return;
-    const transactions = await fetchTransactions(userId);
-    setData((prev) => {
-      const newData = { ...prev, transactions };
-      globalCache = newData;
-      return newData;
-    });
-  }, [userId, fetchTransactions]);
 
-  const refetchPayouts = useCallback(async () => {
-    if (!userId) return;
-    const payouts = await fetchPayouts(userId);
-    setData((prev) => {
-      const newData = { ...prev, payouts };
-      globalCache = newData;
-      return newData;
-    });
-  }, [userId, fetchPayouts]);
 
   const refetchAll = useCallback(async () => {
     if (!userId) return;
@@ -380,9 +353,8 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
         refetchProducts,
         refetchNotifications,
         refetchProfile,
-        refetchCoupons,
-        refetchTransactions,
-        refetchPayouts,
+
+
       }}
     >
       {children}
@@ -419,17 +391,5 @@ export const useFornecedorProfile = () => {
   return { profile: data.profile, loading, refetch: refetchProfile };
 };
 
-export const useFornecedorCoupons = () => {
-  const { data, loading, refetchCoupons } = useFornecedorPrefetch();
-  return { coupons: data.coupons, loading, refetch: refetchCoupons };
-};
 
-export const useFornecedorTransactions = () => {
-  const { data, loading, refetchTransactions } = useFornecedorPrefetch();
-  return { transactions: data.transactions, loading, refetch: refetchTransactions };
-};
 
-export const useFornecedorPayouts = () => {
-  const { data, loading, refetchPayouts } = useFornecedorPrefetch();
-  return { payouts: data.payouts, loading, refetch: refetchPayouts };
-};
