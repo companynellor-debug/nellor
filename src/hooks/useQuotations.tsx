@@ -250,5 +250,9 @@ export function useAcceptProposal() {
       qc.invalidateQueries({ queryKey: ["negotiations"] });
       toast({ title: "Proposta aceita! Negociação criada." });
     },
+    onError: (error: any) => {
+      console.error("Erro ao aceitar proposta:", error);
+      toast({ title: "Erro ao aceitar proposta", description: error?.message || "Tente novamente.", variant: "destructive" });
+    },
   });
 }
