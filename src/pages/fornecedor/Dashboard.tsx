@@ -12,18 +12,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { showPushNotification, getNotificationPermission, requestNotificationPermission } from "@/utils/pushNotifications";
 import { useToast } from "@/hooks/use-toast";
 
-const StatCard = ({ title, value, subtitle, icon, borderColor }: {
+const StatCard = ({ title, value, subtitle, icon, borderColor, wide }: {
   title: string; value: number | string; subtitle: string;
-  icon: React.ElementType; borderColor: string;
+  icon: React.ElementType; borderColor: string; wide?: boolean;
 }) => (
   <Card className={`rounded-2xl shadow-sm overflow-hidden border-2 ${borderColor}`}>
-    <CardContent className="p-5">
-      <div className="flex items-center justify-between mb-3">
-        <DarkGlassIcon icon={icon} size="md" />
-        <span className="text-3xl font-bold">{value}</span>
-      </div>
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+    <CardContent className={wide ? "p-6" : "p-5"}>
+      {wide ? (
+        <div className="flex items-center gap-5">
+          <DarkGlassIcon icon={icon} size="md" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-muted-foreground">{title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+          </div>
+          <span className="text-4xl font-bold text-foreground">{value}</span>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-3">
+            <DarkGlassIcon icon={icon} size="md" />
+            <span className="text-3xl font-bold">{value}</span>
+          </div>
+          <p className="text-sm font-semibold text-foreground">{title}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+        </>
+      )}
     </CardContent>
   </Card>
 );
@@ -172,18 +185,15 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Desktop: Faturamento wide + 3 cards row, then 4 cards row */}
-      <div className="hidden md:block space-y-3">
-        <div className="grid grid-cols-4 gap-3">
-          <div className="col-span-2">
-            <StatCard {...faturamentoCard} />
-          </div>
-          {mainStats.slice(0, 2).map((card) => (
+      {/* Desktop: Faturamento hero + grid */}
+      <div className="hidden md:flex md:flex-col gap-3">
+        <StatCard {...faturamentoCard} wide />
+        <div className="grid grid-cols-3 gap-3">
+          {mainStats.map((card) => (
             <StatCard key={card.title} {...card} />
           ))}
         </div>
-        <div className="grid grid-cols-5 gap-3">
-          <StatCard key={mainStats[2].title} {...mainStats[2]} />
+        <div className="grid grid-cols-4 gap-3">
           {secondaryStats.map((card) => (
             <StatCard key={card.title} {...card} />
           ))}
