@@ -17,6 +17,7 @@ export interface Negotiation {
   delivery_confirmed_at: string | null;
   supplier_confirmed_shipping: boolean;
   shipping_confirmed_at: string | null;
+  delivery_check_sent: boolean;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -106,11 +107,6 @@ export const useNegotiations = (filterSupplierId?: string) => {
         ...extraFields,
       };
 
-      if (status === 'delivered') {
-        updateData.buyer_confirmed_delivery = true;
-        updateData.delivery_confirmed_at = new Date().toISOString();
-      }
-
       const { error } = await supabase
         .from('negotiations')
         .update(updateData)
@@ -125,5 +121,57 @@ export const useNegotiations = (filterSupplierId?: string) => {
     }
   };
 
-  return { negotiations, loading, createNegotiation, updateNegotiationStatus, refetch: fetchNegotiations };
+  // Only buyer can call this - confirms delivery bilaterally
+  const confirmDelivery = async (id: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { error } = await supabase
+        .from('negotiations')
+        .update({
+          status: 'delivered',
+          buyer_confirmed_delivery: true,
+          delivery_confirmed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', id)
+        .eq('buyer_id', user.id); // Ensure only buyer can confirm
+
+      if (error) throw error;
+      toast({ title: 'Entrega confirmada!', description: 'Obrigado por confirmar o recebimento.' });
+      await fetchNegotiations();
+    } catch (error: any) {
+      console.error('Error confirming delivery:', error);
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  // Supplier actions only
+  const supplierAccept = async (id: string) => {
+    return updateNegotiationStatus(id, 'accepted');
+  };
+
+  const supplierShip = async (id: string) => {
+    return updateNegotiationStatus(id, 'shipped', {
+      supplier_confirmed_shipping: true,
+      shipping_confirmed_at: new Date().toISOString(),
+    });
+  };
+
+  const supplierCancel = async (id: string) => {
+    return updateNegotiationStatus(id, 'cancelled');
+  };
+
+  return { 
+    negotiations, 
+    loading, 
+    createNegotiation, 
+    updateNegotiationStatus, 
+    confirmDelivery,
+    supplierAccept,
+    supplierShip,
+    supplierCancel,
+    refetch: fetchNegotiations 
+  };
 };

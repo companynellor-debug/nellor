@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Star, Package, AlertTriangle, CheckCircle, Clock, MessageCircle, FileText, ArrowLeft } from "lucide-react";
+import { Star, Package, AlertTriangle, CheckCircle, Clock, Truck, FileText, ArrowLeft } from "lucide-react";
 import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { useNegotiations } from "@/hooks/useNegotiations";
 import { useDisputes } from "@/hooks/useDisputes";
@@ -21,7 +21,7 @@ const MinhasNegociacoes = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeFilter = searchParams.get("filtro") || "todas";
   const { user } = useSupabaseAuth();
-  const { negotiations, updateNegotiationStatus } = useNegotiations();
+  const { negotiations, confirmDelivery, updateNegotiationStatus } = useNegotiations();
   const { createDispute } = useDisputes();
   const { createReview } = useSupabaseReviews();
 
@@ -41,16 +41,19 @@ const MinhasNegociacoes = () => {
     return true;
   });
 
+  // Negotiations that need buyer action (shipped and waiting confirmation)
+  const needsAction = allMyNegotiations.filter(n => n.status === "shipped");
+
   const filters = [
     { key: "todas", label: "Todas", icon: Package, color: "purple" as const, count: allMyNegotiations.length },
     { key: "pendentes", label: "Pendentes", icon: Clock, color: "amber" as const, count: allMyNegotiations.filter(n => n.status === "pending" || n.status === "accepted").length },
-    { key: "envio", label: "Em Envio", icon: Package, color: "blue" as const, count: allMyNegotiations.filter(n => n.status === "shipped").length },
+    { key: "envio", label: "Em Envio", icon: Truck, color: "blue" as const, count: allMyNegotiations.filter(n => n.status === "shipped").length },
     { key: "concluidas", label: "Concluídas", icon: CheckCircle, color: "emerald" as const, count: allMyNegotiations.filter(n => n.status === "delivered").length },
   ];
 
   const handleConfirmDelivery = async (neg: any) => {
     setSelectedNegotiation(neg);
-    await updateNegotiationStatus(neg.id, 'delivered');
+    await confirmDelivery(neg.id);
     setShowReviewForm(true);
   };
 
@@ -109,6 +112,7 @@ const MinhasNegociacoes = () => {
   const statusConfig: Record<string, { label: string; color: string }> = {
     pending: { label: "Pendente", color: "bg-yellow-100 text-yellow-700" },
     accepted: { label: "Aceita", color: "bg-blue-100 text-blue-700" },
+    shipped: { label: "Enviado", color: "bg-orange-100 text-orange-700" },
     delivered: { label: "Entregue", color: "bg-green-100 text-green-700" },
     disputed: { label: "Em Disputa", color: "bg-destructive/10 text-destructive" },
     cancelled: { label: "Cancelada", color: "bg-muted text-muted-foreground" },
@@ -151,6 +155,26 @@ const MinhasNegociacoes = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-3">
+        {/* Action required banner */}
+        {needsAction.length > 0 && activeFilter === "todas" && (
+          <Card className="p-3 border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+            <div className="flex items-center gap-2">
+              <Truck className="h-5 w-5 text-orange-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                  {needsAction.length} {needsAction.length === 1 ? 'entrega aguardando' : 'entregas aguardando'} confirmação
+                </p>
+                <p className="text-xs text-orange-600 dark:text-orange-300">
+                  Confirme o recebimento dos produtos enviados
+                </p>
+              </div>
+              <Button size="sm" variant="outline" className="border-orange-300 text-orange-700" onClick={() => setSearchParams({ filtro: "envio" })}>
+                Ver
+              </Button>
+            </div>
+          </Card>
+        )}
+
         {myNegotiations.length === 0 ? (
           <Card className="p-8 text-center">
             <Package className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
@@ -164,9 +188,11 @@ const MinhasNegociacoes = () => {
             const config = statusConfig[neg.status] || statusConfig.pending;
             const isDeliveryDue = neg.expected_delivery && new Date(neg.expected_delivery) <= new Date();
             const canDispute = neg.expected_delivery && new Date(neg.expected_delivery).getTime() + 7 * 24 * 60 * 60 * 1000 <= Date.now();
+            const isShipped = neg.status === 'shipped';
+            const isAcceptedAndDue = neg.status === 'accepted' && isDeliveryDue;
 
             return (
-              <Card key={neg.id} className="p-4">
+              <Card key={neg.id} className={`p-4 ${isShipped ? 'border-orange-300 shadow-md' : ''}`}>
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <p className="font-semibold text-sm">{neg.product_name}</p>
@@ -185,36 +211,66 @@ const MinhasNegociacoes = () => {
                   <p>Criada: {new Date(neg.created_at).toLocaleDateString('pt-BR')}</p>
                 </div>
 
-                {neg.status === 'pending' && isDeliveryDue && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
-                      onClick={() => handleConfirmDelivery(neg)}
-                    >
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      Sim, recebi
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={`flex-1 gap-1 ${canDispute ? 'text-destructive border-destructive/30' : 'text-muted-foreground'}`}
-                      onClick={() => handleNotReceived(neg)}
-                      disabled={!canDispute}
-                    >
-                      <AlertTriangle className="h-3.5 w-3.5" />
-                      Não recebi
-                    </Button>
+                {/* SHIPPED: Show confirmation buttons - buyer must confirm */}
+                {isShipped && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 dark:bg-orange-950/30 rounded p-2 mb-2">
+                      <Truck className="h-3.5 w-3.5" />
+                      <span className="font-medium">Fornecedor confirmou o envio. Confirme quando receber.</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
+                        onClick={() => handleConfirmDelivery(neg)}
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Sim, recebi
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`flex-1 gap-1 ${canDispute ? 'text-destructive border-destructive/30' : 'text-muted-foreground'}`}
+                        onClick={() => handleNotReceived(neg)}
+                        disabled={!canDispute}
+                      >
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Não recebi
+                      </Button>
+                    </div>
+                    {!canDispute && neg.expected_delivery && (
+                      <p className="text-[10px] text-muted-foreground text-center">
+                        Poderá abrir disputa a partir de {new Date(new Date(neg.expected_delivery).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {neg.status === 'pending' && !isDeliveryDue && (
+                {/* ACCEPTED + delivery date passed: warn buyer */}
+                {isAcceptedAndDue && (
+                  <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded p-2">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span>Data de entrega prevista já passou. Aguardando envio do fornecedor.</span>
+                  </div>
+                )}
+
+                {/* PENDING: waiting */}
+                {neg.status === 'pending' && (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Clock className="h-3.5 w-3.5" />
-                    Aguardando data de entrega
+                    Aguardando resposta do fornecedor
                   </div>
                 )}
 
+                {/* ACCEPTED: not due yet */}
+                {neg.status === 'accepted' && !isDeliveryDue && (
+                  <div className="flex items-center gap-1.5 text-xs text-blue-600">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Negociação aceita, aguardando envio
+                  </div>
+                )}
+
+                {/* PDF button for accepted/shipped/delivered */}
                 {(neg.status === 'accepted' || neg.status === 'shipped' || neg.status === 'delivered') && (
                   <Button
                     size="sm"
@@ -229,6 +285,14 @@ const MinhasNegociacoes = () => {
                     <FileText className="h-3.5 w-3.5" />
                     Gerar Resumo do Acordo
                   </Button>
+                )}
+
+                {/* DELIVERED: confirmation info */}
+                {neg.status === 'delivered' && (
+                  <div className="flex items-center gap-1.5 text-xs text-green-600 mt-2">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Entrega confirmada{neg.delivery_confirmed_at && ` em ${new Date(neg.delivery_confirmed_at).toLocaleDateString('pt-BR')}`}
+                  </div>
                 )}
               </Card>
             );
