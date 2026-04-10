@@ -439,6 +439,33 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
             )}
           </div>
 
+          {/* Payment proof upload */}
+          <div className="border rounded-lg p-3 space-y-3 bg-green-50/50 dark:bg-green-950/20">
+            <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-300">
+              <DollarSign className="h-4 w-4" />
+              Comprovante de Pagamento
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Envie o comprovante junto com a solicitação para agilizar a aprovação.
+            </p>
+            <div>
+              <Label className="text-xs">Referência / código da transação</Label>
+              <Input
+                value={paymentReference}
+                onChange={e => setPaymentReference(e.target.value)}
+                placeholder="Ex: código PIX, nº do boleto..."
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Comprovante (imagem ou PDF)</Label>
+              <Input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={e => setPaymentProofFile(e.target.files?.[0] || null)}
+              />
+            </div>
+          </div>
+
           <Button onClick={handleSubmit} disabled={submitting || !canSubmit} className="w-full">
             {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
             Registrar Negociação
