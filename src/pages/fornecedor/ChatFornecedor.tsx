@@ -145,12 +145,12 @@ const ChatFornecedor = () => {
     const online = isUserOnline(selectedCustomerId);
 
     const renderMessages = () => (
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gradient-to-b from-primary/5 to-background">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gradient-to-b from-primary/5 to-transparent">
         {messages.map((msg, idx) => {
           const isFromMe = msg.from_user === user?.id;
           return (
             <div key={idx} className={`flex ${isFromMe ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[78%] rounded-2xl px-3 py-2 shadow-sm ${isFromMe ? 'bg-primary text-white rounded-tr-md' : 'bg-white border rounded-tl-md'}`}>
+              <div className={`max-w-[78%] rounded-2xl px-3 py-2 shadow-sm ${isFromMe ? 'bg-primary text-primary-foreground rounded-tr-md' : 'bg-card border rounded-tl-md'}`}>
                 {msg.text && <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>}
                 {msg.attachments && msg.attachments.map((url, attIdx) => {
                   const isImage = url.startsWith('data:image') || /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
@@ -164,10 +164,10 @@ const ChatFornecedor = () => {
                   );
                 })}
                 <div className={`flex items-center gap-1 mt-1 ${isFromMe ? 'justify-end' : 'justify-start'}`}>
-                  <span className={`text-[10px] ${isFromMe ? 'text-white/70' : 'text-muted-foreground'}`}>
+                  <span className={`text-[10px] ${isFromMe ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                     {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </span>
-                  {isFromMe && (msg.read ? <CheckCheck className="h-3 w-3 text-white/80" /> : <Check className="h-3 w-3 text-white/50" />)}
+                  {isFromMe && (msg.read ? <CheckCheck className="h-3 w-3 text-primary-foreground/80" /> : <Check className="h-3 w-3 text-primary-foreground/50" />)}
                 </div>
               </div>
             </div>
@@ -196,7 +196,7 @@ const ChatFornecedor = () => {
     );
 
     const renderHeader = () => (
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-3 flex items-center gap-3 shadow-lg">
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-3 flex items-center gap-3 shadow-lg">
         <button onClick={() => setSelectedCustomerId(null)} className="p-1.5 hover:bg-white/10 rounded-full"><ArrowLeft className="h-5 w-5" /></button>
         <div className="relative flex-shrink-0">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
@@ -268,7 +268,7 @@ const ChatFornecedor = () => {
             {renderHeader()}
             {renderMessages()}
             {attachments.length > 0 && (
-              <div className="border-t p-3 bg-white flex gap-2 overflow-x-auto">
+              <div className="border-t p-3 bg-card flex gap-2 overflow-x-auto">
                 {attachments.map((att, idx) => (
                   <div key={idx} className="relative flex-shrink-0">
                     {att.type === 'image' ? <img src={att.url} alt="" className="h-20 w-20 object-cover rounded-xl" /> : <div className="h-20 w-20 bg-muted rounded-xl flex items-center justify-center">{att.type === 'video' ? <Video className="h-8 w-8" /> : <FileText className="h-8 w-8" />}</div>}
@@ -305,8 +305,8 @@ const ChatFornecedor = () => {
   return (
     <>
       {/* Mobile */}
-      <div className="md:hidden min-h-screen bg-white">
-        <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-4 sticky top-0 z-10 flex items-center justify-between">
+      <div className="md:hidden min-h-screen bg-background">
+        <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 sticky top-0 z-10 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold">Conversas</h1>
             <p className="text-xs text-white/70">{conversations.length} conversas</p>
@@ -314,12 +314,12 @@ const ChatFornecedor = () => {
           <button onClick={() => setShowCreateStory(true)} className="p-2 hover:bg-white/10 rounded-full"><Plus className="h-5 w-5" /></button>
         </div>
 
-        <div className="p-2 bg-white sticky top-[68px] z-10 border-b">
+        <div className="p-2 bg-background sticky top-[68px] z-10 border-b">
           <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input ref={searchInputRef} placeholder="Pesquisar clientes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full h-9" /></div>
         </div>
 
         {/* My Stories */}
-        <div className="bg-white border-b">
+        <div className="bg-background border-b">
           <SupplierStories
             suppliers={groupedStories.filter(s => s.supplierId !== user?.id)}
             onStoryClick={(id) => {
@@ -357,7 +357,7 @@ const ChatFornecedor = () => {
                       <div className="w-14 h-14 rounded-full overflow-hidden">
                         {getCustomerAvatar(conv.userId) ? <img src={getCustomerAvatar(conv.userId)!} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white font-bold text-xl">{getCustomerName(conv.userId).charAt(0)}</div>}
                       </div>
-                      {online && <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white" />}
+                      {online && <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-background" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
@@ -383,7 +383,7 @@ const ChatFornecedor = () => {
       {/* Desktop */}
       <div className="hidden md:flex h-[calc(100vh-8rem)] gap-4">
         <Card className="w-80 flex-shrink-0 flex flex-col overflow-hidden">
-          <div className="p-4 border-b bg-gradient-to-r from-primary to-primary/80 text-white flex items-center justify-between">
+          <div className="p-4 border-b bg-gradient-to-r from-primary to-primary/80 text-primary-foreground flex items-center justify-between">
             <h2 className="font-semibold text-lg">Conversas</h2>
             <button onClick={() => {
               if (myStories.length > 0) {
@@ -427,7 +427,7 @@ const ChatFornecedor = () => {
                   <div className="flex items-center gap-3">
                     <div className="relative flex-shrink-0">
                       <div className="w-12 h-12 rounded-full overflow-hidden">{getCustomerAvatar(conv.userId) ? <img src={getCustomerAvatar(conv.userId)!} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white font-bold text-lg">{getCustomerName(conv.userId).charAt(0)}</div>}</div>
-                      {online && <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />}
+                      {online && <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-background" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between"><h3 className="font-semibold truncate">{getCustomerName(conv.userId)}</h3><span className="text-[11px] text-muted-foreground">{new Date(conv.lastMessage.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span></div>
