@@ -9,11 +9,9 @@ import { ArrowLeft, CreditCard, Plus, Trash2, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useSupabasePaymentMethods } from "@/hooks/useSupabasePaymentMethods";
 
 const MetodosPagamento = () => {
   const navigate = useNavigate();
-  const { paymentMethods, addPaymentMethod, deletePaymentMethod, setDefaultPaymentMethod } = useSupabasePaymentMethods();
   
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [cardForm, setCardForm] = useState({

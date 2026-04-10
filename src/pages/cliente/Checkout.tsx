@@ -5,7 +5,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 import { StepDadosComprador, BuyerData } from "@/components/checkout/StepDadosComprador";
 import { StepResumo } from "@/components/checkout/StepResumo";
-import { StepStripePayment } from "@/components/checkout/StepStripePayment";
+import { StepConcluido } from "@/components/checkout/StepConcluido";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
@@ -147,19 +147,7 @@ const Checkout = () => {
           )}
           
           {currentStep === 3 && buyerData && (
-            <StepStripePayment
-              cartItems={cartItems}
-              subtotal={subtotal}
-              shipping={shipping}
-              discount={discount}
-              couponId={couponId}
-              buyerData={buyerData}
-              onBack={() => setCurrentStep(2)}
-              onSuccess={handlePaymentSuccess}
-              onDiscountChange={handleDiscountChange}
-              isPickup={shippingData.isPickup}
-              shippingRegion={shippingData.region}
-            />
+            <StepConcluido />
           )}
         </div>
       </main>

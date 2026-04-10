@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 interface ClienteData {
   orders: any[];
   addresses: any[];
-  paymentMethods: any[];
   notifications: any[];
   profile: any | null;
   supportTickets: any[];
@@ -17,7 +16,6 @@ interface ClientePrefetchContextType {
   refetchAll: () => Promise<void>;
   refetchOrders: () => Promise<void>;
   refetchAddresses: () => Promise<void>;
-  refetchPaymentMethods: () => Promise<void>;
   refetchNotifications: () => Promise<void>;
   refetchProfile: () => Promise<void>;
 }
@@ -25,7 +23,6 @@ interface ClientePrefetchContextType {
 const defaultData: ClienteData = {
   orders: [],
   addresses: [],
-  paymentMethods: [],
   notifications: [],
   profile: null,
   supportTickets: [],
@@ -102,15 +99,6 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
     return addresses || [];
   }, []);
 
-  const fetchPaymentMethods = useCallback(async (uid: string) => {
-    const { data: methods } = await supabase
-      .from("payment_methods")
-      .select("*")
-      .eq("user_id", uid)
-      .order("is_default", { ascending: false });
-    return methods || [];
-  }, []);
-
   const fetchNotifications = useCallback(async (uid: string) => {
     const { data: notifications } = await supabase
       .from("notifications")
@@ -143,11 +131,10 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
         setLoading(true);
 
         // Buscar todos os dados em paralelo
-        const [profile, orders, addresses, paymentMethods, notifications, supportTickets] = await Promise.all([
+        const [profile, orders, addresses, notifications, supportTickets] = await Promise.all([
           fetchProfile(uid),
           fetchOrders(uid),
           fetchAddresses(uid),
-          fetchPaymentMethods(uid),
           fetchNotifications(uid),
           fetchSupportTickets(uid),
         ]);
@@ -156,7 +143,6 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
           profile,
           orders,
           addresses,
-          paymentMethods,
           notifications,
           supportTickets,
         };
