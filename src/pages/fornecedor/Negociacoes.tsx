@@ -602,6 +602,60 @@ const Negociacoes = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Cancel with reason Dialog */}
+      <Dialog open={cancelDialog} onOpenChange={setCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="h-5 w-5" />
+              Cancelar Negociação
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              O comprador já informou o pagamento. Selecione o motivo do cancelamento:
+            </p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="cancelReason" value="comprovante_falso" checked={cancelReason === 'comprovante_falso'} onChange={e => setCancelReason(e.target.value)} />
+                <span className="text-sm">🚨 Comprovante falso (escalar para admin)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="cancelReason" value="pagamento_nao_localizado" checked={cancelReason === 'pagamento_nao_localizado'} onChange={e => setCancelReason(e.target.value)} />
+                <span className="text-sm">Pagamento não localizado</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="cancelReason" value="produto_indisponivel" checked={cancelReason === 'produto_indisponivel'} onChange={e => setCancelReason(e.target.value)} />
+                <span className="text-sm">Produto indisponível</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="cancelReason" value="outro" checked={cancelReason === 'outro'} onChange={e => setCancelReason(e.target.value)} />
+                <span className="text-sm">Outro motivo</span>
+              </label>
+            </div>
+            {cancelReason && cancelReason !== 'comprovante_falso' && (
+              <p className="text-xs text-orange-600 bg-orange-50 dark:bg-orange-950/30 rounded p-2">
+                ⚠️ Ao cancelar com pagamento informado, você será obrigado a reembolsar o comprador.
+              </p>
+            )}
+            {cancelReason === 'comprovante_falso' && (
+              <p className="text-xs text-destructive bg-destructive/10 rounded p-2">
+                🚨 Uma disputa será criada automaticamente e o administrador será notificado com o comprovante.
+              </p>
+            )}
+            <Button
+              onClick={handleCancelWithReason}
+              variant="destructive"
+              className="w-full gap-1"
+              disabled={!cancelReason}
+            >
+              <XCircle className="h-4 w-4" />
+              Confirmar Cancelamento
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
