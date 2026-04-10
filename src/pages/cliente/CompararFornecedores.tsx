@@ -134,13 +134,15 @@ const CompararFornecedores = () => {
   };
 
   const selectedCount = suppliers.filter(Boolean).length;
-  const filteredPickers = allSuppliers.filter(s => {
-    const alreadySelected = suppliers.some(sel => sel?.id === s.id);
-    const matchesSearch = pickerSearch
-      ? s.nome.toLowerCase().includes(pickerSearch.toLowerCase())
-      : true;
-    return !alreadySelected && matchesSearch;
-  });
+  const filteredPickers = allSuppliers
+    .filter(s => {
+      const alreadySelected = suppliers.some(sel => sel?.id === s.id);
+      const matchesSearch = pickerSearch
+        ? s.nome.toLowerCase().includes(pickerSearch.toLowerCase())
+        : true;
+      return !alreadySelected && matchesSearch;
+    })
+    .sort(() => pickerSearch ? 0 : 0.5 - Math.random());
 
   const getBestValue = (field: keyof SupplierData, mode: "max" | "min") => {
     const vals = suppliers.filter(Boolean).map(s => ({ id: s!.id, val: s![field] as number }));
@@ -304,11 +306,9 @@ const CompararFornecedores = () => {
                 autoFocus
                 className="w-full px-4 py-3 rounded-xl border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
-              {pickerSearch && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {filteredPickers.length} resultado{filteredPickers.length !== 1 ? "s" : ""}
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                {filteredPickers.length} fornecedor{filteredPickers.length !== 1 ? "es" : ""} disponíve{filteredPickers.length !== 1 ? "is" : "l"}
+              </p>
             </div>
             <div className="overflow-y-auto flex-1 p-2">
               {loading ? (
