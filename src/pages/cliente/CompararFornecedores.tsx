@@ -134,15 +134,18 @@ const CompararFornecedores = () => {
   };
 
   const selectedCount = suppliers.filter(Boolean).length;
-  const filteredPickers = allSuppliers
-    .filter(s => {
-      const alreadySelected = suppliers.some(sel => sel?.id === s.id);
-      const matchesSearch = pickerSearch
-        ? s.nome.toLowerCase().includes(pickerSearch.toLowerCase())
-        : true;
-      return !alreadySelected && matchesSearch;
-    })
-    .sort(() => pickerSearch ? 0 : 0.5 - Math.random());
+  // Shuffle suppliers once when picker opens (not on every render)
+  const shuffledSuppliers = useMemo(() => {
+    return [...allSuppliers].sort(() => 0.5 - Math.random());
+  }, [allSuppliers, showPicker]);
+
+  const filteredPickers = shuffledSuppliers.filter(s => {
+    const alreadySelected = suppliers.some(sel => sel?.id === s.id);
+    const matchesSearch = pickerSearch
+      ? s.nome.toLowerCase().includes(pickerSearch.toLowerCase())
+      : true;
+    return !alreadySelected && matchesSearch;
+  });
 
   const getBestValue = (field: keyof SupplierData, mode: "max" | "min") => {
     const vals = suppliers.filter(Boolean).map(s => ({ id: s!.id, val: s![field] as number }));
