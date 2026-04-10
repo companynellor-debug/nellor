@@ -639,73 +639,6 @@ export type Database = {
         }
         Relationships: []
       }
-      coupons: {
-        Row: {
-          ativo: boolean | null
-          codigo: string
-          created_at: string | null
-          expira_em: string | null
-          id: string
-          product_id: string | null
-          supplier_id: string
-          tipo: Database["public"]["Enums"]["coupon_type"]
-          uso_atual: number | null
-          uso_maximo: number | null
-          valor: number
-          valor_minimo: number | null
-        }
-        Insert: {
-          ativo?: boolean | null
-          codigo: string
-          created_at?: string | null
-          expira_em?: string | null
-          id?: string
-          product_id?: string | null
-          supplier_id: string
-          tipo: Database["public"]["Enums"]["coupon_type"]
-          uso_atual?: number | null
-          uso_maximo?: number | null
-          valor: number
-          valor_minimo?: number | null
-        }
-        Update: {
-          ativo?: boolean | null
-          codigo?: string
-          created_at?: string | null
-          expira_em?: string | null
-          id?: string
-          product_id?: string | null
-          supplier_id?: string
-          tipo?: Database["public"]["Enums"]["coupon_type"]
-          uso_atual?: number | null
-          uso_maximo?: number | null
-          valor?: number
-          valor_minimo?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "coupons_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "coupons_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "coupons_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "public_supplier_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       disputes: {
         Row: {
           admin_notes: string | null
@@ -819,16 +752,12 @@ export type Database = {
           id: string
           order_number: string
           order_status: string | null
-          paid_at: string | null
-          payment_status: string | null
-          platform_fee: number | null
           product_id: string
           quantity: number
           sale_price: number
           shipped_at: string | null
           shipping_address: Json
           shipping_company: string | null
-          supplier_amount: number
           supplier_id: string
           total: number
           tracking_code: string | null
@@ -851,16 +780,12 @@ export type Database = {
           id?: string
           order_number?: string
           order_status?: string | null
-          paid_at?: string | null
-          payment_status?: string | null
-          platform_fee?: number | null
           product_id: string
           quantity?: number
           sale_price: number
           shipped_at?: string | null
           shipping_address: Json
           shipping_company?: string | null
-          supplier_amount: number
           supplier_id: string
           total: number
           tracking_code?: string | null
@@ -883,16 +808,12 @@ export type Database = {
           id?: string
           order_number?: string
           order_status?: string | null
-          paid_at?: string | null
-          payment_status?: string | null
-          platform_fee?: number | null
           product_id?: string
           quantity?: number
           sale_price?: number
           shipped_at?: string | null
           shipping_address?: Json
           shipping_company?: string | null
-          supplier_amount?: number
           supplier_id?: string
           total?: number
           tracking_code?: string | null
@@ -1000,6 +921,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      messages_archive: {
+        Row: {
+          archived_at: string | null
+          attachments: string[] | null
+          chat_id: string
+          created_at: string | null
+          from_user: string
+          id: string
+          read: boolean | null
+          text: string
+          to_user: string
+        }
+        Insert: {
+          archived_at?: string | null
+          attachments?: string[] | null
+          chat_id: string
+          created_at?: string | null
+          from_user: string
+          id?: string
+          read?: boolean | null
+          text: string
+          to_user: string
+        }
+        Update: {
+          archived_at?: string | null
+          attachments?: string[] | null
+          chat_id?: string
+          created_at?: string | null
+          from_user?: string
+          id?: string
+          read?: boolean | null
+          text?: string
+          to_user?: string
+        }
+        Relationships: []
       }
       negotiations: {
         Row: {
@@ -1237,7 +1194,6 @@ export type Database = {
           itens: Json
           order_number: string
           order_status: Database["public"]["Enums"]["order_status"] | null
-          paid_at: string | null
           payment_confirmed_at: string | null
           payment_contested_reason: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
@@ -1245,17 +1201,9 @@ export type Database = {
           payment_reference: string | null
           payment_reported_at: string | null
           payment_state: string
-          payment_status: Database["public"]["Enums"]["payment_status"] | null
-          payment_status_label: string | null
-          platform_fee: number | null
           proof_url: string | null
           shipping_company: string | null
-          status_label: string | null
-          stripe_payment_amount: number | null
-          stripe_payment_intent_id: string | null
-          stripe_session_id: string | null
           subtotal: number
-          supplier_amount: number | null
           supplier_id: string
           total: number
           tracking_code: string | null
@@ -1272,7 +1220,6 @@ export type Database = {
           itens: Json
           order_number: string
           order_status?: Database["public"]["Enums"]["order_status"] | null
-          paid_at?: string | null
           payment_confirmed_at?: string | null
           payment_contested_reason?: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
@@ -1280,17 +1227,9 @@ export type Database = {
           payment_reference?: string | null
           payment_reported_at?: string | null
           payment_state?: string
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
-          payment_status_label?: string | null
-          platform_fee?: number | null
           proof_url?: string | null
           shipping_company?: string | null
-          status_label?: string | null
-          stripe_payment_amount?: number | null
-          stripe_payment_intent_id?: string | null
-          stripe_session_id?: string | null
           subtotal: number
-          supplier_amount?: number | null
           supplier_id: string
           total: number
           tracking_code?: string | null
@@ -1307,7 +1246,6 @@ export type Database = {
           itens?: Json
           order_number?: string
           order_status?: Database["public"]["Enums"]["order_status"] | null
-          paid_at?: string | null
           payment_confirmed_at?: string | null
           payment_contested_reason?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
@@ -1315,17 +1253,9 @@ export type Database = {
           payment_reference?: string | null
           payment_reported_at?: string | null
           payment_state?: string
-          payment_status?: Database["public"]["Enums"]["payment_status"] | null
-          payment_status_label?: string | null
-          platform_fee?: number | null
           proof_url?: string | null
           shipping_company?: string | null
-          status_label?: string | null
-          stripe_payment_amount?: number | null
-          stripe_payment_intent_id?: string | null
-          stripe_session_id?: string | null
           subtotal?: number
-          supplier_amount?: number | null
           supplier_id?: string
           total?: number
           tracking_code?: string | null
@@ -1355,96 +1285,6 @@ export type Database = {
           },
           {
             foreignKeyName: "orders_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "public_supplier_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      payment_methods: {
-        Row: {
-          card_brand: string | null
-          card_expiry: string | null
-          card_holder: string | null
-          card_number_last4: string | null
-          created_at: string | null
-          id: string
-          is_default: boolean | null
-          pix_key: string | null
-          type: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          card_brand?: string | null
-          card_expiry?: string | null
-          card_holder?: string | null
-          card_number_last4?: string | null
-          created_at?: string | null
-          id?: string
-          is_default?: boolean | null
-          pix_key?: string | null
-          type: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          card_brand?: string | null
-          card_expiry?: string | null
-          card_holder?: string | null
-          card_number_last4?: string | null
-          created_at?: string | null
-          id?: string
-          is_default?: boolean | null
-          pix_key?: string | null
-          type?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      payouts: {
-        Row: {
-          admin_note: string | null
-          amount: number
-          created_at: string | null
-          id: string
-          pix_key: string
-          status: Database["public"]["Enums"]["payout_status"] | null
-          supplier_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          admin_note?: string | null
-          amount: number
-          created_at?: string | null
-          id?: string
-          pix_key: string
-          status?: Database["public"]["Enums"]["payout_status"] | null
-          supplier_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          admin_note?: string | null
-          amount?: number
-          created_at?: string | null
-          id?: string
-          pix_key?: string
-          status?: Database["public"]["Enums"]["payout_status"] | null
-          supplier_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payouts_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payouts_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "public_supplier_profiles"
@@ -1877,13 +1717,10 @@ export type Database = {
           phone_verified: boolean | null
           phone_verified_at: string | null
           pinned_suppliers: Json | null
-          pix_key: string | null
           service_provider_code: string | null
           shipping_city: string | null
           shipping_state: string | null
           store_slug: string | null
-          stripe_account_id: string | null
-          stripe_ready: boolean | null
           telefone: string | null
           tipo: Database["public"]["Enums"]["user_type"]
           tour_completed: boolean | null
@@ -1907,13 +1744,10 @@ export type Database = {
           phone_verified?: boolean | null
           phone_verified_at?: string | null
           pinned_suppliers?: Json | null
-          pix_key?: string | null
           service_provider_code?: string | null
           shipping_city?: string | null
           shipping_state?: string | null
           store_slug?: string | null
-          stripe_account_id?: string | null
-          stripe_ready?: boolean | null
           telefone?: string | null
           tipo: Database["public"]["Enums"]["user_type"]
           tour_completed?: boolean | null
@@ -1937,13 +1771,10 @@ export type Database = {
           phone_verified?: boolean | null
           phone_verified_at?: string | null
           pinned_suppliers?: Json | null
-          pix_key?: string | null
           service_provider_code?: string | null
           shipping_city?: string | null
           shipping_state?: string | null
           store_slug?: string | null
-          stripe_account_id?: string | null
-          stripe_ready?: boolean | null
           telefone?: string | null
           tipo?: Database["public"]["Enums"]["user_type"]
           tour_completed?: boolean | null
@@ -2149,50 +1980,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      refund_requests: {
-        Row: {
-          buyer_id: string
-          confirmed_at: string | null
-          created_at: string
-          id: string
-          order_id: string
-          reason: string
-          resolved_at: string | null
-          status: string
-          supplier_id: string
-        }
-        Insert: {
-          buyer_id: string
-          confirmed_at?: string | null
-          created_at?: string
-          id?: string
-          order_id: string
-          reason?: string
-          resolved_at?: string | null
-          status?: string
-          supplier_id: string
-        }
-        Update: {
-          buyer_id?: string
-          confirmed_at?: string | null
-          created_at?: string
-          id?: string
-          order_id?: string
-          reason?: string
-          resolved_at?: string | null
-          status?: string
-          supplier_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "refund_requests_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -3180,61 +2967,6 @@ export type Database = {
           },
         ]
       }
-      transactions: {
-        Row: {
-          amount: number
-          created_at: string | null
-          id: string
-          method: Database["public"]["Enums"]["payment_method"] | null
-          order_id: string | null
-          status: Database["public"]["Enums"]["payment_status"] | null
-          supplier_id: string
-          type: Database["public"]["Enums"]["transaction_type"]
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          id?: string
-          method?: Database["public"]["Enums"]["payment_method"] | null
-          order_id?: string | null
-          status?: Database["public"]["Enums"]["payment_status"] | null
-          supplier_id: string
-          type: Database["public"]["Enums"]["transaction_type"]
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
-          method?: Database["public"]["Enums"]["payment_method"] | null
-          order_id?: string | null
-          status?: Database["public"]["Enums"]["payment_status"] | null
-          supplier_id?: string
-          type?: Database["public"]["Enums"]["transaction_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transactions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "public_supplier_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       trend_requests: {
         Row: {
           approved_at: string | null
@@ -3538,7 +3270,6 @@ export type Database = {
           order_number: string
           order_status: string
           payment_method: string
-          payment_status: string
           proof_url: string
           subtotal: number
           supplier_id: string
@@ -3557,7 +3288,6 @@ export type Database = {
           id: string
           nome: string
           onboarding_completed: boolean
-          stripe_account_id: string
           telefone: string
           tipo: string
         }[]
@@ -3615,8 +3345,6 @@ export type Database = {
         Args: never
         Returns: {
           active_suppliers: number
-          delivered_orders: number
-          paid_orders: number
           total_orders: number
           total_revenue: number
           total_users: number
@@ -4040,7 +3768,6 @@ export type Database = {
         | "delivered"
         | "cancelled"
       payment_method: "pix" | "boleto" | "cartao"
-      payment_status: "pending" | "paid" | "refunded" | "cancelled"
       payout_status: "requested" | "approved" | "paid" | "rejected"
       proposal_status: "pending" | "accepted" | "rejected"
       quotation_status: "open" | "closed" | "cancelled"
@@ -4222,7 +3949,6 @@ export const Constants = {
         "cancelled",
       ],
       payment_method: ["pix", "boleto", "cartao"],
-      payment_status: ["pending", "paid", "refunded", "cancelled"],
       payout_status: ["requested", "approved", "paid", "rejected"],
       proposal_status: ["pending", "accepted", "rejected"],
       quotation_status: ["open", "closed", "cancelled"],

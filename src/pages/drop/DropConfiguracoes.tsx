@@ -214,9 +214,8 @@ const DropConfiguracoes = () => {
                 </p>
               </div>
 
-              <Button variant="outline">
-                Configurar método de saque
-              </Button>
+
+
             </Card>
           )}
 

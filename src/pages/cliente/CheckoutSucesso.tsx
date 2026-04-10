@@ -62,7 +62,7 @@ const CheckoutSucesso = () => {
         // 2) Busca pedido para exibir o número e checar status
         const { data: order, error: orderError } = await supabase
           .from("orders")
-          .select("id, order_number, payment_status")
+          .select("id, order_number")
           .eq("id", orderIdFromQuery)
           .maybeSingle();
 

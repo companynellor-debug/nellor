@@ -140,14 +140,9 @@ export const useAdminNotifications = () => {
         async (payload) => {
           const order = payload.new as any;
           const oldOrder = payload.old as any;
-          if (order?.payment_status === 'paid' && oldOrder?.payment_status !== 'paid') {
-            const commission = Number(order.platform_fee) || Number(order.total) * 0.075;
+          if (order?.order_status !== oldOrder?.order_status) {
             playNotificationSound();
-            toast({ title: '✅ Pagamento Confirmado!', description: `Pedido #${order.order_number} - ${formatCurrency(Number(order.total))}` });
-            setTimeout(() => {
-              toast({ title: '💰 Comissão Recebida!', description: `${formatCurrency(commission)} (7,5%)` });
-            }, 1500);
-            await showPaymentNotification(order.order_number, Number(order.total), 'paid');
+            toast({ title: '📦 Pedido Atualizado', description: `Pedido #${order.order_number} - Status: ${order.order_status}` });
             fetchNotifications(0);
           }
         }

@@ -7,9 +7,6 @@ interface FornecedorData {
   products: any[];
   notifications: any[];
   profile: any | null;
-  coupons: any[];
-  transactions: any[];
-  payouts: any[];
   analytics: any[];
 }
 
@@ -21,9 +18,6 @@ interface FornecedorPrefetchContextType {
   refetchProducts: () => Promise<void>;
   refetchNotifications: () => Promise<void>;
   refetchProfile: () => Promise<void>;
-  refetchCoupons: () => Promise<void>;
-  refetchTransactions: () => Promise<void>;
-  refetchPayouts: () => Promise<void>;
 }
 
 const defaultData: FornecedorData = {
@@ -31,9 +25,6 @@ const defaultData: FornecedorData = {
   products: [],
   notifications: [],
   profile: null,
-  coupons: [],
-  transactions: [],
-  payouts: [],
   analytics: [],
 };
 
@@ -118,33 +109,8 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
     return notifications || [];
   }, []);
 
-  const fetchCoupons = useCallback(async (uid: string) => {
-    const { data: coupons } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("supplier_id", uid)
-      .order("created_at", { ascending: false });
-    return coupons || [];
-  }, []);
 
-  const fetchTransactions = useCallback(async (uid: string) => {
-    const { data: transactions } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("supplier_id", uid)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    return transactions || [];
-  }, []);
 
-  const fetchPayouts = useCallback(async (uid: string) => {
-    const { data: payouts } = await supabase
-      .from("payouts")
-      .select("*")
-      .eq("supplier_id", uid)
-      .order("created_at", { ascending: false });
-    return payouts || [];
-  }, []);
 
   const fetchAnalytics = useCallback(async (uid: string) => {
     const { data: analytics } = await supabase
@@ -168,15 +134,12 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
         setLoading(true);
 
         // Buscar todos os dados em paralelo
-        const [profile, orders, products, notifications, coupons, transactions, payouts, analytics] =
+        const [profile, orders, products, notifications, analytics] =
           await Promise.all([
             fetchProfile(uid),
             fetchOrders(uid),
             fetchProducts(uid),
             fetchNotifications(uid),
-            fetchCoupons(uid),
-            fetchTransactions(uid),
-            fetchPayouts(uid),
             fetchAnalytics(uid),
           ]);
 
@@ -185,9 +148,6 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
           orders,
           products,
           notifications,
-          coupons,
-          transactions,
-          payouts,
           analytics,
         };
 
@@ -205,9 +165,6 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
       fetchOrders,
       fetchProducts,
       fetchNotifications,
-      fetchCoupons,
-      fetchTransactions,
-      fetchPayouts,
       fetchAnalytics,
     ]
   );
@@ -253,35 +210,8 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
     });
   }, [userId, fetchProfile]);
 
-  const refetchCoupons = useCallback(async () => {
-    if (!userId) return;
-    const coupons = await fetchCoupons(userId);
-    setData((prev) => {
-      const newData = { ...prev, coupons };
-      globalCache = newData;
-      return newData;
-    });
-  }, [userId, fetchCoupons]);
 
-  const refetchTransactions = useCallback(async () => {
-    if (!userId) return;
-    const transactions = await fetchTransactions(userId);
-    setData((prev) => {
-      const newData = { ...prev, transactions };
-      globalCache = newData;
-      return newData;
-    });
-  }, [userId, fetchTransactions]);
 
-  const refetchPayouts = useCallback(async () => {
-    if (!userId) return;
-    const payouts = await fetchPayouts(userId);
-    setData((prev) => {
-      const newData = { ...prev, payouts };
-      globalCache = newData;
-      return newData;
-    });
-  }, [userId, fetchPayouts]);
 
   const refetchAll = useCallback(async () => {
     if (!userId) return;
@@ -405,71 +335,7 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
       )
       .subscribe((status) => console.log("[realtime] fornecedor products status:", status));
 
-    // Transactions
-    const transactionsChannel = supabase
-      .channel(`fornecedor-transactions-${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "transactions", filter: `supplier_id=eq.${userId}` },
-        (payload) => {
-          const p: any = payload;
-          console.log("[realtime] fornecedor transactions", p.eventType, p.new?.id || p.old?.id);
-
-          if (p.eventType === "DELETE") {
-            const oldRow: any = p.old;
-            setData((prev) => {
-              const transactions = prev.transactions.filter((x: any) => x?.id !== oldRow?.id);
-              const next = { ...prev, transactions };
-              globalCache = next;
-              return next;
-            });
-            return;
-          }
-
-          const newRow: any = p.new;
-          setData((prev) => {
-            const transactions = upsertById(prev.transactions, newRow);
-            const next = { ...prev, transactions };
-            globalCache = next;
-            return next;
-          });
-        }
-      )
-      .subscribe((status) => console.log("[realtime] fornecedor transactions status:", status));
-
-    // Payouts
-    const payoutsChannel = supabase
-      .channel(`fornecedor-payouts-${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "payouts", filter: `supplier_id=eq.${userId}` },
-        (payload) => {
-          const p: any = payload;
-          console.log("[realtime] fornecedor payouts", p.eventType, p.new?.id || p.old?.id);
-
-          if (p.eventType === "DELETE") {
-            const oldRow: any = p.old;
-            setData((prev) => {
-              const payouts = prev.payouts.filter((x: any) => x?.id !== oldRow?.id);
-              const next = { ...prev, payouts };
-              globalCache = next;
-              return next;
-            });
-            return;
-          }
-
-          const newRow: any = p.new;
-          setData((prev) => {
-            const payouts = upsertById(prev.payouts, newRow);
-            const next = { ...prev, payouts };
-            globalCache = next;
-            return next;
-          });
-        }
-      )
-      .subscribe((status) => console.log("[realtime] fornecedor payouts status:", status));
-
-    channelsRef.current = [ordersChannel, notificationsChannel, productsChannel, transactionsChannel, payoutsChannel];
+    channelsRef.current = [ordersChannel, notificationsChannel, productsChannel];
 
     return () => {
       channelsRef.current.forEach((ch) => supabase.removeChannel(ch));
@@ -487,9 +353,8 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
         refetchProducts,
         refetchNotifications,
         refetchProfile,
-        refetchCoupons,
-        refetchTransactions,
-        refetchPayouts,
+
+
       }}
     >
       {children}
@@ -526,17 +391,5 @@ export const useFornecedorProfile = () => {
   return { profile: data.profile, loading, refetch: refetchProfile };
 };
 
-export const useFornecedorCoupons = () => {
-  const { data, loading, refetchCoupons } = useFornecedorPrefetch();
-  return { coupons: data.coupons, loading, refetch: refetchCoupons };
-};
 
-export const useFornecedorTransactions = () => {
-  const { data, loading, refetchTransactions } = useFornecedorPrefetch();
-  return { transactions: data.transactions, loading, refetch: refetchTransactions };
-};
 
-export const useFornecedorPayouts = () => {
-  const { data, loading, refetchPayouts } = useFornecedorPrefetch();
-  return { payouts: data.payouts, loading, refetch: refetchPayouts };
-};

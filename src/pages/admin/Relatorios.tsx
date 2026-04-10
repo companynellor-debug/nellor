@@ -22,7 +22,7 @@ const Relatorios = () => {
   const cutoff = periodDays === "all" ? null : subDays(new Date(), Number(periodDays));
   
   const orders = allOrders.filter(o => {
-    if (o.payment_status !== 'paid' || o.order_status === 'cancelled') return false;
+    if (o.order_status === 'cancelled') return false;
     if (cutoff && new Date(o.created_at) < cutoff) return false;
     return true;
   });
@@ -38,7 +38,6 @@ const Relatorios = () => {
     : fornecedores.length;
 
   const gmvTotal = orders.reduce((s, o) => s + Number(o.total), 0);
-  const receitaNellor = gmvTotal * 0.075;
 
   // Growth chart (cumulative last 6 months, always full range)
   const growthData = (() => {
@@ -204,16 +203,12 @@ const Relatorios = () => {
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="flex justify-between items-center py-3 border-b">
-              <span className="text-sm text-muted-foreground">Total de Pedidos Pagos</span>
+             <span className="text-sm text-muted-foreground">Total de Pedidos</span>
               <span className="font-bold text-2xl text-neutral-700">{orders.length.toLocaleString('pt-BR')}</span>
             </div>
             <div className="flex justify-between items-center py-3 border-b">
-              <span className="text-sm text-muted-foreground">GMV (Volume Bruto)</span>
+              <span className="text-sm text-muted-foreground">Volume Total</span>
               <span className="font-bold text-2xl text-neutral-700">{formatCurrency(gmvTotal)}</span>
-            </div>
-            <div className="flex justify-between items-center py-3 border-b">
-              <span className="text-sm text-muted-foreground">Receita Nellor (7,5%)</span>
-              <span className="font-bold text-2xl text-green-700">{formatCurrency(receitaNellor)}</span>
             </div>
             <div className="flex justify-between items-center py-3 border-b">
               <span className="text-sm text-muted-foreground">Novos Clientes</span>

@@ -65,7 +65,7 @@ const ConfiguracoesNotificacoes = () => {
       key: 'promotions' as const,
       icon: Tag,
       title: 'Promoções e ofertas',
-      description: 'Cupons, descontos e ofertas especiais',
+      description: 'Ofertas especiais e novidades',
       color: 'text-orange-600',
       bgColor: 'bg-orange-100'
     },

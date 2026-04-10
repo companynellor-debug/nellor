@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 interface ClienteData {
   orders: any[];
   addresses: any[];
-  paymentMethods: any[];
   notifications: any[];
   profile: any | null;
   supportTickets: any[];
@@ -17,7 +16,6 @@ interface ClientePrefetchContextType {
   refetchAll: () => Promise<void>;
   refetchOrders: () => Promise<void>;
   refetchAddresses: () => Promise<void>;
-  refetchPaymentMethods: () => Promise<void>;
   refetchNotifications: () => Promise<void>;
   refetchProfile: () => Promise<void>;
 }
@@ -25,7 +23,6 @@ interface ClientePrefetchContextType {
 const defaultData: ClienteData = {
   orders: [],
   addresses: [],
-  paymentMethods: [],
   notifications: [],
   profile: null,
   supportTickets: [],
@@ -102,15 +99,6 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
     return addresses || [];
   }, []);
 
-  const fetchPaymentMethods = useCallback(async (uid: string) => {
-    const { data: methods } = await supabase
-      .from("payment_methods")
-      .select("*")
-      .eq("user_id", uid)
-      .order("is_default", { ascending: false });
-    return methods || [];
-  }, []);
-
   const fetchNotifications = useCallback(async (uid: string) => {
     const { data: notifications } = await supabase
       .from("notifications")
@@ -143,11 +131,10 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
         setLoading(true);
 
         // Buscar todos os dados em paralelo
-        const [profile, orders, addresses, paymentMethods, notifications, supportTickets] = await Promise.all([
+        const [profile, orders, addresses, notifications, supportTickets] = await Promise.all([
           fetchProfile(uid),
           fetchOrders(uid),
           fetchAddresses(uid),
-          fetchPaymentMethods(uid),
           fetchNotifications(uid),
           fetchSupportTickets(uid),
         ]);
@@ -156,7 +143,6 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
           profile,
           orders,
           addresses,
-          paymentMethods,
           notifications,
           supportTickets,
         };
@@ -170,7 +156,7 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
         setLoading(false);
       }
     },
-    [fetchProfile, fetchOrders, fetchAddresses, fetchPaymentMethods, fetchNotifications, fetchSupportTickets]
+    [fetchProfile, fetchOrders, fetchAddresses, fetchNotifications, fetchSupportTickets]
   );
 
   // Funções individuais de refetch (mantidas para telas que precisam forçar refresh)
@@ -194,15 +180,8 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
     });
   }, [userId, fetchAddresses]);
 
-  const refetchPaymentMethods = useCallback(async () => {
-    if (!userId) return;
-    const paymentMethods = await fetchPaymentMethods(userId);
-    setData((prev) => {
-      const newData = { ...prev, paymentMethods };
-      globalCache = newData;
-      return newData;
-    });
-  }, [userId, fetchPaymentMethods]);
+
+
 
   const refetchNotifications = useCallback(async () => {
     if (!userId) return;
@@ -380,7 +359,7 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
         refetchAll,
         refetchOrders,
         refetchAddresses,
-        refetchPaymentMethods,
+        
         refetchNotifications,
         refetchProfile,
       }}
@@ -409,10 +388,8 @@ export const useClienteAddresses = () => {
   return { addresses: data.addresses, loading, refetch: refetchAddresses };
 };
 
-export const useClientePaymentMethods = () => {
-  const { data, loading, refetchPaymentMethods } = useClientePrefetch();
-  return { paymentMethods: data.paymentMethods, loading, refetch: refetchPaymentMethods };
-};
+
+
 
 export const useClienteNotifications = () => {
   const { data, loading, refetchNotifications } = useClientePrefetch();

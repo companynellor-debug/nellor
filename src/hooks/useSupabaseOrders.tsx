@@ -14,11 +14,7 @@ export interface Order {
   total: number;
   endereco_entrega: any;
   payment_method: 'pix' | 'boleto' | 'cartao';
-  payment_status: 'pending' | 'paid' | 'refunded' | 'cancelled';
   order_status: 'pending' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
-  status_label?: string | null;
-  payment_status_label?: string | null;
-  paid_at?: string | null;
   tracking_code: string | null;
   proof_url: string | null;
   shipping_company: string | null;
@@ -79,7 +75,7 @@ export const useSupabaseOrders = () => {
 
       let query = supabase
         .from('orders')
-        .select('id, order_number, buyer_id, supplier_id, itens, subtotal, frete, desconto, total, endereco_entrega, payment_method, payment_status, order_status, tracking_code, proof_url, platform_fee, supplier_amount, created_at, updated_at');
+        .select('id, order_number, buyer_id, supplier_id, itens, subtotal, frete, desconto, total, endereco_entrega, payment_method, order_status, tracking_code, proof_url, created_at, updated_at');
 
       if (profile?.tipo === 'fornecedor') {
         query = query.eq('supplier_id', user.id);
