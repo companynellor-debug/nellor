@@ -244,7 +244,23 @@ export const useSupabaseOrders = () => {
     }
   };
 
+  const confirmDelivery = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ order_status: 'delivered' as any, updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      toast({ title: 'Recebimento confirmado!', description: 'Obrigado por confirmar a entrega do seu pedido.' });
+    } catch (error: any) {
+      console.error('Error confirming delivery:', error);
+      toast({ title: 'Erro ao confirmar entrega', description: error.message, variant: 'destructive' });
+      throw error;
+    }
+  };
+
   const getOrderById = (orderId: string) => orders.find(order => order.id === orderId);
 
-  return { orders, loading, hasMore, loadMore, createOrder, updateOrderStatus, updatePaymentProof, updateTrackingCode, getOrderById, refetch: () => fetchOrders(0) };
+  return { orders, loading, hasMore, loadMore, createOrder, updateOrderStatus, updatePaymentProof, updateTrackingCode, confirmDelivery, getOrderById, refetch: () => fetchOrders(0) };
 };

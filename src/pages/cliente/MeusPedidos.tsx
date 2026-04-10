@@ -23,12 +23,14 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useClienteOrders } from "@/hooks/useClientePrefetch";
 import { useReviews } from "@/hooks/useReviews";
+import { useSupabaseOrders } from "@/hooks/useSupabaseOrders";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const ORDER_STEPS = [
-  { key: 'pending', label: 'Pedido Recebido', icon: Package },
+  { key: 'pending', label: 'Aguardando Aprovação', icon: Package },
   { key: 'preparing', label: 'Em Preparação', icon: ChefHat },
   { key: 'shipped', label: 'Enviado', icon: Truck },
   { key: 'delivered', label: 'Entregue', icon: PackageCheck },
@@ -39,9 +41,24 @@ const MeusPedidos = () => {
   const [searchParams] = useSearchParams();
   const { orders, refetch } = useClienteOrders();
   const { hasReviewedOrder } = useReviews();
+  const { confirmDelivery } = useSupabaseOrders();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [trackingDialog, setTrackingDialog] = useState(false);
   const [detailsDialog, setDetailsDialog] = useState(false);
+  const [confirmingDelivery, setConfirmingDelivery] = useState(false);
+
+  const handleConfirmDelivery = async (orderId: string) => {
+    if (confirmingDelivery) return;
+    setConfirmingDelivery(true);
+    try {
+      await confirmDelivery(orderId);
+      refetch();
+    } catch {
+      // error handled in hook
+    } finally {
+      setConfirmingDelivery(false);
+    }
+  };
 
   // Fluxo pós-pagamento: abre "Meus Pedidos" por 6s e volta automaticamente.
   useEffect(() => {
@@ -240,6 +257,22 @@ const MeusPedidos = () => {
                 onClick={() => window.open(`https://rastreamento.correios.com.br/app/index.php?codigo=${order.tracking_code}`, '_blank')}
               >
                 <ExternalLink className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* Botão Confirmar Recebimento */}
+          {order.order_status === 'shipped' && (
+            <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+              <p className="text-sm text-green-700 mb-2 font-medium">📦 Seu pedido foi marcado como enviado. Recebeu?</p>
+              <Button 
+                size="sm" 
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                disabled={confirmingDelivery}
+                onClick={() => handleConfirmDelivery(order.id)}
+              >
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Confirmar Recebimento
               </Button>
             </div>
           )}
@@ -452,6 +485,18 @@ const MeusPedidos = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Confirmar Recebimento no dialog */}
+              {selectedOrder.order_status === 'shipped' && (
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  disabled={confirmingDelivery}
+                  onClick={() => handleConfirmDelivery(selectedOrder.id)}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Confirmar Recebimento
+                </Button>
+              )}
 
               {/* Ações */}
               <div className="flex gap-2">

@@ -59,9 +59,13 @@ const Pedidos = () => {
     return matchesSearch && matchesStatus && matchesTags && matchesDateFrom && matchesDateTo;
   });
 
+  const [showTrackingDialog, setShowTrackingDialog] = useState(false);
+  const [pendingShipOrderId, setPendingShipOrderId] = useState<string | null>(null);
+  const [shipTrackingCode, setShipTrackingCode] = useState("");
+
   const getStatusBadge = (status: Order['order_status']) => {
     const statusMap = {
-      pending: { label: "Aguardando Pagamento", color: "bg-yellow-100 text-yellow-800" },
+      pending: { label: "Aguardando Aprovação", color: "bg-yellow-100 text-yellow-800" },
       preparing: { label: "Em Preparação", color: "bg-blue-100 text-blue-800" },
       shipped: { label: "Enviado", color: "bg-purple-100 text-purple-800" },
       delivered: { label: "Entregue", color: "bg-green-100 text-green-800" },
@@ -97,7 +101,29 @@ const Pedidos = () => {
   };
 
   const handleStatusChange = async (orderId: string, newStatus: Order['order_status']) => {
+    if (newStatus === 'shipped') {
+      setPendingShipOrderId(orderId);
+      setShipTrackingCode("");
+      setShowTrackingDialog(true);
+      return;
+    }
     await updateOrderStatus(orderId, newStatus);
+  };
+
+  const handleConfirmShip = async () => {
+    if (!pendingShipOrderId || !shipTrackingCode.trim()) {
+      toast.error("Digite um código de rastreio válido");
+      return;
+    }
+    try {
+      await updateTrackingCode(pendingShipOrderId, shipTrackingCode.trim());
+      await updateOrderStatus(pendingShipOrderId, 'shipped');
+      setShowTrackingDialog(false);
+      setPendingShipOrderId(null);
+      setShipTrackingCode("");
+    } catch {
+      // errors already handled by hooks
+    }
   };
 
   const handleAddTrackingCode = async () => {
@@ -407,19 +433,28 @@ const Pedidos = () => {
                 {/* Update Status */}
                 <div>
                   <h3 className="font-semibold mb-3">Atualizar Status</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" onClick={() => handleStatusChange(selectedOrder.id, 'preparing')} disabled={selectedOrder.order_status === 'preparing'}>
-                      <Package className="h-4 w-4 mr-2" />Preparando
-                    </Button>
-                    <Button variant="outline" onClick={() => handleStatusChange(selectedOrder.id, 'shipped')} disabled={selectedOrder.order_status === 'shipped'}>
-                      <Truck className="h-4 w-4 mr-2" />Enviado
-                    </Button>
-                    <Button variant="outline" onClick={() => handleStatusChange(selectedOrder.id, 'delivered')} disabled={selectedOrder.order_status === 'delivered'}>
-                      <CheckCircle className="h-4 w-4 mr-2" />Entregue
-                    </Button>
-                    <Button variant="outline" onClick={() => handleStatusChange(selectedOrder.id, 'cancelled')} disabled={selectedOrder.order_status === 'cancelled'}>
-                      <XCircle className="h-4 w-4 mr-2" />Cancelar
-                    </Button>
+                  <div className="space-y-2">
+                    {selectedOrder.order_status === 'pending' && (
+                      <Button className="w-full" onClick={() => handleStatusChange(selectedOrder.id, 'preparing')}>
+                        <Package className="h-4 w-4 mr-2" />Aceitar e Preparar
+                      </Button>
+                    )}
+                    {selectedOrder.order_status === 'preparing' && (
+                      <Button className="w-full" onClick={() => handleStatusChange(selectedOrder.id, 'shipped')}>
+                        <Truck className="h-4 w-4 mr-2" />Marcar como Enviado
+                      </Button>
+                    )}
+                    {selectedOrder.order_status === 'shipped' && (
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm text-blue-700">
+                        <CheckCircle className="h-4 w-4 inline mr-1" />
+                        Aguardando o cliente confirmar o recebimento
+                      </div>
+                    )}
+                    {!['delivered', 'cancelled'].includes(selectedOrder.order_status) && (
+                      <Button variant="outline" className="w-full text-destructive hover:text-destructive" onClick={() => handleStatusChange(selectedOrder.id, 'cancelled')}>
+                        <XCircle className="h-4 w-4 mr-2" />Cancelar Pedido
+                      </Button>
+                    )}
                   </div>
                 </div>
 
@@ -430,6 +465,26 @@ const Pedidos = () => {
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+      {/* Dialog de Rastreio para Envio */}
+      <Dialog open={showTrackingDialog} onOpenChange={setShowTrackingDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Código de Rastreio Obrigatório</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Para marcar o pedido como enviado, informe o código de rastreio:</p>
+          <Input
+            placeholder="Ex: BR123456789XX"
+            value={shipTrackingCode}
+            onChange={(e) => setShipTrackingCode(e.target.value)}
+          />
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowTrackingDialog(false)}>Cancelar</Button>
+            <Button onClick={handleConfirmShip} disabled={!shipTrackingCode.trim()}>
+              <Truck className="h-4 w-4 mr-2" />Confirmar Envio
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
