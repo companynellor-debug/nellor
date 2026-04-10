@@ -136,16 +136,21 @@ const Dashboard = () => {
     return Object.entries(monthsData).map(([month, value]) => ({ month, negociacoes: value }));
   })();
 
-  const stats = [
-    { title: "Faturamento", value: `R$ ${faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, subtitle: "Total entregue", icon: DollarSign, borderColor: "border-emerald-500" },
+  // Split stats for desktop layout
+  const faturamentoCard = { title: "Faturamento", value: `R$ ${faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, subtitle: "Total entregue", icon: DollarSign, borderColor: "border-emerald-500" };
+  const mainStats = [
     { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, borderColor: "border-blue-500" },
     { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, borderColor: "border-yellow-500" },
     { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Package, borderColor: "border-cyan-500" },
+  ];
+  const secondaryStats = [
     { title: "Visitas", value: totalViews, subtitle: `${viewsLast30} nos últimos 30 dias`, icon: Eye, borderColor: "border-indigo-500" },
     { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageSquare, borderColor: "border-purple-500" },
     { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, borderColor: "border-orange-500" },
     { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, borderColor: "border-green-500" },
   ];
+
+  const allStats = [faturamentoCard, ...mainStats, ...secondaryStats];
 
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-5">
@@ -160,16 +165,29 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Stats Cards - 1 per row on mobile, all on desktop */}
+      {/* Stats Cards - 1 per row on mobile */}
       <div className="grid grid-cols-1 gap-3 md:hidden">
-        {stats.map((card) => (
+        {allStats.map((card) => (
           <StatCard key={card.title} {...card} />
         ))}
       </div>
-      <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-4 gap-3">
-        {stats.map((card) => (
-          <StatCard key={card.title} {...card} />
-        ))}
+
+      {/* Desktop: Faturamento wide + 3 cards row, then 4 cards row */}
+      <div className="hidden md:block space-y-3">
+        <div className="grid grid-cols-4 gap-3">
+          <div className="col-span-2">
+            <StatCard {...faturamentoCard} />
+          </div>
+          {mainStats.slice(0, 2).map((card) => (
+            <StatCard key={card.title} {...card} />
+          ))}
+        </div>
+        <div className="grid grid-cols-5 gap-3">
+          <StatCard key={mainStats[2].title} {...mainStats[2]} />
+          {secondaryStats.map((card) => (
+            <StatCard key={card.title} {...card} />
+          ))}
+        </div>
       </div>
 
       {/* Recent Negotiations - shown FIRST on mobile */}
