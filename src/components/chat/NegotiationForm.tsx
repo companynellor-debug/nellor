@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FileText, Loader2, Calculator, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Loader2, Calculator, User, ChevronDown, ChevronUp, Upload, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNegotiations } from '@/hooks/useNegotiations';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { useToast } from '@/hooks/use-toast';
 
 interface NegotiationFormProps {
   supplierId: string;
@@ -49,6 +50,7 @@ const paymentMethodOptions = [
 
 export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationFormProps) => {
   const { createNegotiation } = useNegotiations(supplierId);
+  const { toast } = useToast();
   const [products, setProducts] = useState<SupplierProduct[]>([]);
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>('');
@@ -60,6 +62,10 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
   const [submitting, setSubmitting] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [showBuyerData, setShowBuyerData] = useState(false);
+
+  // Payment proof
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
+  const [paymentReference, setPaymentReference] = useState('');
 
   // Buyer data for NF
   const [buyerName, setBuyerName] = useState('');
@@ -108,6 +114,8 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
     setBuyerPhone('');
     setBuyerAddress('');
     setPriceTiers([]);
+    setPaymentProofFile(null);
+    setPaymentReference('');
   };
 
   const handleProductSelect = async (productId: string) => {
@@ -206,12 +214,30 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
 
     setSubmitting(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
       const buyerData: Record<string, any> = {};
       if (buyerName) buyerData.nome = buyerName;
       if (buyerDocument) buyerData.documento = buyerDocument;
       if (buyerIE) buyerData.ie = buyerIE;
       if (buyerPhone) buyerData.telefone = buyerPhone;
       if (buyerAddress) buyerData.endereco = buyerAddress;
+
+      // Upload payment proof if provided
+      let proofUrl: string | undefined;
+      if (paymentProofFile) {
+        const ext = paymentProofFile.name.split('.').pop();
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(path, paymentProofFile, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(path);
+        proofUrl = urlData.publicUrl;
+      }
 
       await createNegotiation({
         supplier_id: supplierId,
@@ -225,11 +251,13 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
         buyer_data: Object.keys(buyerData).length > 0 ? buyerData : undefined,
         sale_unit: saleUnit,
         unit_price: effectivePrice,
+        payment_proof_url: proofUrl,
+        payment_reference: paymentReference || undefined,
       });
       onOpenChange(false);
       resetForm();
-    } catch {
-      // error handled by hook
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
