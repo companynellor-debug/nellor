@@ -156,7 +156,7 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
         setLoading(false);
       }
     },
-    [fetchProfile, fetchOrders, fetchAddresses, fetchPaymentMethods, fetchNotifications, fetchSupportTickets]
+    [fetchProfile, fetchOrders, fetchAddresses, fetchNotifications, fetchSupportTickets]
   );
 
   // Funções individuais de refetch (mantidas para telas que precisam forçar refresh)
@@ -180,15 +180,8 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
     });
   }, [userId, fetchAddresses]);
 
-  const refetchPaymentMethods = useCallback(async () => {
-    if (!userId) return;
-    const paymentMethods = await fetchPaymentMethods(userId);
-    setData((prev) => {
-      const newData = { ...prev, paymentMethods };
-      globalCache = newData;
-      return newData;
-    });
-  }, [userId, fetchPaymentMethods]);
+
+
 
   const refetchNotifications = useCallback(async () => {
     if (!userId) return;
@@ -366,7 +359,7 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
         refetchAll,
         refetchOrders,
         refetchAddresses,
-        refetchPaymentMethods,
+        
         refetchNotifications,
         refetchProfile,
       }}
@@ -395,10 +388,8 @@ export const useClienteAddresses = () => {
   return { addresses: data.addresses, loading, refetch: refetchAddresses };
 };
 
-export const useClientePaymentMethods = () => {
-  const { data, loading, refetchPaymentMethods } = useClientePrefetch();
-  return { paymentMethods: data.paymentMethods, loading, refetch: refetchPaymentMethods };
-};
+
+
 
 export const useClienteNotifications = () => {
   const { data, loading, refetchNotifications } = useClientePrefetch();
