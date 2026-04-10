@@ -381,8 +381,7 @@ const Negociacoes = () => {
                 // Cancel logic: can only cancel if pending/accepted AND payment NOT confirmed AND not shipped
                 const paymentConfirmed = neg.payment_state === 'confirmed_by_supplier';
                 const canCancel = (neg.status === 'pending' || neg.status === 'accepted') 
-                  && !paymentConfirmed 
-                  && neg.status !== 'shipped';
+                  && !paymentConfirmed;
                 const needsPaymentAction = neg.payment_state === 'reported_by_buyer' && neg.status === 'pending';
                 const needsRefundAction = neg.refund_state === 'pending' && neg.status === 'cancelled';
 
