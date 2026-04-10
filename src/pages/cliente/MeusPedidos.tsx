@@ -261,6 +261,35 @@ const MeusPedidos = () => {
             </div>
           )}
 
+          {/* Botão Cancelar — só quando pendente */}
+          {order.order_status === 'pending' && (
+            <div className="mb-4">
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="w-full text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
+                onClick={async () => {
+                  if (!confirm('Tem certeza que deseja cancelar este pedido?')) return;
+                  try {
+                    const { supabase } = await import('@/integrations/supabase/client');
+                    const { error } = await supabase
+                      .from('orders')
+                      .update({ order_status: 'cancelled' as any, updated_at: new Date().toISOString() })
+                      .eq('id', order.id);
+                    if (error) throw error;
+                    toast.success('Pedido cancelado com sucesso');
+                    refetch();
+                  } catch (err: any) {
+                    toast.error(err.message || 'Erro ao cancelar pedido');
+                  }
+                }}
+              >
+                <XCircle className="h-4 w-4 mr-1" />
+                Cancelar Pedido
+              </Button>
+            </div>
+          )}
+
           {/* Botão Confirmar Recebimento */}
           {order.order_status === 'shipped' && (
             <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
