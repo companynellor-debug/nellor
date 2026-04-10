@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, FileEdit } from "lucide-react";
+import { Plus, Edit, Trash2, FileEdit, Monitor } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { useSupplierCategories } from "@/hooks/useSupplierCategories";
@@ -13,6 +13,10 @@ import { useProductDrafts } from "@/hooks/useProductDrafts";
 import { toast } from "sonner";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
 import ProductModal from "@/components/fornecedor/product-modal/ProductModal";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 
 const SALE_UNIT_LABELS: Record<string, string> = {
   unit: 'Unidade', pair: 'Par', kit: 'Kit', closed_box: 'Caixa Fechada', bale: 'Fardo',
@@ -28,9 +32,21 @@ const Produtos = () => {
   const { draft, refetch: refetchDraft } = useProductDrafts();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SupplierProduct | null>(null);
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleOpenModal = (product?: SupplierProduct) => {
+    if (isMobile && !product) {
+      setShowMobileWarning(true);
+      return;
+    }
     setEditingProduct(product || null);
+    setIsModalOpen(true);
+  };
+
+  const handleForceOpenMobile = () => {
+    setShowMobileWarning(false);
+    setEditingProduct(null);
     setIsModalOpen(true);
   };
 
@@ -147,6 +163,29 @@ const Produtos = () => {
         customCategories={customCategories}
         onSubmit={handleSubmit}
       />
+
+      {/* Mobile Warning Dialog */}
+      <Dialog open={showMobileWarning} onOpenChange={setShowMobileWarning}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5 text-primary" />
+              Melhor experiência no computador
+            </DialogTitle>
+            <DialogDescription>
+              Para uma melhor experiência, cadastre seus produtos pelo computador. O formulário completo funciona melhor em telas maiores.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 mt-2">
+            <Button variant="outline" onClick={handleForceOpenMobile}>
+              Continuar mesmo assim
+            </Button>
+            <Button variant="ghost" onClick={() => setShowMobileWarning(false)} className="text-muted-foreground">
+              Voltar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

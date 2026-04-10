@@ -141,15 +141,62 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Stats Cards - 2x2 on mobile */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+      {/* Stats Cards - 3 key metrics on mobile, all on desktop */}
+      <div className="grid grid-cols-1 gap-3 md:hidden">
+        {stats.filter(s => ['Negociações', 'Produtos', 'Avaliações'].includes(s.title)).map((card) => (
+          <StatCard key={card.title} {...card} />
+        ))}
+      </div>
+      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-3">
         {stats.map((card) => (
           <StatCard key={card.title} {...card} />
         ))}
       </div>
 
-      {/* Chart */}
-      <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
+      {/* Recent Negotiations - shown FIRST on mobile */}
+      <div className="md:hidden">
+        <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
+          <CardHeader className="p-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold">🤝 Negociações Recentes</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => navigate('/fornecedor/negociacoes')} className="text-xs rounded-full">
+                Ver Todas
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {negotiations.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Handshake className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-30" />
+                  <p className="text-muted-foreground text-sm">Nenhuma negociação registrada</p>
+                </div>
+              ) : negotiations.slice(0, 5).map(neg => (
+                <div key={neg.id} className="p-4 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <DarkGlassIcon icon={Handshake} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{neg.product_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(neg.created_at).toLocaleDateString('pt-BR')} • Qtd: {neg.quantity}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-sm whitespace-nowrap text-primary">R$ {Number(neg.agreed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      <Badge variant={neg.status === 'delivered' ? 'default' : neg.status === 'cancelled' ? 'destructive' : 'secondary'} className="text-[10px] mt-1 rounded-full">
+                        {neg.status === 'pending' ? 'Pendente' : neg.status === 'accepted' ? 'Aceita' : neg.status === 'shipped' ? 'Enviada' : neg.status === 'delivered' ? 'Entregue' : neg.status === 'cancelled' ? 'Cancelada' : neg.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Chart - desktop only */}
+      <Card className="rounded-2xl border-0 shadow-md overflow-hidden hidden md:block">
         <CardHeader className="p-4 sm:p-5">
           <CardTitle className="text-sm sm:text-base font-bold">📈 Atividade de Negociações</CardTitle>
         </CardHeader>
@@ -178,8 +225,8 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Negotiations */}
-      <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
+      {/* Recent Negotiations - desktop only (mobile version is above chart) */}
+      <Card className="rounded-2xl border-0 shadow-md overflow-hidden hidden md:block">
         <CardHeader className="p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm sm:text-base font-bold">🤝 Negociações Recentes</CardTitle>
