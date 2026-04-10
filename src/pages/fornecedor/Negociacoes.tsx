@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Handshake, Search, Truck, CheckCircle, Clock, XCircle, Loader2, FileText } from "lucide-react";
+import { Handshake, Search, Truck, CheckCircle, Clock, XCircle, Loader2, FileText, ShieldAlert } from "lucide-react";
 import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
+import { getTimeUntilAllowed, formatCountdown } from "@/hooks/useNegotiations";
+import type { Negotiation as NegType } from "@/hooks/useNegotiations";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState as useReactState, useEffect as useReactEffect } from "react";
 
 interface Negotiation {
   id: string;
@@ -210,56 +213,13 @@ const Negociacoes = () => {
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0">
-                        {neg.status === 'pending' && (
-                          <>
-                            <Button size="sm" onClick={() => handleAccept(neg.id)} className="flex-1 sm:flex-none">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Aceitar
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleCancel(neg.id)} className="flex-1 sm:flex-none text-destructive">
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Recusar
-                            </Button>
-                          </>
-                        )}
-                        {neg.status === 'accepted' && (
-                          <>
-                            <Button size="sm" onClick={() => handleShip(neg.id)} className="bg-orange-600 hover:bg-orange-700">
-                              <Truck className="h-4 w-4 mr-1" />
-                              Confirmar Envio
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-1"
-                              onClick={() => generateNegotiationPDF({
-                                ...neg,
-                                buyerName: neg.buyerName,
-                                supplierName: user?.email || 'Fornecedor',
-                              })}
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              PDF do Acordo
-                            </Button>
-                          </>
-                        )}
-                        {neg.status === 'shipped' && (
-                          <div className="text-xs text-orange-600 text-center bg-orange-50 dark:bg-orange-900/20 rounded p-2">
-                            <Truck className="h-4 w-4 mx-auto mb-1" />
-                            Aguardando confirmação do comprador
-                          </div>
-                        )}
-                        {neg.status === 'delivered' && (
-                          <div className="text-xs text-green-600 text-center bg-green-50 dark:bg-green-900/20 rounded p-2">
-                            <CheckCircle className="h-4 w-4 mx-auto mb-1" />
-                            Entrega confirmada pelo comprador
-                            {neg.delivery_confirmed_at && (
-                              <p className="mt-0.5">{format(new Date(neg.delivery_confirmed_at), "dd/MM/yyyy", { locale: ptBR })}</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <NegotiationActions
+                        neg={neg}
+                        userEmail={user?.email || 'Fornecedor'}
+                        onAccept={handleAccept}
+                        onShip={handleShip}
+                        onCancel={handleCancel}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -268,6 +228,88 @@ const Negociacoes = () => {
           )}
         </TabsContent>
       </Tabs>
+    </div>
+  );
+};
+
+// Sub-component with countdown timer for anti-fraud
+const NegotiationActions = ({ neg, userEmail, onAccept, onShip, onCancel }: {
+  neg: Negotiation;
+  userEmail: string;
+  onAccept: (id: string) => void;
+  onShip: (id: string) => void;
+  onCancel: (id: string) => void;
+}) => {
+  const [now, setNow] = useReactState(Date.now());
+
+  useReactEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const asNegType = neg as unknown as NegType;
+  const timing = getTimeUntilAllowed(asNegType);
+
+  return (
+    <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0">
+      {neg.status === 'pending' && (
+        <>
+          <Button size="sm" onClick={() => onAccept(neg.id)} className="flex-1 sm:flex-none" disabled={!timing.allowed}>
+            <CheckCircle className="h-4 w-4 mr-1" />
+            {timing.allowed ? 'Aceitar' : formatCountdown(timing.remainingMs)}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => onCancel(neg.id)} className="flex-1 sm:flex-none text-destructive">
+            <XCircle className="h-4 w-4 mr-1" />
+            Recusar
+          </Button>
+          {!timing.allowed && (
+            <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+              <ShieldAlert className="h-3 w-3" /> Segurança anti-fraude
+            </p>
+          )}
+        </>
+      )}
+      {neg.status === 'accepted' && (
+        <>
+          <Button size="sm" onClick={() => onShip(neg.id)} className="bg-orange-600 hover:bg-orange-700" disabled={!timing.allowed}>
+            <Truck className="h-4 w-4 mr-1" />
+            {timing.allowed ? 'Confirmar Envio' : formatCountdown(timing.remainingMs)}
+          </Button>
+          {!timing.allowed && (
+            <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+              <ShieldAlert className="h-3 w-3" /> Segurança anti-fraude
+            </p>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            onClick={() => generateNegotiationPDF({
+              ...neg,
+              buyerName: neg.buyerName,
+              supplierName: userEmail,
+            })}
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            PDF do Acordo
+          </Button>
+        </>
+      )}
+      {neg.status === 'shipped' && (
+        <div className="text-xs text-orange-600 text-center bg-orange-50 dark:bg-orange-900/20 rounded p-2">
+          <Truck className="h-4 w-4 mx-auto mb-1" />
+          Aguardando confirmação do comprador
+        </div>
+      )}
+      {neg.status === 'delivered' && (
+        <div className="text-xs text-green-600 text-center bg-green-50 dark:bg-green-900/20 rounded p-2">
+          <CheckCircle className="h-4 w-4 mx-auto mb-1" />
+          Entrega confirmada pelo comprador
+          {neg.delivery_confirmed_at && (
+            <p className="mt-0.5">{format(new Date(neg.delivery_confirmed_at), "dd/MM/yyyy", { locale: ptBR })}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -313,10 +313,6 @@ const CompararFornecedores = () => {
             <div className="overflow-y-auto flex-1 p-2">
               {loading ? (
                 <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>
-              ) : !pickerSearch && filteredPickers.length > 5 ? (
-                <p className="text-center text-sm text-muted-foreground py-8">
-                  Digite para buscar entre {filteredPickers.length} fornecedores
-                </p>
               ) : filteredPickers.length === 0 ? (
                 <p className="text-center text-sm text-muted-foreground py-8">Nenhum fornecedor encontrado</p>
               ) : (
