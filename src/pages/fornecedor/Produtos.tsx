@@ -32,9 +32,21 @@ const Produtos = () => {
   const { draft, refetch: refetchDraft } = useProductDrafts();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SupplierProduct | null>(null);
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleOpenModal = (product?: SupplierProduct) => {
+    if (isMobile && !product) {
+      setShowMobileWarning(true);
+      return;
+    }
     setEditingProduct(product || null);
+    setIsModalOpen(true);
+  };
+
+  const handleForceOpenMobile = () => {
+    setShowMobileWarning(false);
+    setEditingProduct(null);
     setIsModalOpen(true);
   };
 
