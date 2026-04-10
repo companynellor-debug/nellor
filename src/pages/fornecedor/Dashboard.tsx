@@ -225,8 +225,8 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Negotiations */}
-      <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
+      {/* Recent Negotiations - desktop only (mobile version is above chart) */}
+      <Card className="rounded-2xl border-0 shadow-md overflow-hidden hidden md:block">
         <CardHeader className="p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm sm:text-base font-bold">🤝 Negociações Recentes</CardTitle>

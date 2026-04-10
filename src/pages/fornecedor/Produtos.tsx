@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, FileEdit } from "lucide-react";
+import { Plus, Edit, Trash2, FileEdit, Monitor } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { useSupplierCategories } from "@/hooks/useSupplierCategories";
@@ -13,8 +13,10 @@ import { useProductDrafts } from "@/hooks/useProductDrafts";
 import { toast } from "sonner";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
 import ProductModal from "@/components/fornecedor/product-modal/ProductModal";
-
-const SALE_UNIT_LABELS: Record<string, string> = {
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
   unit: 'Unidade', pair: 'Par', kit: 'Kit', closed_box: 'Caixa Fechada', bale: 'Fardo',
 };
 
