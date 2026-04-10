@@ -60,12 +60,17 @@ const Assinaturas = () => {
 
   const confirmMutation = useMutation({
     mutationFn: async ({ id, notes }: { id: string; notes: string }) => {
+      if (!user?.id) throw new Error("Admin não autenticado");
+      console.log("Confirming subscription:", { id, admin: user.id, notes });
       const { error } = await supabase.rpc("admin_confirm_subscription", {
         _subscription_id: id,
-        _admin_id: user?.id!,
+        _admin_id: user.id,
         _notes: notes || null,
       });
-      if (error) throw error;
+      if (error) {
+        console.error("RPC error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
@@ -73,7 +78,10 @@ const Assinaturas = () => {
       setConfirmNotes("");
       toast.success("Assinatura confirmada com sucesso!");
     },
-    onError: () => toast.error("Erro ao confirmar assinatura."),
+    onError: (err: any) => {
+      console.error("Subscription confirm error:", err);
+      toast.error(`Erro ao confirmar: ${err?.message || "Erro desconhecido"}`);
+    },
   });
 
   const filtered = subscriptions.filter((s) => {
