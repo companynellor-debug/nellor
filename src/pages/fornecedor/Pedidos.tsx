@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info, DollarSign } from "lucide-react";
+import { Eye, CheckCircle, Truck, Package, XCircle, Search, Tag, Plus, Info } from "lucide-react";
 import { useSupabaseOrders, Order } from "@/hooks/useSupabaseOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -74,31 +74,6 @@ const Pedidos = () => {
     return statusMap[status] || { label: status, color: "bg-gray-100 text-gray-800" };
   };
 
-  const getPaymentStatusBadge = (status: string | null) => {
-    const map: Record<string, { label: string; color: string }> = {
-      pending: { label: "Aguardando pagamento", color: "bg-yellow-100 text-yellow-800" },
-      paid: { label: "Pago", color: "bg-green-100 text-green-800" },
-      cancelled: { label: "Cancelado", color: "bg-red-100 text-red-800" },
-      refunded: { label: "Reembolsado", color: "bg-gray-100 text-gray-800" }
-    };
-    return map[status || 'pending'] || { label: status, color: "bg-gray-100 text-gray-800" };
-  };
-
-  const getTransferStatus = (order: Order) => {
-    if (order.payment_status === 'paid') {
-      return { label: "Repasse ao fornecedor", color: "bg-green-100 text-green-800", icon: CheckCircle };
-    }
-
-    return { label: "Aguardando pagamento", color: "bg-gray-100 text-gray-800", icon: null };
-  };
-
-  const calculateOrderBreakdown = (order: Order) => {
-    const total = Number(order.total);
-    const taxaPlataforma = Number(order.platform_fee ?? total * 0.075);
-    const valorLiquidoFornecedor = Number(order.supplier_amount ?? (total - taxaPlataforma));
-
-    return { total, taxaPlataforma, valorLiquidoFornecedor };
-  };
 
   const handleStatusChange = async (orderId: string, newStatus: Order['order_status']) => {
     if (newStatus === 'shipped') {
@@ -239,10 +214,7 @@ const Pedidos = () => {
           ) : (
             filteredOrders.map((order) => {
               const badge = getStatusBadge(order.order_status);
-              const paymentBadge = getPaymentStatusBadge(order.payment_status);
-              const transferStatus = getTransferStatus(order);
               const orderTags = ((order.itens as any)?.tags || []) as string[];
-              const breakdown = calculateOrderBreakdown(order);
               const { totalPieces } = getOrderItems(order);
               
               return (
@@ -266,7 +238,6 @@ const Pedidos = () => {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <Badge className={cn(badge.color, "text-xs sm:text-sm whitespace-nowrap")}>{badge.label}</Badge>
-                      <Badge className={cn(paymentBadge.color, "text-[10px] sm:text-xs whitespace-nowrap")}>{paymentBadge.label}</Badge>
                     </div>
                   </div>
                   
@@ -281,23 +252,6 @@ const Pedidos = () => {
                     </div>
                   </div>
 
-                  <div className="bg-muted/30 rounded-lg p-2 mb-3 text-xs">
-                    <div className="flex items-center justify-between gap-1 mb-2">
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-medium text-muted-foreground">Resumo financeiro:</span>
-                      </div>
-                      <Badge className={cn(transferStatus.color, "text-[10px] sm:text-xs")}>
-                        {transferStatus.icon && <transferStatus.icon className="h-3 w-3 mr-1" />}
-                        {transferStatus.label}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px] sm:text-xs">
-                      <div><span className="text-muted-foreground">Bruto:</span><p className="font-medium">{formatCurrency(breakdown.total)}</p></div>
-                      <div><span className="text-muted-foreground">Taxa Nellor (7,5%):</span><p className="font-medium text-purple-600">-{formatCurrency(breakdown.taxaPlataforma)}</p></div>
-                      <div><span className="text-muted-foreground">Líquido fornecedor:</span><p className="font-semibold text-green-600">{formatCurrency(breakdown.valorLiquidoFornecedor)}</p></div>
-                    </div>
-                  </div>
                   
                   <Button size="sm" variant="outline" onClick={() => setSelectedOrder(order)} className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9">
                     <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />Ver Detalhes
