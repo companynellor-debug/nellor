@@ -73,6 +73,8 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
   const unitsPerSaleUnit = selectedProduct?.units_per_sale_unit || 1;
   const basePrice = selectedProduct?.preco || 0;
 
+  const needsUnitMultiplier = saleUnit === 'closed_box' || saleUnit === 'bale';
+
   // Calculate price based on tiers or base price
   const getEffectivePrice = (): number => {
     if (priceTiers.length > 0) {
@@ -85,8 +87,12 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
   };
 
   const effectivePrice = getEffectivePrice();
-  const totalEstimated = effectivePrice * quantity;
-  const totalUnits = saleUnit !== 'unit' && saleUnit !== 'pair' ? quantity * unitsPerSaleUnit : quantity;
+  // For closed_box/bale: price is per individual unit, so total = price × units_per_sale_unit × qty
+  // For unit/pair/kit: price is already for the whole sale unit
+  const totalEstimated = needsUnitMultiplier
+    ? effectivePrice * unitsPerSaleUnit * quantity
+    : effectivePrice * quantity;
+  const totalUnits = needsUnitMultiplier ? quantity * unitsPerSaleUnit : quantity;
 
   const resetForm = () => {
     setSelectedProductId('');
@@ -297,14 +303,21 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
                 <Calculator className="h-3.5 w-3.5" />
                 Cálculo automático
               </div>
-              <div className="flex justify-between text-sm">
-                <span>Preço por {saleUnitLabels[saleUnit]?.toLowerCase() || 'un.'}:</span>
-                <span className="font-medium">{formatCurrency(effectivePrice)}</span>
-              </div>
-              {saleUnit !== 'unit' && saleUnit !== 'pair' && unitsPerSaleUnit > 1 && (
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{quantity} {saleUnitLabels[saleUnit]?.toLowerCase()} × {unitsPerSaleUnit} un.</span>
-                  <span>= {totalUnits} unidades</span>
+              {needsUnitMultiplier ? (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span>Preço por unidade:</span>
+                    <span className="font-medium">{formatCurrency(effectivePrice)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{formatCurrency(effectivePrice)}/un × {unitsPerSaleUnit} un/{saleUnit === 'closed_box' ? 'cx' : 'fardo'} × {quantity} {saleUnit === 'closed_box' ? 'cx' : 'fardo'}{quantity > 1 ? 's' : ''}</span>
+                    <span>= {totalUnits} un.</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between text-sm">
+                  <span>Preço por {saleUnitLabels[saleUnit]?.toLowerCase() || 'un.'}:</span>
+                  <span className="font-medium">{formatCurrency(effectivePrice)}</span>
                 </div>
               )}
               {priceTiers.length > 0 && (
