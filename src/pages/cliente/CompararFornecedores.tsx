@@ -33,6 +33,7 @@ const CompararFornecedores = () => {
   const [loading, setLoading] = useState(true);
   const [showPicker, setShowPicker] = useState<number | null>(null);
   const [pickerSearch, setPickerSearch] = useState("");
+  const [pickerShuffleSeed, setPickerShuffleSeed] = useState(0);
 
   useEffect(() => {
     fetchAllSuppliers();
@@ -49,43 +50,74 @@ const CompararFornecedores = () => {
     }
   }, [searchParams, allSuppliers]);
 
+  useEffect(() => {
+    if (showPicker !== null) {
+      setPickerShuffleSeed(Date.now());
+    }
+  }, [showPicker]);
+
   const fetchAllSuppliers = async () => {
     try {
-      // Use public view (bypasses RLS)
-      const { data: profiles, error: profilesError } = await supabase
-        .from("public_supplier_profiles")
-        .select("id, nome, foto_perfil_url, descricao_loja");
+      setLoading(true);
 
-      if (profilesError) {
-        console.error("Error fetching supplier profiles:", profilesError);
-        setLoading(false);
-        return;
-      }
+      let profiles: Array<{
+        id: string;
+        nome: string;
+        foto_perfil_url: string | null;
+        descricao_loja: string | null;
+      }> = [];
 
-      if (!profiles || profiles.length === 0) {
-        setLoading(false);
-        return;
+      const { data: rpcProfiles, error: rpcError } = await (supabase as any).rpc("get_public_store_profiles");
+
+      if (rpcError) {
+        console.error("Error fetching supplier profiles via RPC:", rpcError);
+
+        const { data: viewProfiles, error: viewError } = await supabase
+          .from("public_supplier_profiles")
+          .select("id, nome, foto_perfil_url, descricao_loja");
+
+        if (viewError) {
+          console.error("Error fetching supplier profiles via view:", viewError);
+          setAllSuppliers([]);
+          return;
+        }
+
+        profiles = (viewProfiles || []) as typeof profiles;
+      } else {
+        profiles = (rpcProfiles || []) as typeof profiles;
       }
 
       const validProfiles = profiles.filter(
-        (p): p is typeof p & { id: string; nome: string } => p.id !== null && p.nome !== null
+        (p): p is typeof p & { id: string; nome: string } => Boolean(p?.id && p?.nome)
       );
 
-      // Fetch products for stats
-      const { data: products } = await supabase
-        .from("products")
-        .select("supplier_id, preco")
-        .eq("ativo", true);
+      if (validProfiles.length === 0) {
+        setAllSuppliers([]);
+        return;
+      }
 
-      // Fetch reviews with product join to get supplier
-      const { data: reviews } = await supabase
-        .from("reviews")
-        .select("rating, product_id, products!inner(supplier_id)");
+      const [{ data: products, error: productsError }, { data: reviews, error: reviewsError }] = await Promise.all([
+        supabase
+          .from("products")
+          .select("supplier_id, preco")
+          .eq("ativo", true),
+        supabase
+          .from("reviews")
+          .select("rating, product_id, products!inner(supplier_id)"),
+      ]);
 
-      const suppliersData: SupplierData[] = validProfiles.map(p => {
-        const supplierProducts = (products || []).filter(pr => pr.supplier_id === p.id);
+      if (productsError) {
+        console.error("Error fetching supplier products:", productsError);
+      }
+
+      if (reviewsError) {
+        console.error("Error fetching supplier reviews:", reviewsError);
+      }
+
+      const suppliersData: SupplierData[] = validProfiles.map((p) => {
+        const supplierProducts = (products || []).filter((pr) => pr.supplier_id === p.id);
         const supplierReviews = (reviews || []).filter((r: any) => r.products?.supplier_id === p.id);
-        const prices = supplierProducts.map(pr => pr.preco).filter(Boolean);
+        const prices = supplierProducts.map((pr) => pr.preco).filter(Boolean);
         const ratings = supplierReviews.map((r: any) => r.rating).filter(Boolean);
 
         return {
@@ -105,6 +137,7 @@ const CompararFornecedores = () => {
       setAllSuppliers(suppliersData);
     } catch (err) {
       console.error("Error fetching suppliers:", err);
+      setAllSuppliers([]);
     } finally {
       setLoading(false);
     }
@@ -134,18 +167,34 @@ const CompararFornecedores = () => {
   };
 
   const selectedCount = suppliers.filter(Boolean).length;
-  // Shuffle suppliers once when picker opens (not on every render)
-  const shuffledSuppliers = useMemo(() => {
-    return [...allSuppliers].sort(() => 0.5 - Math.random());
-  }, [allSuppliers, showPicker]);
+  const shuffledSuppliers = useMemo(
+    () => [...allSuppliers].sort(() => Math.random() - 0.5),
+    [allSuppliers, pickerShuffleSeed]
+  );
 
-  const filteredPickers = shuffledSuppliers.filter(s => {
-    const alreadySelected = suppliers.some(sel => sel?.id === s.id);
-    const matchesSearch = pickerSearch
-      ? s.nome.toLowerCase().includes(pickerSearch.toLowerCase())
-      : true;
-    return !alreadySelected && matchesSearch;
-  });
+  const searchTerm = pickerSearch.trim().toLowerCase();
+  const pickerSource = searchTerm ? allSuppliers : shuffledSuppliers;
+
+  const filteredPickers = pickerSource
+    .filter((s) => {
+      const alreadySelected = suppliers.some((sel) => sel?.id === s.id);
+      if (alreadySelected) return false;
+      if (!searchTerm) return true;
+      return s.nome.toLowerCase().includes(searchTerm);
+    })
+    .sort((a, b) => {
+      if (!searchTerm) return 0;
+
+      const aName = a.nome.toLowerCase();
+      const bName = b.nome.toLowerCase();
+      const aStarts = aName.startsWith(searchTerm);
+      const bStarts = bName.startsWith(searchTerm);
+
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+
+      return aName.localeCompare(bName, "pt-BR");
+    });
 
   const getBestValue = (field: keyof SupplierData, mode: "max" | "min") => {
     const vals = suppliers.filter(Boolean).map(s => ({ id: s!.id, val: s![field] as number }));
