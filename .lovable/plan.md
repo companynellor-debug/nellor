@@ -1,67 +1,51 @@
 
 
-## Plan: Sistema de Confirmação de Entrega Seguro com Notificações Automáticas
+## Plan: Segurança Anti-Fraude nas Negociações + Correção da Busca de Fornecedores
 
-### Problema Atual
-- Nenhuma notificação automática quando chega a data prevista de entrega
-- Fornecedor pode marcar "shipped" mas o comprador não é notificado para confirmar
-- Sem confirmação bilateral real (dupla confirmação) -- qualquer parte pode agir unilateralmente
-- Os botões de confirmação só aparecem quando o status é `pending` + data vencida, ignorando o fluxo `shipped`
+### Problema 1: Negociações podem ser forjadas em segundos
+Atualmente, um comprador cria uma negociação, o fornecedor aceita, marca como enviado, e o comprador confirma entrega -- tudo no mesmo segundo. Isso permite forjar pedidos e avaliações falsas.
 
-### Solução
+### Problema 2: Busca de fornecedores no comparativo não funciona
+A condição na linha 316 esconde os fornecedores quando há mais de 5 e o usuário não digitou nada. Com apenas 6 fornecedores, nunca mostra a lista. Além disso, o nome digitado "tec fornece" não bate com "pet fornece" que existe na base.
 
-#### 1. Migração de Banco de Dados
-Adicionar coluna `supplier_confirmed_delivery` (boolean, default false) na tabela `negotiations` para rastrear confirmação bilateral. Criar um trigger que envia notificações automáticas:
+---
 
-- **Quando fornecedor marca como "shipped"**: notifica o comprador
-- **Quando fornecedor marca como "delivered"**: notifica o comprador pedindo confirmação
-- **Quando chega a data `expected_delivery`**: uma Edge Function periódica (ou trigger na UI) notifica o comprador perguntando se recebeu
+### Solução 1: Tempo mínimo entre transições de status (Anti-Fraude)
 
-#### 2. Edge Function: `check-delivery-dates`
-Função agendada (chamada via cron ou na abertura do app) que:
-- Busca negociações com `status IN ('accepted', 'shipped')` e `expected_delivery <= hoje`
-- Para cada uma, cria notificação para o comprador: "Sua entrega de [produto] era prevista para hoje. Você recebeu?"
-- Marca na negociação um flag `delivery_check_sent` para não repetir
+**Migração SQL** -- Criar uma função `validate_negotiation_transition()` como trigger BEFORE UPDATE que:
+- `pending → accepted`: mínimo **1 hora** desde `created_at`
+- `accepted → shipped`: mínimo **24 horas** desde que foi aceito (`updated_at` quando mudou para accepted)
+- `shipped → delivered`: mínimo **48 horas** desde que foi marcado como enviado (`shipping_confirmed_at`)
+- Bloqueia qualquer tentativa de pular etapas (ex: `pending → delivered`)
+- Valida que só o `buyer_id` pode confirmar entrega e só o `supplier_id` pode marcar envio
 
-#### 3. Fluxo de Confirmação Bilateral Seguro
+**Frontend** -- Adicionar feedback visual:
+- Em `useNegotiations.tsx`: antes de chamar update, verificar tempo mínimo no frontend também (UX) e mostrar mensagem clara: "Você poderá confirmar envio a partir de [data/hora]"
+- Em `Negociacoes.tsx` (fornecedor): desabilitar botões com countdown mostrando quando a ação estará disponível
+- Em `MinhasNegociacoes.tsx` (cliente): desabilitar "Sim, recebi" com countdown de 48h após envio
+
+### Solução 2: Correção da Busca de Fornecedores
+
+Em `CompararFornecedores.tsx`:
+- Remover a condição `!pickerSearch && filteredPickers.length > 5` -- sempre mostrar todos os fornecedores disponíveis
+- Mostrar resultados imediatamente conforme o usuário digita (já funciona, só o threshold que bloqueia)
+
+---
+
+### Arquivos modificados
+1. **Nova migração SQL**: trigger `validate_negotiation_transition` com tempos mínimos e validação de roles
+2. `src/hooks/useNegotiations.tsx` -- adicionar verificação de tempo mínimo no frontend + mensagens de erro claras
+3. `src/pages/fornecedor/Negociacoes.tsx` -- desabilitar botões com countdown
+4. `src/pages/cliente/MinhasNegociacoes.tsx` -- desabilitar confirmação com countdown de 48h
+5. `src/pages/cliente/CompararFornecedores.tsx` -- remover threshold de 5, sempre mostrar lista
+
+### Tempos mínimos propostos
 
 ```text
-pending → accepted → shipped → awaiting_confirmation → delivered
-                                      ↓
-                                  disputed (se não recebeu)
+pending → accepted:   1 hora   (fornecedor precisa analisar)
+accepted → shipped:  24 horas  (tempo real de preparação)
+shipped → delivered: 48 horas  (tempo real de entrega)
 ```
 
-- **Fornecedor marca envio** (`shipped`): `supplier_confirmed_shipping = true`, notifica comprador
-- **Fornecedor marca entrega** ou **data chega**: status muda para `shipped` (se ainda não estava), notifica comprador
-- **Comprador confirma recebimento**: `buyer_confirmed_delivery = true`, `delivery_confirmed_at = now()`, status → `delivered`
-- **Comprador nega recebimento** (após 7 dias): abre disputa automática
-- **Só o comprador pode marcar "delivered"** -- fornecedor NÃO pode mudar para delivered sozinho
-
-#### 4. Trigger de Notificação no Banco
-Criar `notify_negotiation_changes()` que:
-- No UPDATE de `status` para `shipped`: cria notificação para o comprador
-- No UPDATE de `supplier_confirmed_delivery` para `true`: cria notificação para o comprador pedindo confirmação
-
-#### 5. Alterações no Frontend
-
-**MinhasNegociacoes.tsx (Cliente)**:
-- Mostrar botões "Sim, recebi" e "Não recebi" quando status = `shipped` (não só quando `pending`)
-- Quando status = `accepted` e data vencida, mostrar alerta amarelo
-- Adicionar banner de destaque para negociações que precisam de ação
-
-**Negociacoes.tsx (Fornecedor)**:
-- Remover possibilidade do fornecedor marcar como "delivered" diretamente
-- Mostrar claramente que aguarda confirmação do comprador
-- Quando `shipped`, mostrar "Aguardando confirmação do comprador"
-
-**useNegotiations.tsx**:
-- `confirmDelivery()`: só o comprador pode chamar, seta `buyer_confirmed_delivery = true` e status = `delivered`
-- Fornecedor só pode: aceitar, enviar (shipped), cancelar
-
-### Arquivos Modificados
-- **Nova migração SQL**: adicionar `supplier_confirmed_delivery`, `delivery_check_sent`, trigger `notify_negotiation_changes`
-- **Nova Edge Function**: `check-delivery-dates/index.ts`
-- `src/hooks/useNegotiations.tsx` -- separar ações de comprador vs fornecedor
-- `src/pages/cliente/MinhasNegociacoes.tsx` -- corrigir fluxo de confirmação
-- `src/pages/fornecedor/Negociacoes.tsx` -- remover ação de "delivered" do fornecedor
+Esses tempos são enforced no banco de dados (trigger), impossível burlar pelo frontend.
 
