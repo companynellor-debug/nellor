@@ -284,8 +284,11 @@ const CompararFornecedores = () => {
 
       {/* Supplier Picker Modal */}
       {showPicker !== null && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end">
-          <div className="bg-background w-full rounded-t-3xl max-h-[70vh] flex flex-col animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-end" onClick={() => { setShowPicker(null); setPickerSearch(""); }}>
+          <div
+            className="bg-background w-full rounded-t-3xl max-h-[85vh] min-h-[60vh] flex flex-col animate-in slide-in-from-bottom"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold text-foreground">Escolher Fornecedor</h3>
               <button onClick={() => { setShowPicker(null); setPickerSearch(""); }}>
@@ -295,15 +298,25 @@ const CompararFornecedores = () => {
             <div className="p-4 border-b">
               <input
                 type="text"
-                placeholder="Buscar fornecedor..."
+                placeholder="Digite o nome do fornecedor..."
                 value={pickerSearch}
                 onChange={e => setPickerSearch(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                autoFocus
+                className="w-full px-4 py-3 rounded-xl border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
+              {pickerSearch && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {filteredPickers.length} resultado{filteredPickers.length !== 1 ? "s" : ""}
+                </p>
+              )}
             </div>
             <div className="overflow-y-auto flex-1 p-2">
               {loading ? (
                 <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>
+              ) : !pickerSearch && filteredPickers.length > 5 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">
+                  Digite para buscar entre {filteredPickers.length} fornecedores
+                </p>
               ) : filteredPickers.length === 0 ? (
                 <p className="text-center text-sm text-muted-foreground py-8">Nenhum fornecedor encontrado</p>
               ) : (
@@ -311,7 +324,7 @@ const CompararFornecedores = () => {
                   <button
                     key={s.id}
                     onClick={() => addSupplier(showPicker, s)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 active:bg-muted transition-colors"
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={s.foto_perfil_url || ""} />
