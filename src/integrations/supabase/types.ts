@@ -1007,6 +1007,7 @@ export type Database = {
           buyer_confirmed_delivery: boolean | null
           buyer_id: string
           created_at: string
+          delivery_check_sent: boolean | null
           delivery_confirmed_at: string | null
           expected_delivery: string | null
           id: string
@@ -1026,6 +1027,7 @@ export type Database = {
           buyer_confirmed_delivery?: boolean | null
           buyer_id: string
           created_at?: string
+          delivery_check_sent?: boolean | null
           delivery_confirmed_at?: string | null
           expected_delivery?: string | null
           id?: string
@@ -1045,6 +1047,7 @@ export type Database = {
           buyer_confirmed_delivery?: boolean | null
           buyer_id?: string
           created_at?: string
+          delivery_check_sent?: boolean | null
           delivery_confirmed_at?: string | null
           expected_delivery?: string | null
           id?: string
