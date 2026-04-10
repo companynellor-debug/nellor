@@ -201,6 +201,19 @@ const ProdutoDetalhes = () => {
     if (allVariationsSelected) setVariationError(null);
   }, [allVariationsSelected]);
 
+  // Track product view
+  const viewTracked = useRef(false);
+  useEffect(() => {
+    if (!product?.supplierUuid || viewTracked.current) return;
+    viewTracked.current = true;
+    supabase.auth.getUser().then(({ data }) => {
+      supabase.from('product_views' as any).insert({
+        product_id: product.supplierUuid,
+        viewer_id: data?.user?.id || null,
+      }).then(() => {});
+    });
+  }, [product?.supplierUuid]);
+
   const handleToggleFavorite = () => { isProductFavorite ? removeFavorite(productId) : addFavorite(productId); };
 
   const handleShare = async () => {
