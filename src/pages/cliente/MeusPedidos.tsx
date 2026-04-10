@@ -416,8 +416,8 @@ const MeusPedidos = () => {
               {/* Informações de pagamento */}
               <div className="space-y-2">
                 <h4 className="font-semibold text-sm flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  Pagamento
+                  <Package className="h-4 w-4" />
+                  Forma de pagamento
                 </h4>
                 <div className="p-3 bg-muted/50 rounded-lg">
                   <div className="flex justify-between items-center">
@@ -426,12 +426,6 @@ const MeusPedidos = () => {
                       {selectedOrder.payment_method === 'cartao' ? 'Cartão de Crédito' : 
                        selectedOrder.payment_method === 'pix' ? 'Pix' : 'Boleto'}
                     </span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-sm text-muted-foreground">Status</span>
-                    <Badge className={`${getPaymentStatusInfo(selectedOrder.payment_status).color} border-0`}>
-                      {getPaymentStatusInfo(selectedOrder.payment_status).label}
-                    </Badge>
                   </div>
                 </div>
               </div>
