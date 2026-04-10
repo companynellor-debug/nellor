@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Handshake, Search, Truck, CheckCircle, Clock, XCircle, Loader2, Package, FileText } from "lucide-react";
+import { Handshake, Search, Truck, CheckCircle, Clock, XCircle, Loader2, FileText } from "lucide-react";
 import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -54,7 +54,6 @@ const Negociacoes = () => {
       if (error) throw error;
       const negs = (data || []) as any as Negotiation[];
 
-      // Fetch buyer names
       const buyerIds = [...new Set(negs.map(n => n.buyer_id))];
       if (buyerIds.length > 0) {
         const { data: profiles } = await supabase
@@ -246,7 +245,7 @@ const Negociacoes = () => {
                           </>
                         )}
                         {neg.status === 'shipped' && (
-                          <div className="text-xs text-muted-foreground text-center bg-muted/50 rounded p-2">
+                          <div className="text-xs text-orange-600 text-center bg-orange-50 dark:bg-orange-900/20 rounded p-2">
                             <Truck className="h-4 w-4 mx-auto mb-1" />
                             Aguardando confirmação do comprador
                           </div>
@@ -254,7 +253,10 @@ const Negociacoes = () => {
                         {neg.status === 'delivered' && (
                           <div className="text-xs text-green-600 text-center bg-green-50 dark:bg-green-900/20 rounded p-2">
                             <CheckCircle className="h-4 w-4 mx-auto mb-1" />
-                            Entrega confirmada
+                            Entrega confirmada pelo comprador
+                            {neg.delivery_confirmed_at && (
+                              <p className="mt-0.5">{format(new Date(neg.delivery_confirmed_at), "dd/MM/yyyy", { locale: ptBR })}</p>
+                            )}
                           </div>
                         )}
                       </div>
