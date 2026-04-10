@@ -163,6 +163,29 @@ const Produtos = () => {
         customCategories={customCategories}
         onSubmit={handleSubmit}
       />
+
+      {/* Mobile Warning Dialog */}
+      <Dialog open={showMobileWarning} onOpenChange={setShowMobileWarning}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5 text-primary" />
+              Melhor experiência no computador
+            </DialogTitle>
+            <DialogDescription>
+              Para uma melhor experiência, cadastre seus produtos pelo computador. O formulário completo funciona melhor em telas maiores.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 mt-2">
+            <Button variant="outline" onClick={handleForceOpenMobile}>
+              Continuar mesmo assim
+            </Button>
+            <Button variant="ghost" onClick={() => setShowMobileWarning(false)} className="text-muted-foreground">
+              Voltar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
