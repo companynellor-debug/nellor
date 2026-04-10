@@ -48,6 +48,9 @@ interface Negotiation {
   invoice_url: string | null;
   sale_unit: string | null;
   unit_price: number | null;
+  // Cancellation & refund
+  cancel_reason: string | null;
+  refund_state: string;
 }
 
 const Negociacoes = () => {
@@ -66,6 +69,10 @@ const Negociacoes = () => {
   const [selectedBuyerData, setSelectedBuyerData] = useState<Record<string, any> | null>(null);
   const invoiceInputRef = useRef<HTMLInputElement>(null);
   const [invoiceNegId, setInvoiceNegId] = useState<string | null>(null);
+  // Cancel dialog
+  const [cancelDialog, setCancelDialog] = useState(false);
+  const [cancelNegId, setCancelNegId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState<string>('');
 
   const fetchNegotiations = useCallback(async () => {
     if (!user?.id) return;
