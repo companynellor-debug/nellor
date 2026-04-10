@@ -1,35 +1,60 @@
 
 
-## Correção: Cotações não seguem para Negociação
+## Fluxo Seguro de Pedidos: Confirmação Bilateral
 
-### Problema Identificado
-Quando o comprador clica "Aceitar e Negociar", o `useAcceptProposal` tenta:
-1. Atualizar a proposta aceita (`status = 'accepted'`) na tabela `quotation_proposals`
-2. Rejeitar as demais propostas (`status = 'rejected'`)
-3. Fechar a cotação (`status = 'closed'`)
-4. Criar uma negociação na tabela `negotiations`
+### Problema Atual
+O fornecedor pode marcar qualquer status livremente, inclusive "Entregue", sem confirmação do comprador. Isso é inseguro.
 
-O passo 1 e 2 falham silenciosamente porque a política RLS de UPDATE em `quotation_proposals` só permite que o **fornecedor** atualize suas próprias propostas. O **comprador** não tem permissão de UPDATE, mesmo sendo dono da cotação.
+### Novo Fluxo
 
-### Solução
-
-**1. Nova migração SQL** -- Adicionar política RLS permitindo que o comprador (dono da cotação) atualize o status das propostas:
-
-```sql
-CREATE POLICY "Buyers can update proposals on their quotations"
-  ON public.quotation_proposals FOR UPDATE
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.quotation_requests qr
-    WHERE qr.id = request_id AND qr.buyer_id = auth.uid()
-  ));
+```text
+pending → preparing → shipped → delivered
+   │          │           │          │
+Comprador  Fornecedor  Fornecedor  COMPRADOR
+ criou     aprova e    marca       confirma
+ pedido    prepara     envio +     recebimento
+                       rastreio
 ```
 
-**2. Melhorar tratamento de erros no frontend** (`useQuotations.tsx`):
-- Adicionar `onError` ao `useAcceptProposal` para exibir toast de erro caso algo falhe
-- Garantir que o `onSuccess` com `navigate` funcione corretamente
+- **pending**: Pedido criado, aguardando fornecedor aprovar
+- **preparing**: Fornecedor aceitou e está preparando
+- **shipped**: Fornecedor marcou como enviado (rastreio obrigatório)
+- **delivered**: Somente o COMPRADOR pode confirmar recebimento
 
-### Arquivos modificados
-1. **Nova migração SQL**: política RLS para buyers atualizarem propostas
-2. `src/hooks/useQuotations.tsx`: adicionar tratamento de erro no `useAcceptProposal`
+### Alterações
+
+**1. Migração SQL - Trigger de validação**
+- Criar função `validate_order_status_transition` que:
+  - Impede pular etapas (ex: pending direto para delivered)
+  - Impede fornecedor de marcar `delivered` (só buyer pode)
+  - Impede buyer de marcar `preparing` ou `shipped` (só fornecedor pode)
+  - Exige `tracking_code` ao mudar para `shipped`
+
+**2. Frontend - Fornecedor (`Pedidos.tsx`)**
+- Remover botão "Entregue" dos controles do fornecedor
+- Manter apenas: Preparando, Enviado, Cancelar
+- Ao clicar "Enviado", exigir código de rastreio antes
+- Labels atualizados: `pending` = "Aguardando Aprovação"
+
+**3. Frontend - Cliente (`MeusPedidos.tsx`)**
+- Adicionar botão "Confirmar Recebimento" quando status = `shipped`
+- Diálogo de confirmação antes de confirmar
+- Atualizar ORDER_STEPS labels
+
+**4. Hook (`useSupabaseOrders.tsx`)**
+- Adicionar função `confirmDelivery(orderId)` exclusiva para buyers
+- Atualizar labels de status
+
+**5. Segurança**
+- O trigger SQL garante no nível do banco que:
+  - Transições inválidas são bloqueadas
+  - Apenas o buyer pode marcar `delivered`
+  - Apenas o supplier pode marcar `preparing`/`shipped`
+  - Rastreio obrigatório para envio
+
+### Arquivos Modificados
+1. Nova migração SQL (trigger de validação)
+2. `src/hooks/useSupabaseOrders.tsx` (adicionar `confirmDelivery`)
+3. `src/pages/fornecedor/Pedidos.tsx` (remover botão Entregue, exigir rastreio)
+4. `src/pages/cliente/MeusPedidos.tsx` (botão Confirmar Recebimento)
 
