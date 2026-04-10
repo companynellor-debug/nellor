@@ -243,7 +243,12 @@ export const StoryViewer = ({ supplier, onClose, onContact, onViewed, onPrev, on
               onLoadedData={() => setVideoReady(true)}
               onCanPlay={(event) => {
                 setVideoReady(true);
-                void event.currentTarget.play().catch(() => undefined);
+                const vid = event.currentTarget;
+                vid.muted = false;
+                void vid.play().catch(() => {
+                  vid.muted = true;
+                  void vid.play().catch(() => undefined);
+                });
               }}
               onTimeUpdate={(event) => {
                 const { currentTime, duration } = event.currentTarget;
