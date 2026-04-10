@@ -272,24 +272,14 @@ const Pedidos = () => {
 
           {selectedOrder && (() => {
             const { items, totalPieces } = getOrderItems(selectedOrder);
-            const breakdown = calculateOrderBreakdown(selectedOrder);
 
             return (
               <div className="space-y-6">
-                {/* Payment details */}
-                <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-900/20">
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-3 flex items-center gap-2"><DollarSign className="h-4 w-4" />Detalhes do Pagamento</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div><p className="text-sm text-muted-foreground">Valor total</p><p className="text-xl font-bold">{formatCurrency(selectedOrder.total)}</p></div>
-                      <div><p className="text-sm text-muted-foreground">Status</p><Badge className={cn(getPaymentStatusBadge(selectedOrder.payment_status).color)}>{getPaymentStatusBadge(selectedOrder.payment_status).label}</Badge></div>
-                    </div>
-                    <div className="mt-4 pt-4 border-t space-y-2">
-                      <div className="flex justify-between text-sm"><span>Taxa Nellor (7,5%)</span><span className="text-purple-600">- {formatCurrency(breakdown.taxaPlataforma)}</span></div>
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Valor líquido fornecedor</span><span className="text-green-600">{formatCurrency(breakdown.valorLiquidoFornecedor)}</span></div>
-                    </div>
-                  </div>
-                </Card>
+                {/* Valor total */}
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Valor total</p>
+                  <p className="text-xl font-bold text-primary">{formatCurrency(selectedOrder.total)}</p>
+                </div>
 
                 {/* Client info */}
                 <div>
@@ -404,29 +394,12 @@ const Pedidos = () => {
                         Aguardando o cliente confirmar o recebimento
                       </div>
                     )}
-                    {!['delivered', 'cancelled', 'shipped'].includes(selectedOrder.order_status) && selectedOrder.payment_status === 'pending' && (
+                    {['pending', 'preparing'].includes(selectedOrder.order_status) && (
                       <Button variant="outline" className="w-full text-destructive hover:text-destructive" onClick={() => handleStatusChange(selectedOrder.id, 'cancelled')}>
                         <XCircle className="h-4 w-4 mr-2" />Cancelar Pedido
                       </Button>
                     )}
-                    {!['delivered', 'cancelled', 'shipped'].includes(selectedOrder.order_status) && selectedOrder.payment_status !== 'pending' && (
-                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-sm text-amber-700">
-                        <Info className="h-4 w-4 inline mr-1" />
-                        Pedido já pago — cancelamento não permitido. Solicite reembolso ao administrador.
-                      </div>
-                    )}
-                    {selectedOrder.order_status === 'shipped' && selectedOrder.payment_status !== 'pending' && (
-                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-sm text-amber-700">
-                        <Info className="h-4 w-4 inline mr-1" />
-                        Pedido já enviado — abra uma disputa para resolver problemas.
-                      </div>
-                    )}
                   </div>
-                </div>
-
-                <div className="bg-muted/50 p-3 rounded-lg text-xs text-muted-foreground">
-                  <Info className="h-4 w-4 inline mr-1" />
-                  O valor líquido do pedido já considera apenas a taxa da plataforma Nellor (7,5%).
                 </div>
               </div>
             );
