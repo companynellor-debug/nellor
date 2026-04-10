@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
@@ -134,7 +134,12 @@ const CompararFornecedores = () => {
   };
 
   const selectedCount = suppliers.filter(Boolean).length;
-  const filteredPickers = allSuppliers.filter(s => {
+  // Shuffle suppliers once when picker opens (not on every render)
+  const shuffledSuppliers = useMemo(() => {
+    return [...allSuppliers].sort(() => 0.5 - Math.random());
+  }, [allSuppliers, showPicker]);
+
+  const filteredPickers = shuffledSuppliers.filter(s => {
     const alreadySelected = suppliers.some(sel => sel?.id === s.id);
     const matchesSearch = pickerSearch
       ? s.nome.toLowerCase().includes(pickerSearch.toLowerCase())
@@ -304,11 +309,9 @@ const CompararFornecedores = () => {
                 autoFocus
                 className="w-full px-4 py-3 rounded-xl border bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
-              {pickerSearch && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {filteredPickers.length} resultado{filteredPickers.length !== 1 ? "s" : ""}
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                {filteredPickers.length} fornecedor{filteredPickers.length !== 1 ? "es" : ""} disponíve{filteredPickers.length !== 1 ? "is" : "l"}
+              </p>
             </div>
             <div className="overflow-y-auto flex-1 p-2">
               {loading ? (
