@@ -173,9 +173,7 @@ const ClienteHome = () => {
         <div className="mb-6">
           <Card className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors" onClick={() => navigate("/cliente/cotacoes")}>
             <div className="flex items-center gap-3 p-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
+              <DarkGlassIcon icon={FileText} size="md" color="purple" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm text-foreground">Painel de Cotações</p>
                 <p className="text-xs text-muted-foreground">Publique o que precisa e receba propostas de fornecedores</p>
