@@ -127,10 +127,8 @@ const DropFinanceiro = () => {
               Lucro acumulado das suas vendas
             </p>
           </div>
-          <Button size="lg">
-            <ArrowUpRight className="h-5 w-5 mr-2" />
-            Solicitar Saque
-          </Button>
+
+
         </div>
       </div>
 

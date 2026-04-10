@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
         await supabaseAdmin.from("product_drop_settings").delete().in("product_id", productIds);
         await supabaseAdmin.from("client_drop_products").delete().in("product_id", productIds);
         await supabaseAdmin.from("reviews").delete().in("product_id", productIds);
-        await supabaseAdmin.from("coupons").delete().eq("supplier_id", selfUserId);
+        
         await supabaseAdmin.from("products").delete().eq("supplier_id", selfUserId);
       }
 
@@ -86,13 +86,11 @@ Deno.serve(async (req) => {
       await supabaseAdmin.from("orders").delete().eq("buyer_id", selfUserId);
       await supabaseAdmin.from("drop_orders").delete().eq("supplier_id", selfUserId);
       await supabaseAdmin.from("drop_orders").delete().eq("client_id", selfUserId);
-      await supabaseAdmin.from("analytics").delete().eq("supplier_id", selfUserId);
-      await supabaseAdmin.from("payouts").delete().eq("supplier_id", selfUserId);
+
+
       await supabaseAdmin.from("notifications").delete().eq("user_id", selfUserId);
       await supabaseAdmin.from("messages").delete().or(`from_user.eq.${selfUserId},to_user.eq.${selfUserId}`);
       await supabaseAdmin.from("push_subscriptions").delete().eq("user_id", selfUserId);
-      await supabaseAdmin.from("addresses").delete().eq("user_id", selfUserId);
-      await supabaseAdmin.from("payment_methods").delete().eq("user_id", selfUserId);
       await supabaseAdmin.from("notification_preferences").delete().eq("user_id", selfUserId);
       await supabaseAdmin.from("activity_logs").delete().eq("user_id", selfUserId);
       await supabaseAdmin.from("product_drafts").delete().eq("supplier_id", selfUserId);
@@ -255,16 +253,7 @@ Deno.serve(async (req) => {
         .eq("user_id", user_id);
 
       // 9. Delete addresses
-      await supabaseAdmin
-        .from("addresses")
-        .delete()
-        .eq("user_id", user_id);
-
-      // 10. Delete payment_methods
-      await supabaseAdmin
-        .from("payment_methods")
-        .delete()
-        .eq("user_id", user_id);
+      await supabaseAdmin.from("addresses").delete().eq("user_id", user_id);
 
       // 11. Delete notification_preferences
       await supabaseAdmin

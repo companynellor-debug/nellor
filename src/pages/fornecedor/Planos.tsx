@@ -166,15 +166,8 @@ const Planos = () => {
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <p>
-            Todos os pagamentos são processados de forma segura. Assim que o cliente paga pelo pedido, 
-            o valor é dividido automaticamente entre a plataforma (comissão), o vendedor e a taxa do processador. 
-          </p>
-          <p>
-            Os vendedores podem <strong className="text-foreground">solicitar saques a qualquer momento</strong> após o período de carência. 
-            O valor é transferido via Pix para a conta cadastrada.
-          </p>
-          <p>
-            Para receber pagamentos, é necessário verificar sua conta com documentos válidos.
+            Na Nellor, os pagamentos são acordados diretamente entre fornecedor e cliente. 
+            Não há processamento de pagamentos pela plataforma.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
