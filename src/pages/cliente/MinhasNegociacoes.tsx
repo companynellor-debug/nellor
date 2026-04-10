@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Star, Package, AlertTriangle, CheckCircle, Clock, Truck, FileText, ArrowLeft, ShieldAlert } from "lucide-react";
+import { Star, Package, AlertTriangle, CheckCircle, Clock, Truck, FileText, ArrowLeft, ShieldAlert, Upload, DollarSign, XCircle, Download, Eye } from "lucide-react";
 import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { useNegotiations, getTimeUntilAllowed, formatCountdown } from "@/hooks/useNegotiations";
 import { useDisputes } from "@/hooks/useDisputes";
@@ -15,22 +16,27 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
+import { supabase } from "@/integrations/supabase/client";
 
 const MinhasNegociacoes = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeFilter = searchParams.get("filtro") || "todas";
   const { user } = useSupabaseAuth();
-  const { negotiations, confirmDelivery, updateNegotiationStatus } = useNegotiations();
+  const { negotiations, confirmDelivery, updateNegotiationStatus, reportPayment, buyerCancel } = useNegotiations();
   const { createDispute } = useDisputes();
   const { createReview } = useSupabaseReviews();
 
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedNegotiation, setSelectedNegotiation] = useState<any>(null);
   const [rating, setRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [disputeDescription, setDisputeDescription] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
 
   const allMyNegotiations = negotiations.filter(n => n.buyer_id === user?.id);
 
@@ -41,7 +47,6 @@ const MinhasNegociacoes = () => {
     return true;
   });
 
-  // Negotiations that need buyer action (shipped and waiting confirmation)
   const needsAction = allMyNegotiations.filter(n => n.status === "shipped");
 
   const filters = [
@@ -69,6 +74,47 @@ const MinhasNegociacoes = () => {
 
     setSelectedNegotiation(neg);
     setShowDisputeForm(true);
+  };
+
+  const handleReportPayment = (neg: any) => {
+    setSelectedNegotiation(neg);
+    setPaymentReference('');
+    setPaymentProofFile(null);
+    setShowPaymentForm(true);
+  };
+
+  const handleSubmitPayment = async () => {
+    if (!selectedNegotiation) return;
+    setUploadingProof(true);
+    try {
+      let proofUrl: string | undefined;
+
+      if (paymentProofFile) {
+        const ext = paymentProofFile.name.split('.').pop();
+        const path = `${user!.id}/${selectedNegotiation.id}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(path, paymentProofFile, { upsert: true });
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(path);
+        proofUrl = urlData.publicUrl;
+      }
+
+      await reportPayment(selectedNegotiation.id, proofUrl, paymentReference);
+      setShowPaymentForm(false);
+      setSelectedNegotiation(null);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setUploadingProof(false);
+    }
+  };
+
+  const handleCancelNeg = async (negId: string) => {
+    await buyerCancel(negId);
   };
 
   const handleSubmitReview = async () => {
@@ -118,6 +164,13 @@ const MinhasNegociacoes = () => {
     cancelled: { label: "Cancelada", color: "bg-muted text-muted-foreground" },
   };
 
+  const paymentStateLabels: Record<string, { label: string; color: string }> = {
+    not_reported: { label: '', color: '' },
+    reported_by_buyer: { label: 'Pagamento informado', color: 'bg-blue-100 text-blue-700' },
+    confirmed_by_supplier: { label: 'Pagamento confirmado', color: 'bg-green-100 text-green-700' },
+    contested_by_supplier: { label: 'Pagamento contestado', color: 'bg-red-100 text-red-700' },
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
@@ -131,7 +184,6 @@ const MinhasNegociacoes = () => {
             <p className="text-xs text-muted-foreground">{myNegotiations.length} negociações</p>
           </div>
         </div>
-        {/* Filter pills */}
         <div className="container mx-auto px-4 pb-3 flex gap-2 overflow-x-auto no-scrollbar">
           {filters.map(f => (
             <button
@@ -155,7 +207,6 @@ const MinhasNegociacoes = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-3">
-        {/* Action required banner */}
         {needsAction.length > 0 && activeFilter === "todas" && (
           <Card className="p-3 border-orange-200 bg-orange-50 dark:bg-orange-950/20">
             <div className="flex items-center gap-2">
@@ -190,6 +241,9 @@ const MinhasNegociacoes = () => {
             const canDispute = neg.expected_delivery && new Date(neg.expected_delivery).getTime() + 7 * 24 * 60 * 60 * 1000 <= Date.now();
             const isShipped = neg.status === 'shipped';
             const isAcceptedAndDue = neg.status === 'accepted' && isDeliveryDue;
+            const paymentInfo = paymentStateLabels[neg.payment_state] || paymentStateLabels.not_reported;
+            const canCancel = neg.status === 'pending' && neg.payment_state === 'not_reported';
+            const canReportPayment = neg.status === 'accepted' && neg.payment_state === 'not_reported';
 
             return (
               <Card key={neg.id} className={`p-4 ${isShipped ? 'border-orange-300 shadow-md' : ''}`}>
@@ -200,7 +254,12 @@ const MinhasNegociacoes = () => {
                       {neg.quantity}x • {formatCurrency(neg.agreed_price)}
                     </p>
                   </div>
-                  <Badge className={config.color}>{config.label}</Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge className={config.color}>{config.label}</Badge>
+                    {paymentInfo.label && (
+                      <Badge className={paymentInfo.color + ' text-[10px]'}>{paymentInfo.label}</Badge>
+                    )}
+                  </div>
                 </div>
 
                 <div className="text-xs text-muted-foreground space-y-0.5 mb-3">
@@ -211,7 +270,62 @@ const MinhasNegociacoes = () => {
                   <p>Criada: {new Date(neg.created_at).toLocaleDateString('pt-BR')}</p>
                 </div>
 
-                {/* SHIPPED: Show confirmation buttons - buyer must confirm */}
+                {/* Payment contested warning */}
+                {neg.payment_state === 'contested_by_supplier' && neg.payment_contested_reason && (
+                  <div className="flex items-start gap-1.5 text-xs text-red-600 bg-red-50 dark:bg-red-950/30 rounded p-2 mb-2">
+                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">Pagamento contestado pelo fornecedor: </span>
+                      <span>{neg.payment_contested_reason}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* ACCEPTED: Show "Já paguei" button */}
+                {canReportPayment && (
+                  <Button
+                    size="sm"
+                    className="w-full gap-1 mb-2 bg-green-600 hover:bg-green-700"
+                    onClick={() => handleReportPayment(neg)}
+                  >
+                    <DollarSign className="h-3.5 w-3.5" />
+                    Já paguei — Informar pagamento
+                  </Button>
+                )}
+
+                {/* Invoice download */}
+                {neg.invoice_url && (
+                  <a href={neg.invoice_url} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline" className="w-full gap-1 mb-2">
+                      <Download className="h-3.5 w-3.5" />
+                      Baixar Nota Fiscal
+                    </Button>
+                  </a>
+                )}
+
+                {/* PENDING: cancel button */}
+                {canCancel && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      Aguardando resposta do fornecedor
+                    </div>
+                    <Button size="sm" variant="outline" className="text-destructive border-destructive/30 gap-1" onClick={() => handleCancelNeg(neg.id)}>
+                      <XCircle className="h-3.5 w-3.5" />
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
+
+                {/* PENDING without cancel (payment reported) */}
+                {neg.status === 'pending' && !canCancel && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    Aguardando resposta do fornecedor
+                  </div>
+                )}
+
+                {/* SHIPPED: Show confirmation buttons */}
                 {isShipped && (() => {
                   const timing = getTimeUntilAllowed(neg as any);
                   return (
@@ -256,27 +370,18 @@ const MinhasNegociacoes = () => {
                   );
                 })()}
 
-                {/* ACCEPTED + delivery date passed: warn buyer */}
+                {/* ACCEPTED + not due and no payment report button shown */}
+                {neg.status === 'accepted' && !isDeliveryDue && neg.payment_state !== 'not_reported' && (
+                  <div className="flex items-center gap-1.5 text-xs text-blue-600">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Negociação aceita, aguardando envio
+                  </div>
+                )}
+
                 {isAcceptedAndDue && (
                   <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded p-2">
                     <AlertTriangle className="h-3.5 w-3.5" />
                     <span>Data de entrega prevista já passou. Aguardando envio do fornecedor.</span>
-                  </div>
-                )}
-
-                {/* PENDING: waiting */}
-                {neg.status === 'pending' && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
-                    Aguardando resposta do fornecedor
-                  </div>
-                )}
-
-                {/* ACCEPTED: not due yet */}
-                {neg.status === 'accepted' && !isDeliveryDue && (
-                  <div className="flex items-center gap-1.5 text-xs text-blue-600">
-                    <CheckCircle className="h-3.5 w-3.5" />
-                    Negociação aceita, aguardando envio
                   </div>
                 )}
 
@@ -297,7 +402,6 @@ const MinhasNegociacoes = () => {
                   </Button>
                 )}
 
-                {/* DELIVERED: confirmation info */}
                 {neg.status === 'delivered' && (
                   <div className="flex items-center gap-1.5 text-xs text-green-600 mt-2">
                     <CheckCircle className="h-3.5 w-3.5" />
@@ -309,6 +413,48 @@ const MinhasNegociacoes = () => {
           })
         )}
       </main>
+
+      {/* Payment Report Dialog */}
+      <Dialog open={showPaymentForm} onOpenChange={setShowPaymentForm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-green-600" />
+              Informar Pagamento
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Informe que o pagamento foi feito. Isso protege você: o fornecedor não poderá cancelar após esta confirmação.
+            </p>
+            <div>
+              <label className="text-sm font-medium">Referência / código da transação</label>
+              <Input
+                value={paymentReference}
+                onChange={e => setPaymentReference(e.target.value)}
+                placeholder="Ex: código PIX, nº do boleto..."
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Comprovante (opcional)</label>
+              <Input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={e => setPaymentProofFile(e.target.files?.[0] || null)}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">PDF ou imagem do comprovante</p>
+            </div>
+            <Button
+              onClick={handleSubmitPayment}
+              className="w-full gap-1 bg-green-600 hover:bg-green-700"
+              disabled={uploadingProof || (!paymentReference.trim() && !paymentProofFile)}
+            >
+              {uploadingProof ? <Upload className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+              Confirmar Pagamento
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Review Dialog */}
       <Dialog open={showReviewForm} onOpenChange={setShowReviewForm}>

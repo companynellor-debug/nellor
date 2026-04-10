@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Handshake, Search, Truck, CheckCircle, Clock, XCircle, Loader2, FileText, ShieldAlert } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Handshake, Search, Truck, CheckCircle, Clock, XCircle, Loader2, FileText, ShieldAlert, DollarSign, AlertTriangle, Upload, Eye, Download, User } from "lucide-react";
 import { generateNegotiationPDF } from "@/components/cliente/NegotiationContractPDF";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -13,7 +15,7 @@ import { getTimeUntilAllowed, formatCountdown } from "@/hooks/useNegotiations";
 import type { Negotiation as NegType } from "@/hooks/useNegotiations";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useState as useReactState, useEffect as useReactEffect } from "react";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 interface Negotiation {
   id: string;
@@ -34,6 +36,18 @@ interface Negotiation {
   created_at: string;
   updated_at: string;
   buyerName?: string;
+  // Payment security
+  payment_state: string;
+  payment_reported_at: string | null;
+  payment_proof_url: string | null;
+  payment_reference: string | null;
+  payment_confirmed_at: string | null;
+  payment_contested_reason: string | null;
+  // NF
+  buyer_data: Record<string, any> | null;
+  invoice_url: string | null;
+  sale_unit: string | null;
+  unit_price: number | null;
 }
 
 const Negociacoes = () => {
@@ -43,6 +57,15 @@ const Negociacoes = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
+
+  // Dialogs
+  const [contestDialog, setContestDialog] = useState(false);
+  const [contestReason, setContestReason] = useState("");
+  const [contestNegId, setContestNegId] = useState<string | null>(null);
+  const [buyerDataDialog, setBuyerDataDialog] = useState(false);
+  const [selectedBuyerData, setSelectedBuyerData] = useState<Record<string, any> | null>(null);
+  const invoiceInputRef = useRef<HTMLInputElement>(null);
+  const [invoiceNegId, setInvoiceNegId] = useState<string | null>(null);
 
   const fetchNegotiations = useCallback(async () => {
     if (!user?.id) return;
@@ -84,7 +107,13 @@ const Negociacoes = () => {
         .from('negotiations' as any)
         .update({ status, updated_at: new Date().toISOString(), ...extra } as any)
         .eq('id', id);
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('pagamento informado') || error.message?.includes('Não é possível cancelar')) {
+          toast({ title: 'Ação bloqueada', description: error.message, variant: 'destructive' });
+          return;
+        }
+        throw error;
+      }
       toast({ title: 'Status atualizado!', description: `Negociação marcada como "${status}".` });
       fetchNegotiations();
     } catch (err: any) {
@@ -98,6 +127,73 @@ const Negociacoes = () => {
     shipping_confirmed_at: new Date().toISOString(),
   });
   const handleCancel = (id: string) => updateStatus(id, 'cancelled');
+
+  const handleConfirmPayment = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('negotiations' as any)
+        .update({
+          payment_state: 'confirmed_by_supplier',
+          payment_confirmed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Pagamento confirmado!', description: 'Pagamento do comprador foi localizado.' });
+      fetchNegotiations();
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleContestPayment = async () => {
+    if (!contestNegId || !contestReason.trim()) return;
+    try {
+      const { error } = await supabase
+        .from('negotiations' as any)
+        .update({
+          payment_state: 'contested_by_supplier',
+          payment_contested_reason: contestReason,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', contestNegId);
+      if (error) throw error;
+      toast({ title: 'Pagamento contestado', description: 'A contestação foi registrada.' });
+      setContestDialog(false);
+      setContestReason('');
+      setContestNegId(null);
+      fetchNegotiations();
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleInvoiceUpload = async (file: File) => {
+    if (!invoiceNegId || !user) return;
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/${invoiceNegId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('invoices')
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('invoices')
+        .getPublicUrl(path);
+
+      const { error } = await supabase
+        .from('negotiations' as any)
+        .update({ invoice_url: urlData.publicUrl, updated_at: new Date().toISOString() } as any)
+        .eq('id', invoiceNegId);
+      if (error) throw error;
+      toast({ title: 'NF anexada!', description: 'Nota fiscal enviada ao comprador.' });
+      setInvoiceNegId(null);
+      fetchNegotiations();
+    } catch (err: any) {
+      toast({ title: 'Erro ao enviar NF', description: err.message, variant: 'destructive' });
+    }
+  };
 
   const filtered = negotiations.filter(n => {
     const matchesSearch = !search || n.product_name.toLowerCase().includes(search.toLowerCase()) || n.buyerName?.toLowerCase().includes(search.toLowerCase());
@@ -122,6 +218,15 @@ const Negociacoes = () => {
       case 'cancelled': return <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" />Cancelada</Badge>;
       case 'disputed': return <Badge className="bg-red-100 text-red-800 gap-1">Disputada</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getPaymentStateBadge = (state: string) => {
+    switch (state) {
+      case 'reported_by_buyer': return <Badge className="bg-blue-100 text-blue-700 text-[10px]">💰 Pagamento informado</Badge>;
+      case 'confirmed_by_supplier': return <Badge className="bg-green-100 text-green-700 text-[10px]">✅ Pagamento confirmado</Badge>;
+      case 'contested_by_supplier': return <Badge className="bg-red-100 text-red-700 text-[10px]">⚠️ Pagamento contestado</Badge>;
+      default: return null;
     }
   };
 
@@ -168,81 +273,201 @@ const Negociacoes = () => {
             </Card>
           ) : (
             <div className="space-y-3">
-              {filtered.map(neg => (
-                <Card key={neg.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold text-sm sm:text-base truncate">{neg.product_name}</h3>
-                          {getStatusBadge(neg.status)}
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Comprador:</span>
-                            <span className="ml-1 font-medium">{neg.buyerName}</span>
+              {filtered.map(neg => {
+                const canCancel = (neg.status === 'pending' || neg.status === 'accepted') && neg.payment_state === 'not_reported';
+                const hasPaymentReported = neg.payment_state !== 'not_reported';
+                const needsPaymentAction = neg.payment_state === 'reported_by_buyer';
+
+                return (
+                  <Card key={neg.id} className={`overflow-hidden hover:shadow-lg transition-shadow ${needsPaymentAction ? 'border-blue-300' : ''}`}>
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
+                            <h3 className="font-semibold text-sm sm:text-base truncate">{neg.product_name}</h3>
+                            <div className="flex flex-col items-end gap-1">
+                              {getStatusBadge(neg.status)}
+                              {getPaymentStateBadge(neg.payment_state)}
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Quantidade:</span>
-                            <span className="ml-1 font-medium">{neg.quantity}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Valor acordado:</span>
-                            <span className="ml-1 font-bold text-primary">R$ {Number(neg.agreed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Pagamento:</span>
-                            <span className="ml-1 font-medium">{neg.payment_method}</span>
-                          </div>
-                          {neg.expected_delivery && (
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-xs sm:text-sm">
                             <div>
-                              <span className="text-muted-foreground">Entrega prevista:</span>
-                              <span className="ml-1 font-medium">{format(new Date(neg.expected_delivery), 'dd/MM/yyyy')}</span>
+                              <span className="text-muted-foreground">Comprador:</span>
+                              <span className="ml-1 font-medium">{neg.buyerName}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Quantidade:</span>
+                              <span className="ml-1 font-medium">{neg.quantity}{neg.sale_unit ? ` (${neg.sale_unit})` : ''}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Valor acordado:</span>
+                              <span className="ml-1 font-bold text-primary">{formatCurrency(neg.agreed_price)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Pagamento:</span>
+                              <span className="ml-1 font-medium">{neg.payment_method}</span>
+                            </div>
+                            {neg.expected_delivery && (
+                              <div>
+                                <span className="text-muted-foreground">Entrega prevista:</span>
+                                <span className="ml-1 font-medium">{format(new Date(neg.expected_delivery), 'dd/MM/yyyy')}</span>
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-muted-foreground">Registrada em:</span>
+                              <span className="ml-1">{format(new Date(neg.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
+                            </div>
+                          </div>
+
+                          {neg.notes && (
+                            <p className="text-xs text-muted-foreground bg-muted/50 rounded p-2 mt-2">📝 {neg.notes}</p>
+                          )}
+
+                          {/* Payment reported banner */}
+                          {needsPaymentAction && (
+                            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 space-y-2">
+                              <div className="flex items-center gap-1.5 text-xs text-blue-700 font-medium">
+                                <DollarSign className="h-3.5 w-3.5" />
+                                Comprador informou que pagou
+                              </div>
+                              {neg.payment_reference && (
+                                <p className="text-xs text-blue-600">Referência: {neg.payment_reference}</p>
+                              )}
+                              {neg.payment_proof_url && (
+                                <a href={neg.payment_proof_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline flex items-center gap-1">
+                                  <Eye className="h-3 w-3" /> Ver comprovante
+                                </a>
+                              )}
+                              <div className="flex gap-2">
+                                <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 gap-1" onClick={() => handleConfirmPayment(neg.id)}>
+                                  <CheckCircle className="h-3.5 w-3.5" />
+                                  Confirmar recebimento
+                                </Button>
+                                <Button size="sm" variant="outline" className="flex-1 text-red-600 border-red-200 gap-1" onClick={() => {
+                                  setContestNegId(neg.id);
+                                  setContestReason('');
+                                  setContestDialog(true);
+                                }}>
+                                  <AlertTriangle className="h-3.5 w-3.5" />
+                                  Não localizei
+                                </Button>
+                              </div>
                             </div>
                           )}
-                          <div>
-                            <span className="text-muted-foreground">Registrada em:</span>
-                            <span className="ml-1">{format(new Date(neg.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
-                          </div>
+
+                          {/* Buyer data for NF */}
+                          {neg.buyer_data && Object.keys(neg.buyer_data).length > 0 && (
+                            <Button size="sm" variant="ghost" className="gap-1 text-xs" onClick={() => {
+                              setSelectedBuyerData(neg.buyer_data);
+                              setBuyerDataDialog(true);
+                            }}>
+                              <User className="h-3.5 w-3.5" />
+                              Ver dados do comprador (NF)
+                            </Button>
+                          )}
                         </div>
 
-                        {neg.notes && (
-                          <p className="text-xs text-muted-foreground bg-muted/50 rounded p-2 mt-2">📝 {neg.notes}</p>
-                        )}
+                        {/* Action buttons */}
+                        <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0 flex-wrap">
+                          <NegotiationActions
+                            neg={neg}
+                            userEmail={user?.email || 'Fornecedor'}
+                            onAccept={handleAccept}
+                            onShip={handleShip}
+                            onCancel={canCancel ? handleCancel : undefined}
+                            onUploadInvoice={(id) => {
+                              setInvoiceNegId(id);
+                              invoiceInputRef.current?.click();
+                            }}
+                          />
+                        </div>
                       </div>
-
-                      {/* Action buttons */}
-                      <NegotiationActions
-                        neg={neg}
-                        userEmail={user?.email || 'Fornecedor'}
-                        onAccept={handleAccept}
-                        onShip={handleShip}
-                        onCancel={handleCancel}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Hidden file input for invoice upload */}
+      <input
+        ref={invoiceInputRef}
+        type="file"
+        accept="application/pdf,image/*"
+        className="hidden"
+        onChange={e => {
+          const file = e.target.files?.[0];
+          if (file) handleInvoiceUpload(file);
+          e.target.value = '';
+        }}
+      />
+
+      {/* Contest Payment Dialog */}
+      <Dialog open={contestDialog} onOpenChange={setContestDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Contestar Pagamento
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Informe o motivo pelo qual não localizou o pagamento. O comprador será notificado.
+            </p>
+            <Textarea
+              value={contestReason}
+              onChange={e => setContestReason(e.target.value)}
+              placeholder="Ex: Não localizei o PIX na conta informada..."
+              rows={3}
+            />
+            <Button onClick={handleContestPayment} variant="destructive" className="w-full gap-1" disabled={!contestReason.trim()}>
+              <AlertTriangle className="h-4 w-4" />
+              Confirmar Contestação
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Buyer Data Dialog */}
+      <Dialog open={buyerDataDialog} onOpenChange={setBuyerDataDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Dados do Comprador para NF
+            </DialogTitle>
+          </DialogHeader>
+          {selectedBuyerData && (
+            <div className="space-y-2 text-sm">
+              {selectedBuyerData.nome && <div><span className="text-muted-foreground">Nome:</span> <span className="font-medium">{selectedBuyerData.nome}</span></div>}
+              {selectedBuyerData.documento && <div><span className="text-muted-foreground">CPF/CNPJ:</span> <span className="font-medium">{selectedBuyerData.documento}</span></div>}
+              {selectedBuyerData.ie && <div><span className="text-muted-foreground">IE:</span> <span className="font-medium">{selectedBuyerData.ie}</span></div>}
+              {selectedBuyerData.telefone && <div><span className="text-muted-foreground">Telefone:</span> <span className="font-medium">{selectedBuyerData.telefone}</span></div>}
+              {selectedBuyerData.endereco && <div><span className="text-muted-foreground">Endereço:</span> <span className="font-medium">{selectedBuyerData.endereco}</span></div>}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 // Sub-component with countdown timer for anti-fraud
-const NegotiationActions = ({ neg, userEmail, onAccept, onShip, onCancel }: {
+const NegotiationActions = ({ neg, userEmail, onAccept, onShip, onCancel, onUploadInvoice }: {
   neg: Negotiation;
   userEmail: string;
   onAccept: (id: string) => void;
   onShip: (id: string) => void;
-  onCancel: (id: string) => void;
+  onCancel?: (id: string) => void;
+  onUploadInvoice: (id: string) => void;
 }) => {
-  const [now, setNow] = useReactState(Date.now());
+  const [now, setNow] = useState(Date.now());
 
-  useReactEffect(() => {
+  useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -251,17 +476,19 @@ const NegotiationActions = ({ neg, userEmail, onAccept, onShip, onCancel }: {
   const timing = getTimeUntilAllowed(asNegType);
 
   return (
-    <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0">
+    <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0 flex-wrap">
       {neg.status === 'pending' && (
         <>
           <Button size="sm" onClick={() => onAccept(neg.id)} className="flex-1 sm:flex-none" disabled={!timing.allowed}>
             <CheckCircle className="h-4 w-4 mr-1" />
             {timing.allowed ? 'Aceitar' : formatCountdown(timing.remainingMs)}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => onCancel(neg.id)} className="flex-1 sm:flex-none text-destructive">
-            <XCircle className="h-4 w-4 mr-1" />
-            Recusar
-          </Button>
+          {onCancel && (
+            <Button size="sm" variant="outline" onClick={() => onCancel(neg.id)} className="flex-1 sm:flex-none text-destructive">
+              <XCircle className="h-4 w-4 mr-1" />
+              Recusar
+            </Button>
+          )}
           {!timing.allowed && (
             <p className="text-[10px] text-muted-foreground flex items-center gap-1">
               <ShieldAlert className="h-3 w-3" /> Segurança anti-fraude
@@ -275,11 +502,22 @@ const NegotiationActions = ({ neg, userEmail, onAccept, onShip, onCancel }: {
             <Truck className="h-4 w-4 mr-1" />
             {timing.allowed ? 'Confirmar Envio' : formatCountdown(timing.remainingMs)}
           </Button>
+          {onCancel && (
+            <Button size="sm" variant="outline" onClick={() => onCancel(neg.id)} className="text-destructive">
+              <XCircle className="h-4 w-4 mr-1" />
+              Cancelar
+            </Button>
+          )}
           {!timing.allowed && (
             <p className="text-[10px] text-muted-foreground flex items-center gap-1">
               <ShieldAlert className="h-3 w-3" /> Segurança anti-fraude
             </p>
           )}
+        </>
+      )}
+      {/* PDF & Invoice for accepted/shipped/delivered */}
+      {['accepted', 'shipped', 'delivered'].includes(neg.status) && (
+        <>
           <Button
             size="sm"
             variant="outline"
@@ -291,8 +529,25 @@ const NegotiationActions = ({ neg, userEmail, onAccept, onShip, onCancel }: {
             })}
           >
             <FileText className="h-4 w-4 mr-1" />
-            PDF do Acordo
+            PDF
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            onClick={() => onUploadInvoice(neg.id)}
+          >
+            <Upload className="h-4 w-4 mr-1" />
+            {neg.invoice_url ? 'Atualizar NF' : 'Anexar NF'}
+          </Button>
+          {neg.invoice_url && (
+            <a href={neg.invoice_url} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" variant="ghost" className="gap-1 text-xs">
+                <Download className="h-3.5 w-3.5" />
+                Ver NF
+              </Button>
+            </a>
+          )}
         </>
       )}
       {neg.status === 'shipped' && (
@@ -304,7 +559,7 @@ const NegotiationActions = ({ neg, userEmail, onAccept, onShip, onCancel }: {
       {neg.status === 'delivered' && (
         <div className="text-xs text-green-600 text-center bg-green-50 dark:bg-green-900/20 rounded p-2">
           <CheckCircle className="h-4 w-4 mx-auto mb-1" />
-          Entrega confirmada pelo comprador
+          Entrega confirmada
           {neg.delivery_confirmed_at && (
             <p className="mt-0.5">{format(new Date(neg.delivery_confirmed_at), "dd/MM/yyyy", { locale: ptBR })}</p>
           )}

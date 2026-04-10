@@ -4,9 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, Calculator, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNegotiations } from '@/hooks/useNegotiations';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 interface NegotiationFormProps {
   supplierId: string;
@@ -18,7 +19,25 @@ interface SupplierProduct {
   id: string;
   nome: string;
   preco: number;
+  sale_unit: string | null;
+  units_per_sale_unit: number | null;
+  min_order_quantity: number | null;
+  max_order_quantity: number | null;
 }
+
+interface PriceTier {
+  min_quantity: number;
+  max_quantity: number | null;
+  price_per_unit: number;
+}
+
+const saleUnitLabels: Record<string, string> = {
+  unit: 'Unidade',
+  pair: 'Par',
+  closed_box: 'Caixa Fechada',
+  bale: 'Fardo',
+  kit: 'Kit',
+};
 
 const paymentMethodOptions = [
   { value: 'pix', label: 'PIX' },
@@ -31,46 +50,120 @@ const paymentMethodOptions = [
 export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationFormProps) => {
   const { createNegotiation } = useNegotiations(supplierId);
   const [products, setProducts] = useState<SupplierProduct[]>([]);
+  const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [productName, setProductName] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [agreedPrice, setAgreedPrice] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('pix');
   const [expectedDelivery, setExpectedDelivery] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [showBuyerData, setShowBuyerData] = useState(false);
+
+  // Buyer data for NF
+  const [buyerName, setBuyerName] = useState('');
+  const [buyerDocument, setBuyerDocument] = useState('');
+  const [buyerIE, setBuyerIE] = useState('');
+  const [buyerPhone, setBuyerPhone] = useState('');
+  const [buyerAddress, setBuyerAddress] = useState('');
+
+  const selectedProduct = products.find(p => p.id === selectedProductId);
+  const saleUnit = selectedProduct?.sale_unit || 'unit';
+  const unitsPerSaleUnit = selectedProduct?.units_per_sale_unit || 1;
+  const basePrice = selectedProduct?.preco || 0;
+
+  // Calculate price based on tiers or base price
+  const getEffectivePrice = (): number => {
+    if (priceTiers.length > 0) {
+      const tier = priceTiers.find(t =>
+        quantity >= t.min_quantity && (t.max_quantity === null || quantity <= t.max_quantity)
+      );
+      if (tier) return tier.price_per_unit;
+    }
+    return basePrice;
+  };
+
+  const effectivePrice = getEffectivePrice();
+  const totalEstimated = effectivePrice * quantity;
+  const totalUnits = saleUnit !== 'unit' && saleUnit !== 'pair' ? quantity * unitsPerSaleUnit : quantity;
 
   const resetForm = () => {
     setSelectedProductId('');
     setProductName('');
     setQuantity(1);
-    setAgreedPrice('');
     setPaymentMethod('pix');
     setExpectedDelivery('');
     setNotes('');
+    setShowBuyerData(false);
+    setBuyerName('');
+    setBuyerDocument('');
+    setBuyerIE('');
+    setBuyerPhone('');
+    setBuyerAddress('');
+    setPriceTiers([]);
   };
 
-  const handleProductSelect = (productId: string) => {
+  const handleProductSelect = async (productId: string) => {
     setSelectedProductId(productId);
     const product = products.find(p => p.id === productId);
     if (product) {
       setProductName(product.nome);
-      setAgreedPrice(String(product.preco));
+      setQuantity(product.min_order_quantity || 1);
+      // Fetch price tiers
+      try {
+        const { data } = await supabase
+          .from('product_price_tiers')
+          .select('min_quantity, max_quantity, price_per_unit')
+          .eq('product_id', productId)
+          .order('min_quantity');
+        setPriceTiers((data || []) as PriceTier[]);
+      } catch {
+        setPriceTiers([]);
+      }
     }
   };
 
+  // Pre-fill buyer data from profile
   useEffect(() => {
     if (!open) {
       resetForm();
       setProducts([]);
       setLoadingProducts(false);
+      return;
     }
-  }, [open, supplierId]);
+
+    const loadProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nome, telefone, documento')
+        .eq('id', user.id)
+        .single();
+      if (profile) {
+        setBuyerName((profile as any).nome || '');
+        setBuyerPhone((profile as any).telefone || '');
+        setBuyerDocument((profile as any).documento || '');
+      }
+      // Try default address
+      const { data: addr } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_default', true)
+        .maybeSingle();
+      if (addr) {
+        setBuyerAddress(`${addr.street}, ${addr.number}${addr.complement ? ' - ' + addr.complement : ''}, ${addr.neighborhood}, ${addr.city}/${addr.state} - CEP ${addr.zip_code}`);
+        if (!buyerName && addr.name) setBuyerName(addr.name);
+        if (!buyerDocument && addr.document) setBuyerDocument(addr.document);
+      }
+    };
+    loadProfile();
+  }, [open]);
 
   useEffect(() => {
     if (!open || !supplierId) return;
-
     let isActive = true;
 
     const fetchProducts = async () => {
@@ -78,59 +171,54 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
       try {
         const { data, error } = await supabase
           .from('products')
-          .select('id, nome, preco')
+          .select('id, nome, preco, sale_unit, units_per_sale_unit, min_order_quantity, max_order_quantity')
           .eq('supplier_id', supplierId)
           .eq('ativo', true)
           .order('nome');
-        if (error) {
-          console.error('Error fetching products:', error);
-        }
-
+        if (error) console.error('Error fetching products:', error);
         if (!isActive) return;
 
         const nextProducts = (data || []) as SupplierProduct[];
         setProducts(nextProducts);
 
         if (nextProducts.length > 0) {
-          const firstProduct = nextProducts[0];
-          setSelectedProductId(firstProduct.id);
-          setProductName(firstProduct.nome);
-          setAgreedPrice(String(firstProduct.preco));
+          handleProductSelect(nextProducts[0].id);
         }
       } catch (err) {
         console.error('Error fetching products:', err);
       } finally {
-        if (isActive) {
-          setLoadingProducts(false);
-        }
+        if (isActive) setLoadingProducts(false);
       }
     };
 
     fetchProducts();
-
-    return () => {
-      isActive = false;
-    };
+    return () => { isActive = false; };
   }, [open, supplierId]);
 
   const handleSubmit = async () => {
-    const normalizedPrice = Number(agreedPrice);
-
-    if (!productName.trim() || Number.isNaN(normalizedPrice) || normalizedPrice <= 0 || quantity < 1) {
-      return;
-    }
+    if (!productName.trim() || totalEstimated <= 0 || quantity < 1) return;
 
     setSubmitting(true);
     try {
+      const buyerData: Record<string, any> = {};
+      if (buyerName) buyerData.nome = buyerName;
+      if (buyerDocument) buyerData.documento = buyerDocument;
+      if (buyerIE) buyerData.ie = buyerIE;
+      if (buyerPhone) buyerData.telefone = buyerPhone;
+      if (buyerAddress) buyerData.endereco = buyerAddress;
+
       await createNegotiation({
         supplier_id: supplierId,
         product_id: selectedProductId || undefined,
         product_name: productName,
         quantity,
-        agreed_price: normalizedPrice,
+        agreed_price: totalEstimated,
         payment_method: paymentMethod,
         expected_delivery: expectedDelivery || undefined,
         notes: notes || undefined,
+        buyer_data: Object.keys(buyerData).length > 0 ? buyerData : undefined,
+        sale_unit: saleUnit,
+        unit_price: effectivePrice,
       });
       onOpenChange(false);
       resetForm();
@@ -141,7 +229,7 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
     }
   };
 
-  const canSubmit = productName.trim().length > 0 && Number(agreedPrice) > 0 && quantity >= 1;
+  const canSubmit = productName.trim().length > 0 && totalEstimated > 0 && quantity >= 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -154,6 +242,7 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Product selection */}
           <div>
             <Label>Produto negociado</Label>
             {loadingProducts ? (
@@ -169,7 +258,7 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
               >
                 {products.map(p => (
                   <option key={p.id} value={p.id}>
-                    {p.nome}
+                    {p.nome} — {saleUnitLabels[p.sale_unit || 'unit'] || 'Unidade'}
                   </option>
                 ))}
               </select>
@@ -180,34 +269,60 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
                 placeholder="Nome do produto"
               />
             )}
-            {products.length > 0 && selectedProductId && (
-              <p className="text-xs text-muted-foreground mt-1">Produto e valor inicial preenchidos automaticamente.</p>
+          </div>
+
+          {/* Quantity and auto-calculated price */}
+          <div>
+            <Label>
+              Quantidade {selectedProduct ? `(${saleUnitLabels[saleUnit] || saleUnit})` : ''}
+            </Label>
+            <Input
+              type="number"
+              min={selectedProduct?.min_order_quantity || 1}
+              max={selectedProduct?.max_order_quantity || undefined}
+              value={quantity}
+              onChange={e => setQuantity(parseInt(e.target.value) || 1)}
+            />
+            {selectedProduct?.min_order_quantity && selectedProduct.min_order_quantity > 1 && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Mín. {selectedProduct.min_order_quantity} {saleUnitLabels[saleUnit]?.toLowerCase() || 'un.'}
+              </p>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Quantidade</Label>
-              <Input
-                type="number"
-                min={1}
-                value={quantity}
-                onChange={e => setQuantity(parseInt(e.target.value) || 1)}
-              />
+          {/* Price breakdown */}
+          {selectedProduct && (
+            <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-1">
+                <Calculator className="h-3.5 w-3.5" />
+                Cálculo automático
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Preço por {saleUnitLabels[saleUnit]?.toLowerCase() || 'un.'}:</span>
+                <span className="font-medium">{formatCurrency(effectivePrice)}</span>
+              </div>
+              {saleUnit !== 'unit' && saleUnit !== 'pair' && unitsPerSaleUnit > 1 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{quantity} {saleUnitLabels[saleUnit]?.toLowerCase()} × {unitsPerSaleUnit} un.</span>
+                  <span>= {totalUnits} unidades</span>
+                </div>
+              )}
+              {priceTiers.length > 0 && (
+                <p className="text-[10px] text-muted-foreground">
+                  Preço por faixa de quantidade aplicado automaticamente
+                </p>
+              )}
+              <div className="flex justify-between text-sm font-bold pt-1 border-t border-border">
+                <span>Total estimado:</span>
+                <span className="text-primary">{formatCurrency(totalEstimated)}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                O fornecedor pode ajustar o valor final ao aceitar a negociação
+              </p>
             </div>
-            <div>
-              <Label>Valor combinado (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min={0}
-                value={agreedPrice}
-                onChange={e => setAgreedPrice(e.target.value)}
-                placeholder="0,00"
-              />
-            </div>
-          </div>
+          )}
 
+          {/* Payment method */}
           <div>
             <Label>Forma de pagamento combinada</Label>
             <select
@@ -239,8 +354,48 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Detalhes adicionais da negociação..."
-              rows={3}
+              rows={2}
             />
+          </div>
+
+          {/* Buyer data for NF (collapsible) */}
+          <div className="border rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowBuyerData(!showBuyerData)}
+              className="flex items-center justify-between w-full p-3 text-sm font-medium text-left hover:bg-muted/50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                Dados para Nota Fiscal
+              </span>
+              {showBuyerData ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+            {showBuyerData && (
+              <div className="p-3 pt-0 space-y-3">
+                <p className="text-[10px] text-muted-foreground">Pré-preenchido do seu perfil. O fornecedor usará esses dados para emitir a NF.</p>
+                <div>
+                  <Label className="text-xs">Nome / Razão Social</Label>
+                  <Input value={buyerName} onChange={e => setBuyerName(e.target.value)} placeholder="Nome completo ou razão social" />
+                </div>
+                <div>
+                  <Label className="text-xs">CPF / CNPJ</Label>
+                  <Input value={buyerDocument} onChange={e => setBuyerDocument(e.target.value)} placeholder="000.000.000-00" />
+                </div>
+                <div>
+                  <Label className="text-xs">Inscrição Estadual (opcional)</Label>
+                  <Input value={buyerIE} onChange={e => setBuyerIE(e.target.value)} placeholder="Isento ou número" />
+                </div>
+                <div>
+                  <Label className="text-xs">Telefone</Label>
+                  <Input value={buyerPhone} onChange={e => setBuyerPhone(e.target.value)} placeholder="(00) 00000-0000" />
+                </div>
+                <div>
+                  <Label className="text-xs">Endereço completo</Label>
+                  <Textarea value={buyerAddress} onChange={e => setBuyerAddress(e.target.value)} placeholder="Rua, número, bairro, cidade/UF, CEP" rows={2} />
+                </div>
+              </div>
+            )}
           </div>
 
           <Button onClick={handleSubmit} disabled={submitting || !canSubmit} className="w-full">
