@@ -160,9 +160,9 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Stats Cards - 3 key metrics on mobile, all on desktop */}
-      <div className="grid grid-cols-2 gap-3 md:hidden">
-        {stats.filter(s => ['Faturamento', 'Negociações', 'Avaliações', 'Produtos', 'Visitas'].includes(s.title)).map((card) => (
+      {/* Stats Cards - 1 per row on mobile, all on desktop */}
+      <div className="grid grid-cols-1 gap-3 md:hidden">
+        {stats.map((card) => (
           <StatCard key={card.title} {...card} />
         ))}
       </div>
