@@ -79,7 +79,7 @@ const MeusPedidos = () => {
   const filtro = searchParams.get("filtro");
 
   const getFilteredOrders = () => {
-    if (filtro === 'a-pagar') return orders.filter(o => o.payment_status === 'pending');
+    if (filtro === 'a-pagar') return orders.filter(o => o.order_status === 'pending');
     if (filtro === 'a-enviar') return orders.filter(o => o.order_status === 'preparing');
     if (filtro === 'a-receber') return orders.filter(o => o.order_status === 'shipped');
     return null;
@@ -108,20 +108,6 @@ const MeusPedidos = () => {
     }
   };
 
-  const getPaymentStatusInfo = (status: string) => {
-    switch (status) {
-      case "paid":
-        return { label: "Pago", color: "bg-green-100 text-green-700", icon: CheckCircle };
-      case "pending":
-        return { label: "Pendente", color: "bg-yellow-100 text-yellow-700", icon: Clock };
-      case "refunded":
-        return { label: "Reembolsado", color: "bg-blue-100 text-blue-700", icon: CreditCard };
-      case "cancelled":
-        return { label: "Cancelado", color: "bg-red-100 text-red-700", icon: XCircle };
-      default:
-        return { label: "Pendente", color: "bg-gray-100 text-gray-700", icon: Clock };
-    }
-  };
 
   const getCurrentStepIndex = (status: string) => {
     if (status === 'cancelled') return -1;
@@ -186,9 +172,7 @@ const MeusPedidos = () => {
 
   const renderOrderCard = (order: any) => {
     const statusInfo = getStatusInfo(order.order_status);
-    const paymentInfo = getPaymentStatusInfo(order.payment_status);
     const StatusIcon = statusInfo.icon;
-    const PaymentIcon = paymentInfo.icon;
     const items = Array.isArray(order.itens) ? order.itens : [];
     const firstImage = items[0]?.image || items[0]?.imagem;
     
@@ -222,10 +206,6 @@ const MeusPedidos = () => {
                 }
               </p>
               <div className="flex items-center gap-3 mt-2">
-                <Badge variant="outline" className={`text-xs ${paymentInfo.color} border-0`}>
-                  <PaymentIcon className="h-3 w-3 mr-1" />
-                  {paymentInfo.label}
-                </Badge>
                 <span className="font-bold text-primary">
                   R$ {Number(order.total).toFixed(2).replace('.', ',')}
                 </span>
