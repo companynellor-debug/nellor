@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
