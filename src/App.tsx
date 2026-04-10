@@ -84,7 +84,7 @@ const AdminIndicadores = lazy(() => import("./pages/admin/Indicadores"));
 const AdminUsuarios = lazy(() => import("./pages/admin/Usuarios"));
 const AdminFornecedores = lazy(() => import("./pages/admin/Fornecedores"));
 const AdminVendas = lazy(() => import("./pages/admin/Vendas"));
-const AdminFinanceiro = lazy(() => import("./pages/admin/Financeiro"));
+// AdminFinanceiro removido — modelo de pagamento legado
 const AdminRelatorios = lazy(() => import("./pages/admin/Relatorios"));
 const AdminAlertas = lazy(() => import("./pages/admin/Alertas"));
 const AdminConfiguracoes = lazy(() => import("./pages/admin/Configuracoes"));
@@ -239,7 +239,7 @@ const App = () => {
                 <Route path="usuarios" element={<Suspense fallback={<PageSkeleton />}><AdminUsuarios /></Suspense>} />
                 <Route path="fornecedores" element={<Suspense fallback={<PageSkeleton />}><AdminFornecedores /></Suspense>} />
                 <Route path="vendas" element={<Suspense fallback={<PageSkeleton />}><AdminVendas /></Suspense>} />
-                <Route path="financeiro" element={<Suspense fallback={<PageSkeleton />}><AdminFinanceiro /></Suspense>} />
+                {/* financeiro admin removido */}
                 <Route path="relatorios" element={<Suspense fallback={<PageSkeleton />}><AdminRelatorios /></Suspense>} />
                 <Route path="alertas" element={<Suspense fallback={<PageSkeleton />}><AdminAlertas /></Suspense>} />
                 <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><AdminConfiguracoes /></Suspense>} />

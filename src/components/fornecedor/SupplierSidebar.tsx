@@ -1,4 +1,4 @@
-import { Home, Handshake, MessageSquare, Tag, DollarSign, Bell, Store, BarChart3, Megaphone, BookOpen, FileText } from "lucide-react";
+import { Home, Handshake, MessageSquare, Tag, Bell, Store, BarChart3, Megaphone, BookOpen, FileText } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
@@ -12,7 +12,6 @@ const menuItems = [
   { title: "Chat", url: "/fornecedor/chat", icon: MessageSquare },
   { title: "Produtos", url: "/fornecedor/produtos", icon: Tag },
   { title: "Estatísticas", url: "/fornecedor/estatisticas", icon: BarChart3 },
-  { title: "Financeiro", url: "/fornecedor/financeiro", icon: DollarSign },
   { title: "Patrocínio", url: "/fornecedor/patrocinio", icon: Megaphone },
   { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
