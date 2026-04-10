@@ -36,6 +36,8 @@ interface AdminDispute {
   buyer_data: Record<string, any> | null;
   invoice_url: string | null;
   negotiation_status: string | null;
+  cancel_reason: string | null;
+  refund_state: string | null;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -269,7 +271,33 @@ const Disputas = () => {
               {selectedDispute.payment_contested_reason && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Motivo da contestação:</p>
-                  <p className="text-sm bg-red-50 dark:bg-red-950/30 p-2 rounded text-red-700">{selectedDispute.payment_contested_reason}</p>
+                  <p className="text-sm bg-destructive/10 p-2 rounded text-destructive">{selectedDispute.payment_contested_reason}</p>
+                </div>
+              )}
+
+              {/* Cancel reason */}
+              {selectedDispute.cancel_reason && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Motivo do cancelamento:</p>
+                  <p className="text-sm bg-muted p-2 rounded">{selectedDispute.cancel_reason}</p>
+                </div>
+              )}
+
+              {/* Refund state */}
+              {selectedDispute.refund_state && selectedDispute.refund_state !== 'none' && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Estado do reembolso:</p>
+                  <Badge className={
+                    selectedDispute.refund_state === 'buyer_confirmed' ? 'bg-green-100 text-green-700' :
+                    selectedDispute.refund_state === 'buyer_denied' ? 'bg-destructive/10 text-destructive' :
+                    selectedDispute.refund_state === 'supplier_confirmed' ? 'bg-blue-100 text-blue-700' :
+                    'bg-orange-100 text-orange-700'
+                  }>
+                    {selectedDispute.refund_state === 'pending' && 'Pendente'}
+                    {selectedDispute.refund_state === 'supplier_confirmed' && 'Fornecedor confirmou'}
+                    {selectedDispute.refund_state === 'buyer_confirmed' && 'Comprador confirmou'}
+                    {selectedDispute.refund_state === 'buyer_denied' && 'Comprador negou recebimento'}
+                  </Badge>
                 </div>
               )}
 
@@ -327,7 +355,7 @@ const Disputas = () => {
                     <Button
                       onClick={() => handleAdminAction(selectedDispute.id, 'suspend_supplier')}
                       variant="outline"
-                      className="gap-1 text-red-600 border-red-200"
+                      className="gap-1 text-destructive border-destructive/20"
                       size="sm"
                       disabled={resolving}
                     >
