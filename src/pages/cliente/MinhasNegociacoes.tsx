@@ -212,39 +212,49 @@ const MinhasNegociacoes = () => {
                 </div>
 
                 {/* SHIPPED: Show confirmation buttons - buyer must confirm */}
-                {isShipped && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 dark:bg-orange-950/30 rounded p-2 mb-2">
-                      <Truck className="h-3.5 w-3.5" />
-                      <span className="font-medium">Fornecedor confirmou o envio. Confirme quando receber.</span>
+                {isShipped && (() => {
+                  const timing = getTimeUntilAllowed(neg as any);
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 dark:bg-orange-950/30 rounded p-2 mb-2">
+                        <Truck className="h-3.5 w-3.5" />
+                        <span className="font-medium">Fornecedor confirmou o envio. Confirme quando receber.</span>
+                      </div>
+                      {!timing.allowed && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 rounded p-2">
+                          <ShieldAlert className="h-3.5 w-3.5" />
+                          <span>Confirmação disponível em {formatCountdown(timing.remainingMs)} (segurança anti-fraude)</span>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
+                          onClick={() => handleConfirmDelivery(neg)}
+                          disabled={!timing.allowed}
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          {timing.allowed ? 'Sim, recebi' : formatCountdown(timing.remainingMs)}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`flex-1 gap-1 ${canDispute ? 'text-destructive border-destructive/30' : 'text-muted-foreground'}`}
+                          onClick={() => handleNotReceived(neg)}
+                          disabled={!canDispute}
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          Não recebi
+                        </Button>
+                      </div>
+                      {!canDispute && neg.expected_delivery && (
+                        <p className="text-[10px] text-muted-foreground text-center">
+                          Poderá abrir disputa a partir de {new Date(new Date(neg.expected_delivery).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
-                        onClick={() => handleConfirmDelivery(neg)}
-                      >
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Sim, recebi
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className={`flex-1 gap-1 ${canDispute ? 'text-destructive border-destructive/30' : 'text-muted-foreground'}`}
-                        onClick={() => handleNotReceived(neg)}
-                        disabled={!canDispute}
-                      >
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        Não recebi
-                      </Button>
-                    </div>
-                    {!canDispute && neg.expected_delivery && (
-                      <p className="text-[10px] text-muted-foreground text-center">
-                        Poderá abrir disputa a partir de {new Date(new Date(neg.expected_delivery).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
-                      </p>
-                    )}
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* ACCEPTED + delivery date passed: warn buyer */}
                 {isAcceptedAndDue && (
