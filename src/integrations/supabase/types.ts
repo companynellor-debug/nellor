@@ -1535,6 +1535,38 @@ export type Database = {
           },
         ]
       }
+      product_views: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          viewer_id: string | null
+          visitor_fingerprint: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          viewer_id?: string | null
+          visitor_fingerprint?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          viewer_id?: string | null
+          visitor_fingerprint?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_views_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           affiliate_commission_percent: number | null
@@ -3544,6 +3576,13 @@ export type Database = {
           products_in_drop: number
           total_orders: number
           total_sales: number
+        }[]
+      }
+      get_supplier_product_views: {
+        Args: { _supplier_id: string }
+        Returns: {
+          total_views: number
+          views_last_30_days: number
         }[]
       }
       get_supplier_subscription: {

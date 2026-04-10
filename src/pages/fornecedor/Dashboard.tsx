@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Bell, Handshake, MessageSquare, Truck, CheckCircle, Star, Package } from "lucide-react";
+import { Loader2, Bell, Handshake, MessageSquare, Truck, CheckCircle, Star, Package, DollarSign, Eye } from "lucide-react";
 import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -64,6 +64,8 @@ const Dashboard = () => {
   const [totalConversations, setTotalConversations] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
   const [negotiations, setNegotiations] = useState<any[]>([]);
+  const [totalViews, setTotalViews] = useState(0);
+  const [viewsLast30, setViewsLast30] = useState(0);
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -91,6 +93,16 @@ const Dashboard = () => {
         .eq('supplier_id', profile.id)
         .order('created_at', { ascending: false });
       setNegotiations((negData || []) as any[]);
+
+      // Fetch product views
+      const { data: viewsData } = await supabase.rpc('get_supplier_product_views', { _supplier_id: profile.id });
+      if (viewsData && Array.isArray(viewsData) && viewsData.length > 0) {
+        setTotalViews(Number(viewsData[0].total_views) || 0);
+        setViewsLast30(Number(viewsData[0].views_last_30_days) || 0);
+      } else if (viewsData && !Array.isArray(viewsData)) {
+        setTotalViews(Number((viewsData as any).total_views) || 0);
+        setViewsLast30(Number((viewsData as any).views_last_30_days) || 0);
+      }
     };
 
     fetchMetrics();
@@ -100,6 +112,11 @@ const Dashboard = () => {
   const acceptedNegotiations = negotiations.filter(n => n.status === 'accepted').length;
   const shippedNegotiations = negotiations.filter(n => n.status === 'shipped').length;
   const deliveredNegotiations = negotiations.filter(n => n.status === 'delivered').length;
+
+  // Faturamento: soma de agreed_price * quantity das negociações entregues
+  const faturamento = negotiations
+    .filter(n => n.status === 'delivered')
+    .reduce((sum, n) => sum + (Number(n.agreed_price) * Number(n.quantity)), 0);
 
   const activityData = (() => {
     const monthsData: Record<string, number> = {};
@@ -120,12 +137,14 @@ const Dashboard = () => {
   })();
 
   const stats = [
-    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageSquare, borderColor: "border-purple-500" },
+    { title: "Faturamento", value: `R$ ${faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, subtitle: "Total entregue", icon: DollarSign, borderColor: "border-emerald-500" },
     { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, borderColor: "border-blue-500" },
-    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, borderColor: "border-orange-500" },
-    { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, borderColor: "border-green-500" },
     { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, borderColor: "border-yellow-500" },
     { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Package, borderColor: "border-cyan-500" },
+    { title: "Visitas", value: totalViews, subtitle: `${viewsLast30} nos últimos 30 dias`, icon: Eye, borderColor: "border-indigo-500" },
+    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageSquare, borderColor: "border-purple-500" },
+    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, borderColor: "border-orange-500" },
+    { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, borderColor: "border-green-500" },
   ];
 
   return (
@@ -142,12 +161,12 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards - 3 key metrics on mobile, all on desktop */}
-      <div className="grid grid-cols-1 gap-3 md:hidden">
-        {stats.filter(s => ['Negociações', 'Produtos', 'Avaliações'].includes(s.title)).map((card) => (
+      <div className="grid grid-cols-2 gap-3 md:hidden">
+        {stats.filter(s => ['Faturamento', 'Negociações', 'Avaliações', 'Produtos', 'Visitas'].includes(s.title)).map((card) => (
           <StatCard key={card.title} {...card} />
         ))}
       </div>
-      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-4 gap-3">
         {stats.map((card) => (
           <StatCard key={card.title} {...card} />
         ))}
