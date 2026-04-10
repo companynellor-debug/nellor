@@ -3370,6 +3370,10 @@ export type Database = {
         Args: { _application_id: string; _reason: string }
         Returns: boolean
       }
+      admin_resolve_negotiation_dispute: {
+        Args: { p_action: string; p_admin_notes?: string; p_dispute_id: string }
+        Returns: undefined
+      }
       admin_update_report: {
         Args: { _report_id: string; _status: string }
         Returns: boolean
@@ -3489,13 +3493,22 @@ export type Database = {
         Returns: {
           admin_notes: string
           agreed_price: number
+          buyer_data: Json
           buyer_id: string
           buyer_name: string
           created_at: string
           description: string
           id: string
+          invoice_url: string
           negotiation_id: string
+          negotiation_status: string
+          payment_contested_reason: string
+          payment_method: string
+          payment_proof_url: string
+          payment_reference: string
+          payment_state: string
           product_name: string
+          quantity: number
           reason: string
           resolved_at: string
           status: string
