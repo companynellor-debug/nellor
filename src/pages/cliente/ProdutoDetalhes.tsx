@@ -329,7 +329,7 @@ const ProdutoDetalhes = () => {
   const displayPriceNumber = selectedVariation?.price ?? product.priceNumber;
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-6">
+    <div className="min-h-screen bg-background pb-24 md:pb-6">
       <ParticlesBackground />
 
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
