@@ -160,7 +160,7 @@ const ClienteHome = () => {
                   {mainBanners.map((banner) =>
                 <CarouselItem key={banner.id}>
                       <div className="relative overflow-hidden rounded-3xl cursor-pointer shadow-lg hover:shadow-xl transition-shadow" onClick={() => banner.link_url && navigate(banner.link_url)}>
-                        <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-56 md:h-80 lg:h-[420px] object-cover" />
+                        <img src={banner.image_url} alt={banner.title || "Banner"} className="w-full h-40 md:h-80 lg:h-[420px] object-cover" />
                       </div>
                     </CarouselItem>
                 )}
@@ -352,7 +352,7 @@ const ClienteHome = () => {
               Ver Mais <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {filteredProducts.map((product) =>
             <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`}>
                 <Card className="bg-background border overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group h-full rounded-2xl shadow-sm">
