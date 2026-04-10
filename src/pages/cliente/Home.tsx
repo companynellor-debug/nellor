@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Heart, Bell, Bookmark, ChevronRight, X, Download, Smartphone, CheckCircle2, Package, Sparkles, HelpCircle, FileText } from "lucide-react";
+import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
