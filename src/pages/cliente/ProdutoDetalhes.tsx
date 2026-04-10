@@ -367,7 +367,8 @@ const ProdutoDetalhes = () => {
                 ))}
               </div>
               <div className="flex-1 order-2">
-                <div className="aspect-square rounded-3xl overflow-hidden bg-muted max-w-lg mx-auto lg:max-w-none shadow-lg">
+                {/* Mobile: image takes ~60% of viewport height */}
+                <div className="aspect-[4/5] md:aspect-square rounded-3xl overflow-hidden bg-muted max-w-lg mx-auto lg:max-w-none shadow-lg">
                   <img src={displayImages[selectedImage] || product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex gap-2 justify-center mt-4 lg:hidden">
@@ -817,14 +818,10 @@ const ProdutoDetalhes = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Mobile buttons */}
-        <div className="fixed bottom-20 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-sm p-4 z-30 lg:hidden">
-          <div className="container mx-auto flex gap-3">
-            <Button variant="outline" className="flex-1 border-primary text-primary hover:bg-primary/10 gap-2"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); validateAndAddToCart(1, '/cliente/carrinho'); }}>
-              <Heart className="h-5 w-5" />Salvar
-            </Button>
-            <Button className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2"
+        {/* Mobile fixed negotiate button */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-lg p-3 z-30 md:hidden safe-area-pb">
+          <div className="container mx-auto">
+            <Button className="w-full bg-foreground hover:bg-foreground/90 text-background h-14 text-base font-bold gap-2 rounded-2xl"
               onClick={() => {
                 if (!product.supplierProfileId) return;
                 navigate('/cliente/chat', {
@@ -834,7 +831,8 @@ const ProdutoDetalhes = () => {
                   }
                 });
               }}>
-              <img src={nellorIcon} alt="Nellor" className="h-5 w-5" />Negociar
+              <img src={nellorIcon} alt="Nellor" className="h-5 w-5" />
+              Negociar com Fornecedor
             </Button>
           </div>
         </div>
