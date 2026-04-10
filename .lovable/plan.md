@@ -1,33 +1,29 @@
 
 
-## Adaptação: Remover Lógica de Pagamento e Simplificar Cancelamento
+## Segurança de Pagamento Offline, Formulário Inteligente e NF
 
-### Contexto
-A plataforma não processa pagamentos — são feitos diretamente entre as partes. O código atual tem referências a `payment_status`, taxas da plataforma, e regras de cancelamento baseadas em pagamento que não se aplicam.
+### Implementado
 
-### Mudanças
+**1. Segurança Anti-Fraude (Pagamento Offline)**
+- Comprador informa pagamento ("Já paguei") com comprovante ou referência
+- Após informar pagamento, fornecedor NÃO pode cancelar — só contestar com motivo
+- Comprador pode cancelar apenas enquanto `pending` e sem pagamento informado
+- Fornecedor pode cancelar apenas se `pending`/`accepted` e sem pagamento informado
+- Triggers validam no banco: `validate_negotiation_status_transition` e `validate_order_status_transition`
+- Subfluxo: `not_reported → reported_by_buyer → confirmed_by_supplier | contested_by_supplier`
 
-**1. Migração SQL — Simplificar trigger de cancelamento**
-- Remover checagem de `payment_status` do trigger `validate_order_status_transition`
-- Novas regras de cancelamento:
-  - **Comprador**: pode cancelar se status é `pending` (antes do fornecedor aceitar)
-  - **Fornecedor**: pode cancelar se status é `pending` ou `preparing` (antes de enviar)
-  - **Ninguém** cancela após `shipped` ou `delivered`
+**2. Formulário de Negociação Inteligente**
+- Cálculo automático de valor baseado em `sale_unit`, `units_per_sale_unit`, `product_price_tiers`
+- Exibe preço por unidade/caixa/fardo e total estimado
+- Seção colapsável "Dados para NF" pré-preenchida do perfil/endereço
+- Dados salvos como snapshot na negociação (`buyer_data` JSONB)
 
-**2. Fornecedor (`Pedidos.tsx`)**
-- Remover toda seção de `payment_status` (badges, resumo financeiro, taxa Nellor, valor líquido)
-- Remover `getPaymentStatusBadge`, `getTransferStatus`, `calculateOrderBreakdown`
-- Simplificar botão de cancelar: mostrar quando status é `pending` ou `preparing`, sem checagem de pagamento
-- Remover mensagens sobre "pedido já pago"
+**3. Nota Fiscal**
+- Fornecedor faz upload de NF (PDF/imagem) direto na negociação
+- Comprador baixa NF na tela de negociações
+- Bucket `invoices` no Supabase Storage
 
-**3. Cliente (`MeusPedidos.tsx`)**
-- Remover referências a `payment_status` e `getPaymentStatusInfo`
-- Manter botão "Cancelar Pedido" apenas quando `pending`
-- Remover ícone/import `CreditCard` se não usado em outro lugar
-
-**4. Hook (`useSupabaseOrders.tsx`)**
-- Remover referências desnecessárias a `payment_status` na lógica de UI (manter o campo no tipo caso o banco tenha)
-
-### Resultado
-Interface limpa, sem campos de pagamento irrelevantes, com regras de cancelamento simples e claras baseadas apenas no status do pedido.
-
+**4. Botões de Cancelamento**
+- Buyer: botão "Cancelar" visível em `pending` (some se pagamento informado)
+- Supplier: botão "Recusar/Cancelar" visível em `pending`/`accepted` (some se pagamento informado)
+- Bloqueado para ambos após `shipped`/`delivered`
