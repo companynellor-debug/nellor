@@ -23,7 +23,7 @@ const MinhasNegociacoes = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeFilter = searchParams.get("filtro") || "todas";
   const { user } = useSupabaseAuth();
-  const { negotiations, confirmDelivery, updateNegotiationStatus, reportPayment, buyerCancel } = useNegotiations();
+  const { negotiations, confirmDelivery, updateNegotiationStatus, reportPayment, buyerCancel, buyerConfirmRefund } = useNegotiations();
   const { createDispute } = useDisputes();
   const { createReview } = useSupabaseReviews();
 
@@ -272,12 +272,45 @@ const MinhasNegociacoes = () => {
 
                 {/* Payment contested warning */}
                 {neg.payment_state === 'contested_by_supplier' && neg.payment_contested_reason && (
-                  <div className="flex items-start gap-1.5 text-xs text-red-600 bg-red-50 dark:bg-red-950/30 rounded p-2 mb-2">
+                  <div className="flex items-start gap-1.5 text-xs text-destructive bg-destructive/10 rounded p-2 mb-2">
                     <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
                     <div>
                       <span className="font-medium">Pagamento contestado pelo fornecedor: </span>
                       <span>{neg.payment_contested_reason}</span>
                     </div>
+                  </div>
+                )}
+
+                {/* Refund confirmation banner */}
+                {neg.refund_state === 'supplier_confirmed' && (
+                  <div className="bg-orange-50 dark:bg-orange-950/30 rounded-lg p-3 space-y-2 mb-2">
+                    <p className="text-xs font-medium text-orange-700">
+                      💰 O fornecedor informou que reembolsou. Você recebeu o valor?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 gap-1" onClick={() => buyerConfirmRefund(neg.id, true)}>
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Sim, recebi
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1 text-destructive border-destructive/30 gap-1" onClick={() => buyerConfirmRefund(neg.id, false)}>
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Não recebi
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Refund denied - escalated */}
+                {neg.refund_state === 'buyer_denied' && (
+                  <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2 mb-2">
+                    ⚠️ Disputa aberta — aguardando resolução do administrador
+                  </div>
+                )}
+
+                {/* Refund pending from supplier */}
+                {neg.refund_state === 'pending' && neg.status === 'cancelled' && (
+                  <div className="text-xs text-orange-600 bg-orange-50 dark:bg-orange-950/30 rounded p-2 mb-2">
+                    ⏳ Aguardando fornecedor realizar o reembolso
                   </div>
                 )}
 

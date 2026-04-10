@@ -1007,6 +1007,7 @@ export type Database = {
           buyer_confirmed_delivery: boolean | null
           buyer_data: Json | null
           buyer_id: string
+          cancel_reason: string | null
           created_at: string
           delivery_check_sent: boolean | null
           delivery_confirmed_at: string | null
@@ -1024,6 +1025,7 @@ export type Database = {
           product_id: string | null
           product_name: string
           quantity: number
+          refund_state: string
           sale_unit: string | null
           shipping_confirmed_at: string | null
           status: string
@@ -1037,6 +1039,7 @@ export type Database = {
           buyer_confirmed_delivery?: boolean | null
           buyer_data?: Json | null
           buyer_id: string
+          cancel_reason?: string | null
           created_at?: string
           delivery_check_sent?: boolean | null
           delivery_confirmed_at?: string | null
@@ -1054,6 +1057,7 @@ export type Database = {
           product_id?: string | null
           product_name: string
           quantity?: number
+          refund_state?: string
           sale_unit?: string | null
           shipping_confirmed_at?: string | null
           status?: string
@@ -1067,6 +1071,7 @@ export type Database = {
           buyer_confirmed_delivery?: boolean | null
           buyer_data?: Json | null
           buyer_id?: string
+          cancel_reason?: string | null
           created_at?: string
           delivery_check_sent?: boolean | null
           delivery_confirmed_at?: string | null
@@ -1084,6 +1089,7 @@ export type Database = {
           product_id?: string | null
           product_name?: string
           quantity?: number
+          refund_state?: string
           sale_unit?: string | null
           shipping_confirmed_at?: string | null
           status?: string

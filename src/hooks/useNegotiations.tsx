@@ -33,6 +33,9 @@ export interface Negotiation {
   sale_unit: string | null;
   unit_price: number | null;
   invoice_url: string | null;
+  // Cancellation & refund
+  cancel_reason: string | null;
+  refund_state: 'none' | 'pending' | 'supplier_confirmed' | 'buyer_confirmed' | 'buyer_denied';
 }
 
 // Minimum time intervals (in ms) for anti-fraud
@@ -118,10 +121,14 @@ export const useNegotiations = (filterSupplierId?: string) => {
     buyer_data?: Record<string, any>;
     sale_unit?: string;
     unit_price?: number;
+    payment_proof_url?: string;
+    payment_reference?: string;
   }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
+
+      const hasPaymentProof = !!(data.payment_proof_url || data.payment_reference);
 
       const insertData = {
         buyer_id: user.id,
@@ -136,6 +143,12 @@ export const useNegotiations = (filterSupplierId?: string) => {
         buyer_data: data.buyer_data || null,
         sale_unit: data.sale_unit || null,
         unit_price: data.unit_price || null,
+        ...(hasPaymentProof ? {
+          payment_state: 'reported_by_buyer',
+          payment_reported_at: new Date().toISOString(),
+          payment_proof_url: data.payment_proof_url || null,
+          payment_reference: data.payment_reference || null,
+        } : {}),
       };
 
       const { data: result, error } = await supabase
@@ -378,12 +391,71 @@ export const useNegotiations = (filterSupplierId?: string) => {
     });
   };
 
-  const supplierCancel = async (id: string) => {
-    return updateNegotiationStatus(id, 'cancelled');
+  const supplierCancel = async (id: string, cancelReason?: string) => {
+    return updateNegotiationStatus(id, 'cancelled', { cancel_reason: cancelReason || null });
   };
 
   const buyerCancel = async (id: string) => {
     return updateNegotiationStatus(id, 'cancelled');
+  };
+
+  const confirmRefund = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('negotiations')
+        .update({
+          refund_state: 'supplier_confirmed',
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Reembolso informado', description: 'O comprador será notificado para confirmar.' });
+      await fetchNegotiations();
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const buyerConfirmRefund = async (id: string, received: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const newState = received ? 'buyer_confirmed' : 'buyer_denied';
+      const { error } = await supabase
+        .from('negotiations')
+        .update({
+          refund_state: newState,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', id)
+        .eq('buyer_id', user.id);
+      if (error) throw error;
+
+      if (!received) {
+        // Auto-create dispute for admin
+        const neg = negotiations.find(n => n.id === id);
+        if (neg) {
+          await supabase
+            .from('disputes')
+            .insert([{
+              negotiation_id: id,
+              buyer_id: user.id,
+              supplier_id: neg.supplier_id,
+              reason: 'refund_not_received',
+              description: 'Comprador nega ter recebido o reembolso informado pelo fornecedor.',
+            }] as any);
+        }
+      }
+
+      toast({
+        title: received ? 'Reembolso confirmado' : 'Reembolso negado',
+        description: received ? 'Obrigado por confirmar.' : 'Uma disputa foi aberta para o administrador.',
+      });
+      await fetchNegotiations();
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    }
   };
 
   return {
@@ -400,6 +472,8 @@ export const useNegotiations = (filterSupplierId?: string) => {
     confirmPaymentReceived,
     contestPayment,
     uploadInvoice,
+    confirmRefund,
+    buyerConfirmRefund,
     refetch: fetchNegotiations
   };
 };
