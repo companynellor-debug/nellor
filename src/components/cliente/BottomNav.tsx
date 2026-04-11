@@ -14,7 +14,7 @@ export const BottomNav = () => {
   const activeIndex = navItems.findIndex((item) => location.pathname === item.path);
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
+    <nav className="fixed bottom-4 left-4 right-4 z-50">
       <div className="relative max-w-md mx-auto">
         <div className="flex items-center justify-around h-16 px-6 rounded-2xl bg-background/80 backdrop-blur-xl border border-border/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
           {navItems.map((item, index) => {

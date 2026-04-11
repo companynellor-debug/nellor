@@ -127,31 +127,6 @@ const ClienteHome = () => {
               </button>
             </div>
           </div>
-          {/* Desktop Navigation Bar */}
-          <nav className="hidden md:flex items-center gap-1 py-2 border-t border-border/50">
-            {[
-              { label: "Início", path: "/cliente" },
-              { label: "Produtos", path: "/cliente/produtos" },
-              { label: "Chat", path: "/cliente/chat" },
-              { label: "Interesses", path: "/cliente/favoritos" },
-              { label: "Negociações", path: "/cliente/minhas-negociacoes" },
-              { label: "Meus Pedidos", path: "/cliente/meus-pedidos" },
-              { label: "Cotações", path: "/cliente/cotacoes" },
-              { label: "Perfil", path: "/cliente/perfil" },
-            ].map((item) => (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  location.pathname === item.path
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
         </div>
       </header>
 
