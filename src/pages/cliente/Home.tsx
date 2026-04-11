@@ -24,6 +24,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useProductVariations } from "@/hooks/useProductVariations";
 import { getColorHex } from "@/utils/colorMap";
 import { useSponsoredProducts } from "@/hooks/useSponsoredProducts";
+import { useClientOnboardingTour } from "@/hooks/useClientOnboardingTour";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 const ProductCardColorDots = ({ productId }: {productId: string;}) => {
   const { variations } = useProductVariations(productId);
@@ -63,6 +65,16 @@ const ClienteHome = () => {
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showStripeReturnBanner, setShowStripeReturnBanner] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { startTour } = useClientOnboardingTour();
+  const { profile } = useSupabaseAuth();
+
+  // Auto-start tour for first-time clients
+  useEffect(() => {
+    if (profile && profile.tipo === 'cliente' && profile.client_onboarding_completed === false) {
+      const t = setTimeout(() => startTour(), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [profile, startTour]);
 
   useEffect(() => {
     if (searchParams.get("stripe_return") === "1") {
@@ -102,7 +114,7 @@ const ClienteHome = () => {
           <div className="flex items-center justify-between gap-4 py-4">
             <img src={logo} alt="Nellor" className="h-10 lg:h-12 w-auto cursor-pointer" onClick={() => navigate("/cliente")} />
             <div className="flex-1 max-w-2xl hidden md:block">
-              <div className="relative" onClick={() => setSearchOpen(true)}>
+              <div className="relative" onClick={() => setSearchOpen(true)} id="home-search-bar">
                 <Input placeholder="Buscar produtos, marcas e muito mais..." className="pl-4 pr-12 py-6 bg-muted border-input focus:border-primary cursor-pointer text-base" readOnly />
                 <button className="absolute right-0 top-0 h-full px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-r-md">
                   <Search className="h-5 w-5" />
@@ -355,8 +367,8 @@ const ClienteHome = () => {
             </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-            {filteredProducts.map((product) =>
-            <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`}>
+            {filteredProducts.map((product, idx) =>
+            <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`} {...(idx === 0 ? { "data-tour": "product-card" } : {})}>
                 <Card className="bg-background border overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group h-full rounded-2xl shadow-sm">
                   <div className="aspect-square overflow-hidden relative rounded-t-2xl">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />

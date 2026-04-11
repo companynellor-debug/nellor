@@ -17,6 +17,7 @@ interface Profile {
   descricao_loja?: string;
   endereco_principal?: any;
   onboarding_completed: boolean;
+  client_onboarding_completed?: boolean;
   ativo: boolean;
   shipping_city?: string | null;
   shipping_state?: string | null;
@@ -55,7 +56,7 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const initInProgressRef = useRef(true);
   const getSessionResolvedRef = useRef(false);
 
-  const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo, shipping_city, shipping_state, store_slug, phone_verified';
+  const PROFILE_SELECT = 'id, nome, email, tipo, document, telefone, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, client_onboarding_completed, ativo, shipping_city, shipping_state, store_slug, phone_verified';
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

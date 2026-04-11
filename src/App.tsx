@@ -55,6 +55,7 @@ const SolicitarFornecedor = lazy(() => import("./pages/cliente/SolicitarForneced
 const MinhasNegociacoes = lazy(() => import("./pages/cliente/MinhasNegociacoes"));
 const CompararFornecedores = lazy(() => import("./pages/cliente/CompararFornecedores"));
 const ClienteCotacoes = lazy(() => import("./pages/cliente/Cotacoes"));
+const Ajuda = lazy(() => import("./pages/cliente/Ajuda"));
 
 // Drop Mode pages removidos - Nellor Drop desativado temporariamente
 
@@ -192,6 +193,7 @@ const App = () => {
                 <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><MinhasNegociacoes /></Suspense>} />
                 <Route path="comparar-fornecedores" element={<Suspense fallback={<PageSkeleton />}><CompararFornecedores /></Suspense>} />
                 <Route path="cotacoes" element={<Suspense fallback={<PageSkeleton />}><ClienteCotacoes /></Suspense>} />
+                <Route path="ajuda" element={<Suspense fallback={<PageSkeleton />}><Ajuda /></Suspense>} />
               </Route>
 
               {/* Fornecedor Panel Routes */}
