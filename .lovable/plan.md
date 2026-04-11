@@ -1,90 +1,74 @@
 
 
-## Plan: Sistema Completo de Tutorial e Suporte para Clientes
+## Plan: Redesign do Perfil de Loja (PerfilLoja.tsx)
 
-### 1. Migration — Novo campo na tabela `profiles`
+### Overview
 
-Adicionar coluna `client_onboarding_completed` (boolean, default false) na tabela `profiles`. O campo existente `onboarding_completed` é usado pelo fornecedor, então precisamos de um separado para o cliente.
+Complete visual overhaul of `src/pages/cliente/PerfilLoja.tsx` inspired by the reference images, using only real data available in the system. No new database changes needed.
 
-### 2. Novo Componente — Tour Guiado do Cliente
+### Available Real Data
+- `storeProfile.nome`, `descricao_loja`, `foto_perfil_url`, `banner_loja_url`
+- `averageRating`, `storeReviews.length`
+- `storeProducts` (array with `nome`, `preco`, `imagens`, `rating_medio`)
+- `isStoreFavorite`, `user` (auth state)
+- `VerifiedSupplierBadge` component (existing)
 
-**Arquivo:** `src/components/cliente/ClientOnboardingTour.tsx`
+### Changes (single file: `src/pages/cliente/PerfilLoja.tsx`)
 
-Tour com 9 passos (os 7 originais + cotações + comparar fornecedores):
+**1. Hero Banner with Overlay (Mobile)**
+- Banner fills top area (~220px) with dark gradient overlay (`bg-gradient-to-t from-black/70 via-black/30 to-transparent`)
+- Store avatar (ring-4 ring-white, h-20 w-20) positioned bottom-left over banner
+- Store name, rating stars, review count rendered in white text over the overlay
+- Back button and Share button as translucent circular icons over the banner (no separate header bar)
+- Remove the current sticky white header entirely
 
-| Passo | Tipo | Alvo | Navegação |
-|-------|------|------|-----------|
-| 1 | Modal | — | /cliente |
-| 2 | Spotlight | Barra de busca + categorias | /cliente |
-| 3 | Spotlight | Card de produto | /cliente |
-| 4 | Spotlight | Botão "Negociar" | /cliente/produto/:id |
-| 5 | Spotlight | Aba Chat na nav | /cliente/produto/:id |
-| 6 | Spotlight | Botão registrar negociação (simulado) | /cliente/chat |
-| 7 | Spotlight | Botão Cotações no perfil | /cliente/perfil |
-| 8 | Spotlight | Botão Comparar Fornecedores no perfil | /cliente/perfil |
-| 9 | Modal | Conclusão | — |
+**2. Hero Banner (Desktop, lg+)**
+- Banner taller (~280px), same gradient overlay
+- Avatar larger (h-28 w-28), name and rating text larger
+- Content stays inside a max-w-6xl container
 
-Lógica: overlay escuro com recorte SVG para spotlight, posicionamento do tooltip relativo ao elemento, navegação automática entre rotas, barra de progresso, salvar `client_onboarding_completed = true` ao concluir.
+**3. Stats Strip Card**
+- Floating card (`-mt-6`, `rounded-2xl`, `shadow-lg`, `mx-4`) below the banner
+- Row of 3 metrics: `Star icon + averageRating`, `Package icon + storeProducts.length produtos`, `MessageCircle icon + storeReviews.length avaliações`
+- Clean horizontal dividers between metrics
+- VerifiedSupplierBadge shown here if verified
 
-### 3. Context Provider — Tour do Cliente
+**4. Tabs Redesign**
+- 3 tabs: Produtos, Avaliações, Sobre
+- Custom styled tabs with icons (Package, Star, Info)
+- Active tab has purple bottom border indicator (not the default shadcn pill style)
+- Smooth transition between tabs
 
-**Arquivo:** `src/hooks/useClientOnboardingTour.tsx`
+**5. Product Grid Enhancement**
+- Mobile: 2 columns, `gap-3`
+- Desktop (lg+): 3-4 columns
+- Cards: `rounded-2xl`, larger image area (`aspect-[4/5]`), hover scale effect
+- Product name `font-semibold text-sm line-clamp-2`
+- Price in `text-primary font-bold text-base`
+- Rating shown with small star + number
 
-Context com `shouldShowTour`, `startTour`, `endTour`, `triggerRestart`. Montado dentro do `ClienteLayout`.
+**6. "Sobre" Tab (New)**
+- Shows `descricao_loja` in a clean card
+- ReportButton moved here
 
-### 4. Auto-iniciar tour na Home
+**7. Fixed Bottom Action Bar (Mobile)**
+- Fixed bar above BottomNav (`bottom-16`) with glassmorphism background
+- Two buttons side by side:
+  - "Falar com vendedor" (primary, icon MessageCircle, flex-1)
+  - "Seguir" heart icon button (outline, toggles favorite)
+- Desktop: these buttons appear in the stats card area instead
 
-Em `ClienteHome`, verificar `profile.client_onboarding_completed === false` e, após 1 segundo, chamar `startTour()`.
+**8. Reviews Tab**
+- Keep existing `ReviewsList` component (already well-designed)
+- Remove the wrapping Card, let ReviewsList render directly
 
-### 5. Nova Página — Ajuda e FAQ
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/pages/cliente/PerfilLoja.tsx` | Full rewrite of JSX/layout |
 
-**Arquivo:** `src/pages/cliente/Ajuda.tsx`  
-**Rota:** `/cliente/ajuda`
-
-Três seções:
-- **Tutorial passo a passo:** 8 cards expansíveis (Encontrar Fornecedores, Negociar pelo Chat, Registrar Negociação, Gerar PDF, Avaliar Fornecedor, Reportar Problema, Cotações, Comparar Fornecedores)
-- **FAQ:** Accordion com 20 perguntas organizadas em 5 categorias (Começando, Encontrando Produtos, Negociando, Após a Compra, Segurança)
-- **Suporte direto:** Card com fundo roxo escuro + botão WhatsApp
-
-### 6. Botão Flutuante de Suporte
-
-**Arquivo:** `src/components/cliente/FloatingHelpButton.tsx`
-
-Botão circular fixo com `?`, posicionado acima da BottomNav em mobile. Ao clicar, mini menu com 3 opções:
-- "Ver Tutorial" → `triggerRestart()` do context
-- "Perguntas Frequentes" → navega `/cliente/ajuda`
-- "Falar com Suporte" → abre WhatsApp
-
-Animação de pulso nas primeiras 3 visitas (controlado via `localStorage`).
-
-Montado no `ClienteLayout` para aparecer em todas as telas.
-
-### 7. Botão "Ver Tutorial" no Perfil
-
-Em `Perfil.tsx`, adicionar item no menu principal: ícone `Lightbulb`, label "Ver Tutorial Novamente", que chama `triggerRestart()`.
-
-### 8. Registrar rota e lazy import
-
-Em `App.tsx`:
-- Adicionar lazy import de `Ajuda`
-- Adicionar `<Route path="ajuda" .../>` dentro das rotas `/cliente`
-
-### 9. Atualizar `useSupabaseAuth`
-
-Adicionar `client_onboarding_completed` na interface `Profile` e no `fetchProfile`.
-
-### Arquivos afetados
-
-| Arquivo | Ação |
-|---------|------|
-| `supabase/migrations/` | Nova migration (add column) |
-| `src/hooks/useClientOnboardingTour.tsx` | Criar |
-| `src/components/cliente/ClientOnboardingTour.tsx` | Criar |
-| `src/components/cliente/FloatingHelpButton.tsx` | Criar |
-| `src/pages/cliente/Ajuda.tsx` | Criar |
-| `src/pages/cliente/ClienteLayout.tsx` | Adicionar providers + FloatingHelpButton |
-| `src/pages/cliente/Home.tsx` | Auto-iniciar tour |
-| `src/pages/cliente/Perfil.tsx` | Botão "Ver Tutorial" |
-| `src/hooks/useSupabaseAuth.tsx` | Adicionar campo ao Profile |
-| `src/App.tsx` | Rota /cliente/ajuda |
+### Not Changed
+- No new hooks, no database changes, no new components
+- BottomNav, ReviewsList, ReportButton stay as-is
+- No fake badges ("Mais vendido", "Promoção") added
 
