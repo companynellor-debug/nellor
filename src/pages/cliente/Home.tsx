@@ -49,6 +49,7 @@ const ProductCardColorDots = ({ productId }: {productId: string;}) => {
 
 const ClienteHome = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { favorites } = useFavorites();
   const { products } = useProducts();
