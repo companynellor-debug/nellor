@@ -94,6 +94,9 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
         unitsPerSaleUnit: (sp as any).units_per_sale_unit || 1,
         baleApproxPieces: (sp.variacoes as any)?.baleApproxPieces || null,
         kitItemsCount: sp.is_kit && sp.kit_items ? (sp.kit_items as any[]).length : 0,
+        keywords: (sp as any).keywords || [],
+        brand: (sp as any).brand || '',
+        shortDescription: sp.descricao_curta || '',
       };
     });
 
