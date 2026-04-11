@@ -102,14 +102,14 @@ const ClienteHome = () => {
           <div className="flex items-center justify-between gap-4 py-4">
             <img src={logo} alt="Nellor" className="h-10 lg:h-12 w-auto cursor-pointer" onClick={() => navigate("/cliente")} />
             <div className="flex-1 max-w-2xl hidden md:block">
-              <div className="relative" onClick={() => navigate("/cliente/produtos")}>
+              <div className="relative" onClick={() => setSearchOpen(true)}>
                 <Input placeholder="Buscar produtos, marcas e muito mais..." className="pl-4 pr-12 py-6 bg-muted border-input focus:border-primary cursor-pointer text-base" readOnly />
                 <button className="absolute right-0 top-0 h-full px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-r-md">
                   <Search className="h-5 w-5" />
                 </button>
               </div>
             </div>
-            <div className="flex-1 md:hidden" onClick={() => navigate("/cliente/produtos")}>
+            <div className="flex-1 md:hidden" onClick={() => setSearchOpen(true)}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input placeholder="Buscar produtos..." className="pl-10 bg-muted border-input cursor-pointer" readOnly />
