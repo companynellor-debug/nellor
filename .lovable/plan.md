@@ -1,52 +1,90 @@
 
-## Plano: Assinaturas funcional + Dashboard com Faturamento e Visitas
 
-### Problema 1: Admin não consegue aprovar assinaturas
-A função `admin_confirm_subscription` é SECURITY DEFINER e funciona (já há 1 assinatura aprovada no banco). O problema provável é que o `onError` mostra um toast genérico sem detalhes. Vou adicionar logging do erro real e verificar se o admin `user?.id` está disponível no momento da chamada. Também vou garantir que o erro seja exibido com detalhes para facilitar debug.
+## Plan: Sistema Completo de Tutorial e Suporte para Clientes
 
-### Problema 2: Card de Faturamento no Dashboard
-Calcular faturamento a partir das negociações com `status = 'delivered'` (soma de `agreed_price * quantity`).
+### 1. Migration — Novo campo na tabela `profiles`
 
-### Problema 3: Rastreamento de Visitas em Produtos (100% funcional)
-Precisa de uma nova tabela `product_views` no banco para armazenar cada visualização.
+Adicionar coluna `client_onboarding_completed` (boolean, default false) na tabela `profiles`. O campo existente `onboarding_completed` é usado pelo fornecedor, então precisamos de um separado para o cliente.
 
----
+### 2. Novo Componente — Tour Guiado do Cliente
 
-### Etapa 1 — Migração SQL
+**Arquivo:** `src/components/cliente/ClientOnboardingTour.tsx`
 
-**Nova tabela `product_views`:**
-```sql
-CREATE TABLE public.product_views (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  viewer_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  visitor_fingerprint text,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+Tour com 9 passos (os 7 originais + cotações + comparar fornecedores):
 
-CREATE INDEX idx_product_views_product_id ON product_views(product_id);
-CREATE INDEX idx_product_views_created_at ON product_views(created_at);
-```
+| Passo | Tipo | Alvo | Navegação |
+|-------|------|------|-----------|
+| 1 | Modal | — | /cliente |
+| 2 | Spotlight | Barra de busca + categorias | /cliente |
+| 3 | Spotlight | Card de produto | /cliente |
+| 4 | Spotlight | Botão "Negociar" | /cliente/produto/:id |
+| 5 | Spotlight | Aba Chat na nav | /cliente/produto/:id |
+| 6 | Spotlight | Botão registrar negociação (simulado) | /cliente/chat |
+| 7 | Spotlight | Botão Cotações no perfil | /cliente/perfil |
+| 8 | Spotlight | Botão Comparar Fornecedores no perfil | /cliente/perfil |
+| 9 | Modal | Conclusão | — |
 
-**RLS:** Permitir INSERT para qualquer pessoa (anon + authenticated) e SELECT para o fornecedor dono do produto.
+Lógica: overlay escuro com recorte SVG para spotlight, posicionamento do tooltip relativo ao elemento, navegação automática entre rotas, barra de progresso, salvar `client_onboarding_completed = true` ao concluir.
 
-**Função RPC** `get_supplier_product_views(_supplier_id uuid)` — retorna total de views agrupado por produto para o fornecedor.
+### 3. Context Provider — Tour do Cliente
 
-### Etapa 2 — Frontend: ProdutoDetalhes.tsx
-Ao carregar a página de detalhe do produto, fazer `INSERT` na tabela `product_views` com `product_id` e `viewer_id` (se logado).
+**Arquivo:** `src/hooks/useClientOnboardingTour.tsx`
 
-### Etapa 3 — Frontend: Dashboard.tsx
-- Adicionar card **"Faturamento"** calculando soma de `agreed_price * quantity` das negociações `delivered`.
-- Adicionar card **"Visitas"** buscando total de views via RPC `get_supplier_product_views`.
-- Manter os cards existentes (Negociações pendentes, Avaliações, Produtos).
+Context com `shouldShowTour`, `startTour`, `endTour`, `triggerRestart`. Montado dentro do `ClienteLayout`.
 
-### Etapa 4 — Admin Assinaturas: Debug e correção
-- Adicionar detalhes do erro no toast `onError` para diagnosticar.
-- Adicionar fallback: se o RPC falhar, tentar via edge function com adminToken (padrão usado em outras ações admin).
-- Log do erro no console para facilitar debug.
+### 4. Auto-iniciar tour na Home
 
-### Arquivos editados
-- **Migração SQL**: nova tabela, RLS, função RPC
-- `src/pages/cliente/ProdutoDetalhes.tsx` — inserir view ao carregar
-- `src/pages/fornecedor/Dashboard.tsx` — cards Faturamento + Visitas
-- `src/pages/admin/Assinaturas.tsx` — melhorar tratamento de erro
+Em `ClienteHome`, verificar `profile.client_onboarding_completed === false` e, após 1 segundo, chamar `startTour()`.
+
+### 5. Nova Página — Ajuda e FAQ
+
+**Arquivo:** `src/pages/cliente/Ajuda.tsx`  
+**Rota:** `/cliente/ajuda`
+
+Três seções:
+- **Tutorial passo a passo:** 8 cards expansíveis (Encontrar Fornecedores, Negociar pelo Chat, Registrar Negociação, Gerar PDF, Avaliar Fornecedor, Reportar Problema, Cotações, Comparar Fornecedores)
+- **FAQ:** Accordion com 20 perguntas organizadas em 5 categorias (Começando, Encontrando Produtos, Negociando, Após a Compra, Segurança)
+- **Suporte direto:** Card com fundo roxo escuro + botão WhatsApp
+
+### 6. Botão Flutuante de Suporte
+
+**Arquivo:** `src/components/cliente/FloatingHelpButton.tsx`
+
+Botão circular fixo com `?`, posicionado acima da BottomNav em mobile. Ao clicar, mini menu com 3 opções:
+- "Ver Tutorial" → `triggerRestart()` do context
+- "Perguntas Frequentes" → navega `/cliente/ajuda`
+- "Falar com Suporte" → abre WhatsApp
+
+Animação de pulso nas primeiras 3 visitas (controlado via `localStorage`).
+
+Montado no `ClienteLayout` para aparecer em todas as telas.
+
+### 7. Botão "Ver Tutorial" no Perfil
+
+Em `Perfil.tsx`, adicionar item no menu principal: ícone `Lightbulb`, label "Ver Tutorial Novamente", que chama `triggerRestart()`.
+
+### 8. Registrar rota e lazy import
+
+Em `App.tsx`:
+- Adicionar lazy import de `Ajuda`
+- Adicionar `<Route path="ajuda" .../>` dentro das rotas `/cliente`
+
+### 9. Atualizar `useSupabaseAuth`
+
+Adicionar `client_onboarding_completed` na interface `Profile` e no `fetchProfile`.
+
+### Arquivos afetados
+
+| Arquivo | Ação |
+|---------|------|
+| `supabase/migrations/` | Nova migration (add column) |
+| `src/hooks/useClientOnboardingTour.tsx` | Criar |
+| `src/components/cliente/ClientOnboardingTour.tsx` | Criar |
+| `src/components/cliente/FloatingHelpButton.tsx` | Criar |
+| `src/pages/cliente/Ajuda.tsx` | Criar |
+| `src/pages/cliente/ClienteLayout.tsx` | Adicionar providers + FloatingHelpButton |
+| `src/pages/cliente/Home.tsx` | Auto-iniciar tour |
+| `src/pages/cliente/Perfil.tsx` | Botão "Ver Tutorial" |
+| `src/hooks/useSupabaseAuth.tsx` | Adicionar campo ao Profile |
+| `src/App.tsx` | Rota /cliente/ajuda |
+
