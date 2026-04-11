@@ -746,7 +746,10 @@ const ProdutoDetalhes = () => {
 
             {/* Negotiation info */}
             <div className="bg-primary/5 border-2 border-primary/20 rounded-2xl p-5 space-y-3">
-              <Button className="w-full bg-foreground hover:bg-foreground/90 text-background h-14 text-base font-bold gap-2 rounded-2xl"
+              <Button
+                className="w-full bg-foreground hover:bg-foreground/90 text-background h-14 text-base font-bold gap-2 rounded-2xl"
+                data-tour="negotiate-btn"
+                data-tour-supplier-id={product.supplierProfileId || ""}
                 onClick={() => {
                   if (!product.supplierProfileId) return;
                   navigate('/cliente/chat', {
@@ -755,7 +758,8 @@ const ProdutoDetalhes = () => {
                       message: `Olá! Tenho interesse no produto ${product.name}. Podemos negociar?`
                     }
                   });
-                }}>
+                }}
+              >
                 <img src={nellorIcon} alt="Nellor" className="h-5 w-5" />
                 Negociar com Fornecedor
               </Button>
@@ -834,7 +838,10 @@ const ProdutoDetalhes = () => {
         {/* Mobile fixed negotiate button */}
         <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t shadow-lg p-3 z-30 md:hidden safe-area-pb">
           <div className="container mx-auto">
-            <Button className="w-full bg-foreground hover:bg-foreground/90 text-background h-14 text-base font-bold gap-2 rounded-2xl"
+            <Button
+              className="w-full bg-foreground hover:bg-foreground/90 text-background h-14 text-base font-bold gap-2 rounded-2xl"
+              data-tour="negotiate-btn"
+              data-tour-supplier-id={product.supplierProfileId || ""}
               onClick={() => {
                 if (!product.supplierProfileId) return;
                 navigate('/cliente/chat', {
@@ -843,7 +850,8 @@ const ProdutoDetalhes = () => {
                     message: `Olá! Tenho interesse no produto ${product.name}. Podemos negociar?`
                   }
                 });
-              }}>
+              }}
+            >
               <img src={nellorIcon} alt="Nellor" className="h-5 w-5" />
               Negociar com Fornecedor
             </Button>

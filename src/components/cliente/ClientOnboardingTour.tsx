@@ -1,15 +1,27 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import {
+  ChevronLeft,
+  Compass,
+  FileText,
+  GitCompareArrows,
+  Handshake,
+  MessageCircle,
+  Package,
+  Search,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { useClientOnboardingTour } from "@/hooks/useClientOnboardingTour";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 interface TourStep {
   type: "modal" | "spotlight";
-  title?: string;
+  title: string;
   text: string;
+  icon: typeof Sparkles;
   targetSelector?: string;
   route?: string;
 }
@@ -17,52 +29,69 @@ interface TourStep {
 const STEPS: TourStep[] = [
   {
     type: "modal",
-    title: "Bem-vindo à Nellor! 🎉",
+    title: "Bem-vindo à Nellor! ♊",
     text: "A Nellor conecta você diretamente com fornecedores reais para comprar produtos em quantidade. Vamos te mostrar como funciona em menos de 2 minutos.",
+    icon: Sparkles,
   },
   {
     type: "spotlight",
-    targetSelector: "#home-search-bar",
+    title: "Busca e categorias",
+    text: "Use a busca para encontrar produtos e fornecedores com rapidez. Você também pode explorar por categorias e descobrir novas oportunidades de compra.",
+    icon: Search,
+    targetSelector: "[data-tour='home-search-bar']",
     route: "/cliente",
-    text: "Use a busca ou navegue pelas categorias para encontrar fornecedores e produtos. Você pode filtrar por tipo de produto, região e fornecedores verificados.",
   },
   {
     type: "spotlight",
+    title: "Cards de produto",
+    text: "Cada card mostra o produto, o preço de referência e o tipo de venda. Toque em um item para abrir os detalhes e ver mais informações do fornecedor.",
+    icon: Package,
     targetSelector: "[data-tour='product-card']",
     route: "/cliente",
-    text: "Cada card mostra o produto, o preço de referência por quantidade e o badge do tipo de venda — unidade, caixa fechada, fardo ou kit. Clique para ver mais detalhes.",
   },
   {
     type: "spotlight",
+    title: "Negociar com fornecedor",
+    text: "Na Nellor você negocia direto com o fornecedor. É aqui que você inicia a conversa para combinar quantidade, preço e entrega.",
+    icon: Handshake,
     targetSelector: "[data-tour='negotiate-btn']",
-    text: "Na Nellor você não compra direto — você negocia. Clique aqui para abrir o chat com o fornecedor e combinar quantidade, preço e entrega.",
   },
   {
     type: "spotlight",
+    title: "Aba de chat",
+    text: "Todas as suas conversas ficam aqui. O chat é o coração da Nellor: é onde você tira dúvidas, negocia e acompanha tudo em um só lugar.",
+    icon: MessageCircle,
     targetSelector: "[data-tour='chat-nav']",
-    text: "Todas as suas conversas ficam aqui. O chat é o coração da Nellor — é onde você negocia, tira dúvidas e fecha acordos com os fornecedores.",
   },
   {
     type: "spotlight",
+    title: "Registrar negociação",
+    text: "Depois de alinhar os detalhes com o fornecedor, use este botão para registrar o acordo e formalizar a negociação dentro da plataforma.",
+    icon: FileText,
     targetSelector: "[data-tour='register-negotiation']",
-    text: "Quando chegar a um acordo com o fornecedor, registre a negociação aqui. Isso gera um PDF oficial do acordo que protege as duas partes.",
+    route: "/cliente/chat",
   },
   {
     type: "spotlight",
+    title: "Painel de cotações",
+    text: "Publique uma cotação com o que você precisa e receba propostas de vários fornecedores. É uma forma prática de comparar preços e acelerar sua compra.",
+    icon: FileText,
     targetSelector: "[data-tour='cotacoes-menu']",
     route: "/cliente/perfil",
-    text: "Publique cotações detalhando o que precisa e receba propostas de vários fornecedores. É a forma mais rápida de encontrar o melhor preço.",
   },
   {
     type: "spotlight",
+    title: "Comparar fornecedores",
+    text: "Compare fornecedores lado a lado para avaliar preço, reputação e localização antes de decidir com quem negociar.",
+    icon: GitCompareArrows,
     targetSelector: "[data-tour='comparar-menu']",
     route: "/cliente/perfil",
-    text: "Compare até 3 fornecedores lado a lado — preço, avaliação e localização — para tomar a melhor decisão de compra.",
   },
   {
     type: "modal",
-    title: "Pronto para começar! 🎉",
-    text: "Agora você sabe como usar a Nellor. Explore os fornecedores, negocie pelo chat e feche bons acordos. Se tiver dúvidas, clique no botão ? a qualquer momento.",
+    title: "Pronto para começar! ♊",
+    text: "Agora você já sabe como buscar, negociar, registrar acordos, usar cotações e comparar fornecedores. Se bater qualquer dúvida, toque no botão ? a qualquer momento.",
+    icon: Compass,
   },
 ];
 
@@ -73,196 +102,279 @@ export const ClientOnboardingTour = () => {
   const location = useLocation();
   const [step, setStep] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
-  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
-  const [searching, setSearching] = useState(false);
-  const waitingForRoute = useRef(false);
-  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [productRoute, setProductRoute] = useState<string | null>(null);
+  const [tutorialSupplierId, setTutorialSupplierId] = useState<string | null>(null);
+  const retryTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const currentStep = STEPS[step];
+  const progress = ((step + 1) / STEPS.length) * 100;
+  const isFirstStep = step === 0;
+  const isLastStep = step === STEPS.length - 1;
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : true;
+
+  const resolvedRoute = useMemo(() => {
+    if (currentStep.route) return currentStep.route;
+    if (step === 3 || step === 4) return productRoute ?? undefined;
+    if (step === 5) return "/cliente/chat";
+    return undefined;
+  }, [currentStep.route, step, productRoute]);
+
+  const clearRetryTimers = useCallback(() => {
+    retryTimers.current.forEach((timer) => clearTimeout(timer));
+    retryTimers.current = [];
+  }, []);
 
   const findTarget = useCallback(() => {
     if (!currentStep?.targetSelector) return null;
-    return document.querySelector(currentStep.targetSelector) as HTMLElement | null;
+
+    const matches = Array.from(document.querySelectorAll(currentStep.targetSelector)) as HTMLElement[];
+    if (matches.length === 0) return null;
+
+    const visibleMatches = matches.filter((element) => {
+      const rect = element.getBoundingClientRect();
+      const styles = window.getComputedStyle(element);
+      return styles.display !== "none" && styles.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
+    });
+
+    return visibleMatches[0] ?? null;
   }, [currentStep]);
 
-  // Measure spotlight target with retries
   useEffect(() => {
-    if (!shouldShowTour) return;
-    if (currentStep?.type !== "spotlight") {
-      setSpotlightRect(null);
-      setTooltipPos(null);
-      setSearching(false);
+    if (!shouldShowTour || !currentStep?.route && !(step === 3 || step === 4 || step === 5)) return;
+    if (!resolvedRoute || location.pathname === resolvedRoute) return;
+
+    if (step === 5 && tutorialSupplierId) {
+      navigate(resolvedRoute, { state: { supplierId: tutorialSupplierId, tutorialMode: true } });
       return;
     }
 
-    setSearching(true);
-    let attempts = 0;
-    const maxAttempts = 8;
+    navigate(resolvedRoute);
+  }, [shouldShowTour, currentStep, resolvedRoute, location.pathname, navigate, step, tutorialSupplierId]);
 
-    const measure = () => {
-      const el = findTarget();
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          setSpotlightRect(rect);
-          const tooltipTop = rect.bottom + 16;
-          const tooltipLeft = Math.max(16, Math.min(rect.left, window.innerWidth - 340));
-          setTooltipPos({
-            top: tooltipTop > window.innerHeight - 200 ? rect.top - 180 : tooltipTop,
-            left: tooltipLeft,
-          });
-          setSearching(false);
-          waitingForRoute.current = false;
-          return;
-        }
-      }
-      attempts++;
-      if (attempts < maxAttempts) {
-        retryTimer.current = setTimeout(measure, 500);
-      } else {
-        // Element truly not found — show as modal fallback
-        setSpotlightRect(null);
-        setTooltipPos(null);
-        setSearching(false);
-      }
-    };
-
-    retryTimer.current = setTimeout(measure, 400);
-    return () => {
-      if (retryTimer.current) clearTimeout(retryTimer.current);
-    };
-  }, [shouldShowTour, step, currentStep, findTarget, location.pathname]);
-
-  // Navigate to step route if needed
   useEffect(() => {
-    if (!shouldShowTour || !currentStep?.route) return;
-    if (location.pathname !== currentStep.route) {
-      waitingForRoute.current = true;
-      navigate(currentStep.route);
-    }
-  }, [shouldShowTour, step, currentStep, location.pathname, navigate]);
+    clearRetryTimers();
 
-  const handleNext = useCallback(() => {
-    if (step < STEPS.length - 1) {
-      setStep(step + 1);
-    } else {
-      if (user) {
-        supabase.from("profiles").update({ client_onboarding_completed: true } as any).eq("id", user.id).then();
-      }
-      endTour();
-      setStep(0);
-      navigate("/cliente");
+    if (!shouldShowTour || currentStep?.type !== "spotlight") {
+      setSpotlightRect(null);
+      return;
     }
-  }, [step, user, endTour, navigate]);
+
+    setSpotlightRect(null);
+
+    const measureTarget = (attempt = 0) => {
+      const element = findTarget();
+
+      if (element) {
+        element.scrollIntoView({ block: "center", inline: "nearest", behavior: attempt === 0 ? "smooth" : "auto" });
+
+        const finalTimer = setTimeout(() => {
+          const rect = element.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            setSpotlightRect(rect);
+          }
+        }, 220);
+
+        retryTimers.current.push(finalTimer);
+        return;
+      }
+
+      if (attempt < 8) {
+        const retryTimer = setTimeout(() => measureTarget(attempt + 1), 350);
+        retryTimers.current.push(retryTimer);
+      }
+    };
+
+    const initialTimer = setTimeout(
+      () => measureTarget(0),
+      resolvedRoute && location.pathname !== resolvedRoute ? 450 : 120,
+    );
+    retryTimers.current.push(initialTimer);
+
+    return clearRetryTimers;
+  }, [shouldShowTour, currentStep, findTarget, location.pathname, resolvedRoute, clearRetryTimers]);
+
+  useEffect(() => {
+    if (!shouldShowTour || currentStep?.type !== "spotlight" || !spotlightRect) return;
+
+    const updateRect = () => {
+      const element = findTarget();
+      if (!element) return;
+      const rect = element.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setSpotlightRect(rect);
+      }
+    };
+
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect, true);
+
+    return () => {
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect, true);
+    };
+  }, [shouldShowTour, currentStep, spotlightRect, findTarget]);
+
+  const finishTour = useCallback(() => {
+    if (user) {
+      void supabase.from("profiles").update({ client_onboarding_completed: true } as never).eq("id", user.id);
+    }
+    clearRetryTimers();
+    setSpotlightRect(null);
+    setProductRoute(null);
+    setTutorialSupplierId(null);
+    setStep(0);
+    endTour();
+    navigate("/cliente");
+  }, [user, endTour, navigate, clearRetryTimers]);
 
   const handleSkip = useCallback(() => {
-    if (user) {
-      supabase.from("profiles").update({ client_onboarding_completed: true } as any).eq("id", user.id).then();
+    finishTour();
+  }, [finishTour]);
+
+  const handlePrev = useCallback(() => {
+    if (step === 0) return;
+    clearRetryTimers();
+    setSpotlightRect(null);
+    setStep((prev) => Math.max(0, prev - 1));
+  }, [step, clearRetryTimers]);
+
+  const handleNext = useCallback(() => {
+    if (step === 2) {
+      const cardLink = findTarget() as HTMLAnchorElement | null;
+      const href = cardLink?.getAttribute("href");
+      if (href) setProductRoute(href);
     }
-    endTour();
-    setStep(0);
-  }, [user, endTour]);
+
+    if (step === 3) {
+      const negotiateButton = findTarget();
+      const supplierId = negotiateButton?.getAttribute("data-tour-supplier-id");
+      if (supplierId) setTutorialSupplierId(supplierId);
+    }
+
+    if (isLastStep) {
+      finishTour();
+      return;
+    }
+
+    clearRetryTimers();
+    setSpotlightRect(null);
+    setStep((prev) => prev + 1);
+  }, [step, isLastStep, finishTour, findTarget, clearRetryTimers]);
 
   if (!shouldShowTour) return null;
 
-  // While still searching for the element, show a loading state
-  if (searching) {
-    return (
-      <div className="fixed inset-0 z-[9999]">
-        <div className="absolute inset-0 bg-black/70" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-card rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-3">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-muted-foreground">Carregando...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const showSpotlight = currentStep.type === "spotlight" && !!spotlightRect;
+  const StepIcon = currentStep.icon;
 
-  const isModal = currentStep?.type === "modal";
-  const hasSpotlight = !isModal && spotlightRect;
-  const showAsModal = isModal || !hasSpotlight;
-  const isLastStep = step === STEPS.length - 1;
-  const isFirstStep = step === 0;
-  const progress = ((step + 1) / STEPS.length) * 100;
+  const desktopTooltipStyle = showSpotlight && spotlightRect && !isMobile
+    ? {
+        top:
+          spotlightRect.bottom + 20 + 240 < window.innerHeight
+            ? spotlightRect.bottom + 20
+            : Math.max(24, spotlightRect.top - 240),
+        left: Math.max(24, Math.min(spotlightRect.left, window.innerWidth - 392)),
+      }
+    : undefined;
 
   return (
     <div className="fixed inset-0 z-[9999]">
-      {/* Overlay */}
-      {showAsModal ? (
-        <div className="absolute inset-0 bg-black/70" />
-      ) : (
-        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+      {showSpotlight ? (
+        <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <mask id="tour-mask">
+            <mask id="client-tour-mask">
               <rect width="100%" height="100%" fill="white" />
               {spotlightRect && (
                 <rect
-                  x={spotlightRect.left - 8}
-                  y={spotlightRect.top - 8}
-                  width={spotlightRect.width + 16}
-                  height={spotlightRect.height + 16}
-                  rx={12}
+                  x={spotlightRect.left - 10}
+                  y={spotlightRect.top - 10}
+                  width={spotlightRect.width + 20}
+                  height={spotlightRect.height + 20}
+                  rx={18}
                   fill="black"
                 />
               )}
             </mask>
           </defs>
-          <rect width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#tour-mask)" />
+          <rect width="100%" height="100%" fill="rgba(15, 9, 26, 0.78)" mask="url(#client-tour-mask)" />
         </svg>
+      ) : (
+        <div className="absolute inset-0 bg-foreground/75 backdrop-blur-[2px]" />
       )}
 
-      {/* Spotlight ring */}
-      {!showAsModal && spotlightRect && (
+      {showSpotlight && spotlightRect && (
         <div
-          className="absolute border-2 border-primary rounded-xl pointer-events-none animate-pulse"
+          className="pointer-events-none absolute rounded-[22px] border-2 border-primary bg-primary/5 shadow-2xl"
           style={{
-            left: spotlightRect.left - 8,
-            top: spotlightRect.top - 8,
-            width: spotlightRect.width + 16,
-            height: spotlightRect.height + 16,
+            left: spotlightRect.left - 10,
+            top: spotlightRect.top - 10,
+            width: spotlightRect.width + 20,
+            height: spotlightRect.height + 20,
           }}
         />
       )}
 
-      {/* Content — always visible */}
-      {showAsModal ? (
-        <div className="absolute inset-0 flex items-center justify-center p-6">
-          <div className="bg-card text-card-foreground rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 relative">
-            <button onClick={handleSkip} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
-              <X className="h-4 w-4" />
-            </button>
-            {currentStep.title && <h2 className="text-xl font-bold">{currentStep.title}</h2>}
-            <p className="text-sm text-muted-foreground leading-relaxed">{currentStep.text}</p>
-            <div className="w-full bg-muted rounded-full h-1.5">
-              <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
+      <div
+        className={showSpotlight && !isMobile ? "absolute w-[368px]" : "absolute inset-x-4 bottom-24 md:bottom-8 md:left-auto md:right-8 md:w-[388px]"}
+        style={showSpotlight && !isMobile ? desktopTooltipStyle : undefined}
+      >
+        <div className="overflow-hidden rounded-[28px] border border-border/60 bg-card/95 shadow-2xl backdrop-blur-xl">
+          <div className="h-1.5 w-full bg-primary/15">
+            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
+          </div>
+
+          <div className="p-5 md:p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                  <StepIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">Tutorial Nellor</p>
+                  <h2 className="mt-1 text-lg font-bold leading-tight text-foreground">{currentStep.title}</h2>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSkip}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Fechar tutorial"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <p className="text-xs text-muted-foreground text-center">Passo {step + 1} de {STEPS.length}</p>
-            <div className="flex gap-3">
-              <Button variant="ghost" onClick={handleSkip} className="flex-1">Pular</Button>
-              <Button onClick={handleNext} className="flex-1">
+
+            <p className="text-sm leading-6 text-muted-foreground">{currentStep.text}</p>
+
+            {!showSpotlight && currentStep.type === "spotlight" && (
+              <div className="mt-4 rounded-2xl border border-dashed border-border bg-muted/35 px-3 py-2.5 text-xs leading-5 text-muted-foreground">
+                Se esse elemento não estiver visível nesta tela, tudo bem — você ainda pode continuar o tutorial sem travar.
+              </div>
+            )}
+
+            <div className="mt-5 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Passo {step + 1} de {STEPS.length}</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+
+            <div className="mt-5 flex items-center gap-2 md:gap-3">
+              {!isFirstStep ? (
+                <Button variant="outline" onClick={handlePrev} className="shrink-0 gap-1.5 rounded-full px-4">
+                  <ChevronLeft className="h-4 w-4" />
+                  Voltar
+                </Button>
+              ) : (
+                <Button variant="ghost" onClick={handleSkip} className="shrink-0 rounded-full px-4">
+                  Pular
+                </Button>
+              )}
+
+              <Button onClick={handleNext} className="flex-1 rounded-full">
                 {isLastStep ? "Explorar a Nellor" : isFirstStep ? "Começar" : "Próximo"}
               </Button>
             </div>
           </div>
         </div>
-      ) : (
-        <div
-          className="absolute bg-card text-card-foreground rounded-xl p-4 max-w-xs shadow-2xl space-y-3 border"
-          style={{ top: tooltipPos!.top, left: tooltipPos!.left }}
-        >
-          <p className="text-sm leading-relaxed">{currentStep.text}</p>
-          <div className="w-full bg-muted rounded-full h-1.5">
-            <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
-          </div>
-          <p className="text-xs text-muted-foreground">Passo {step + 1} de {STEPS.length}</p>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={handleSkip}>Pular</Button>
-            <Button size="sm" onClick={handleNext} className="flex-1">Próximo</Button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
