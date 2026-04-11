@@ -24,6 +24,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useProductVariations } from "@/hooks/useProductVariations";
 import { getColorHex } from "@/utils/colorMap";
 import { useSponsoredProducts } from "@/hooks/useSponsoredProducts";
+import { useClientOnboardingTour } from "@/hooks/useClientOnboardingTour";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 const ProductCardColorDots = ({ productId }: {productId: string;}) => {
   const { variations } = useProductVariations(productId);
@@ -63,6 +65,16 @@ const ClienteHome = () => {
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showStripeReturnBanner, setShowStripeReturnBanner] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { startTour } = useClientOnboardingTour();
+  const { profile } = useSupabaseAuth();
+
+  // Auto-start tour for first-time clients
+  useEffect(() => {
+    if (profile && profile.tipo === 'cliente' && profile.client_onboarding_completed === false) {
+      const t = setTimeout(() => startTour(), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [profile, startTour]);
 
   useEffect(() => {
     if (searchParams.get("stripe_return") === "1") {

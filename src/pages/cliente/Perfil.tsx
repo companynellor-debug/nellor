@@ -2,7 +2,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Lightbulb, Compass, MessageCircleHeart, PackageCheck, Trophy, Handshake, GitCompareArrows, FileText } from "lucide-react";
+import { User, MapPin, Bell, Package, LogOut, Edit, CreditCard, ChevronRight, Users, Briefcase, HeadphonesIcon, Folder, Store, Clock, CheckCircle, XCircle, Shield, Lightbulb, Compass, MessageCircleHeart, PackageCheck, Trophy, Handshake, GitCompareArrows, FileText, GraduationCap, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
@@ -10,6 +10,7 @@ import { useNegotiations } from "@/hooks/useNegotiations";
 import { usePWA } from "@/hooks/usePWA";
 import { useSupplierApplication } from "@/hooks/useSupplierApplication";
 import CollectionsTab from "@/components/cliente/CollectionsTab";
+import { useClientOnboardingTour } from "@/hooks/useClientOnboardingTour";
 
 import nellorLogo from "@/assets/nellor-logo.png";
 
@@ -19,6 +20,7 @@ const Perfil = () => {
   const { negotiations } = useNegotiations();
   const { canInstall, isInstalled } = usePWA();
   const { application } = useSupplierApplication();
+  const { triggerRestart } = useClientOnboardingTour();
 
   const handleLogout = async () => {
     await signOut();
@@ -148,9 +150,9 @@ const Perfil = () => {
             {/* Menu principal */}
             <div className="space-y-1">
               {[
-                { icon: FileText, label: "Minhas Cotações", route: "/cliente/cotacoes" },
+                { icon: FileText, label: "Minhas Cotações", route: "/cliente/cotacoes", tourId: "cotacoes-menu" },
                 { icon: Handshake, label: "Minhas Negociações", route: "/cliente/negociacoes" },
-                { icon: GitCompareArrows, label: "Comparar Fornecedores", route: "/cliente/comparar-fornecedores" },
+                { icon: GitCompareArrows, label: "Comparar Fornecedores", route: "/cliente/comparar-fornecedores", tourId: "comparar-menu" },
                 { icon: MapPin, label: "Meus Endereços", route: "/cliente/enderecos" },
                 { icon: CreditCard, label: "Métodos de Pagamento", route: "/cliente/metodos-pagamento" },
                 { icon: Shield, label: "Segurança", route: "/cliente/seguranca" },
@@ -163,6 +165,7 @@ const Perfil = () => {
                     key={item.label}
                     onClick={() => navigate(item.route)}
                     className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg hover:bg-muted/50 transition-colors"
+                    {...((item as any).tourId ? { "data-tour": (item as any).tourId } : {})}
                   >
                     <Icon className="h-5 w-5 text-primary" />
                     <span className="flex-1 text-left text-sm font-medium">{item.label}</span>
