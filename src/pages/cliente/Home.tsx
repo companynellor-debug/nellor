@@ -62,6 +62,7 @@ const ClienteHome = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showStripeReturnBanner, setShowStripeReturnBanner] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("stripe_return") === "1") {
