@@ -431,6 +431,7 @@ const ClienteHome = () => {
       </button>
 
       <BottomNav />
+      <ProductSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>);
 
 };
