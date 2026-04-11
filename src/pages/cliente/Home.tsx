@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Heart, Bell, Bookmark, ChevronRight, X, Download, Smartphone, CheckCircle2, Package, Sparkles, HelpCircle, FileText } from "lucide-react";
 import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
-import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProducts } from "@/hooks/useProducts";
@@ -49,7 +49,6 @@ const ProductCardColorDots = ({ productId }: {productId: string;}) => {
 
 const ClienteHome = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { favorites } = useFavorites();
   const { products } = useProducts();
