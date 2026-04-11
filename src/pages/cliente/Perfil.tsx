@@ -287,6 +287,26 @@ const Perfil = () => {
               </div>
             </Card>
 
+            {/* Tutorial e Ajuda */}
+            <div className="flex gap-2">
+              <Button
+                onClick={triggerRestart}
+                variant="outline"
+                className="flex-1 rounded-full border-primary text-primary hover:bg-primary/5 font-medium"
+              >
+                <GraduationCap className="h-4 w-4 mr-2" />
+                Ver Tutorial
+              </Button>
+              <Button
+                onClick={() => navigate("/cliente/ajuda")}
+                variant="outline"
+                className="flex-1 rounded-full border-primary text-primary hover:bg-primary/5 font-medium"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Ajuda e FAQ
+              </Button>
+            </div>
+
             {/* Suporte */}
             <Button
               onClick={() => navigate("/cliente/suporte")}
