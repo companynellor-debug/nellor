@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { ReviewsList } from "@/components/cliente/ReviewsList";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { VerifiedSupplierBadge } from "@/components/cliente/VerifiedSupplierBadge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Heart, MessageCircle, Star, Share2 } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Star, Share2, Package, Info } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
-import { useProducts } from "@/hooks/useProducts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
@@ -27,20 +26,16 @@ const PerfilLoja = () => {
   const { products: supabaseProducts } = useSupabaseProducts();
   const { user } = useSupabaseAuth();
   const { isFavoriteStore, addFavoriteStore, removeFavoriteStore } = useStoresFavorites();
-  
-  // Refetch stores when component mounts to ensure fresh data
+
   useEffect(() => {
     refetch();
   }, [id]);
-  
-  // Support both UUID and slug-based lookups
+
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || '');
-  
   const [slugProfile, setSlugProfile] = useState<any>(null);
-  
+
   useEffect(() => {
     if (!isUuid && id) {
-      // Lookup by slug
       const lookupBySlug = async () => {
         const { data } = await supabase
           .from('profiles')
@@ -53,20 +48,19 @@ const PerfilLoja = () => {
       lookupBySlug();
     }
   }, [id, isUuid]);
-  
-  const resolvedId = isUuid ? id : slugProfile?.id;
-  const storeProfile = stores.find(s => s.id === resolvedId) || (slugProfile ? { id: slugProfile.id, nome: slugProfile.nome, descricao_loja: slugProfile.descricao_loja, foto_perfil_url: slugProfile.foto_perfil_url, banner_loja_url: slugProfile.banner_loja_url } : undefined);
-  const storeProducts = supabaseProducts.filter(p => p.supplier_id === resolvedId);
 
-  // Fetch reviews for this supplier
+  const resolvedId = isUuid ? id : slugProfile?.id;
+  const storeProfile = stores.find(s => s.id === resolvedId) || (slugProfile ? {
+    id: slugProfile.id, nome: slugProfile.nome, descricao_loja: slugProfile.descricao_loja,
+    foto_perfil_url: slugProfile.foto_perfil_url, banner_loja_url: slugProfile.banner_loja_url
+  } : undefined);
+  const storeProducts = supabaseProducts.filter(p => p.supplier_id === resolvedId);
   const { reviews: storeReviews, loading: reviewsLoading, averageRating } = useSupplierReviews(resolvedId);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg">Carregando...</p>
-        </div>
+        <div className="animate-pulse text-muted-foreground">Carregando...</div>
       </div>
     );
   }
@@ -76,7 +70,7 @@ const PerfilLoja = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Loja não encontrada</h1>
-          <Button onClick={() => navigate("/cliente")} className="bg-primary hover:bg-primary/90 text-white">
+          <Button onClick={() => navigate("/cliente")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             Voltar para Home
           </Button>
         </div>
@@ -85,21 +79,27 @@ const PerfilLoja = () => {
   }
 
   const isStoreFavorite = id ? isFavoriteStore(id) : false;
-
   const handleToggleFavorite = () => {
     if (!id) return;
-    if (isStoreFavorite) {
-      removeFavoriteStore(id);
-    } else {
-      addFavoriteStore(id);
-    }
+    if (isStoreFavorite) removeFavoriteStore(id);
+    else addFavoriteStore(id);
   };
 
+  const handleChat = () => {
+    if (!user) { navigate("/auth"); return; }
+    navigate("/cliente/chat", {
+      state: { supplierId: id, message: "Olá! Tenho interesse em seus produtos." }
+    });
+  };
+
+  const bannerUrl = storeProfile.banner_loja_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8';
+  const avatarUrl = storeProfile.foto_perfil_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store';
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-36 lg:pb-20">
       <Helmet>
         <title>{storeProfile.nome} - Loja Online | Nellor</title>
-        <meta name="description" content={`${storeProfile.descricao_loja || 'Confira nossos produtos'}`} />
+        <meta name="description" content={storeProfile.descricao_loja || 'Confira nossos produtos'} />
         <meta property="og:title" content={`${storeProfile.nome} - Loja Online`} />
         <meta property="og:description" content={storeProfile.descricao_loja || ''} />
         <meta property="og:image" content={storeProfile.banner_loja_url || ''} />
@@ -108,157 +108,238 @@ const PerfilLoja = () => {
       </Helmet>
       <ParticlesBackground />
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
+      {/* Hero Banner */}
+      <div className="relative h-56 lg:h-72 w-full overflow-hidden">
+        <img
+          src={bannerUrl}
+          alt={`Banner ${storeProfile.nome}`}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+
+        {/* Nav buttons over banner */}
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/cliente")}
+            className="rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 h-10 w-10"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => {
-              window.history.length > 1 ? navigate(-1) : navigate("/cliente");
-            }} 
-            className="rounded-full"
+              navigator.clipboard.writeText(`${window.location.origin}/loja/${id}`);
+              toast.success("Link da loja copiado!");
+            }}
+            className="rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 h-10 w-10"
           >
-            <ArrowLeft className="h-6 w-6" />
+            <Share2 className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Perfil da Loja</h1>
-          <div className="w-10" />
-        </div>
-      </header>
-
-      <main className="relative z-10">
-        {/* Banner */}
-        <div className="h-48 overflow-hidden bg-muted">
-          <img 
-            src={storeProfile.banner_loja_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'} 
-            alt={`Banner ${storeProfile.nome}`} 
-            className="w-full h-full object-cover" 
-          />
         </div>
 
-        {/* Store Info */}
-        <div className="container mx-auto px-4">
-          <div className="relative -mt-16 mb-6">
-            <Card className="bg-white border shadow-sm p-6">
-              <div className="flex items-start gap-4 mb-4">
-                <Avatar className="h-24 w-24 border-4 border-white shadow-md">
-                  <AvatarImage 
-                    src={storeProfile.foto_perfil_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=store'} 
-                    alt={storeProfile.nome} 
-                  />
-                  <AvatarFallback>{storeProfile.nome.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold mb-2">{storeProfile.nome}</h2>
-                  <p className="text-sm text-muted-foreground mb-3">{storeProfile.descricao_loja || 'Sem descrição'}</p>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span>{averageRating.toFixed(1)}</span>
-                    </div>
-                    <span className="text-muted-foreground">
-                      {storeReviews.length} {storeReviews.length === 1 ? 'avaliação' : 'avaliações'}
-                    </span>
-                    <span className="text-muted-foreground">{storeProducts.length} produtos</span>
-                  </div>
+        {/* Store info over banner */}
+        <div className="absolute bottom-0 left-0 right-0 p-5 lg:px-0">
+          <div className="lg:max-w-6xl lg:mx-auto flex items-end gap-4">
+            <Avatar className="h-20 w-20 lg:h-28 lg:w-28 ring-4 ring-white shadow-xl shrink-0">
+              <AvatarImage src={avatarUrl} alt={storeProfile.nome} />
+              <AvatarFallback className="text-2xl font-bold">{storeProfile.nome.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0 pb-1">
+              <h1 className="text-white font-bold text-xl lg:text-3xl truncate drop-shadow-lg">
+                {storeProfile.nome}
+              </h1>
+              {averageRating > 0 && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-white/90 text-sm font-medium">{averageRating.toFixed(1)}</span>
+                  <span className="text-white/60 text-sm">
+                    · {storeReviews.length} {storeReviews.length === 1 ? 'avaliação' : 'avaliações'}
+                  </span>
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                {user ? (
-                  <>
-                    <Button
-                      onClick={() => {
-                        navigate("/cliente/chat", { 
-                          state: { 
-                            supplierId: id,
-                            message: `Olá! Tenho interesse em seus produtos.`
-                          } 
-                        });
-                      }}
-                      className="flex-1 bg-primary hover:bg-primary/90 text-white"
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Chat
-                    </Button>
-                    <Button
-                      onClick={handleToggleFavorite}
-                      variant="outline"
-                      className={`px-4 ${isStoreFavorite ? "border-red-500 text-red-500" : "border-primary text-primary"}`}
-                    >
-                      <Heart className={`h-5 w-5 ${isStoreFavorite ? "fill-red-500" : ""}`} />
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    onClick={() => navigate("/auth")}
-                    className="flex-1 bg-primary hover:bg-primary/90 text-white"
-                  >
-                    Fazer login para interagir
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    const url = `${window.location.origin}/loja/${id}`;
-                    navigator.clipboard.writeText(url);
-                    toast.success("Link da loja copiado!");
-                  }}
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
+      {/* Stats Strip Card */}
+      <div className="relative z-10 px-4 lg:px-0 lg:max-w-6xl lg:mx-auto -mt-6">
+        <div className="bg-card rounded-2xl shadow-lg border p-4">
+          <div className="flex items-center justify-around text-center">
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1.5 text-primary">
+                <Star className="h-4 w-4 fill-primary text-primary" />
+                <span className="font-bold text-lg">{averageRating.toFixed(1)}</span>
               </div>
-              <div className="flex justify-end mt-2">
-                {id && <ReportButton targetType="supplier" targetId={id} />}
+              <span className="text-xs text-muted-foreground">Avaliação</span>
+            </div>
+            <div className="w-px h-8 bg-border" />
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1.5 text-foreground">
+                <Package className="h-4 w-4 text-primary" />
+                <span className="font-bold text-lg">{storeProducts.length}</span>
               </div>
-            </Card>
+              <span className="text-xs text-muted-foreground">Produtos</span>
+            </div>
+            <div className="w-px h-8 bg-border" />
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1.5 text-foreground">
+                <MessageCircle className="h-4 w-4 text-primary" />
+                <span className="font-bold text-lg">{storeReviews.length}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">Avaliações</span>
+            </div>
           </div>
 
-          {/* Tabs para Produtos e Avaliações */}
-          <Tabs defaultValue="products" className="mb-6">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="products">Produtos ({storeProducts.length})</TabsTrigger>
-              <TabsTrigger value="reviews">Avaliações ({storeReviews.length})</TabsTrigger>
-            </TabsList>
+          {/* Desktop action buttons */}
+          <div className="hidden lg:flex items-center gap-3 mt-4 pt-4 border-t">
+            <Button onClick={handleChat} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Falar com vendedor
+            </Button>
+            {user && (
+              <Button
+                onClick={handleToggleFavorite}
+                variant="outline"
+                className={`rounded-xl h-11 px-5 ${isStoreFavorite ? "border-destructive text-destructive" : "border-primary text-primary"}`}
+              >
+                <Heart className={`h-5 w-5 ${isStoreFavorite ? "fill-destructive" : ""}`} />
+                <span className="ml-2">{isStoreFavorite ? "Seguindo" : "Seguir"}</span>
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
 
-            <TabsContent value="products" className="mt-0">
-              <div className="grid grid-cols-2 gap-4">
+      {/* Tabs */}
+      <div className="relative z-10 mt-6 px-4 lg:px-0 lg:max-w-6xl lg:mx-auto">
+        <Tabs defaultValue="products">
+          <TabsList className="w-full bg-transparent border-b rounded-none h-auto p-0 gap-0">
+            <TabsTrigger
+              value="products"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary pb-3 pt-2 text-muted-foreground gap-1.5"
+            >
+              <Package className="h-4 w-4" />
+              Produtos
+            </TabsTrigger>
+            <TabsTrigger
+              value="reviews"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary pb-3 pt-2 text-muted-foreground gap-1.5"
+            >
+              <Star className="h-4 w-4" />
+              Avaliações
+            </TabsTrigger>
+            <TabsTrigger
+              value="about"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary pb-3 pt-2 text-muted-foreground gap-1.5"
+            >
+              <Info className="h-4 w-4" />
+              Sobre
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Products Tab */}
+          <TabsContent value="products" className="mt-6">
+            {storeProducts.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Package className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                <p>Nenhum produto cadastrado ainda.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                 {storeProducts.map((product) => (
-                  <Card
+                  <div
                     key={product.id}
                     onClick={() => navigate(`/cliente/produto/${product.id}`)}
-                    className="bg-white border shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                    className="group bg-card rounded-2xl border shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
                   >
-                    <div className="aspect-square overflow-hidden">
-                      <img 
-                        src={product.imagens?.[0] || '/placeholder.svg'} 
-                        alt={product.nome} 
-                        className="w-full h-full object-cover hover:scale-105 transition-transform" 
+                    <div className="aspect-[4/5] overflow-hidden bg-muted">
+                      <img
+                        src={product.imagens?.[0] || '/placeholder.svg'}
+                        alt={product.nome}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                    <div className="p-3">
-                      <p className="text-sm mb-2 line-clamp-2 font-semibold">{product.nome}</p>
-                      <div className="flex items-center gap-1 mb-2">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs text-muted-foreground">{product.rating_medio || 0}</span>
-                      </div>
-                      <p className="text-primary font-bold">{formatCurrencyFromDecimal(product.preco)}</p>
+                    <div className="p-3 lg:p-4 space-y-1.5">
+                      <p className="text-sm font-semibold line-clamp-2 text-foreground leading-tight">
+                        {product.nome}
+                      </p>
+                      {(product.rating_medio ?? 0) > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                          <span className="text-xs text-muted-foreground">{product.rating_medio}</span>
+                        </div>
+                      )}
+                      <p className="text-primary font-bold text-base">
+                        {formatCurrencyFromDecimal(product.preco)}
+                      </p>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
-            </TabsContent>
+            )}
+          </TabsContent>
 
-            <TabsContent value="reviews" className="mt-0">
-              <Card className="bg-white border shadow-sm p-6">
-                <ReviewsList reviews={storeReviews} loading={reviewsLoading} />
-              </Card>
-            </TabsContent>
-          </Tabs>
+          {/* Reviews Tab */}
+          <TabsContent value="reviews" className="mt-6">
+            {averageRating > 0 && (
+              <div className="flex items-center gap-3 mb-6 p-4 bg-card rounded-2xl border">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-foreground">{averageRating.toFixed(1)}</p>
+                  <div className="flex items-center gap-0.5 mt-1">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${i <= Math.round(averageRating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {storeReviews.length} {storeReviews.length === 1 ? 'avaliação' : 'avaliações'}
+                  </p>
+                </div>
+              </div>
+            )}
+            <ReviewsList reviews={storeReviews} loading={reviewsLoading} />
+          </TabsContent>
+
+          {/* About Tab */}
+          <TabsContent value="about" className="mt-6">
+            <div className="bg-card rounded-2xl border p-5 space-y-4">
+              <h3 className="font-semibold text-foreground text-lg">Sobre a loja</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {storeProfile.descricao_loja || 'Este vendedor ainda não adicionou uma descrição.'}
+              </p>
+              <div className="pt-2">
+                {id && <ReportButton targetType="supplier" targetId={id} />}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Mobile Fixed Bottom Action Bar */}
+      <div className="fixed bottom-16 left-0 right-0 z-30 lg:hidden">
+        <div className="mx-3 mb-2 bg-card/90 backdrop-blur-xl rounded-2xl shadow-lg border p-3 flex items-center gap-3">
+          <Button onClick={handleChat} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 text-sm font-semibold">
+            <MessageCircle className="h-5 w-5 mr-2" />
+            Falar com vendedor
+          </Button>
+          {user && (
+            <Button
+              onClick={handleToggleFavorite}
+              variant="outline"
+              size="icon"
+              className={`rounded-xl h-12 w-12 shrink-0 ${isStoreFavorite ? "border-destructive text-destructive" : "border-primary text-primary"}`}
+            >
+              <Heart className={`h-5 w-5 ${isStoreFavorite ? "fill-destructive" : ""}`} />
+            </Button>
+          )}
         </div>
-      </main>
+      </div>
 
       <BottomNav />
     </div>
