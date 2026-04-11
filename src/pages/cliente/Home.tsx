@@ -433,14 +433,6 @@ const ClienteHome = () => {
         </div>
       }
 
-      {/* Botão "Preciso de ajuda" */}
-      <button
-        onClick={() => navigate("/cliente/suporte")}
-        className="fixed bottom-24 right-4 z-50 lg:bottom-6 lg:right-6 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center"
-        title="Preciso de ajuda para encontrar um produto"
-      >
-        <HelpCircle className="h-6 w-6" />
-      </button>
 
       <BottomNav />
       <ProductSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
