@@ -1,10 +1,10 @@
-import { Home, MessageCircle, ShoppingBag, User } from "lucide-react";
+import { Home, MessageCircle, Bookmark, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const navItems = [
   { icon: Home, path: "/cliente" },
   { icon: MessageCircle, path: "/cliente/chat" },
-  { icon: ShoppingBag, path: "/cliente/meus-pedidos" },
+  { icon: Bookmark, path: "/cliente/favoritos" },
   { icon: User, path: "/cliente/perfil" },
 ];
 
@@ -16,7 +16,7 @@ export const BottomNav = () => {
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
       <div className="relative max-w-md mx-auto">
-        <div className="flex items-center justify-around h-16 px-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-around h-16 px-6 rounded-2xl bg-background/80 backdrop-blur-xl border border-border/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const active = activeIndex === index;
