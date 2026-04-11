@@ -177,7 +177,14 @@ const Chat = () => {
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setShowNegotiationForm(true)} className="shrink-0 gap-1.5 text-xs text-white hover:bg-white/10" title="Negociar">
+            <Button
+              variant="ghost"
+              size="sm"
+              data-tour="register-negotiation"
+              onClick={() => setShowNegotiationForm(true)}
+              className="shrink-0 gap-1.5 text-xs text-white hover:bg-white/10"
+              title="Negociar"
+            >
               <Handshake className="h-4 w-4" />
               <span>Negociar</span>
             </Button>
