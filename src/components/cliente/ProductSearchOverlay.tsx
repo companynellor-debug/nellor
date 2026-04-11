@@ -39,8 +39,15 @@ export const ProductSearchOverlay = ({ open, onClose }: ProductSearchOverlayProp
 
     for (const p of products) {
       const name = p.name.toLowerCase();
+      // Build searchable text from name, keywords, brand, description
+      const raw = p as any;
+      const keywords = Array.isArray(raw.keywords) ? raw.keywords.join(" ").toLowerCase() : "";
+      const brand = (raw.brand || "").toLowerCase();
+      const desc = (raw.shortDescription || raw.descricao_curta || "").toLowerCase();
+      const searchText = `${name} ${keywords} ${brand} ${desc}`;
+
       if (name.startsWith(q)) starts.push(p);
-      else if (name.includes(q)) contains.push(p);
+      else if (searchText.includes(q)) contains.push(p);
     }
     return [...starts, ...contains].slice(0, 8);
   }, [query, products]);
