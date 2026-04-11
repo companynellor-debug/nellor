@@ -45,7 +45,7 @@ export const ProductSearchOverlay = ({ open, onClose }: ProductSearchOverlayProp
     return [...starts, ...contains].slice(0, 8);
   }, [query, products]);
 
-  const handleSelect = (productId: string) => {
+  const handleSelect = (productId: number) => {
     onClose();
     navigate(`/cliente/produto/${productId}`);
   };
@@ -109,7 +109,7 @@ export const ProductSearchOverlay = ({ open, onClose }: ProductSearchOverlayProp
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {product.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    {product.price}
                   </p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
