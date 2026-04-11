@@ -367,8 +367,8 @@ const ClienteHome = () => {
             </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-            {filteredProducts.map((product) =>
-            <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`}>
+            {filteredProducts.map((product, idx) =>
+            <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`} {...(idx === 0 ? { "data-tour": "product-card" } : {})}>
                 <Card className="bg-background border overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group h-full rounded-2xl shadow-sm">
                   <div className="aspect-square overflow-hidden relative rounded-t-2xl">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
