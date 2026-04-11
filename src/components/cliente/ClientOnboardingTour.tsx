@@ -74,8 +74,9 @@ export const ClientOnboardingTour = () => {
   const [step, setStep] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
-  const [elementFound, setElementFound] = useState(false);
+  const [searching, setSearching] = useState(false);
   const waitingForRoute = useRef(false);
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep = STEPS[step];
 
@@ -86,15 +87,17 @@ export const ClientOnboardingTour = () => {
 
   // Measure spotlight target with retries
   useEffect(() => {
-    if (!shouldShowTour || currentStep?.type !== "spotlight") {
+    if (!shouldShowTour) return;
+    if (currentStep?.type !== "spotlight") {
       setSpotlightRect(null);
       setTooltipPos(null);
-      setElementFound(false);
+      setSearching(false);
       return;
     }
 
+    setSearching(true);
     let attempts = 0;
-    const maxAttempts = 5;
+    const maxAttempts = 8;
 
     const measure = () => {
       const el = findTarget();
@@ -108,24 +111,26 @@ export const ClientOnboardingTour = () => {
             top: tooltipTop > window.innerHeight - 200 ? rect.top - 180 : tooltipTop,
             left: tooltipLeft,
           });
-          setElementFound(true);
+          setSearching(false);
           waitingForRoute.current = false;
           return;
         }
       }
       attempts++;
       if (attempts < maxAttempts) {
-        setTimeout(measure, 500);
+        retryTimer.current = setTimeout(measure, 500);
       } else {
-        // Element not found after retries — show as modal fallback
+        // Element truly not found — show as modal fallback
         setSpotlightRect(null);
         setTooltipPos(null);
-        setElementFound(false);
+        setSearching(false);
       }
     };
 
-    const t = setTimeout(measure, 400);
-    return () => clearTimeout(t);
+    retryTimer.current = setTimeout(measure, 400);
+    return () => {
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+    };
   }, [shouldShowTour, step, currentStep, findTarget, location.pathname]);
 
   // Navigate to step route if needed
@@ -160,8 +165,24 @@ export const ClientOnboardingTour = () => {
 
   if (!shouldShowTour) return null;
 
+  // While still searching for the element, show a loading state
+  if (searching) {
+    return (
+      <div className="fixed inset-0 z-[9999]">
+        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-card rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-3">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground">Carregando...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const isModal = currentStep?.type === "modal";
-  const showAsModal = isModal || (currentStep?.type === "spotlight" && !elementFound);
+  const hasSpotlight = !isModal && spotlightRect;
+  const showAsModal = isModal || !hasSpotlight;
   const isLastStep = step === STEPS.length - 1;
   const isFirstStep = step === 0;
   const progress = ((step + 1) / STEPS.length) * 100;
@@ -169,7 +190,7 @@ export const ClientOnboardingTour = () => {
   return (
     <div className="fixed inset-0 z-[9999]">
       {/* Overlay */}
-      {showAsModal || !spotlightRect ? (
+      {showAsModal ? (
         <div className="absolute inset-0 bg-black/70" />
       ) : (
         <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -205,7 +226,7 @@ export const ClientOnboardingTour = () => {
         />
       )}
 
-      {/* Content */}
+      {/* Content — always visible */}
       {showAsModal ? (
         <div className="absolute inset-0 flex items-center justify-center p-6">
           <div className="bg-card text-card-foreground rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 relative">
@@ -219,22 +240,17 @@ export const ClientOnboardingTour = () => {
             </div>
             <p className="text-xs text-muted-foreground text-center">Passo {step + 1} de {STEPS.length}</p>
             <div className="flex gap-3">
-              {isFirstStep && (
-                <Button variant="ghost" onClick={handleSkip} className="flex-1">Pular</Button>
-              )}
-              {!isFirstStep && (
-                <Button variant="ghost" onClick={handleSkip} className="flex-1">Pular</Button>
-              )}
+              <Button variant="ghost" onClick={handleSkip} className="flex-1">Pular</Button>
               <Button onClick={handleNext} className="flex-1">
                 {isLastStep ? "Explorar a Nellor" : isFirstStep ? "Começar" : "Próximo"}
               </Button>
             </div>
           </div>
         </div>
-      ) : tooltipPos ? (
+      ) : (
         <div
           className="absolute bg-card text-card-foreground rounded-xl p-4 max-w-xs shadow-2xl space-y-3 border"
-          style={{ top: tooltipPos.top, left: tooltipPos.left }}
+          style={{ top: tooltipPos!.top, left: tooltipPos!.left }}
         >
           <p className="text-sm leading-relaxed">{currentStep.text}</p>
           <div className="w-full bg-muted rounded-full h-1.5">
@@ -246,7 +262,7 @@ export const ClientOnboardingTour = () => {
             <Button size="sm" onClick={handleNext} className="flex-1">Próximo</Button>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };
