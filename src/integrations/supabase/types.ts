@@ -1734,6 +1734,7 @@ export type Database = {
         Row: {
           ativo: boolean | null
           banner_loja_url: string | null
+          client_onboarding_completed: boolean | null
           created_at: string | null
           descricao_loja: string | null
           document: string | null
@@ -1761,6 +1762,7 @@ export type Database = {
         Insert: {
           ativo?: boolean | null
           banner_loja_url?: string | null
+          client_onboarding_completed?: boolean | null
           created_at?: string | null
           descricao_loja?: string | null
           document?: string | null
@@ -1788,6 +1790,7 @@ export type Database = {
         Update: {
           ativo?: boolean | null
           banner_loja_url?: string | null
+          client_onboarding_completed?: boolean | null
           created_at?: string | null
           descricao_loja?: string | null
           document?: string | null
