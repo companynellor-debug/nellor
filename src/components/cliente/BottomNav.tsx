@@ -38,6 +38,7 @@ export const BottomNav = () => {
                 key={item.path}
                 to={item.path}
                 className="flex flex-col items-center gap-1.5 transition-all duration-300"
+                {...(item.path === "/cliente/chat" ? { "data-tour": "chat-nav" } : {})}
               >
                 <Icon
                   className="h-[22px] w-[22px] text-muted-foreground/70 transition-colors duration-300"
