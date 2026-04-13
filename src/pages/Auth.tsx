@@ -271,6 +271,7 @@ const Auth = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+                autoComplete={isLogin ? "username" : "email"}
                 className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
               />
             </div>
@@ -285,6 +286,10 @@ const Auth = () => {
                 onChange={e => setPassword(e.target.value)}
                 required
                 minLength={6}
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-form-type="other"
                 className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
               />
             </div>
