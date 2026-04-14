@@ -6,15 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PageSkeleton from "@/components/PageSkeleton";
-import { AppModeProvider } from "@/hooks/useAppMode";
 
 // Lazy load layouts
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const ClienteLayout = lazy(() => import("./pages/cliente/ClienteLayout"));
 const FornecedorLayout = lazy(() => import("./pages/fornecedor/FornecedorLayout"));
-// DropModeLayout removido - Nellor Drop desativado temporariamente
 
-// Lazy load public pages (minimal - only welcome and auth)
+// Lazy load public pages
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -48,16 +46,9 @@ const Suporte = lazy(() => import("./pages/cliente/Suporte"));
 const PedidoConfirmado = lazy(() => import("./pages/cliente/PedidoConfirmado"));
 const InstalarApp = lazy(() => import("./pages/cliente/InstalarApp"));
 const ConfiguracoesNotificacoes = lazy(() => import("./pages/cliente/ConfiguracoesNotificacoes"));
-const ProgramaAfiliados = lazy(() => import("./pages/cliente/ProgramaAfiliados"));
-const AfiliadoCadastro = lazy(() => import("./pages/cliente/AfiliadoCadastro"));
-const PrestadorServicos = lazy(() => import("./pages/cliente/PrestadorServicos"));
 const SolicitarFornecedor = lazy(() => import("./pages/cliente/SolicitarFornecedor"));
 const MinhasNegociacoes = lazy(() => import("./pages/cliente/MinhasNegociacoes"));
-const CompararFornecedores = lazy(() => import("./pages/cliente/CompararFornecedores"));
-const ClienteCotacoes = lazy(() => import("./pages/cliente/Cotacoes"));
 const Ajuda = lazy(() => import("./pages/cliente/Ajuda"));
-
-// Drop Mode pages removidos - Nellor Drop desativado temporariamente
 
 // Lazy load fornecedor pages
 const Dashboard = lazy(() => import("./pages/fornecedor/Dashboard"));
@@ -70,13 +61,9 @@ const NotificacoesFornecedor = lazy(() => import("./pages/fornecedor/Notificacoe
 const EditarLoja = lazy(() => import("./pages/fornecedor/EditarLoja"));
 const Estatisticas = lazy(() => import("./pages/fornecedor/Estatisticas"));
 const Recebimentos = lazy(() => import("./pages/fornecedor/Recebimentos"));
-// PlanosFornecedor removido (Stripe/planos desativados)
 const ComoUsarFornecedor = lazy(() => import("./pages/fornecedor/ComoUsar"));
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
 const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
-// NellorDrop removido - desativado temporariamente
-const Patrocinio = lazy(() => import("./pages/fornecedor/Patrocinio"));
-const FornecedorCotacoes = lazy(() => import("./pages/fornecedor/Cotacoes"));
 const AssinaturaFornecedor = lazy(() => import("./pages/fornecedor/Assinatura"));
 
 // Lazy load admin pages
@@ -85,30 +72,24 @@ const AdminIndicadores = lazy(() => import("./pages/admin/Indicadores"));
 const AdminUsuarios = lazy(() => import("./pages/admin/Usuarios"));
 const AdminFornecedores = lazy(() => import("./pages/admin/Fornecedores"));
 const AdminVendas = lazy(() => import("./pages/admin/Vendas"));
-// AdminFinanceiro removido — modelo de pagamento legado
 const AdminRelatorios = lazy(() => import("./pages/admin/Relatorios"));
 const AdminAlertas = lazy(() => import("./pages/admin/Alertas"));
 const AdminConfiguracoes = lazy(() => import("./pages/admin/Configuracoes"));
-
 const AdminSuporteAdmin = lazy(() => import("./pages/admin/SuporteAdmin"));
 const AdminCategorias = lazy(() => import("./pages/admin/Categorias"));
 const AdminBanners = lazy(() => import("./pages/admin/Banners"));
 const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
-// Reconciliacao removido - era dependente do Stripe
-const AdminAffiliatePrestadores = lazy(() => import("./pages/admin/AffiliatePrestadores"));
-const AdminPatrocinios = lazy(() => import("./pages/admin/Patrocinios"));
 const AdminSolicitacoesFornecedor = lazy(() => import("./pages/admin/SolicitacoesFornecedor"));
 const AdminConversas = lazy(() => import("./pages/admin/Conversas"));
 const AdminDisputas = lazy(() => import("./pages/admin/Disputas"));
 const AdminAssinaturas = lazy(() => import("./pages/admin/Assinaturas"));
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 
-// Optimized QueryClient with aggressive caching
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 10, // 10 minutes
-      gcTime: 1000 * 60 * 15, // 15 minutes
+      staleTime: 1000 * 60 * 10,
+      gcTime: 1000 * 60 * 15,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       retry: 1,
@@ -123,146 +104,115 @@ const App = () => {
         <Toaster />
         <Sonner />
         <Suspense fallback={<PageSkeleton />}>
-          <AppModeProvider>
-            <Routes>
-              {/* Welcome Screen - única página pública */}
-              <Route path="/" element={<Welcome />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/termos-de-uso" element={<TermosDeUso />} />
-              
-              {/* Public Product Share Route (mantido para links de compartilhamento) */}
-              <Route path="/p/:id" element={<PublicProduto />} />
+          <Routes>
+            <Route path="/" element={<Welcome />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/termos-de-uso" element={<TermosDeUso />} />
+            <Route path="/p/:id" element={<PublicProduto />} />
+            <Route path="/loja/:id" element={<PerfilLoja />} />
+            <Route path="/pasta/:token" element={<PastaPublica />} />
+            <Route path="/carrinho/:token" element={<CarrinhoCompartilhado />} />
 
-              {/* Public Store Route - qualquer visitante pode ver */}
-              <Route path="/loja/:id" element={<PerfilLoja />} />
+            <Route
+              path="/fornecedor/onboarding"
+              element={
+                <ProtectedRoute requireType="fornecedor">
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Public Collection Route */}
-              <Route path="/pasta/:token" element={<PastaPublica />} />
+            <Route
+              path="/cliente"
+              element={
+                <ProtectedRoute requireType="cliente">
+                  <ClienteLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageSkeleton />}><ClienteHome /></Suspense>} />
+              <Route path="produtos" element={<Suspense fallback={<PageSkeleton />}><Produtos /></Suspense>} />
+              <Route path="produto/:id" element={<Suspense fallback={<PageSkeleton />}><ProdutoDetalhes /></Suspense>} />
+              <Route path="checkout" element={<Suspense fallback={<PageSkeleton />}><Checkout /></Suspense>} />
+              <Route path="checkout/sucesso" element={<Suspense fallback={<PageSkeleton />}><CheckoutSucesso /></Suspense>} />
+              <Route path="pedido-confirmado" element={<Suspense fallback={<PageSkeleton />}><PedidoConfirmado /></Suspense>} />
+              <Route path="chat" element={<Suspense fallback={<PageSkeleton />}><Chat /></Suspense>} />
+              <Route path="perfil" element={<Suspense fallback={<PageSkeleton />}><Perfil /></Suspense>} />
+              <Route path="editar-perfil" element={<Suspense fallback={<PageSkeleton />}><EditarPerfil /></Suspense>} />
+              <Route path="meus-pedidos" element={<Suspense fallback={<PageSkeleton />}><MeusPedidos /></Suspense>} />
+              <Route path="enderecos" element={<Suspense fallback={<PageSkeleton />}><Enderecos /></Suspense>} />
+              <Route path="seguranca" element={<Suspense fallback={<PageSkeleton />}><Seguranca /></Suspense>} />
+              <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><Notificacoes /></Suspense>} />
+              <Route path="avaliacoes" element={<Suspense fallback={<PageSkeleton />}><Avaliacoes /></Suspense>} />
+              <Route path="avaliar-pedido/:orderId" element={<Suspense fallback={<PageSkeleton />}><AvaliarPedido /></Suspense>} />
+              <Route path="favoritos" element={<Suspense fallback={<PageSkeleton />}><Favoritos /></Suspense>} />
+              <Route path="metodos-pagamento" element={<Suspense fallback={<PageSkeleton />}><MetodosPagamento /></Suspense>} />
+              <Route path="suporte" element={<Suspense fallback={<PageSkeleton />}><Suporte /></Suspense>} />
+              <Route path="instalar" element={<Suspense fallback={<PageSkeleton />}><InstalarApp /></Suspense>} />
+              <Route path="configuracoes-notificacoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesNotificacoes /></Suspense>} />
+              <Route path="carrinho" element={<Suspense fallback={<PageSkeleton />}><Carrinho /></Suspense>} />
+              <Route path="loja/:id" element={<Suspense fallback={<PageSkeleton />}><PerfilLoja /></Suspense>} />
+              <Route path="solicitar-fornecedor" element={<Suspense fallback={<PageSkeleton />}><SolicitarFornecedor /></Suspense>} />
+              <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><MinhasNegociacoes /></Suspense>} />
+              <Route path="ajuda" element={<Suspense fallback={<PageSkeleton />}><Ajuda /></Suspense>} />
+            </Route>
 
-              {/* Public Shared Cart Route */}
-              <Route path="/carrinho/:token" element={<CarrinhoCompartilhado />} />
+            <Route
+              path="/fornecedor"
+              element={
+                <ProtectedRoute requireType="fornecedor">
+                  <FornecedorLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>} />
+              <Route path="dashboard" element={<Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>} />
+              <Route path="pedidos" element={<Suspense fallback={<PageSkeleton />}><Pedidos /></Suspense>} />
+              <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><NegociacoesFornecedor /></Suspense>} />
+              <Route path="chat" element={<Suspense fallback={<PageSkeleton />}><ChatFornecedor /></Suspense>} />
+              <Route path="produtos" element={<Suspense fallback={<PageSkeleton />}><ProdutosFornecedor /></Suspense>} />
+              <Route path="financeiro" element={<Suspense fallback={<PageSkeleton />}><Financeiro /></Suspense>} />
+              <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><NotificacoesFornecedor /></Suspense>} />
+              <Route path="editar-loja" element={<Suspense fallback={<PageSkeleton />}><EditarLoja /></Suspense>} />
+              <Route path="estatisticas" element={<Suspense fallback={<PageSkeleton />}><Estatisticas /></Suspense>} />
+              <Route path="recebimentos" element={<Suspense fallback={<PageSkeleton />}><Recebimentos /></Suspense>} />
+              <Route path="como-usar" element={<Suspense fallback={<PageSkeleton />}><ComoUsarFornecedor /></Suspense>} />
+              <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
+              <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
+              <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
+              <Route path="assinatura" element={<Suspense fallback={<PageSkeleton />}><AssinaturaFornecedor /></Suspense>} />
+            </Route>
 
-              {/* Fornecedor Onboarding */}
-              <Route
-                path="/fornecedor/onboarding"
-                element={
-                  <ProtectedRoute requireType="fornecedor">
-                    <Onboarding />
-                  </ProtectedRoute>
-                }
-              />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requireType="admin">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Suspense fallback={<PageSkeleton />}><AdminDashboard /></Suspense>} />
+              <Route path="dashboard" element={<Suspense fallback={<PageSkeleton />}><AdminDashboard /></Suspense>} />
+              <Route path="indicadores" element={<Suspense fallback={<PageSkeleton />}><AdminIndicadores /></Suspense>} />
+              <Route path="usuarios" element={<Suspense fallback={<PageSkeleton />}><AdminUsuarios /></Suspense>} />
+              <Route path="fornecedores" element={<Suspense fallback={<PageSkeleton />}><AdminFornecedores /></Suspense>} />
+              <Route path="vendas" element={<Suspense fallback={<PageSkeleton />}><AdminVendas /></Suspense>} />
+              <Route path="relatorios" element={<Suspense fallback={<PageSkeleton />}><AdminRelatorios /></Suspense>} />
+              <Route path="alertas" element={<Suspense fallback={<PageSkeleton />}><AdminAlertas /></Suspense>} />
+              <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><AdminConfiguracoes /></Suspense>} />
+              <Route path="suporte" element={<Suspense fallback={<PageSkeleton />}><AdminSuporteAdmin /></Suspense>} />
+              <Route path="categorias" element={<Suspense fallback={<PageSkeleton />}><AdminCategorias /></Suspense>} />
+              <Route path="banners" element={<Suspense fallback={<PageSkeleton />}><AdminBanners /></Suspense>} />
+              <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
+              <Route path="solicitacoes-fornecedor" element={<Suspense fallback={<PageSkeleton />}><AdminSolicitacoesFornecedor /></Suspense>} />
+              <Route path="conversas" element={<Suspense fallback={<PageSkeleton />}><AdminConversas /></Suspense>} />
+              <Route path="disputas" element={<Suspense fallback={<PageSkeleton />}><AdminDisputas /></Suspense>} />
+              <Route path="assinaturas" element={<Suspense fallback={<PageSkeleton />}><AdminAssinaturas /></Suspense>} />
+            </Route>
 
-              {/* ========================================= */}
-              {/* MODO CLIENTE - Marketplace Normal */}
-              {/* ========================================= */}
-              <Route
-                path="/cliente"
-                element={
-                  <ProtectedRoute requireType="cliente">
-                    <ClienteLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Suspense fallback={<PageSkeleton />}><ClienteHome /></Suspense>} />
-                <Route path="produtos" element={<Suspense fallback={<PageSkeleton />}><Produtos /></Suspense>} />
-                <Route path="produto/:id" element={<Suspense fallback={<PageSkeleton />}><ProdutoDetalhes /></Suspense>} />
-                <Route path="checkout" element={<Suspense fallback={<PageSkeleton />}><Checkout /></Suspense>} />
-                <Route path="checkout/sucesso" element={<Suspense fallback={<PageSkeleton />}><CheckoutSucesso /></Suspense>} />
-                <Route path="pedido-confirmado" element={<Suspense fallback={<PageSkeleton />}><PedidoConfirmado /></Suspense>} />
-                <Route path="chat" element={<Suspense fallback={<PageSkeleton />}><Chat /></Suspense>} />
-                <Route path="perfil" element={<Suspense fallback={<PageSkeleton />}><Perfil /></Suspense>} />
-                <Route path="editar-perfil" element={<Suspense fallback={<PageSkeleton />}><EditarPerfil /></Suspense>} />
-                <Route path="meus-pedidos" element={<Suspense fallback={<PageSkeleton />}><MeusPedidos /></Suspense>} />
-                <Route path="enderecos" element={<Suspense fallback={<PageSkeleton />}><Enderecos /></Suspense>} />
-                <Route path="seguranca" element={<Suspense fallback={<PageSkeleton />}><Seguranca /></Suspense>} />
-                <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><Notificacoes /></Suspense>} />
-                <Route path="avaliacoes" element={<Suspense fallback={<PageSkeleton />}><Avaliacoes /></Suspense>} />
-                <Route path="avaliar-pedido/:orderId" element={<Suspense fallback={<PageSkeleton />}><AvaliarPedido /></Suspense>} />
-                <Route path="favoritos" element={<Suspense fallback={<PageSkeleton />}><Favoritos /></Suspense>} />
-                <Route path="metodos-pagamento" element={<Suspense fallback={<PageSkeleton />}><MetodosPagamento /></Suspense>} />
-                <Route path="suporte" element={<Suspense fallback={<PageSkeleton />}><Suporte /></Suspense>} />
-                <Route path="instalar" element={<Suspense fallback={<PageSkeleton />}><InstalarApp /></Suspense>} />
-                <Route path="configuracoes-notificacoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesNotificacoes /></Suspense>} />
-                <Route path="carrinho" element={<Suspense fallback={<PageSkeleton />}><Carrinho /></Suspense>} />
-                <Route path="loja/:id" element={<Suspense fallback={<PageSkeleton />}><PerfilLoja /></Suspense>} />
-                <Route path="afiliados" element={<Suspense fallback={<PageSkeleton />}><ProgramaAfiliados /></Suspense>} />
-                <Route path="afiliados/cadastro" element={<Suspense fallback={<PageSkeleton />}><AfiliadoCadastro /></Suspense>} />
-                <Route path="prestador-servicos" element={<Suspense fallback={<PageSkeleton />}><PrestadorServicos /></Suspense>} />
-                <Route path="solicitar-fornecedor" element={<Suspense fallback={<PageSkeleton />}><SolicitarFornecedor /></Suspense>} />
-                <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><MinhasNegociacoes /></Suspense>} />
-                <Route path="comparar-fornecedores" element={<Suspense fallback={<PageSkeleton />}><CompararFornecedores /></Suspense>} />
-                <Route path="cotacoes" element={<Suspense fallback={<PageSkeleton />}><ClienteCotacoes /></Suspense>} />
-                <Route path="ajuda" element={<Suspense fallback={<PageSkeleton />}><Ajuda /></Suspense>} />
-              </Route>
-
-              {/* Fornecedor Panel Routes */}
-              <Route
-                path="/fornecedor"
-                element={
-                  <ProtectedRoute requireType="fornecedor">
-                    <FornecedorLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>} />
-                <Route path="dashboard" element={<Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>} />
-                <Route path="pedidos" element={<Suspense fallback={<PageSkeleton />}><Pedidos /></Suspense>} />
-                <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><NegociacoesFornecedor /></Suspense>} />
-                <Route path="chat" element={<Suspense fallback={<PageSkeleton />}><ChatFornecedor /></Suspense>} />
-                <Route path="produtos" element={<Suspense fallback={<PageSkeleton />}><ProdutosFornecedor /></Suspense>} />
-                <Route path="financeiro" element={<Suspense fallback={<PageSkeleton />}><Financeiro /></Suspense>} />
-                <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><NotificacoesFornecedor /></Suspense>} />
-                <Route path="editar-loja" element={<Suspense fallback={<PageSkeleton />}><EditarLoja /></Suspense>} />
-                <Route path="estatisticas" element={<Suspense fallback={<PageSkeleton />}><Estatisticas /></Suspense>} />
-                <Route path="recebimentos" element={<Suspense fallback={<PageSkeleton />}><Recebimentos /></Suspense>} />
-                <Route path="como-usar" element={<Suspense fallback={<PageSkeleton />}><ComoUsarFornecedor /></Suspense>} />
-                <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
-                <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
-                <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
-                <Route path="patrocinio" element={<Suspense fallback={<PageSkeleton />}><Patrocinio /></Suspense>} />
-                <Route path="assinatura" element={<Suspense fallback={<PageSkeleton />}><AssinaturaFornecedor /></Suspense>} />
-                <Route path="cotacoes" element={<Suspense fallback={<PageSkeleton />}><FornecedorCotacoes /></Suspense>} />
-                {/* nellor-drop removido temporariamente */}
-              </Route>
-
-              {/* Admin Panel */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requireType="admin">
-                    <AdminLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Suspense fallback={<PageSkeleton />}><AdminDashboard /></Suspense>} />
-                <Route path="dashboard" element={<Suspense fallback={<PageSkeleton />}><AdminDashboard /></Suspense>} />
-                <Route path="indicadores" element={<Suspense fallback={<PageSkeleton />}><AdminIndicadores /></Suspense>} />
-                <Route path="usuarios" element={<Suspense fallback={<PageSkeleton />}><AdminUsuarios /></Suspense>} />
-                <Route path="fornecedores" element={<Suspense fallback={<PageSkeleton />}><AdminFornecedores /></Suspense>} />
-                <Route path="vendas" element={<Suspense fallback={<PageSkeleton />}><AdminVendas /></Suspense>} />
-                {/* financeiro admin removido */}
-                <Route path="relatorios" element={<Suspense fallback={<PageSkeleton />}><AdminRelatorios /></Suspense>} />
-                <Route path="alertas" element={<Suspense fallback={<PageSkeleton />}><AdminAlertas /></Suspense>} />
-                <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><AdminConfiguracoes /></Suspense>} />
-                
-                <Route path="suporte" element={<Suspense fallback={<PageSkeleton />}><AdminSuporteAdmin /></Suspense>} />
-                <Route path="categorias" element={<Suspense fallback={<PageSkeleton />}><AdminCategorias /></Suspense>} />
-                <Route path="banners" element={<Suspense fallback={<PageSkeleton />}><AdminBanners /></Suspense>} />
-                <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
-                {/* Rota de reconciliação removida - era dependente do Stripe */}
-                <Route path="afiliados-prestadores" element={<Suspense fallback={<PageSkeleton />}><AdminAffiliatePrestadores /></Suspense>} />
-                <Route path="patrocinios" element={<Suspense fallback={<PageSkeleton />}><AdminPatrocinios /></Suspense>} />
-                <Route path="solicitacoes-fornecedor" element={<Suspense fallback={<PageSkeleton />}><AdminSolicitacoesFornecedor /></Suspense>} />
-                <Route path="conversas" element={<Suspense fallback={<PageSkeleton />}><AdminConversas /></Suspense>} />
-                <Route path="disputas" element={<Suspense fallback={<PageSkeleton />}><AdminDisputas /></Suspense>} />
-                <Route path="assinaturas" element={<Suspense fallback={<PageSkeleton />}><AdminAssinaturas /></Suspense>} />
-              </Route>
-
-              {/* Catch-all - redirect to welcome */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AppModeProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </Suspense>
       </TooltipProvider>
     </QueryClientProvider>

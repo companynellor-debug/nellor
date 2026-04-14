@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
 import { ClientePrefetchProvider } from "@/hooks/useClientePrefetch";
-import { AffiliateTracker } from "@/components/cliente/AffiliateTracker";
 import { ProductsProvider } from "@/hooks/useProducts";
 import { StoresProvider } from "@/hooks/useStores";
 import { ReviewsProvider } from "@/hooks/useReviews";
@@ -15,7 +14,6 @@ const ClienteLayout = () => {
         <ReviewsProvider>
           <ClientePrefetchProvider>
             <ClientOnboardingTourProvider>
-              <AffiliateTracker />
               <Outlet />
               <ClientOnboardingTour />
               <FloatingHelpButton />

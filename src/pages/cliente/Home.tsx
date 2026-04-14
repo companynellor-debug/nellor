@@ -23,7 +23,7 @@ import { usePWA } from "@/hooks/usePWA";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useProductVariations } from "@/hooks/useProductVariations";
 import { getColorHex } from "@/utils/colorMap";
-import { useSponsoredProducts } from "@/hooks/useSponsoredProducts";
+
 import { useClientOnboardingTour } from "@/hooks/useClientOnboardingTour";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
@@ -58,7 +58,7 @@ const ClienteHome = () => {
   const { banners } = useSupabaseBanners();
   const { categories } = useSupabaseCategories();
   const { stores } = useSupabaseStores();
-  const { sponsoredIds } = useSponsoredProducts();
+  
   const { cartItems } = useCart();
   const { canInstall, isInstalled, isIOS, installApp } = usePWA();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -238,48 +238,6 @@ const ClienteHome = () => {
           </section>
         }
 
-        {/* Produtos Patrocinados */}
-        {sponsoredIds.length > 0 && (() => {
-          const sponsoredProducts = products.filter(p => sponsoredIds.includes((p as any).supplierUuid || p.id));
-          if (sponsoredProducts.length === 0) return null;
-          return (
-            <section className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" /> Destaques Patrocinados
-                </h2>
-              </div>
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {sponsoredProducts.map((product) => (
-                  <Link key={product.id} to={`/cliente/produto/${(product as any).supplierUuid || product.id}`} className="flex-shrink-0 w-44 lg:w-52">
-                    <Card className="bg-background border-primary/30 border-2 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group rounded-2xl">
-                      <div className="aspect-square overflow-hidden relative rounded-t-2xl">
-                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        <Badge className="absolute top-2.5 left-2.5 bg-primary text-primary-foreground text-[10px] gap-1 rounded-full px-2.5">
-                          <Sparkles className="h-3 w-3" /> Patrocinado
-                        </Badge>
-                        <div className="absolute bottom-2.5 left-2.5 bg-primary/90 text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-sm">
-                          {product.price}
-                        </div>
-                      </div>
-                      <div className="p-3">
-                        <p className="text-sm mb-2 line-clamp-2 text-foreground min-h-[40px]">{product.name}</p>
-                        {(product as any).supplierUuid && <ProductCardColorDots productId={(product as any).supplierUuid} />}
-                        <div className="flex items-center justify-between mt-1">
-                          <div className="flex items-center gap-1">
-                            <span className="text-yellow-500 text-sm">⭐</span>
-                            <span className="text-xs text-muted-foreground">{product.rating > 0 ? product.rating.toFixed(1) : '-'}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">{product.salesCount || 0} vendidos</span>
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          );
-        })()}
 
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
