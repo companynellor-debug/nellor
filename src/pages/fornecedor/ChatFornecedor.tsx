@@ -8,10 +8,6 @@ import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { usePresence } from "@/hooks/usePresence";
-import { useSupplierStories, SupplierWithStories } from "@/hooks/useSupplierStories";
-import { SupplierStories } from "@/components/chat/SupplierStories";
-import { StoryViewer } from "@/components/chat/StoryViewer";
-import { CreateStoryModal } from "@/components/chat/CreateStoryModal";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTypingPresence } from "@/hooks/useTypingPresence";
@@ -30,24 +26,19 @@ const ChatFornecedor = () => {
   const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const [customerProfiles, setCustomerProfiles] = useState<Record<string, CustomerProfile>>({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [showCreateStory, setShowCreateStory] = useState(false);
-  const [showSearchActive, setShowSearchActive] = useState(false);
-  const [viewingStorySupplier, setViewingStorySupplier] = useState<SupplierWithStories | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { sendMessage: sendSupabaseMessage, getConversations, getMessagesByUser, markAsRead } = useSupabaseMessages(user?.id);
   const { isUserOnline, getLastSeenText, fetchLastSeen } = usePresence(user?.id);
-  const { getGroupedStories, markAsViewed, createStory, deleteStory, getMyStories } = useSupplierStories();
+  
 
   const chatId = selectedCustomerId && user?.id ? [user.id, selectedCustomerId].sort().join('_') : '';
   const { isOtherUserTyping, startTyping, stopTyping } = useTypingPresence(chatId, user?.id);
 
   const conversations = getConversations();
   const messages = selectedCustomerId ? getMessagesByUser(selectedCustomerId) : [];
-  const myStories = getMyStories();
-  const groupedStories = getGroupedStories();
 
   // Fetch customer profiles - track conversation user IDs as a string key to avoid stale closures
   const conversationUserIds = conversations.map(c => c.userId).sort().join(',');

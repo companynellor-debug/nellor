@@ -7,9 +7,6 @@ import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake, Al
 import { useState, useEffect, useRef, useMemo } from "react";
 import { NegotiationForm } from "@/components/chat/NegotiationForm";
 import { VerifiedSupplierBadge } from "@/components/cliente/VerifiedSupplierBadge";
-import { SupplierStories } from "@/components/chat/SupplierStories";
-import { StoryViewer } from "@/components/chat/StoryViewer";
-import { SearchSuppliersSheet } from "@/components/chat/SearchSuppliersSheet";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MessageAttachment } from "@/hooks/useMessages";
 import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
@@ -18,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
 import { useTypingPresence } from "@/hooks/useTypingPresence";
 import { usePresence } from "@/hooks/usePresence";
-import { useSupplierStories, SupplierWithStories } from "@/hooks/useSupplierStories";
+
 import { supabase } from "@/integrations/supabase/client";
 
 const Chat = () => {
@@ -33,20 +30,18 @@ const Chat = () => {
   const [showNegotiationForm, setShowNegotiationForm] = useState(false);
   const [messageLimitInfo, setMessageLimitInfo] = useState<{ allowed: boolean; remaining: number; verified: boolean; is_new_account?: boolean } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showSearchSheet, setShowSearchSheet] = useState(false);
-  const [viewingStorySupplier, setViewingStorySupplier] = useState<SupplierWithStories | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { sendMessage: sendSupabaseMessage, getConversations, getMessagesByUser, markAsRead, getUnreadCount } = useSupabaseMessages();
   const { isUserOnline, getLastSeenText, fetchLastSeen } = usePresence(user?.id);
-  const { getGroupedStories, markAsViewed } = useSupplierStories();
+  
 
   const chatId = selectedUserId && user?.id ? [user.id, selectedUserId].sort().join('_') : '';
   const { isOtherUserTyping, startTyping, stopTyping } = useTypingPresence(chatId, user?.id);
 
   const conversations = getConversations();
-  const groupedStories = getGroupedStories();
+  
 
   // Fetch last seen for all conversation partners
   useEffect(() => {
@@ -131,16 +126,6 @@ const Chat = () => {
     }
   };
 
-  const handleStoryClick = (supplierId: string) => {
-    const supplier = groupedStories.find(s => s.supplierId === supplierId);
-    if (supplier) setViewingStorySupplier(supplier);
-  };
-
-  const handleStoryContact = (supplierId: string) => {
-    setViewingStorySupplier(null);
-    setSelectedUserId(supplierId);
-    markAsRead(supplierId);
-  };
 
   const currentMessages = selectedUserId ? getMessagesByUser(selectedUserId) : [];
   const selectedSupplier = selectedUserId ? stores.find(s => s.id === selectedUserId) : null;
@@ -308,77 +293,6 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Stories */}
-      {(groupedStories.length > 0 || true) && (
-        <div className="bg-white border-b">
-          <SupplierStories suppliers={groupedStories} onStoryClick={handleStoryClick} onSearchClick={() => setShowSearchSheet(true)} />
-        </div>
-      )}
-
-      {/* Conversations */}
-      <div className="divide-y">
-        {filteredConversations.length === 0 ? (
-          <div className="text-center py-12 px-4">
-            <p className="text-muted-foreground">Nenhuma conversa ainda</p>
-            <p className="text-sm text-muted-foreground mt-2">Use a busca acima para encontrar fornecedores</p>
-          </div>
-        ) : (
-          filteredConversations.map((conv) => {
-            const supplier = stores.find(s => s.id === conv.userId);
-            if (!supplier) return null;
-            const online = isUserOnline(conv.userId);
-            return (
-              <div
-                key={conv.userId}
-                onClick={() => { setSelectedUserId(conv.userId); markAsRead(conv.userId); }}
-                className="px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors active:bg-muted"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-shrink-0">
-                    <div className="w-14 h-14 rounded-full overflow-hidden">
-                      <img src={supplier.foto_perfil_url || '/placeholder.svg'} alt={supplier.nome} className="w-full h-full object-cover" />
-                    </div>
-                    {online && <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <h3 className="font-semibold truncate text-[15px]">{supplier.nome}</h3>
-                      <span className="text-[11px] text-muted-foreground flex-shrink-0 ml-2">
-                        {new Date(conv.lastMessage.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground truncate pr-2">{conv.lastMessage.text || 'Anexo'}</p>
-                      {conv.unreadCount > 0 && (
-                        <span className="bg-primary text-white text-[11px] rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 flex-shrink-0">
-                          {conv.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Story Viewer */}
-      {viewingStorySupplier && (
-        <StoryViewer
-          supplier={viewingStorySupplier}
-          onClose={() => setViewingStorySupplier(null)}
-          onContact={handleStoryContact}
-          onViewed={markAsViewed}
-        />
-      )}
-
-      {/* Search Suppliers Sheet */}
-      <SearchSuppliersSheet
-        open={showSearchSheet}
-        onOpenChange={setShowSearchSheet}
-        onSelectSupplier={(id) => { setSelectedUserId(id); markAsRead(id); }}
-      />
 
       <BottomNav />
     </div>
