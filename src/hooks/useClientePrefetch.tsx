@@ -33,7 +33,7 @@ const ClientePrefetchContext = createContext<ClientePrefetchContextType | undefi
 // Cache global para evitar refetch desnecessário
 let globalCache: ClienteData | null = null;
 let lastFetchTime = 0;
-const CACHE_TTL = 60_000; // 60 segundos
+const CACHE_TTL = 5 * 60_000; // 5 minutos
 
 const sortByCreatedAtDesc = (list: any[]) =>
   list.slice().sort((a, b) => ((a?.created_at || "") < (b?.created_at || "") ? 1 : -1));
