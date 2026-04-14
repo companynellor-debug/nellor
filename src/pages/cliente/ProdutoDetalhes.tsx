@@ -28,7 +28,7 @@ import { formatCurrencyFromDecimal } from "@/utils/currency";
 import { getColorHex } from "@/utils/colorMap";
 import ReportButton from "@/components/ReportButton";
 import PriceHistoryChart from "@/components/cliente/PriceHistoryChart";
-import SaveToFolderButton from "@/components/cliente/SaveToFolderButton";
+
 
 const SALE_UNIT_LABELS: Record<string, string> = {
   unit: 'Unidade', pair: 'Par', kit: 'Kit', closed_box: 'Caixa Fechada', bale: 'Fardo',
