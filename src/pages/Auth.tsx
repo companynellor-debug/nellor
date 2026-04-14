@@ -74,15 +74,6 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && isAuthenticated && profile) {
-      void syncAttributionsOnLogin(profile.id);
-
-      const storedSp = localStorage.getItem('nellor_service_provider_ref');
-      if (storedSp && profile.tipo === 'fornecedor') {
-        void acceptServiceProviderInvite(profile.id, storedSp).finally(() => {
-          localStorage.removeItem('nellor_service_provider_ref');
-        });
-      }
-
       const next = localStorage.getItem('nellor_post_auth_redirect');
       if (next && profile.tipo === 'cliente') {
         localStorage.removeItem('nellor_post_auth_redirect');
