@@ -63,7 +63,7 @@ const Estatisticas = lazy(() => import("./pages/fornecedor/Estatisticas"));
 const Recebimentos = lazy(() => import("./pages/fornecedor/Recebimentos"));
 const ComoUsarFornecedor = lazy(() => import("./pages/fornecedor/ComoUsar"));
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
-const PermissoesFornecedor = lazy(() => import("./pages/fornecedor/Permissoes"));
+
 const AssinaturaFornecedor = lazy(() => import("./pages/fornecedor/Assinatura"));
 
 // Lazy load admin pages
@@ -180,7 +180,7 @@ const App = () => {
               <Route path="como-usar" element={<Suspense fallback={<PageSkeleton />}><ComoUsarFornecedor /></Suspense>} />
               <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
               <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
-              <Route path="permissoes" element={<Suspense fallback={<PageSkeleton />}><PermissoesFornecedor /></Suspense>} />
+              
               <Route path="assinatura" element={<Suspense fallback={<PageSkeleton />}><AssinaturaFornecedor /></Suspense>} />
             </Route>
 

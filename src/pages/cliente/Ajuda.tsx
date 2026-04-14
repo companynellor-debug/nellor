@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, Search, MessageCircle, FileText, Star, AlertTriangle, ShoppingBag, GitCompareArrows, Compass, HeadphonesIcon } from "lucide-react";
+import { ArrowLeft, Search, MessageCircle, FileText, Star, AlertTriangle, Compass, HeadphonesIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import nellorLogo from "@/assets/nellor-logo.png";
@@ -15,8 +15,6 @@ const tutorialCards = [
   { icon: FileText, title: "Gerar PDF do Acordo", desc: "Crie um documento com todos os detalhes.", detail: "Após registrar a negociação, clique em 'Gerar PDF do Acordo'. O documento é gerado automaticamente e pode ser salvo ou enviado ao fornecedor como comprovante." },
   { icon: Star, title: "Avaliar Fornecedor", desc: "Deixe sua avaliação após receber o pedido.", detail: "Após confirmar o recebimento na negociação, um formulário de avaliação aparece automaticamente. Dê de 1 a 5 estrelas e deixe um comentário." },
   { icon: AlertTriangle, title: "Reportar Problema", desc: "Abra uma disputa se algo deu errado.", detail: "Na negociação, clique em 'Reportar Problema'. Descreva o ocorrido e a Nellor abrirá uma disputa, notificando o fornecedor que tem 48h para responder." },
-  { icon: ShoppingBag, title: "Cotações", desc: "Publique demandas e receba propostas.", detail: "Acesse Cotações no seu perfil, descreva o que precisa com quantidade e especificações. Fornecedores enviam propostas com preço e prazo. Aceite a melhor e siga para o chat." },
-  { icon: GitCompareArrows, title: "Comparar Fornecedores", desc: "Compare até 3 fornecedores lado a lado.", detail: "Na página Comparar Fornecedores, selecione até 3 para ver preço, avaliação e localização lado a lado. Ideal para tomar decisões informadas." },
 ];
 
 const faqCategories = [
