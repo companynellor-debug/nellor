@@ -1,67 +1,79 @@
 
 
-## Plan: Limpeza do Banco de Dados
+## Plan: Fix Chat, Remove Leftover Feature References, and Clean Database Data
 
-### O Problema
-O banco está em **565 MB** e o Supabase está avisando que excedeu a cota. A tabela `push_notification_logs` sozinha ocupa **350 MB** (715.268 linhas) — é a principal culpada.
+### Problems Identified
 
-Além disso, há **funcionalidades inativas** (Nellor Drop, Afiliados, Prestador de Serviço, Stories, Patrocínios, Cotações) com tabelas e funções RPC ocupando espaço desnecessário.
+1. **Chat broken**: The conversation list in `Chat.tsx` is missing its rendering code -- after the search bar there's nothing before `<BottomNav />`. The `filteredConversations` are computed but never rendered.
 
-### Ações
+2. **Removed features still linked in UI** (clicking them causes 404):
+   - **Home.tsx**: "Painel de Cotações" CTA card + "Comparar" button on suppliers section
+   - **Perfil.tsx**: "Minhas Cotações", "Comparar Fornecedores", "Programa de Afiliados" menu items + "Serviços Nellor" section (Afiliados + Prestador)
+   - **SupplierSidebar.tsx**: "Cotações" and "Patrocínio" menu items
+   - **AdminSidebar.tsx**: "Afiliados & Prestadores" and "Patrocínios" menu items
+   - **Ajuda.tsx**: Tutorial cards and FAQ entries about Cotações and Comparar Fornecedores
+   - **ClientOnboardingTour.tsx**: Tour steps about Cotações and Comparar Fornecedores
+   - **Permissoes.tsx**: References afiliados/prestadores (page itself is ComingSoon but route exists)
+   - **PublicProduto.tsx**: Affiliate tracking param cleanup code
+   - **Auth.tsx**: Service provider ref localStorage code
 
-#### 1. Limpar push_notification_logs (PRIORIDADE MÁXIMA)
-- Criar migration para **TRUNCATE** a tabela `push_notification_logs` (libera ~350 MB imediatamente)
-- Adicionar política de retenção: criar trigger ou cron que deleta logs com mais de 7 dias
+3. **Database over quota** (238MB / 500MB, egress at 135%):
+   - `notifications`: 493,823 rows = 139MB (biggest table)
+   - `orders`: 223 rows = 35MB
+   - `messages`: 96 rows = 1MB
+   - Other tables with test data: `activity_logs`, `reviews`, `login_attempts`, etc.
 
-#### 2. Dropar tabelas de funcionalidades inativas
-Tabelas a remover (todas vazias ou com dados de teste):
+### Actions
 
-**Drop/Nellor Drop (7 tabelas):**
-- `client_drop_products`, `client_drop_profiles`, `drop_audit_log`, `drop_orders`, `product_drop_settings`, `supplier_drop_settings`
+#### 1. Fix Chat conversation list rendering
+- Add back the conversation list JSX between search bar and BottomNav in `Chat.tsx`
+- Render `filteredConversations` with supplier name, last message preview, timestamp, unread badge
 
-**Afiliados (6 tabelas):**
-- `affiliate_attributions`, `affiliate_commission_items`, `affiliate_commissions`, `affiliate_links`, `affiliates`, `supplier_affiliate_settings`
+#### 2. Remove dead feature references from UI
 
-**Prestador de Serviço (5 tabelas):**
-- `service_provider_contract_requests`, `service_provider_crm`, `service_provider_requests`, `service_provider_suppliers`, `supplier_service_provider_settings`, `service_providers`
+**Home.tsx**: Remove "Cotações CTA" card (lines 187-199) and "Comparar" button from suppliers section (line 293-295)
 
-**Stories (2 tabelas):**
-- `supplier_stories`, `story_views`
+**Perfil.tsx**: Remove "Minhas Cotações", "Comparar Fornecedores", "Programa de Afiliados" from menu. Remove entire "Serviços Nellor" section (Afiliados + Prestador)
 
-**Patrocínios (2 tabelas):**
-- `sponsored_products`, `sponsorship_requests`
+**SupplierSidebar.tsx**: Remove "Cotações" and "Patrocínio" menu items
 
-**Cotações (2 tabelas):**
-- `quotation_proposals`, `quotation_requests`
+**AdminSidebar.tsx**: Remove "Afiliados & Prestadores" and "Patrocínios" menu items
 
-**Outros inativos (4 tabelas):**
-- `shared_carts`, `trend_requests`, `messages_archive`, `user_sessions`
+**Ajuda.tsx**: Remove tutorial cards and FAQ items about Cotações and Comparar Fornecedores
 
-**Total: ~28 tabelas removidas** (de 63 → ~35)
+**ClientOnboardingTour.tsx**: Remove tour steps for Cotações and Comparar Fornecedores, update final step text
 
-#### 3. Dropar funções RPC associadas
-17 funções a remover:
-- `accept_service_provider_invite`, `create_affiliate_commission_for_order`, `generate_affiliate_code`, `get_admin_affiliates`, `get_admin_service_providers`, `get_admin_sponsorship_requests`, `get_client_drop_stats`, `get_drop_admin_stats`, `get_drop_catalog`, `get_drop_clients_admin`, `get_drop_suppliers_admin`, `get_story_views`, `get_supplier_drop_stats`, `log_drop_audit`, `notify_new_sponsorship_request`, `track_affiliate_click`, `update_affiliate_earnings`
+**Auth.tsx**: Remove service provider ref code
 
-#### 4. Remover código frontend das features inativas
-- Remover páginas: `DropCatalogo`, `DropConfiguracoes`, `DropDashboard`, `DropFinanceiro`, `DropMarketplaces`, `DropMeusProdutos`, `DropModeLayout`, `DropNotificacoes`, `DropPedidos`, `NellorDrop` (admin + fornecedor)
-- Remover páginas: `ProgramaAfiliados`, `AfiliadoCadastro`, `AffiliatePrestadores`, `PrestadorServicos`, `Cotacoes` (cliente + fornecedor), `CompararFornecedores`, `Patrocinio`
-- Remover componentes: `AffiliateTracker`, `AffiliateSettingsPanel`, `ServiceProviderCodePanel`, `ServiceProviderIntegration`, `ServiceProviderProducts`, `SupplierProductDropModal`, `ModeSwitcher`, `ProductDetailModal`, `SupplierStories`, `StoryViewer`, `CreateStoryModal`, `SearchSuppliersSheet`, `ContractApprovalPanel`, `ServiceProviderRequestsPanel`
-- Remover hooks: `useAffiliateTracking`, `useSupplierAffiliateSettings`, `useSupplierDrop`, `useClientDrop`, `useAdminDrop`, `useSupplierStories`, `useCollections`, `useQuotations`, `useSponsoredProducts`, `useAppMode`
-- Limpar rotas no `App.tsx`
-- Remover edge functions: `admin-sponsorship-action`
+**PublicProduto.tsx**: Remove affiliate tracking param code
 
-#### 5. Dropar tipos enum não utilizados
-- `affiliate_status`, `commission_status` e outros associados às features removidas
+#### 3. Database data cleanup (migration)
+Truncate data from active tables to free space:
+- `TRUNCATE notifications` (139MB, 493K rows of test data)
+- `TRUNCATE orders` (35MB)  
+- `TRUNCATE messages` (1MB)
+- `TRUNCATE activity_logs, analytics, login_attempts, notification_sent_events, phone_verification_codes, reports, reviews, disputes`
+- `TRUNCATE collections, collection_items, collection_members`
+- `TRUNCATE negotiations, product_views, price_history`
+- Keep table structures intact, just remove all test data
 
-### Resultado Esperado
-- Banco de ~**50-80 MB** (redução de ~85%)
-- De 63 para ~35 tabelas
-- Código frontend significativamente mais limpo
-- Cota do Supabase normalizada
+This should bring database from ~238MB down to under 50MB.
 
-### Detalhes Técnicos
-- Uma migration SQL fará o TRUNCATE + DROP TABLE CASCADE + DROP FUNCTION
-- CASCADE garante que foreign keys, triggers e policies sejam removidos junto
-- O código frontend será limpo removendo arquivos e referências das rotas
+#### 4. Remove unused pages/components
+- Delete `src/pages/fornecedor/Permissoes.tsx` (just a ComingSoon wrapper for removed features)
+- Remove Permissoes route from App.tsx if still present
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/pages/cliente/Chat.tsx` | Restore conversation list rendering |
+| `src/pages/cliente/Home.tsx` | Remove Cotações CTA + Comparar button |
+| `src/pages/cliente/Perfil.tsx` | Remove dead menu items + Serviços section |
+| `src/pages/cliente/Ajuda.tsx` | Remove Cotações/Comparar tutorial + FAQ |
+| `src/components/cliente/ClientOnboardingTour.tsx` | Remove 2 tour steps |
+| `src/components/fornecedor/SupplierSidebar.tsx` | Remove 2 menu items |
+| `src/components/admin/AdminSidebar.tsx` | Remove 2 menu items |
+| `src/pages/Auth.tsx` | Remove service provider code |
+| `src/pages/PublicProduto.tsx` | Remove affiliate code |
+| Migration SQL | TRUNCATE all test data from active tables |
 
