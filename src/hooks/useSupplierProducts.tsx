@@ -51,8 +51,9 @@ export const useSupplierProducts = () => {
   const fetchProducts = useCallback(async (pageNum = 0, append = false) => {
     try {
       if (pageNum === 0) setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setLoading(false); return; }
+      const user = session.user;
 
       const from = pageNum * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;

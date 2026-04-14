@@ -51,7 +51,8 @@ export const useSupabaseOrders = () => {
   const fetchOrders = useCallback(async (pageNum = 0, append = false) => {
     try {
       if (pageNum === 0) setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
 
       if (!user) {
         userIdRef.current = null;
