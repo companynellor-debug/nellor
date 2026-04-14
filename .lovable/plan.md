@@ -1,74 +1,67 @@
 
 
-## Plan: Redesign do Perfil de Loja (PerfilLoja.tsx)
+## Plan: Limpeza do Banco de Dados
 
-### Overview
+### O Problema
+O banco está em **565 MB** e o Supabase está avisando que excedeu a cota. A tabela `push_notification_logs` sozinha ocupa **350 MB** (715.268 linhas) — é a principal culpada.
 
-Complete visual overhaul of `src/pages/cliente/PerfilLoja.tsx` inspired by the reference images, using only real data available in the system. No new database changes needed.
+Além disso, há **funcionalidades inativas** (Nellor Drop, Afiliados, Prestador de Serviço, Stories, Patrocínios, Cotações) com tabelas e funções RPC ocupando espaço desnecessário.
 
-### Available Real Data
-- `storeProfile.nome`, `descricao_loja`, `foto_perfil_url`, `banner_loja_url`
-- `averageRating`, `storeReviews.length`
-- `storeProducts` (array with `nome`, `preco`, `imagens`, `rating_medio`)
-- `isStoreFavorite`, `user` (auth state)
-- `VerifiedSupplierBadge` component (existing)
+### Ações
 
-### Changes (single file: `src/pages/cliente/PerfilLoja.tsx`)
+#### 1. Limpar push_notification_logs (PRIORIDADE MÁXIMA)
+- Criar migration para **TRUNCATE** a tabela `push_notification_logs` (libera ~350 MB imediatamente)
+- Adicionar política de retenção: criar trigger ou cron que deleta logs com mais de 7 dias
 
-**1. Hero Banner with Overlay (Mobile)**
-- Banner fills top area (~220px) with dark gradient overlay (`bg-gradient-to-t from-black/70 via-black/30 to-transparent`)
-- Store avatar (ring-4 ring-white, h-20 w-20) positioned bottom-left over banner
-- Store name, rating stars, review count rendered in white text over the overlay
-- Back button and Share button as translucent circular icons over the banner (no separate header bar)
-- Remove the current sticky white header entirely
+#### 2. Dropar tabelas de funcionalidades inativas
+Tabelas a remover (todas vazias ou com dados de teste):
 
-**2. Hero Banner (Desktop, lg+)**
-- Banner taller (~280px), same gradient overlay
-- Avatar larger (h-28 w-28), name and rating text larger
-- Content stays inside a max-w-6xl container
+**Drop/Nellor Drop (7 tabelas):**
+- `client_drop_products`, `client_drop_profiles`, `drop_audit_log`, `drop_orders`, `product_drop_settings`, `supplier_drop_settings`
 
-**3. Stats Strip Card**
-- Floating card (`-mt-6`, `rounded-2xl`, `shadow-lg`, `mx-4`) below the banner
-- Row of 3 metrics: `Star icon + averageRating`, `Package icon + storeProducts.length produtos`, `MessageCircle icon + storeReviews.length avaliações`
-- Clean horizontal dividers between metrics
-- VerifiedSupplierBadge shown here if verified
+**Afiliados (6 tabelas):**
+- `affiliate_attributions`, `affiliate_commission_items`, `affiliate_commissions`, `affiliate_links`, `affiliates`, `supplier_affiliate_settings`
 
-**4. Tabs Redesign**
-- 3 tabs: Produtos, Avaliações, Sobre
-- Custom styled tabs with icons (Package, Star, Info)
-- Active tab has purple bottom border indicator (not the default shadcn pill style)
-- Smooth transition between tabs
+**Prestador de Serviço (5 tabelas):**
+- `service_provider_contract_requests`, `service_provider_crm`, `service_provider_requests`, `service_provider_suppliers`, `supplier_service_provider_settings`, `service_providers`
 
-**5. Product Grid Enhancement**
-- Mobile: 2 columns, `gap-3`
-- Desktop (lg+): 3-4 columns
-- Cards: `rounded-2xl`, larger image area (`aspect-[4/5]`), hover scale effect
-- Product name `font-semibold text-sm line-clamp-2`
-- Price in `text-primary font-bold text-base`
-- Rating shown with small star + number
+**Stories (2 tabelas):**
+- `supplier_stories`, `story_views`
 
-**6. "Sobre" Tab (New)**
-- Shows `descricao_loja` in a clean card
-- ReportButton moved here
+**Patrocínios (2 tabelas):**
+- `sponsored_products`, `sponsorship_requests`
 
-**7. Fixed Bottom Action Bar (Mobile)**
-- Fixed bar above BottomNav (`bottom-16`) with glassmorphism background
-- Two buttons side by side:
-  - "Falar com vendedor" (primary, icon MessageCircle, flex-1)
-  - "Seguir" heart icon button (outline, toggles favorite)
-- Desktop: these buttons appear in the stats card area instead
+**Cotações (2 tabelas):**
+- `quotation_proposals`, `quotation_requests`
 
-**8. Reviews Tab**
-- Keep existing `ReviewsList` component (already well-designed)
-- Remove the wrapping Card, let ReviewsList render directly
+**Outros inativos (4 tabelas):**
+- `shared_carts`, `trend_requests`, `messages_archive`, `user_sessions`
 
-### Files Modified
-| File | Change |
-|------|--------|
-| `src/pages/cliente/PerfilLoja.tsx` | Full rewrite of JSX/layout |
+**Total: ~28 tabelas removidas** (de 63 → ~35)
 
-### Not Changed
-- No new hooks, no database changes, no new components
-- BottomNav, ReviewsList, ReportButton stay as-is
-- No fake badges ("Mais vendido", "Promoção") added
+#### 3. Dropar funções RPC associadas
+17 funções a remover:
+- `accept_service_provider_invite`, `create_affiliate_commission_for_order`, `generate_affiliate_code`, `get_admin_affiliates`, `get_admin_service_providers`, `get_admin_sponsorship_requests`, `get_client_drop_stats`, `get_drop_admin_stats`, `get_drop_catalog`, `get_drop_clients_admin`, `get_drop_suppliers_admin`, `get_story_views`, `get_supplier_drop_stats`, `log_drop_audit`, `notify_new_sponsorship_request`, `track_affiliate_click`, `update_affiliate_earnings`
+
+#### 4. Remover código frontend das features inativas
+- Remover páginas: `DropCatalogo`, `DropConfiguracoes`, `DropDashboard`, `DropFinanceiro`, `DropMarketplaces`, `DropMeusProdutos`, `DropModeLayout`, `DropNotificacoes`, `DropPedidos`, `NellorDrop` (admin + fornecedor)
+- Remover páginas: `ProgramaAfiliados`, `AfiliadoCadastro`, `AffiliatePrestadores`, `PrestadorServicos`, `Cotacoes` (cliente + fornecedor), `CompararFornecedores`, `Patrocinio`
+- Remover componentes: `AffiliateTracker`, `AffiliateSettingsPanel`, `ServiceProviderCodePanel`, `ServiceProviderIntegration`, `ServiceProviderProducts`, `SupplierProductDropModal`, `ModeSwitcher`, `ProductDetailModal`, `SupplierStories`, `StoryViewer`, `CreateStoryModal`, `SearchSuppliersSheet`, `ContractApprovalPanel`, `ServiceProviderRequestsPanel`
+- Remover hooks: `useAffiliateTracking`, `useSupplierAffiliateSettings`, `useSupplierDrop`, `useClientDrop`, `useAdminDrop`, `useSupplierStories`, `useCollections`, `useQuotations`, `useSponsoredProducts`, `useAppMode`
+- Limpar rotas no `App.tsx`
+- Remover edge functions: `admin-sponsorship-action`
+
+#### 5. Dropar tipos enum não utilizados
+- `affiliate_status`, `commission_status` e outros associados às features removidas
+
+### Resultado Esperado
+- Banco de ~**50-80 MB** (redução de ~85%)
+- De 63 para ~35 tabelas
+- Código frontend significativamente mais limpo
+- Cota do Supabase normalizada
+
+### Detalhes Técnicos
+- Uma migration SQL fará o TRUNCATE + DROP TABLE CASCADE + DROP FUNCTION
+- CASCADE garante que foreign keys, triggers e policies sejam removidos junto
+- O código frontend será limpo removendo arquivos e referências das rotas
 
