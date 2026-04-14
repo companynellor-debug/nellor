@@ -296,20 +296,18 @@ const ChatFornecedor = () => {
     <>
       {/* Mobile */}
       <div className="md:hidden min-h-screen bg-background">
-         <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 sticky top-0 z-10 flex items-center justify-between">
-           <div>
-             <h1 className="text-xl font-bold">Conversas</h1>
-             <p className="text-xs text-white/70">{conversations.length} conversas</p>
-           </div>
-         </div>
+        <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 sticky top-0 z-10 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">Conversas</h1>
+            <p className="text-xs text-white/70">{conversations.length} conversas</p>
+          </div>
         </div>
 
         <div className="p-2 bg-background sticky top-[68px] z-10 border-b">
           <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input ref={searchInputRef} placeholder="Pesquisar clientes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full h-9" /></div>
         </div>
 
-
-         <div className="divide-y pb-20">
+        <div className="divide-y pb-20">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground"><p className="text-lg">Nenhuma conversa</p><p className="text-sm mt-2">Mensagens dos clientes aparecerão aqui</p></div>
           ) : (
