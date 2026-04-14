@@ -326,10 +326,6 @@ const Perfil = () => {
               Sair da Conta
             </button>
           </TabsContent>
-
-          <TabsContent value="pastas" className="mt-0">
-            <CollectionsTab />
-          </TabsContent>
         </Tabs>
       </main>
 

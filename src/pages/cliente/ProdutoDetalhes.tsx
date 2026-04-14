@@ -359,9 +359,6 @@ const ProdutoDetalhes = () => {
             </button>
             <button onClick={handleShare} className="p-2 hover:bg-muted rounded-full transition-colors" title="Copiar link"><Share2 className="h-6 w-6 hover:text-primary transition-colors" /></button>
             <button onClick={handleToggleFavorite} className="p-2 hover:bg-muted rounded-full transition-colors"><Heart className={`h-6 w-6 transition-colors ${isProductFavorite ? "fill-red-500 text-red-500" : "hover:text-primary"}`} /></button>
-            {product?.supplierUuid && (
-              <SaveToFolderButton type="product" referenceId={product.supplierUuid} />
-            )}
           </div>
         </div>
       </header>
