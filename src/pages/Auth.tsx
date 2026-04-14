@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '@/assets/logo.png';
 import { Loader2, Mail, CheckCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -102,17 +102,6 @@ const Auth = () => {
     }
   }, [isAuthenticated, profile, loading, navigate]);
 
-  const acceptServiceProviderInvite = async (supplierId: string, spId: string) => {
-    try {
-      const { error } = await supabase.rpc('accept_service_provider_invite', {
-        _service_provider_id: spId,
-        _supplier_id: supplierId,
-      });
-      if (error) console.error('Error accepting service provider invite:', error);
-    } catch (error) {
-      console.error('Error in acceptServiceProviderInvite:', error);
-    }
-  };
 
   if (loading || (isAuthenticated && profile)) {
     return (

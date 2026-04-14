@@ -124,7 +124,6 @@ const ChatFornecedor = () => {
   });
 
   const focusSearchInput = () => {
-    setShowSearchActive(true);
     requestAnimationFrame(() => searchInputRef.current?.focus());
   };
 
@@ -297,45 +296,20 @@ const ChatFornecedor = () => {
     <>
       {/* Mobile */}
       <div className="md:hidden min-h-screen bg-background">
-        <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 sticky top-0 z-10 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Conversas</h1>
-            <p className="text-xs text-white/70">{conversations.length} conversas</p>
-          </div>
-          <button onClick={() => setShowCreateStory(true)} className="p-2 hover:bg-white/10 rounded-full"><Plus className="h-5 w-5" /></button>
+         <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 sticky top-0 z-10 flex items-center justify-between">
+           <div>
+             <h1 className="text-xl font-bold">Conversas</h1>
+             <p className="text-xs text-white/70">{conversations.length} conversas</p>
+           </div>
+         </div>
         </div>
 
         <div className="p-2 bg-background sticky top-[68px] z-10 border-b">
           <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input ref={searchInputRef} placeholder="Pesquisar clientes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full h-9" /></div>
         </div>
 
-        {/* My Stories */}
-        <div className="bg-background border-b">
-          <SupplierStories
-            suppliers={groupedStories.filter(s => s.supplierId !== user?.id)}
-            onStoryClick={(id) => {
-              const s = groupedStories.find(g => g.supplierId === id);
-              if (s) setViewingStorySupplier(s);
-            }}
-            onSearchClick={focusSearchInput}
-            showAddButton
-            onAddClick={() => {
-              if (myStories.length > 0) {
-                const myGroup = groupedStories.find(g => g.supplierId === user?.id);
-                if (myGroup) setViewingStorySupplier(myGroup);
-                else setShowCreateStory(true);
-              } else {
-                setShowCreateStory(true);
-              }
-            }}
-            myStories={myStories}
-          />
-        </div>
 
-        <div className="divide-y pb-20">
-          {showSearchActive && (
-            <div className="px-4 py-2 border-b bg-muted/30 text-xs text-muted-foreground">A busca filtra as conversas pelo nome real do cliente.</div>
-          )}
+         <div className="divide-y pb-20">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground"><p className="text-lg">Nenhuma conversa</p><p className="text-sm mt-2">Mensagens dos clientes aparecerão aqui</p></div>
           ) : (
@@ -374,39 +348,9 @@ const ChatFornecedor = () => {
       {/* Desktop */}
       <div className="hidden md:flex h-[calc(100vh-8rem)] gap-4">
         <Card className="w-80 flex-shrink-0 flex flex-col overflow-hidden">
-          <div className="p-4 border-b bg-gradient-to-r from-primary to-primary/80 text-primary-foreground flex items-center justify-between">
-            <h2 className="font-semibold text-lg">Conversas</h2>
-            <button onClick={() => {
-              if (myStories.length > 0) {
-                const myGroup = groupedStories.find(g => g.supplierId === user?.id);
-                if (myGroup) setViewingStorySupplier(myGroup);
-                else setShowCreateStory(true);
-              } else {
-                setShowCreateStory(true);
-              }
-            }} className="p-1.5 hover:bg-white/10 rounded-full"><Plus className="h-5 w-5" /></button>
-          </div>
-          <div className="border-b bg-card">
-            <SupplierStories
-              suppliers={groupedStories.filter(s => s.supplierId !== user?.id)}
-              onStoryClick={(id) => {
-                const s = groupedStories.find(g => g.supplierId === id);
-                if (s) setViewingStorySupplier(s);
-              }}
-              onSearchClick={focusSearchInput}
-              showAddButton
-              onAddClick={() => {
-                if (myStories.length > 0) {
-                  const myGroup = groupedStories.find(g => g.supplierId === user?.id);
-                  if (myGroup) setViewingStorySupplier(myGroup);
-                  else setShowCreateStory(true);
-                } else {
-                  setShowCreateStory(true);
-                }
-              }}
-              myStories={myStories}
-            />
-          </div>
+           <div className="p-4 border-b bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+             <h2 className="font-semibold text-lg">Conversas</h2>
+           </div>
           <div className="p-2 border-b">
             <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input ref={searchInputRef} placeholder="Pesquisar clientes..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 bg-muted border-0 rounded-full" /></div>
           </div>
@@ -442,13 +386,6 @@ const ChatFornecedor = () => {
         </Card>
       </div>
 
-      {/* Story Viewer */}
-      {viewingStorySupplier && (
-        <StoryViewer supplier={viewingStorySupplier} onClose={() => setViewingStorySupplier(null)} onContact={(id) => { setViewingStorySupplier(null); setSelectedCustomerId(id); }} onViewed={markAsViewed} onDelete={deleteStory} isOwnStory={viewingStorySupplier.supplierId === user?.id} />
-      )}
-
-      {/* Create Story Modal */}
-      <CreateStoryModal open={showCreateStory} onOpenChange={setShowCreateStory} onCreateStory={createStory} />
     </>
   );
 };

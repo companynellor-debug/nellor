@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { AffiliateSettingsPanel } from "@/components/fornecedor/AffiliateSettingsPanel";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useNavigate } from "react-router-dom";
