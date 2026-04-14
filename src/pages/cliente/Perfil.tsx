@@ -150,14 +150,11 @@ const Perfil = () => {
             {/* Menu principal */}
             <div className="space-y-1">
               {[
-                { icon: FileText, label: "Minhas Cotações", route: "/cliente/cotacoes", tourId: "cotacoes-menu" },
                 { icon: Handshake, label: "Minhas Negociações", route: "/cliente/negociacoes" },
-                { icon: GitCompareArrows, label: "Comparar Fornecedores", route: "/cliente/comparar-fornecedores", tourId: "comparar-menu" },
                 { icon: MapPin, label: "Meus Endereços", route: "/cliente/enderecos" },
                 { icon: CreditCard, label: "Métodos de Pagamento", route: "/cliente/metodos-pagamento" },
                 { icon: Shield, label: "Segurança", route: "/cliente/seguranca" },
                 { icon: Bell, label: "Notificações", route: "/cliente/notificacoes" },
-                { icon: Users, label: "Programa de Afiliados", route: "/cliente/afiliados" },
               ].map((item) => {
                 const Icon = item.icon;
                 return (

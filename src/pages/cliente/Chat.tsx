@@ -293,6 +293,60 @@ const Chat = () => {
         </div>
       </div>
 
+      {/* Conversation list */}
+      <div className="flex-1 overflow-y-auto">
+        {filteredConversations.length === 0 ? (
+          <div className="text-center py-16 px-4">
+            <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-muted-foreground font-medium">Nenhuma conversa</p>
+            <p className="text-xs text-muted-foreground mt-1">Visite a loja de um fornecedor e inicie uma conversa</p>
+          </div>
+        ) : (
+          filteredConversations.map((conv) => {
+            const supplier = stores.find(s => s.id === conv.userId);
+            const supplierName = supplier?.nome || 'Fornecedor';
+            const supplierAvatar = supplier?.foto_perfil_url || '/placeholder.svg';
+            const unread = getUnreadCount(conv.userId);
+            const lastMsg = conv.lastMessage;
+            const timeStr = lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+            const lastText = lastMsg?.text || 'Anexo';
+            const isFromMe = lastMsg?.from_user === user?.id;
+
+            return (
+              <button
+                key={conv.userId}
+                onClick={() => { setSelectedUserId(conv.userId); markAsRead(conv.userId); }}
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors border-b border-border/50"
+              >
+                <div className="relative flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/10">
+                    <img src={supplierAvatar} alt={supplierName} className="w-full h-full object-cover" />
+                  </div>
+                  {isUserOnline(conv.userId) && (
+                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-background" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className={`text-sm truncate ${unread > 0 ? 'font-bold text-foreground' : 'font-medium text-foreground'}`}>{supplierName}</h3>
+                    <span className={`text-[11px] flex-shrink-0 ${unread > 0 ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>{timeStr}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <p className={`text-xs truncate ${unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                      {isFromMe ? 'Você: ' : ''}{lastText}
+                    </p>
+                    {unread > 0 && (
+                      <span className="flex-shrink-0 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {unread > 9 ? '9+' : unread}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
 
       <BottomNav />
     </div>
