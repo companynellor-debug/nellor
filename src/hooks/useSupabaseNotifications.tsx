@@ -19,9 +19,9 @@ const PAGE_SIZE = 20;
 
 const checkIfSupplier = async (): Promise<boolean> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-    const { data: profile } = await supabase.from('profiles').select('tipo').eq('id', user.id).single();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return false;
+    const { data: profile } = await supabase.from('profiles').select('tipo').eq('id', session.user.id).single();
     return profile?.tipo === 'fornecedor' || profile?.tipo === 'admin';
   } catch { return false; }
 };
@@ -58,8 +58,9 @@ export const useSupabaseNotifications = () => {
   const fetchNotifications = useCallback(async (pageNum = 0, append = false) => {
     try {
       if (pageNum === 0) setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setNotifications([]); setUnreadCount(0); setLoading(false); return; }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setNotifications([]); setUnreadCount(0); setLoading(false); return; }
+      const userId = session.user.id;
 
       const from = pageNum * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
@@ -67,7 +68,7 @@ export const useSupabaseNotifications = () => {
       const { data, error } = await supabase
         .from('notifications')
         .select('id, user_id, title, body, data, type, sound, read, created_at')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -98,8 +99,8 @@ export const useSupabaseNotifications = () => {
     let userId: string | null = null;
 
     const setupRealtimeSubscription = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      userId = user?.id || null;
+      const { data: { session } } = await supabase.auth.getSession();
+      userId = session?.user?.id || null;
       if (!userId) return;
 
       const notificationsChannel = supabase
@@ -139,9 +140,9 @@ export const useSupabaseNotifications = () => {
 
   const markAllAsRead = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', session.user.id).eq('read', false);
       if (error) throw error;
       toast({ title: 'Notificações marcadas como lidas' });
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));

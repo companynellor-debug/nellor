@@ -33,7 +33,7 @@ const FornecedorPrefetchContext = createContext<FornecedorPrefetchContextType | 
 // Cache global para evitar refetch desnecessário
 let globalCache: FornecedorData | null = null;
 let lastFetchTime = 0;
-const CACHE_TTL = 60_000; // 60 segundos
+const CACHE_TTL = 5 * 60_000; // 5 minutos
 
 const sortByCreatedAtDesc = (list: any[]) =>
   list.slice().sort((a, b) => ((a?.created_at || "") < (b?.created_at || "") ? 1 : -1));
@@ -76,24 +76,24 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
   }, []);
 
   const fetchProfile = useCallback(async (uid: string) => {
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", uid).single();
+    const { data: profile } = await supabase.from("profiles").select("id, nome, email, tipo, telefone, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, ativo, store_slug, shipping_city, shipping_state, min_order_value, min_order_quantity, document").eq("id", uid).single();
     return profile;
   }, []);
 
   const fetchOrders = useCallback(async (uid: string) => {
     const { data: orders } = await supabase
       .from("orders")
-      .select("*")
+      .select("id, order_number, buyer_id, supplier_id, total, subtotal, frete, desconto, order_status, payment_method, payment_state, tracking_code, created_at, updated_at, itens, endereco_entrega")
       .eq("supplier_id", uid)
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(50);
     return orders || [];
   }, []);
 
   const fetchProducts = useCallback(async (uid: string) => {
     const { data: products } = await supabase
       .from("products")
-      .select("*")
+      .select("id, nome, descricao_curta, preco, estoque, categoria_id, imagens, ativo, rating_medio, total_reviews, vendas_count, sale_unit, min_order_quantity, created_at, updated_at")
       .eq("supplier_id", uid)
       .order("created_at", { ascending: false });
     return products || [];
@@ -102,10 +102,10 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
   const fetchNotifications = useCallback(async (uid: string) => {
     const { data: notifications } = await supabase
       .from("notifications")
-      .select("*")
+      .select("id, title, body, type, read, created_at, data")
       .eq("user_id", uid)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(30);
     return notifications || [];
   }, []);
 
@@ -115,9 +115,10 @@ export const FornecedorPrefetchProvider = ({ children }: { children: ReactNode }
   const fetchAnalytics = useCallback(async (uid: string) => {
     const { data: analytics } = await supabase
       .from("analytics")
-      .select("*")
+      .select("id, mes_referencia, total_pedidos, total_vendas, ticket_medio, lucro_estimado")
       .eq("supplier_id", uid)
-      .order("mes_referencia", { ascending: false });
+      .order("mes_referencia", { ascending: false })
+      .limit(12);
     return analytics || [];
   }, []);
 
