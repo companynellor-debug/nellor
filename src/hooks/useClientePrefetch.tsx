@@ -76,24 +76,24 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
   }, []);
 
   const fetchProfile = useCallback(async (uid: string) => {
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", uid).single();
+    const { data: profile } = await supabase.from("profiles").select("id, nome, email, tipo, telefone, foto_perfil_url, banner_loja_url, descricao_loja, endereco_principal, onboarding_completed, client_onboarding_completed, ativo, store_slug, phone_verified, document").eq("id", uid).single();
     return profile;
   }, []);
 
   const fetchOrders = useCallback(async (uid: string) => {
     const { data: orders } = await supabase
       .from("orders")
-      .select("*")
+      .select("id, order_number, buyer_id, supplier_id, total, subtotal, frete, desconto, order_status, payment_method, payment_state, tracking_code, created_at, updated_at, itens, endereco_entrega, estimated_delivery")
       .eq("buyer_id", uid)
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(50);
     return orders || [];
   }, []);
 
   const fetchAddresses = useCallback(async (uid: string) => {
     const { data: addresses } = await supabase
       .from("addresses")
-      .select("*")
+      .select("id, label, name, street, number, complement, neighborhood, city, state, zip_code, document, is_default")
       .eq("user_id", uid)
       .order("is_default", { ascending: false });
     return addresses || [];
@@ -102,19 +102,20 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
   const fetchNotifications = useCallback(async (uid: string) => {
     const { data: notifications } = await supabase
       .from("notifications")
-      .select("*")
+      .select("id, title, body, type, read, created_at, data")
       .eq("user_id", uid)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(30);
     return notifications || [];
   }, []);
 
   const fetchSupportTickets = useCallback(async (uid: string) => {
     const { data: tickets } = await supabase
       .from("support_tickets")
-      .select("*")
+      .select("id, assunto, mensagem, status, resposta_admin, created_at, updated_at")
       .eq("user_id", uid)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(20);
     return tickets || [];
   }, []);
 
@@ -299,57 +300,7 @@ export const ClientePrefetchProvider = ({ children }: { children: ReactNode }) =
     };
   }, [userId]);
 
-  // Polling inteligente (fallback) para confirmação de pagamentos Stripe
-  // - Só roda enquanto existir pedido cartão pendente com stripe_session_id
-  // - Dispara stripe-verify-payment no backend e refaz fetch somente se houve update
-  const pollingRunningRef = useRef(false);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const candidates = (data.orders || []).filter(
-      (o: any) =>
-        o?.payment_method === "cartao" &&
-        o?.payment_status === "pending" &&
-        !!o?.stripe_session_id
-    );
-
-    if (candidates.length === 0) return;
-
-    let cancelled = false;
-
-    const tick = async () => {
-      if (pollingRunningRef.current) return;
-      pollingRunningRef.current = true;
-      try {
-        const results = await Promise.allSettled(
-          candidates.map((o: any) =>
-            supabase.functions.invoke("stripe-verify-payment", {
-              body: { sessionId: o.stripe_session_id },
-            })
-          )
-        );
-
-        const anyUpdated = results.some(
-          (r) => r.status === "fulfilled" && (r as any).value?.data?.updated
-        );
-
-        if (anyUpdated && !cancelled) {
-          await refetchOrders();
-        }
-      } finally {
-        pollingRunningRef.current = false;
-      }
-    };
-
-    tick();
-    const id = window.setInterval(tick, 15_000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [userId, data.orders, refetchOrders]);
+  // Stripe polling removed — feature no longer exists
 
   return (
     <ClientePrefetchContext.Provider

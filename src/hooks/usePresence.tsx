@@ -40,7 +40,7 @@ export const usePresence = (userId?: string) => {
         .eq('id', userId);
     };
     updateLastSeen();
-    updateIntervalRef.current = setInterval(updateLastSeen, 60000);
+    updateIntervalRef.current = setInterval(updateLastSeen, 5 * 60000); // 5 min instead of 1 min
 
     return () => {
       if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
