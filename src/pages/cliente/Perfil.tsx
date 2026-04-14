@@ -9,7 +9,7 @@ import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { useNegotiations } from "@/hooks/useNegotiations";
 import { usePWA } from "@/hooks/usePWA";
 import { useSupplierApplication } from "@/hooks/useSupplierApplication";
-import CollectionsTab from "@/components/cliente/CollectionsTab";
+
 import { useClientOnboardingTour } from "@/hooks/useClientOnboardingTour";
 
 import nellorLogo from "@/assets/nellor-logo.png";
@@ -325,10 +325,6 @@ const Perfil = () => {
               <LogOut className="h-4 w-4" />
               Sair da Conta
             </button>
-          </TabsContent>
-
-          <TabsContent value="pastas" className="mt-0">
-            <CollectionsTab />
           </TabsContent>
         </Tabs>
       </main>

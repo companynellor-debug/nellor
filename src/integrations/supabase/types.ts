@@ -98,270 +98,6 @@ export type Database = {
         }
         Relationships: []
       }
-      affiliate_attributions: {
-        Row: {
-          affiliate_link_id: string
-          buyer_id: string | null
-          clicked_at: string | null
-          converted: boolean | null
-          expires_at: string
-          id: string
-          supplier_id: string
-          visitor_id: string | null
-        }
-        Insert: {
-          affiliate_link_id: string
-          buyer_id?: string | null
-          clicked_at?: string | null
-          converted?: boolean | null
-          expires_at: string
-          id?: string
-          supplier_id: string
-          visitor_id?: string | null
-        }
-        Update: {
-          affiliate_link_id?: string
-          buyer_id?: string | null
-          clicked_at?: string | null
-          converted?: boolean | null
-          expires_at?: string
-          id?: string
-          supplier_id?: string
-          visitor_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "affiliate_attributions_affiliate_link_id_fkey"
-            columns: ["affiliate_link_id"]
-            isOneToOne: false
-            referencedRelation: "affiliate_links"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      affiliate_commission_items: {
-        Row: {
-          commission_amount: number
-          commission_id: string
-          commission_percent: number
-          created_at: string
-          id: string
-          line_total: number
-          product_id: string
-          quantity: number
-          unit_price: number
-        }
-        Insert: {
-          commission_amount: number
-          commission_id: string
-          commission_percent: number
-          created_at?: string
-          id?: string
-          line_total: number
-          product_id: string
-          quantity?: number
-          unit_price: number
-        }
-        Update: {
-          commission_amount?: number
-          commission_id?: string
-          commission_percent?: number
-          created_at?: string
-          id?: string
-          line_total?: number
-          product_id?: string
-          quantity?: number
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "affiliate_commission_items_commission_id_fkey"
-            columns: ["commission_id"]
-            isOneToOne: false
-            referencedRelation: "affiliate_commissions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "affiliate_commission_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      affiliate_commissions: {
-        Row: {
-          affiliate_id: string
-          amount: number
-          attribution_id: string | null
-          commission_percent: number | null
-          created_at: string | null
-          id: string
-          order_id: string
-          order_total: number | null
-          paid_at: string | null
-          status: Database["public"]["Enums"]["commission_status"] | null
-          stripe_transfer_id: string | null
-          supplier_id: string | null
-        }
-        Insert: {
-          affiliate_id: string
-          amount: number
-          attribution_id?: string | null
-          commission_percent?: number | null
-          created_at?: string | null
-          id?: string
-          order_id: string
-          order_total?: number | null
-          paid_at?: string | null
-          status?: Database["public"]["Enums"]["commission_status"] | null
-          stripe_transfer_id?: string | null
-          supplier_id?: string | null
-        }
-        Update: {
-          affiliate_id?: string
-          amount?: number
-          attribution_id?: string | null
-          commission_percent?: number | null
-          created_at?: string | null
-          id?: string
-          order_id?: string
-          order_total?: number | null
-          paid_at?: string | null
-          status?: Database["public"]["Enums"]["commission_status"] | null
-          stripe_transfer_id?: string | null
-          supplier_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "affiliate_commissions_affiliate_id_fkey"
-            columns: ["affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "affiliate_commissions_attribution_id_fkey"
-            columns: ["attribution_id"]
-            isOneToOne: false
-            referencedRelation: "affiliate_attributions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "affiliate_commissions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      affiliate_links: {
-        Row: {
-          affiliate_id: string
-          clicks: number | null
-          code: string
-          conversions: number | null
-          created_at: string | null
-          id: string
-          product_id: string | null
-          supplier_id: string
-        }
-        Insert: {
-          affiliate_id: string
-          clicks?: number | null
-          code: string
-          conversions?: number | null
-          created_at?: string | null
-          id?: string
-          product_id?: string | null
-          supplier_id: string
-        }
-        Update: {
-          affiliate_id?: string
-          clicks?: number | null
-          code?: string
-          conversions?: number | null
-          created_at?: string | null
-          id?: string
-          product_id?: string | null
-          supplier_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "affiliate_links_affiliate_id_fkey"
-            columns: ["affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "affiliate_links_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      affiliates: {
-        Row: {
-          created_at: string | null
-          document_number: string | null
-          document_type: string | null
-          email: string | null
-          full_name: string | null
-          id: string
-          pending_earnings: number | null
-          pix_key: string | null
-          registration_step: number | null
-          status: Database["public"]["Enums"]["affiliate_status"]
-          stripe_account_id: string | null
-          stripe_ready: boolean | null
-          terms_accepted_at: string | null
-          total_earnings: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          document_number?: string | null
-          document_type?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          pending_earnings?: number | null
-          pix_key?: string | null
-          registration_step?: number | null
-          status?: Database["public"]["Enums"]["affiliate_status"]
-          stripe_account_id?: string | null
-          stripe_ready?: boolean | null
-          terms_accepted_at?: string | null
-          total_earnings?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          document_number?: string | null
-          document_type?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          pending_earnings?: number | null
-          pix_key?: string | null
-          registration_step?: number | null
-          status?: Database["public"]["Enums"]["affiliate_status"]
-          stripe_account_id?: string | null
-          stripe_ready?: boolean | null
-          terms_accepted_at?: string | null
-          total_earnings?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       analytics: {
         Row: {
           created_at: string | null
@@ -464,87 +200,6 @@ export type Database = {
           imagem_url?: string | null
           nome?: string
           slug?: string
-        }
-        Relationships: []
-      }
-      client_drop_products: {
-        Row: {
-          client_id: string
-          created_at: string | null
-          custom_price: number
-          id: string
-          is_active: boolean | null
-          margin_type: string | null
-          margin_value: number | null
-          product_drop_setting_id: string
-          product_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          client_id: string
-          created_at?: string | null
-          custom_price: number
-          id?: string
-          is_active?: boolean | null
-          margin_type?: string | null
-          margin_value?: number | null
-          product_drop_setting_id: string
-          product_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          client_id?: string
-          created_at?: string | null
-          custom_price?: number
-          id?: string
-          is_active?: boolean | null
-          margin_type?: string | null
-          margin_value?: number | null
-          product_drop_setting_id?: string
-          product_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_drop_products_product_drop_setting_id_fkey"
-            columns: ["product_drop_setting_id"]
-            isOneToOne: false
-            referencedRelation: "product_drop_settings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "client_drop_products_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      client_drop_profiles: {
-        Row: {
-          business_name: string | null
-          created_at: string | null
-          drop_enabled: boolean | null
-          id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          business_name?: string | null
-          created_at?: string | null
-          drop_enabled?: boolean | null
-          id?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          business_name?: string | null
-          created_at?: string | null
-          drop_enabled?: boolean | null
-          id?: string
-          updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -695,147 +350,6 @@ export type Database = {
           },
         ]
       }
-      drop_audit_log: {
-        Row: {
-          action: string
-          created_at: string | null
-          entity_id: string
-          entity_type: string
-          id: string
-          ip_address: string | null
-          new_value: Json | null
-          old_value: Json | null
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          action: string
-          created_at?: string | null
-          entity_id: string
-          entity_type: string
-          id?: string
-          ip_address?: string | null
-          new_value?: Json | null
-          old_value?: Json | null
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          action?: string
-          created_at?: string | null
-          entity_id?: string
-          entity_type?: string
-          id?: string
-          ip_address?: string | null
-          new_value?: Json | null
-          old_value?: Json | null
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      drop_orders: {
-        Row: {
-          base_price: number
-          buyer_document: string | null
-          buyer_email: string | null
-          buyer_name: string
-          buyer_phone: string | null
-          client_drop_product_id: string
-          client_id: string
-          client_margin: number
-          created_at: string | null
-          delivered_at: string | null
-          estimated_delivery: string | null
-          external_marketplace: string | null
-          external_order_id: string | null
-          id: string
-          order_number: string
-          order_status: string | null
-          product_id: string
-          quantity: number
-          sale_price: number
-          shipped_at: string | null
-          shipping_address: Json
-          shipping_company: string | null
-          supplier_id: string
-          total: number
-          tracking_code: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          base_price: number
-          buyer_document?: string | null
-          buyer_email?: string | null
-          buyer_name: string
-          buyer_phone?: string | null
-          client_drop_product_id: string
-          client_id: string
-          client_margin: number
-          created_at?: string | null
-          delivered_at?: string | null
-          estimated_delivery?: string | null
-          external_marketplace?: string | null
-          external_order_id?: string | null
-          id?: string
-          order_number?: string
-          order_status?: string | null
-          product_id: string
-          quantity?: number
-          sale_price: number
-          shipped_at?: string | null
-          shipping_address: Json
-          shipping_company?: string | null
-          supplier_id: string
-          total: number
-          tracking_code?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          base_price?: number
-          buyer_document?: string | null
-          buyer_email?: string | null
-          buyer_name?: string
-          buyer_phone?: string | null
-          client_drop_product_id?: string
-          client_id?: string
-          client_margin?: number
-          created_at?: string | null
-          delivered_at?: string | null
-          estimated_delivery?: string | null
-          external_marketplace?: string | null
-          external_order_id?: string | null
-          id?: string
-          order_number?: string
-          order_status?: string | null
-          product_id?: string
-          quantity?: number
-          sale_price?: number
-          shipped_at?: string | null
-          shipping_address?: Json
-          shipping_company?: string | null
-          supplier_id?: string
-          total?: number
-          tracking_code?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "drop_orders_client_drop_product_id_fkey"
-            columns: ["client_drop_product_id"]
-            isOneToOne: false
-            referencedRelation: "client_drop_products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "drop_orders_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       login_attempts: {
         Row: {
           created_at: string
@@ -921,42 +435,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      messages_archive: {
-        Row: {
-          archived_at: string | null
-          attachments: string[] | null
-          chat_id: string
-          created_at: string | null
-          from_user: string
-          id: string
-          read: boolean | null
-          text: string
-          to_user: string
-        }
-        Insert: {
-          archived_at?: string | null
-          attachments?: string[] | null
-          chat_id: string
-          created_at?: string | null
-          from_user: string
-          id?: string
-          read?: boolean | null
-          text: string
-          to_user: string
-        }
-        Update: {
-          archived_at?: string | null
-          attachments?: string[] | null
-          chat_id?: string
-          created_at?: string | null
-          from_user?: string
-          id?: string
-          read?: boolean | null
-          text?: string
-          to_user?: string
-        }
-        Relationships: []
       }
       negotiations: {
         Row: {
@@ -1390,59 +868,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      product_drop_settings: {
-        Row: {
-          allow_affiliates: boolean | null
-          allow_service_providers: boolean | null
-          commission_percent: number | null
-          created_at: string | null
-          drop_enabled: boolean | null
-          id: string
-          max_commission_percent: number | null
-          min_resale_price: number | null
-          product_id: string
-          shipping_days_estimate: number | null
-          supplier_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          allow_affiliates?: boolean | null
-          allow_service_providers?: boolean | null
-          commission_percent?: number | null
-          created_at?: string | null
-          drop_enabled?: boolean | null
-          id?: string
-          max_commission_percent?: number | null
-          min_resale_price?: number | null
-          product_id: string
-          shipping_days_estimate?: number | null
-          supplier_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          allow_affiliates?: boolean | null
-          allow_service_providers?: boolean | null
-          commission_percent?: number | null
-          created_at?: string | null
-          drop_enabled?: boolean | null
-          id?: string
-          max_commission_percent?: number | null
-          min_resale_price?: number | null
-          product_id?: string
-          shipping_days_estimate?: number | null
-          supplier_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_drop_settings_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: true
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       product_price_tiers: {
         Row: {
@@ -1916,109 +1341,6 @@ export type Database = {
           },
         ]
       }
-      quotation_proposals: {
-        Row: {
-          created_at: string
-          freight: number | null
-          id: string
-          notes: string | null
-          offer_validity_days: number | null
-          request_id: string
-          status: Database["public"]["Enums"]["proposal_status"]
-          supplier_id: string
-          unit_price: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          freight?: number | null
-          id?: string
-          notes?: string | null
-          offer_validity_days?: number | null
-          request_id: string
-          status?: Database["public"]["Enums"]["proposal_status"]
-          supplier_id: string
-          unit_price: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          freight?: number | null
-          id?: string
-          notes?: string | null
-          offer_validity_days?: number | null
-          request_id?: string
-          status?: Database["public"]["Enums"]["proposal_status"]
-          supplier_id?: string
-          unit_price?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quotation_proposals_request_id_fkey"
-            columns: ["request_id"]
-            isOneToOne: false
-            referencedRelation: "quotation_requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      quotation_requests: {
-        Row: {
-          buyer_id: string
-          category_id: string | null
-          created_at: string
-          deadline: string | null
-          description: string | null
-          id: string
-          proposals_count: number
-          quantity: number
-          specs_file_url: string | null
-          status: Database["public"]["Enums"]["quotation_status"]
-          title: string
-          unit: string | null
-          updated_at: string
-        }
-        Insert: {
-          buyer_id: string
-          category_id?: string | null
-          created_at?: string
-          deadline?: string | null
-          description?: string | null
-          id?: string
-          proposals_count?: number
-          quantity?: number
-          specs_file_url?: string | null
-          status?: Database["public"]["Enums"]["quotation_status"]
-          title: string
-          unit?: string | null
-          updated_at?: string
-        }
-        Update: {
-          buyer_id?: string
-          category_id?: string | null
-          created_at?: string
-          deadline?: string | null
-          description?: string | null
-          id?: string
-          proposals_count?: number
-          quantity?: number
-          specs_file_url?: string | null
-          status?: Database["public"]["Enums"]["quotation_status"]
-          title?: string
-          unit?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quotation_requests_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       reports: {
         Row: {
           created_at: string
@@ -2113,427 +1435,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      service_provider_contract_requests: {
-        Row: {
-          contract_type: string
-          created_at: string
-          id: string
-          monthly_value: number | null
-          notes: string | null
-          rejected_reason: string | null
-          requested_at: string
-          responded_at: string | null
-          service_provider_id: string
-          status: string
-          supplier_id: string
-          updated_at: string
-        }
-        Insert: {
-          contract_type: string
-          created_at?: string
-          id?: string
-          monthly_value?: number | null
-          notes?: string | null
-          rejected_reason?: string | null
-          requested_at?: string
-          responded_at?: string | null
-          service_provider_id: string
-          status?: string
-          supplier_id: string
-          updated_at?: string
-        }
-        Update: {
-          contract_type?: string
-          created_at?: string
-          id?: string
-          monthly_value?: number | null
-          notes?: string | null
-          rejected_reason?: string | null
-          requested_at?: string
-          responded_at?: string | null
-          service_provider_id?: string
-          status?: string
-          supplier_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "service_provider_contract_requests_service_provider_id_fkey"
-            columns: ["service_provider_id"]
-            isOneToOne: false
-            referencedRelation: "service_providers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      service_provider_crm: {
-        Row: {
-          client_email: string | null
-          client_name: string
-          client_phone: string | null
-          contract_type: Database["public"]["Enums"]["crm_contract_type"] | null
-          created_at: string | null
-          id: string
-          monthly_value: number | null
-          next_billing_date: string | null
-          notes: string | null
-          service_provider_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          client_email?: string | null
-          client_name: string
-          client_phone?: string | null
-          contract_type?:
-            | Database["public"]["Enums"]["crm_contract_type"]
-            | null
-          created_at?: string | null
-          id?: string
-          monthly_value?: number | null
-          next_billing_date?: string | null
-          notes?: string | null
-          service_provider_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          client_email?: string | null
-          client_name?: string
-          client_phone?: string | null
-          contract_type?:
-            | Database["public"]["Enums"]["crm_contract_type"]
-            | null
-          created_at?: string | null
-          id?: string
-          monthly_value?: number | null
-          next_billing_date?: string | null
-          notes?: string | null
-          service_provider_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "service_provider_crm_service_provider_id_fkey"
-            columns: ["service_provider_id"]
-            isOneToOne: false
-            referencedRelation: "service_providers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      service_provider_requests: {
-        Row: {
-          created_at: string
-          id: string
-          requested_at: string
-          responded_at: string | null
-          service_provider_id: string
-          status: string
-          supplier_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          requested_at?: string
-          responded_at?: string | null
-          service_provider_id: string
-          status?: string
-          supplier_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          requested_at?: string
-          responded_at?: string | null
-          service_provider_id?: string
-          status?: string
-          supplier_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "service_provider_requests_service_provider_id_fkey"
-            columns: ["service_provider_id"]
-            isOneToOne: false
-            referencedRelation: "service_providers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_provider_requests_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_provider_requests_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "public_supplier_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      service_provider_suppliers: {
-        Row: {
-          created_at: string | null
-          id: string
-          service_provider_id: string
-          supplier_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          service_provider_id: string
-          supplier_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          service_provider_id?: string
-          supplier_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "service_provider_suppliers_service_provider_id_fkey"
-            columns: ["service_provider_id"]
-            isOneToOne: false
-            referencedRelation: "service_providers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      service_providers: {
-        Row: {
-          business_name: string
-          created_at: string | null
-          description: string | null
-          id: string
-          service_type: string
-          status: Database["public"]["Enums"]["service_provider_status"] | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          business_name: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          service_type: string
-          status?: Database["public"]["Enums"]["service_provider_status"] | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          business_name?: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          service_type?: string
-          status?: Database["public"]["Enums"]["service_provider_status"] | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      shared_carts: {
-        Row: {
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          items: Json
-          share_token: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          items?: Json
-          share_token?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          items?: Json
-          share_token?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      sponsored_products: {
-        Row: {
-          approved_at: string | null
-          banner_url: string | null
-          created_at: string
-          description: string | null
-          expires_at: string | null
-          id: string
-          product_id: string
-          status: string
-          supplier_id: string
-        }
-        Insert: {
-          approved_at?: string | null
-          banner_url?: string | null
-          created_at?: string
-          description?: string | null
-          expires_at?: string | null
-          id?: string
-          product_id: string
-          status?: string
-          supplier_id: string
-        }
-        Update: {
-          approved_at?: string | null
-          banner_url?: string | null
-          created_at?: string
-          description?: string | null
-          expires_at?: string | null
-          id?: string
-          product_id?: string
-          status?: string
-          supplier_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sponsored_products_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sponsorship_requests: {
-        Row: {
-          admin_response: string | null
-          banner_image_url: string | null
-          created_at: string | null
-          id: string
-          message: string | null
-          product_id: string | null
-          scheduled_date: string | null
-          status: Database["public"]["Enums"]["sponsorship_status"] | null
-          supplier_id: string
-          type: Database["public"]["Enums"]["sponsorship_type"]
-        }
-        Insert: {
-          admin_response?: string | null
-          banner_image_url?: string | null
-          created_at?: string | null
-          id?: string
-          message?: string | null
-          product_id?: string | null
-          scheduled_date?: string | null
-          status?: Database["public"]["Enums"]["sponsorship_status"] | null
-          supplier_id: string
-          type: Database["public"]["Enums"]["sponsorship_type"]
-        }
-        Update: {
-          admin_response?: string | null
-          banner_image_url?: string | null
-          created_at?: string | null
-          id?: string
-          message?: string | null
-          product_id?: string | null
-          scheduled_date?: string | null
-          status?: Database["public"]["Enums"]["sponsorship_status"] | null
-          supplier_id?: string
-          type?: Database["public"]["Enums"]["sponsorship_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sponsorship_requests_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      story_views: {
-        Row: {
-          id: string
-          story_id: string
-          viewed_at: string
-          viewer_id: string
-        }
-        Insert: {
-          id?: string
-          story_id: string
-          viewed_at?: string
-          viewer_id: string
-        }
-        Update: {
-          id?: string
-          story_id?: string
-          viewed_at?: string
-          viewer_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "story_views_story_id_fkey"
-            columns: ["story_id"]
-            isOneToOne: false
-            referencedRelation: "supplier_stories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "story_views_viewer_id_fkey"
-            columns: ["viewer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "story_views_viewer_id_fkey"
-            columns: ["viewer_id"]
-            isOneToOne: false
-            referencedRelation: "public_supplier_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      supplier_affiliate_settings: {
-        Row: {
-          allow_affiliates: boolean | null
-          allow_recurring_commission: boolean | null
-          commission_duration_days: number
-          created_at: string | null
-          default_commission_percent: number | null
-          id: string
-          recurring_duration_months: number | null
-          supplier_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          allow_affiliates?: boolean | null
-          allow_recurring_commission?: boolean | null
-          commission_duration_days?: number
-          created_at?: string | null
-          default_commission_percent?: number | null
-          id?: string
-          recurring_duration_months?: number | null
-          supplier_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          allow_affiliates?: boolean | null
-          allow_recurring_commission?: boolean | null
-          commission_duration_days?: number
-          created_at?: string | null
-          default_commission_percent?: number | null
-          id?: string
-          recurring_duration_months?: number | null
-          supplier_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       supplier_applications: {
         Row: {
@@ -2652,78 +1553,6 @@ export type Database = {
         }
         Relationships: []
       }
-      supplier_drop_settings: {
-        Row: {
-          allow_affiliates_on_drop: boolean | null
-          allow_service_providers_on_drop: boolean | null
-          created_at: string | null
-          default_commission_percent: number | null
-          drop_enabled: boolean | null
-          id: string
-          min_order_value: number | null
-          supplier_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          allow_affiliates_on_drop?: boolean | null
-          allow_service_providers_on_drop?: boolean | null
-          created_at?: string | null
-          default_commission_percent?: number | null
-          drop_enabled?: boolean | null
-          id?: string
-          min_order_value?: number | null
-          supplier_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          allow_affiliates_on_drop?: boolean | null
-          allow_service_providers_on_drop?: boolean | null
-          created_at?: string | null
-          default_commission_percent?: number | null
-          drop_enabled?: boolean | null
-          id?: string
-          min_order_value?: number | null
-          supplier_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      supplier_service_provider_settings: {
-        Row: {
-          allow_service_providers: boolean | null
-          can_edit_description: boolean | null
-          can_edit_photos: boolean | null
-          can_edit_price: boolean | null
-          can_edit_stock: boolean | null
-          created_at: string | null
-          id: string
-          supplier_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          allow_service_providers?: boolean | null
-          can_edit_description?: boolean | null
-          can_edit_photos?: boolean | null
-          can_edit_price?: boolean | null
-          can_edit_stock?: boolean | null
-          created_at?: string | null
-          id?: string
-          supplier_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          allow_service_providers?: boolean | null
-          can_edit_description?: boolean | null
-          can_edit_photos?: boolean | null
-          can_edit_price?: boolean | null
-          can_edit_stock?: boolean | null
-          created_at?: string | null
-          id?: string
-          supplier_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       supplier_shipping_config: {
         Row: {
           created_at: string
@@ -2828,54 +1657,6 @@ export type Database = {
           },
           {
             foreignKeyName: "supplier_shipping_regions_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "public_supplier_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      supplier_stories: {
-        Row: {
-          bg_color: string | null
-          caption: string | null
-          created_at: string
-          expires_at: string
-          id: string
-          media_url: string | null
-          supplier_id: string
-          type: string
-        }
-        Insert: {
-          bg_color?: string | null
-          caption?: string | null
-          created_at?: string
-          expires_at?: string
-          id?: string
-          media_url?: string | null
-          supplier_id: string
-          type?: string
-        }
-        Update: {
-          bg_color?: string | null
-          caption?: string | null
-          created_at?: string
-          expires_at?: string
-          id?: string
-          media_url?: string | null
-          supplier_id?: string
-          type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "supplier_stories_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "supplier_stories_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "public_supplier_profiles"
@@ -3002,41 +1783,6 @@ export type Database = {
           },
         ]
       }
-      trend_requests: {
-        Row: {
-          approved_at: string | null
-          created_at: string
-          id: string
-          product_id: string
-          status: string
-          supplier_id: string
-        }
-        Insert: {
-          approved_at?: string | null
-          created_at?: string
-          id?: string
-          product_id: string
-          status?: string
-          supplier_id: string
-        }
-        Update: {
-          approved_at?: string | null
-          created_at?: string
-          id?: string
-          product_id?: string
-          status?: string
-          supplier_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trend_requests_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -3054,39 +1800,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_sessions: {
-        Row: {
-          created_at: string
-          device_info: string | null
-          id: string
-          ip_address: string | null
-          is_active: boolean
-          last_active_at: string
-          token: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          device_info?: string | null
-          id?: string
-          ip_address?: string | null
-          is_active?: boolean
-          last_active_at?: string
-          token?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          device_info?: string | null
-          id?: string
-          ip_address?: string | null
-          is_active?: boolean
-          last_active_at?: string
-          token?: string | null
           user_id?: string
         }
         Relationships: []
@@ -3127,10 +1840,6 @@ export type Database = {
       }
     }
     Functions: {
-      accept_service_provider_invite: {
-        Args: { _service_provider_id: string; _supplier_id: string }
-        Returns: boolean
-      }
       admin_approve_supplier_application: {
         Args: { _application_id: string }
         Returns: boolean
@@ -3158,51 +1867,10 @@ export type Database = {
       bytea_to_text: { Args: { data: string }; Returns: string }
       check_chat_message_limit: { Args: { _user_id: string }; Returns: Json }
       check_login_blocked: { Args: { _email: string }; Returns: Json }
-      create_affiliate_commission_for_order: {
-        Args: { _order_id: string }
-        Returns: undefined
-      }
+      cleanup_old_push_logs: { Args: never; Returns: undefined }
       format_brl: { Args: { value: number }; Returns: string }
-      generate_affiliate_code: { Args: never; Returns: string }
-      generate_or_get_supplier_code: {
-        Args: { _supplier_id: string }
-        Returns: string
-      }
       generate_order_number: { Args: never; Returns: string }
       generate_store_slug: { Args: { store_name: string }; Returns: string }
-      generate_supplier_code: { Args: never; Returns: string }
-      get_active_attribution: {
-        Args: { _buyer_id: string; _supplier_id: string }
-        Returns: {
-          affiliate_id: string
-          affiliate_link_id: string
-          attribution_id: string
-          clicked_at: string
-          expires_at: string
-        }[]
-      }
-      get_admin_affiliates: {
-        Args: never
-        Returns: {
-          clicks_count: number
-          conversions_count: number
-          created_at: string
-          document_number: string
-          document_type: string
-          email: string
-          full_name: string
-          id: string
-          links_count: number
-          pending_earnings: number
-          registration_step: number
-          status: string
-          stripe_ready: boolean
-          total_earnings: number
-          user_email: string
-          user_id: string
-          user_name: string
-        }[]
-      }
       get_admin_chat_messages: {
         Args: { _chat_id: string }
         Returns: {
@@ -3213,39 +1881,6 @@ export type Database = {
           text: string
           to_name: string
           to_user: string
-        }[]
-      }
-      get_admin_commissions: {
-        Args: never
-        Returns: {
-          affiliate_id: string
-          affiliate_name: string
-          amount: number
-          commission_percent: number
-          created_at: string
-          id: string
-          order_id: string
-          order_number: string
-          order_total: number
-          paid_at: string
-          status: string
-        }[]
-      }
-      get_admin_contract_requests: {
-        Args: never
-        Returns: {
-          contract_type: string
-          id: string
-          monthly_value: number
-          notes: string
-          rejected_reason: string
-          requested_at: string
-          responded_at: string
-          service_provider_id: string
-          sp_name: string
-          status: string
-          supplier_id: string
-          supplier_name: string
         }[]
       }
       get_admin_conversations: {
@@ -3339,41 +1974,6 @@ export type Database = {
           status: string
           target_id: string
           target_type: string
-        }[]
-      }
-      get_admin_service_providers: {
-        Args: never
-        Returns: {
-          business_name: string
-          created_at: string
-          crm_clients_count: number
-          description: string
-          id: string
-          pending_contracts: number
-          service_type: string
-          status: string
-          suppliers_count: number
-          user_email: string
-          user_id: string
-          user_name: string
-          user_photo: string
-        }[]
-      }
-      get_admin_sponsorship_requests: {
-        Args: never
-        Returns: {
-          admin_response: string
-          banner_image_url: string
-          created_at: string
-          id: string
-          message: string
-          product_id: string
-          product_name: string
-          scheduled_date: string
-          status: string
-          supplier_id: string
-          supplier_name: string
-          type: string
         }[]
       }
       get_admin_stats: {
@@ -3481,26 +2081,6 @@ export type Database = {
           total_drop_orders: number
           total_gmv: number
           total_platform_fees: number
-        }[]
-      }
-      get_drop_catalog: {
-        Args: never
-        Returns: {
-          allow_affiliates: boolean
-          allow_service_providers: boolean
-          base_price: number
-          commission_percent: number
-          max_commission_percent: number
-          min_resale_price: number
-          product_description: string
-          product_id: string
-          product_images: string[]
-          product_name: string
-          shipping_days: number
-          stock: number
-          supplier_avatar: string
-          supplier_id: string
-          supplier_name: string
         }[]
       }
       get_drop_clients_admin: {
@@ -3732,10 +2312,6 @@ export type Database = {
         Args: { curlopt: string; value: string }
         Returns: boolean
       }
-      is_collection_owner: {
-        Args: { _collection_id: string; _user_id: string }
-        Returns: boolean
-      }
       is_supplier_verified: { Args: { _supplier_id: string }; Returns: boolean }
       log_activity: {
         Args: {
@@ -3751,29 +2327,7 @@ export type Database = {
         Args: { _email: string; _ip_address?: string; _success: boolean }
         Returns: undefined
       }
-      regenerate_supplier_code: {
-        Args: { _supplier_id: string }
-        Returns: string
-      }
-      request_supplier_integration: { Args: { _code: string }; Returns: Json }
-      respond_to_sp_request: {
-        Args: { _approve: boolean; _request_id: string }
-        Returns: Json
-      }
       text_to_bytea: { Args: { data: string }; Returns: string }
-      track_affiliate_click: {
-        Args: {
-          _buyer_id?: string
-          _code: string
-          _user_agent?: string
-          _visitor_id?: string
-        }
-        Returns: Json
-      }
-      update_affiliate_earnings: {
-        Args: { _affiliate_id: string; _amount: number }
-        Returns: undefined
-      }
       urlencode:
         | { Args: { data: Json }; Returns: string }
         | {
@@ -3790,11 +2344,9 @@ export type Database = {
           }
     }
     Enums: {
-      affiliate_status: "pending" | "active" | "suspended"
       app_role: "admin" | "fornecedor" | "cliente"
       business_type: "individual" | "company"
       collection_item_type: "product" | "supplier"
-      commission_status: "pending" | "confirmed" | "paid" | "cancelled"
       coupon_type: "percentage" | "fixed"
       crm_contract_type: "single" | "monthly"
       notification_type:
@@ -3815,8 +2367,6 @@ export type Database = {
       quotation_status: "open" | "closed" | "cancelled"
       service_provider_status: "pending" | "active" | "suspended"
       shipping_region: "norte" | "nordeste" | "centro_oeste" | "sudeste" | "sul"
-      sponsorship_status: "pending" | "approved" | "rejected" | "scheduled"
-      sponsorship_type: "produto_destaque" | "banner_homepage"
       subscription_status: "active" | "pending" | "expired" | "cancelled"
       supplier_application_status:
         | "pending"
@@ -3969,11 +2519,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      affiliate_status: ["pending", "active", "suspended"],
       app_role: ["admin", "fornecedor", "cliente"],
       business_type: ["individual", "company"],
       collection_item_type: ["product", "supplier"],
-      commission_status: ["pending", "confirmed", "paid", "cancelled"],
       coupon_type: ["percentage", "fixed"],
       crm_contract_type: ["single", "monthly"],
       notification_type: [
@@ -3996,8 +2544,6 @@ export const Constants = {
       quotation_status: ["open", "closed", "cancelled"],
       service_provider_status: ["pending", "active", "suspended"],
       shipping_region: ["norte", "nordeste", "centro_oeste", "sudeste", "sul"],
-      sponsorship_status: ["pending", "approved", "rejected", "scheduled"],
-      sponsorship_type: ["produto_destaque", "banner_homepage"],
       subscription_status: ["active", "pending", "expired", "cancelled"],
       supplier_application_status: [
         "pending",

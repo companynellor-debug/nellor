@@ -11,40 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import { supabase } from "@/integrations/supabase/client";
 
-const AFFILIATE_STORAGE_KEY = "nellor_affiliate_ref";
-const VISITOR_ID_KEY = "nellor_visitor_id";
-
-interface AffiliateAttribution {
-  code: string;
-  clickedAt: string;
-  expiresAt: string;
-  linkId: string;
-  supplierId: string;
-  affiliateId: string;
-  productId?: string;
-  isNewUser?: boolean;
-}
-
-function getOrCreateVisitorId(): string {
-  const existing = localStorage.getItem(VISITOR_ID_KEY);
-  if (existing) return existing;
-  const id = crypto.randomUUID();
-  localStorage.setItem(VISITOR_ID_KEY, id);
-  return id;
-}
-
-function getStoredAttributions(): AffiliateAttribution[] {
-  try {
-    const stored = localStorage.getItem(AFFILIATE_STORAGE_KEY);
-    if (!stored) return [];
-    const attributions: AffiliateAttribution[] = JSON.parse(stored);
-    const now = new Date();
-    return attributions.filter((attr) => new Date(attr.expiresAt) > now);
-  } catch {
-    return [];
-  }
-}
-
 const PublicProduto = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -60,69 +26,17 @@ const PublicProduto = () => {
 
   const productUrl = useMemo(() => `${publicBaseUrl}/p/${id}`, [publicBaseUrl, id]);
 
-  // Track affiliate click when ref/aff param is present
+
+  // Remove affiliate tracking params from URL if present
   useEffect(() => {
     const refCode = searchParams.get("ref") ?? searchParams.get("aff");
-    if (!refCode) return;
-
-    const trackClick = async () => {
-      try {
-        const visitorId = getOrCreateVisitorId();
-        const { data: auth } = await supabase.auth.getUser();
-
-        const { data, error } = await supabase.rpc("track_affiliate_click", {
-          _code: refCode,
-          _buyer_id: auth.user?.id ?? null,
-          _visitor_id: visitorId,
-          _user_agent: navigator.userAgent,
-        });
-
-        const result =
-          (data as {
-            ok?: boolean;
-            error?: string;
-            clicked_at?: string;
-            expires_at?: string;
-            link_id?: string;
-            supplier_id?: string;
-            affiliate_id?: string;
-            product_id?: string;
-          } | null) ?? null;
-
-        if (error || !result?.ok) {
-          console.log("Affiliate click not tracked:", refCode, error?.message ?? result?.error);
-          return;
-        }
-
-        const attribution: AffiliateAttribution = {
-          code: refCode,
-          clickedAt: result.clicked_at ?? new Date().toISOString(),
-          expiresAt: result.expires_at ?? new Date().toISOString(),
-          linkId: result.link_id ?? "",
-          supplierId: result.supplier_id ?? "",
-          affiliateId: result.affiliate_id ?? "",
-          productId: result.product_id ?? id,
-          isNewUser: !auth.user,
-        };
-
-        // Keep only one active attribution per supplier
-        const existingRefs = getStoredAttributions();
-        const filteredRefs = existingRefs.filter((ref) => ref.supplierId !== attribution.supplierId);
-        filteredRefs.push(attribution);
-        localStorage.setItem(AFFILIATE_STORAGE_KEY, JSON.stringify(filteredRefs));
-      } catch (error) {
-        console.error("Error tracking affiliate click:", error);
-      }
-    };
-
-    void trackClick();
-
-    // Remove tracking param from URL without reload
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete("ref");
-    newParams.delete("aff");
-    setSearchParams(newParams, { replace: true });
-  }, [searchParams, setSearchParams, id]);
+    if (refCode) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("ref");
+      newParams.delete("aff");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleCopyLink = async () => {
     try {

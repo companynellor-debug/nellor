@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '@/assets/logo.png';
 import { Loader2, Mail, CheckCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { syncAttributionsOnLogin } from '@/hooks/useAffiliateTracking';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -74,15 +74,6 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && isAuthenticated && profile) {
-      void syncAttributionsOnLogin(profile.id);
-
-      const storedSp = localStorage.getItem('nellor_service_provider_ref');
-      if (storedSp && profile.tipo === 'fornecedor') {
-        void acceptServiceProviderInvite(profile.id, storedSp).finally(() => {
-          localStorage.removeItem('nellor_service_provider_ref');
-        });
-      }
-
       const next = localStorage.getItem('nellor_post_auth_redirect');
       if (next && profile.tipo === 'cliente') {
         localStorage.removeItem('nellor_post_auth_redirect');
@@ -102,17 +93,6 @@ const Auth = () => {
     }
   }, [isAuthenticated, profile, loading, navigate]);
 
-  const acceptServiceProviderInvite = async (supplierId: string, spId: string) => {
-    try {
-      const { error } = await supabase.rpc('accept_service_provider_invite', {
-        _service_provider_id: spId,
-        _supplier_id: supplierId,
-      });
-      if (error) console.error('Error accepting service provider invite:', error);
-    } catch (error) {
-      console.error('Error in acceptServiceProviderInvite:', error);
-    }
-  };
 
   if (loading || (isAuthenticated && profile)) {
     return (

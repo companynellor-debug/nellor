@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { AffiliateSettingsPanel } from "@/components/fornecedor/AffiliateSettingsPanel";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useNavigate } from "react-router-dom";
@@ -65,7 +65,7 @@ const Configuracoes = () => {
     <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       <h1 className="text-2xl sm:text-3xl font-bold">Configurações</h1>
 
-      <AffiliateSettingsPanel />
+      
 
       <Card className="p-6">
         <div className="space-y-6">
