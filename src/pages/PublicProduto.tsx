@@ -26,18 +26,6 @@ const PublicProduto = () => {
 
   const productUrl = useMemo(() => `${publicBaseUrl}/p/${id}`, [publicBaseUrl, id]);
 
-
-  // Remove affiliate tracking params from URL if present
-  useEffect(() => {
-    const refCode = searchParams.get("ref") ?? searchParams.get("aff");
-    if (refCode) {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("ref");
-      newParams.delete("aff");
-      setSearchParams(newParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(productUrl);

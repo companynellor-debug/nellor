@@ -59,18 +59,13 @@ const Auth = () => {
   } = useSupabaseAuth();
   const navigate = useNavigate();
 
-  const serviceProviderId = searchParams.get('provider') ?? searchParams.get('sp');
   const nextParam = searchParams.get('next');
 
   useEffect(() => {
     if (nextParam) {
       localStorage.setItem('nellor_post_auth_redirect', nextParam);
     }
-    if (serviceProviderId) {
-      localStorage.setItem('nellor_service_provider_ref', serviceProviderId);
-      setIsLogin(false);
-    }
-  }, [serviceProviderId, nextParam, searchParams]);
+  }, [nextParam]);
 
   useEffect(() => {
     if (!loading && isAuthenticated && profile) {

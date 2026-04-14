@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/cliente/BottomNav";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake, AlertTriangle, Search, Pin } from "lucide-react";
+import { Send, ArrowLeft, Paperclip, X, Video, FileText, Download, Handshake, AlertTriangle, Search, Pin, MessageSquare } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { NegotiationForm } from "@/components/chat/NegotiationForm";
 import { VerifiedSupplierBadge } from "@/components/cliente/VerifiedSupplierBadge";

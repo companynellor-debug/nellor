@@ -184,20 +184,6 @@ const ClienteHome = () => {
           </div>
         }
 
-        {/* Cotações CTA */}
-        <div className="mb-6">
-          <Card className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors" onClick={() => navigate("/cliente/cotacoes")}>
-            <div className="flex items-center gap-3 p-4">
-              <DarkGlassIcon icon={FileText} size="md" color="purple" />
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm text-foreground">Painel de Cotações</p>
-                <p className="text-xs text-muted-foreground">Publique o que precisa e receba propostas de fornecedores</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-            </div>
-          </Card>
-        </div>
-
         {/* B2B Banner Strip */}
         <div className="mb-6 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270 60% 50%) 100%)' }}>
           <div className="flex items-center justify-between px-4 py-3 sm:px-6" style={{ maxHeight: '60px' }}>
@@ -290,8 +276,8 @@ const ClienteHome = () => {
         <section className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">🏆 Fornecedores em Destaque</h2>
-              <button onClick={() => navigate("/cliente/comparar-fornecedores")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
-                Comparar <ChevronRight className="h-4 w-4" />
+              <button onClick={() => navigate("/cliente/produtos")} className="flex items-center gap-1 text-primary hover:underline text-sm font-medium">
+                Ver Todos <ChevronRight className="h-4 w-4" />
               </button>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">

@@ -226,40 +226,6 @@ const Perfil = () => {
               )}
             </Card>
 
-            {/* Serviços Nellor */}
-            <div>
-              <h3 className="text-sm font-semibold text-muted-foreground mb-2 px-1">Serviços Nellor</h3>
-              <Card className="border shadow-sm divide-y">
-                {[
-                  { icon: Users, label: "Programa de Afiliados", desc: "Ganhe comissões indicando", route: "/cliente/afiliados", badge: "Em breve" },
-                  { icon: Briefcase, label: "Prestador de Serviços", desc: "Ofereça seus talentos", route: "/cliente/prestador-servicos", badge: "Em breve" },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.label}
-                      onClick={() => navigate(item.route)}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors first:rounded-t-lg last:rounded-b-lg"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icon className="h-4.5 w-4.5 text-primary" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">{item.label}</p>
-                          {item.badge && (
-                            <span className="text-[9px] font-semibold uppercase bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">{item.badge}</span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">{item.desc}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  );
-                })}
-              </Card>
-            </div>
-
             {/* Como funciona a Nellor */}
             <Card className="p-5 border shadow-sm">
               <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
