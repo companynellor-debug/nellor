@@ -10,6 +10,7 @@ interface SubscriptionData {
   started_at: string | null;
   expires_at: string | null;
   days_remaining: number | null;
+  max_products: number | null;
 }
 
 export function useSupplierSubscription() {

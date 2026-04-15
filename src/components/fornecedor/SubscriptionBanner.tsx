@@ -16,11 +16,11 @@ export const SubscriptionBanner = () => {
         <div className="flex items-center gap-2 min-w-0">
           <CreditCard className="w-4 h-4 text-destructive flex-shrink-0" />
           <p className="text-sm text-destructive truncate">
-            Sua loja precisa de uma assinatura ativa para funcionar. Assine agora por R$ 29/mês.
+            Sua loja precisa de uma assinatura ativa. Escolha um plano a partir de R$ 0/mês.
           </p>
         </div>
-        <Button size="sm" variant="destructive" onClick={() => navigate("/fornecedor/assinatura")} className="flex-shrink-0">
-          Assinar
+        <Button size="sm" variant="destructive" onClick={() => navigate("/fornecedor/planos")} className="flex-shrink-0">
+          Ver Planos
         </Button>
       </div>
     );

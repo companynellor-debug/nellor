@@ -65,6 +65,7 @@ const ComoUsarFornecedor = lazy(() => import("./pages/fornecedor/ComoUsar"));
 const TesteNotificacoes = lazy(() => import("./pages/fornecedor/TesteNotificacoes"));
 
 const AssinaturaFornecedor = lazy(() => import("./pages/fornecedor/Assinatura"));
+const PlanosFornecedor = lazy(() => import("./pages/fornecedor/Planos"));
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -182,6 +183,7 @@ const App = () => {
               <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
               
               <Route path="assinatura" element={<Suspense fallback={<PageSkeleton />}><AssinaturaFornecedor /></Suspense>} />
+              <Route path="planos" element={<Suspense fallback={<PageSkeleton />}><PlanosFornecedor /></Suspense>} />
             </Route>
 
             <Route
