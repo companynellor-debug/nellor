@@ -13,7 +13,6 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useNavigate } from "react-router-dom";
 import { useSupplierPaymentMethods } from "@/hooks/useSupplierPaymentMethods";
 import { useSupplierShippingMethods } from "@/hooks/useSupplierShippingMethods";
-import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
