@@ -141,6 +141,50 @@ const Configuracoes = () => {
         </div>
       </Card>
 
+      {/* Payment Methods */}
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <CreditCard className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">Métodos de Pagamento Aceitos</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Selecione quais formas de pagamento você aceita. Os clientes verão apenas estas opções ao negociar.
+        </p>
+        <div className="space-y-3">
+          {ALL_PAYMENTS.map((m) => (
+            <label key={m.value} className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={enabledPayments.includes(m.value)}
+                onCheckedChange={(checked) => togglePayment.mutate({ method: m.value, enabled: !!checked })}
+              />
+              <span className="text-sm">{m.label}</span>
+            </label>
+          ))}
+        </div>
+      </Card>
+
+      {/* Shipping Methods */}
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Truck className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">Formas de Envio</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Selecione quais formas de envio você oferece aos seus clientes.
+        </p>
+        <div className="space-y-3">
+          {ALL_SHIPPING.map((m) => (
+            <label key={m.value} className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={enabledShipping.includes(m.value)}
+                onCheckedChange={(checked) => toggleShipping.mutate({ method: m.value, enabled: !!checked })}
+              />
+              <span className="text-sm">{m.label}</span>
+            </label>
+          ))}
+        </div>
+      </Card>
+
       {/* Delete Account */}
       <Card className="p-6 border-destructive/30">
         <div className="flex items-center gap-2 mb-3">
