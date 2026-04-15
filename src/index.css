@@ -338,4 +338,19 @@ All colors MUST be HSL.
     animation: screen-shine 4s ease-in-out infinite;
     animation-delay: 1s;
   }
+
+  @keyframes tour-step-enter {
+    0% {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-tour-step-enter {
+    animation: tour-step-enter 280ms ease-out both;
+  }
 }
