@@ -1,51 +1,109 @@
 
 
-## Plan: Fix Client Tutorial — Fluid, Bug-Free, Apple-Style
+## Plano: Sistema de Planos, Conquistas Mensais, Meta de Faturamento e Métodos de Pagamento/Envio do Fornecedor
 
-### Problems Found
+Este plano cobre 4 grandes funcionalidades solicitadas. A implementação será dividida em etapas claras.
 
-1. **Infinite loop**: `startTour` in Home.tsx's `useEffect` dependency array gets recreated each render, and profile state doesn't update immediately after tour completion, causing re-triggers.
-2. **Steps 3-5 are broken**: They depend on navigating to a product detail page and chat with real data — impossible with an empty database. The tour gets stuck trying to find elements that don't exist.
-3. **No guard against re-triggering**: No local flag to prevent the tour from starting multiple times in the same session.
-4. **Transitions aren't smooth**: Missing CSS animations for step changes.
+---
 
-### Solution
+### 1. Novos Planos de Assinatura (5 tiers)
 
-**Simplify the tour to 5 self-contained steps** that work regardless of database state:
+**Database**: Migration para atualizar `supplier_subscriptions` com campo `max_products` e atualizar a RPC `get_supplier_subscription` para retornar o plano com limite de produtos.
 
-| Step | Type | Content |
-|------|------|---------|
-| 1 | Modal | Welcome — explain Nellor |
-| 2 | Spotlight | Search bar on Home (`home-search-bar`) |
-| 3 | Spotlight | Product card on Home (`product-card`) — fallback to modal if none exist |
-| 4 | Spotlight | Chat nav button (`chat-nav`) |
-| 5 | Modal | Conclusion — ready to explore |
+| Plano | Produtos | Preço |
+|-------|----------|-------|
+| Grátis | 10 | R$ 0 |
+| Inicial | 50 | R$ 39,90 |
+| Intermediário | 170 | R$ 67,90 |
+| Avançado | 500 | R$ 149,00 |
+| Ultra | Ilimitado | R$ 249,00 |
 
-Remove cross-page navigation entirely (no navigating to product detail or chat pages during the tour).
+**Arquivos**:
+- `src/pages/fornecedor/Planos.tsx` — Reescrever com 5 cards horizontais (scroll no mobile), cada um com nome, preço, limite de produtos e benefícios
+- `src/hooks/useSupplierSubscription.tsx` — Atualizar interface para incluir `max_products`, `plan_name` atualizado
+- `src/components/fornecedor/SubscriptionBanner.tsx` — Ajustar para novos nomes de plano
+- Adicionar rota `/fornecedor/planos` no `App.tsx` e link no `SupplierSidebar.tsx`
+- Enforcement: bloquear cadastro de produto quando atingir limite do plano
 
-### Files to Change
+### 2. Card de Conquistas Mensais (End-of-Month Highlight)
 
-**`src/components/cliente/ClientOnboardingTour.tsx`** — Full rewrite:
-- Reduce to 5 steps, all on `/cliente` except chat-nav which is always visible
-- Remove `productRoute` and `tutorialSupplierId` state (no cross-page navigation)
-- Add CSS transitions between steps (`animate-in fade-in` with duration)
-- Add `isAnimating` state to prevent rapid clicking
-- Improve fallback: if spotlight target not found after retries, show step as centered modal card (already exists but ensure it works)
+**Componente novo**: `src/components/fornecedor/MonthlyAchievements.tsx`
 
-**`src/pages/cliente/Home.tsx`** — Fix auto-start:
-- Add `useRef(false)` guard (`tourStartedRef`) to prevent multiple triggers
-- Remove `startTour` from `useEffect` dependency array (use ref pattern)
-- Check `sessionStorage` flag to avoid re-showing after skip in same session
+- Overlay com backdrop-blur sobre o dashboard
+- Card centralizado estilo Apple com animações de entrada
+- Dados mostrados:
+  - Top 3 produtos mais negociados
+  - Visitas no perfil (product_views)
+  - Conversas iniciadas por clientes
+  - Negociações fechadas (delivered)
+  - Total vendido
+  - Total de visualizações nos status
+  - Comparação com mês anterior (setas verdes/vermelhas + %)
+- Rodapé: "E tudo isso pagando apenas **R$ X/mês**" com o valor do plano ativo
+- Lógica de exibição: mostrar uma vez por mês (salvar em `localStorage` a data do último dismiss)
+- Botão "Fechar" e "Compartilhar" (screenshot/share API)
 
-**`src/hooks/useClientOnboardingTour.tsx`** — Stabilize callbacks:
-- Wrap `startTour`, `endTour`, `triggerRestart` in `useCallback` so they have stable references
+**Dados**: Query nas tabelas `negotiations`, `product_views`, `messages` filtrando por mês atual vs mês anterior
 
-**`src/index.css`** — Add smooth step transition keyframe:
-- Add a subtle `tour-step-enter` animation for card appearance
+### 3. Meta de Faturamento no Header (estilo Kiwify)
 
-### Animation Details
-- Step transitions: 280ms fade + slide-up
-- Spotlight movement: CSS transition on position/size (200ms ease-out)
-- Progress bar: `transition-all duration-500 ease-out`
-- Overlay: `transition-opacity duration-300`
+**Componente novo**: `src/components/fornecedor/RevenueGoalBar.tsx`
+
+- Barra de progresso no header do `FornecedorLayout.tsx`, abaixo do header existente
+- Metas pré-definidas: R$ 500k, R$ 1M, R$ 2M, R$ 5M, R$ 10M, R$ 20M
+- Auto-seleciona a próxima meta acima do faturamento atual
+- Mostra: `R$ X / R$ Y` com barra animada e porcentagem
+- Faturamento = soma de `agreed_price * quantity` das negociações `delivered`
+- Clicável para alterar meta manualmente (salvar em `profiles` ou `localStorage`)
+
+### 4. Métodos de Pagamento e Formas de Envio do Fornecedor
+
+**Database**: Migration para criar duas novas tabelas:
+
+```sql
+CREATE TABLE supplier_payment_methods (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  supplier_id uuid NOT NULL,
+  method text NOT NULL, -- 'pix', 'transferencia', 'boleto', 'cartao_credito'
+  enabled boolean DEFAULT true,
+  details jsonb DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE supplier_shipping_methods (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  supplier_id uuid NOT NULL,
+  method text NOT NULL, -- 'correios_pac', 'correios_sedex', 'transportadora_propria', 'fob'
+  enabled boolean DEFAULT true,
+  details jsonb DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+```
+
+Com RLS para fornecedores gerenciarem os próprios e leitura pública.
+
+**Arquivos**:
+- `src/pages/fornecedor/Configuracoes.tsx` — Adicionar seções de "Métodos de Pagamento Aceitos" e "Formas de Envio" com checkboxes
+- `src/hooks/useSupplierPaymentMethods.tsx` — CRUD hook
+- `src/hooks/useSupplierShippingMethods.tsx` — CRUD hook
+- `src/components/chat/NegotiationForm.tsx` — Filtrar `paymentMethodOptions` para mostrar apenas os métodos aceitos pelo fornecedor. Adicionar seleção de forma de envio
+
+### Resumo de Arquivos
+
+| Ação | Arquivo |
+|------|---------|
+| Criar | `src/components/fornecedor/MonthlyAchievements.tsx` |
+| Criar | `src/components/fornecedor/RevenueGoalBar.tsx` |
+| Criar | `src/hooks/useSupplierPaymentMethods.tsx` |
+| Criar | `src/hooks/useSupplierShippingMethods.tsx` |
+| Reescrever | `src/pages/fornecedor/Planos.tsx` |
+| Editar | `src/hooks/useSupplierSubscription.tsx` |
+| Editar | `src/components/fornecedor/SubscriptionBanner.tsx` |
+| Editar | `src/pages/fornecedor/FornecedorLayout.tsx` |
+| Editar | `src/pages/fornecedor/Dashboard.tsx` |
+| Editar | `src/pages/fornecedor/Configuracoes.tsx` |
+| Editar | `src/components/fornecedor/SupplierSidebar.tsx` |
+| Editar | `src/components/chat/NegotiationForm.tsx` |
+| Editar | `src/App.tsx` |
+| Migration | Tabelas `supplier_payment_methods`, `supplier_shipping_methods` + update `supplier_subscriptions` |
 
