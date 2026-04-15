@@ -63,7 +63,6 @@ export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationF
   const shippingMethodOptions = supplierShipping.length > 0
     ? ALL_SHIPPING.filter(s => supplierShipping.includes(s.value))
     : [];
-  const { toast } = useToast();
   const [products, setProducts] = useState<SupplierProduct[]>([]);
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>('');
