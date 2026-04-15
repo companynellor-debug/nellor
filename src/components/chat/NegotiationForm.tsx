@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNegotiations } from '@/hooks/useNegotiations';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { useToast } from '@/hooks/use-toast';
+import { useSupplierPaymentMethods } from '@/hooks/useSupplierPaymentMethods';
+import { useSupplierShippingMethods } from '@/hooks/useSupplierShippingMethods';
 
 interface NegotiationFormProps {
   supplierId: string;
@@ -40,16 +42,27 @@ const saleUnitLabels: Record<string, string> = {
   kit: 'Kit',
 };
 
-const paymentMethodOptions = [
+const allPaymentMethodOptions = [
   { value: 'pix', label: 'PIX' },
   { value: 'transferencia', label: 'Transferência bancária' },
   { value: 'boleto', label: 'Boleto' },
-  { value: 'dinheiro', label: 'Dinheiro' },
-  { value: 'outro', label: 'Outro' },
+  { value: 'cartao_credito', label: 'Cartão de crédito' },
 ];
 
 export const NegotiationForm = ({ supplierId, open, onOpenChange }: NegotiationFormProps) => {
   const { createNegotiation } = useNegotiations(supplierId);
+  const { toast } = useToast();
+  const { enabledMethods: supplierPayments } = useSupplierPaymentMethods(supplierId);
+  const { enabledMethods: supplierShipping, ALL_METHODS: ALL_SHIPPING } = useSupplierShippingMethods(supplierId);
+
+  // Filter payment methods to only show supplier's accepted ones (fallback to all if none configured)
+  const paymentMethodOptions = supplierPayments.length > 0
+    ? allPaymentMethodOptions.filter(o => supplierPayments.includes(o.value))
+    : allPaymentMethodOptions;
+
+  const shippingMethodOptions = supplierShipping.length > 0
+    ? ALL_SHIPPING.filter(s => supplierShipping.includes(s.value))
+    : [];
   const { toast } = useToast();
   const [products, setProducts] = useState<SupplierProduct[]>([]);
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
