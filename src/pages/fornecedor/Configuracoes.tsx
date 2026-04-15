@@ -4,11 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Save, Trash2, CreditCard, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useNavigate } from "react-router-dom";
+import { useSupplierPaymentMethods } from "@/hooks/useSupplierPaymentMethods";
+import { useSupplierShippingMethods } from "@/hooks/useSupplierShippingMethods";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -26,6 +30,8 @@ const Configuracoes = () => {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
+  const { enabledMethods: enabledPayments, toggleMethod: togglePayment, ALL_METHODS: ALL_PAYMENTS } = useSupplierPaymentMethods();
+  const { enabledMethods: enabledShipping, toggleMethod: toggleShipping, ALL_METHODS: ALL_SHIPPING } = useSupplierShippingMethods();
   const [formData, setFormData] = useState({
     storeName: 'Minha Loja Premium',
     pixKey: '11999999999',
