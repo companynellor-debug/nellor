@@ -1,4 +1,4 @@
-import { Home, Handshake, MessageSquare, Tag, Bell, Store, BarChart3, BookOpen } from "lucide-react";
+import { Home, Handshake, MessageSquare, Tag, Bell, Store, BarChart3, BookOpen, CreditCard, Settings } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
@@ -13,6 +13,8 @@ const menuItems = [
   { title: "Estatísticas", url: "/fornecedor/estatisticas", icon: BarChart3 },
   { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
+  { title: "Planos", url: "/fornecedor/planos", icon: CreditCard },
+  { title: "Configurações", url: "/fornecedor/configuracoes", icon: Settings },
   { title: "Como Usar", url: "/fornecedor/como-usar", icon: BookOpen },
 ];
 

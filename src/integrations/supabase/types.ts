@@ -2261,6 +2261,7 @@ export type Database = {
           days_remaining: number
           expires_at: string
           id: string
+          max_products: number
           plan_name: string
           price: number
           started_at: string

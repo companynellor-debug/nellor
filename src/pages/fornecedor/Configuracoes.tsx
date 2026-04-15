@@ -4,12 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Save, Trash2, CreditCard, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useNavigate } from "react-router-dom";
+import { useSupplierPaymentMethods } from "@/hooks/useSupplierPaymentMethods";
+import { useSupplierShippingMethods } from "@/hooks/useSupplierShippingMethods";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +29,8 @@ const Configuracoes = () => {
   const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
+  const { enabledMethods: enabledPayments, toggleMethod: togglePayment, ALL_METHODS: ALL_PAYMENTS } = useSupplierPaymentMethods();
+  const { enabledMethods: enabledShipping, toggleMethod: toggleShipping, ALL_METHODS: ALL_SHIPPING } = useSupplierShippingMethods();
   const [formData, setFormData] = useState({
     storeName: 'Minha Loja Premium',
     pixKey: '11999999999',
@@ -133,6 +138,50 @@ const Configuracoes = () => {
             <Save className="h-4 w-4 mr-2" />
             Salvar Alterações
           </Button>
+        </div>
+      </Card>
+
+      {/* Payment Methods */}
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <CreditCard className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">Métodos de Pagamento Aceitos</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Selecione quais formas de pagamento você aceita. Os clientes verão apenas estas opções ao negociar.
+        </p>
+        <div className="space-y-3">
+          {ALL_PAYMENTS.map((m) => (
+            <label key={m.value} className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={enabledPayments.includes(m.value)}
+                onCheckedChange={(checked) => togglePayment.mutate({ method: m.value, enabled: !!checked })}
+              />
+              <span className="text-sm">{m.label}</span>
+            </label>
+          ))}
+        </div>
+      </Card>
+
+      {/* Shipping Methods */}
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Truck className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">Formas de Envio</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Selecione quais formas de envio você oferece aos seus clientes.
+        </p>
+        <div className="space-y-3">
+          {ALL_SHIPPING.map((m) => (
+            <label key={m.value} className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={enabledShipping.includes(m.value)}
+                onCheckedChange={(checked) => toggleShipping.mutate({ method: m.value, enabled: !!checked })}
+              />
+              <span className="text-sm">{m.label}</span>
+            </label>
+          ))}
         </div>
       </Card>
 

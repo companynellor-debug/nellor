@@ -4,6 +4,8 @@ import { SupplierSidebar } from "@/components/fornecedor/SupplierSidebar";
 import { BottomNavFornecedor } from "@/components/fornecedor/BottomNav";
 import { NotificationPermissionBanner } from "@/components/fornecedor/NotificationPermissionBanner";
 import { SubscriptionBanner } from "@/components/fornecedor/SubscriptionBanner";
+import { RevenueGoalBar } from "@/components/fornecedor/RevenueGoalBar";
+import { MonthlyAchievements } from "@/components/fornecedor/MonthlyAchievements";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -95,6 +97,7 @@ const FornecedorLayoutContent = () => {
 
             <NotificationPermissionBanner />
             <SubscriptionBanner />
+            <RevenueGoalBar />
 
             <main className="flex-1 min-w-0 overflow-x-hidden p-3 pb-20 sm:p-4 md:p-6 md:pb-6">
               <div className="w-full min-w-0 max-w-full overflow-x-hidden">
@@ -105,6 +108,7 @@ const FornecedorLayoutContent = () => {
         </div>
 
         <BottomNavFornecedor />
+        <MonthlyAchievements />
         <Suspense fallback={null}><OnboardingTourContent /></Suspense>
       </div>
     </div>
