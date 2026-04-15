@@ -1,244 +1,143 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Star, Zap, Shield, HelpCircle, CreditCard } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { CheckCircle2, Star, Zap, Crown, Rocket, Infinity } from "lucide-react";
+import { useSupplierSubscription } from "@/hooks/useSupplierSubscription";
 import { toast } from "sonner";
 
-type PlanType = "free" | "premium";
+const plans = [
+  {
+    name: "Grátis",
+    price: 0,
+    maxProducts: 10,
+    icon: Zap,
+    color: "text-blue-600",
+    border: "border-border",
+    features: ["Até 10 produtos", "Chat com clientes", "Estatísticas básicas"],
+  },
+  {
+    name: "Inicial",
+    price: 39.9,
+    maxProducts: 50,
+    icon: Star,
+    color: "text-amber-500",
+    border: "border-amber-200 dark:border-amber-800",
+    features: ["Até 50 produtos", "Chat com clientes", "Estatísticas completas", "Suporte por chat"],
+  },
+  {
+    name: "Intermediário",
+    price: 67.9,
+    maxProducts: 170,
+    icon: Rocket,
+    color: "text-purple-600",
+    border: "border-purple-200 dark:border-purple-800",
+    popular: true,
+    features: ["Até 170 produtos", "Destaque na busca", "Relatórios avançados", "Suporte prioritário"],
+  },
+  {
+    name: "Avançado",
+    price: 149,
+    maxProducts: 500,
+    icon: Crown,
+    color: "text-emerald-600",
+    border: "border-emerald-200 dark:border-emerald-800",
+    features: ["Até 500 produtos", "Destaque máximo", "Relatórios premium", "Suporte dedicado"],
+  },
+  {
+    name: "Ultra",
+    price: 249,
+    maxProducts: null,
+    icon: Infinity,
+    color: "text-rose-600",
+    border: "border-rose-200 dark:border-rose-800",
+    features: ["Produtos ilimitados", "Destaque exclusivo", "Relatórios em tempo real", "Gerente de conta"],
+  },
+];
 
 const Planos = () => {
-  const { profile } = useSupabaseAuth();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const { subscription, createSubscription } = useSupplierSubscription();
+  const [subscribing, setSubscribing] = useState<string | null>(null);
+  const currentPlan = subscription?.plan_name || "Grátis";
 
-  // TODO: Obter plano atual do perfil do fornecedor (será populado via backend)
-  const [currentPlan] = useState<PlanType>("free");
-
-  const handleSelectPlan = (plan: string) => {
-    if (plan === "premium") {
-      setSelectedPlan(plan);
-      setShowPaymentModal(true);
-    } else {
-      // Plano grátis - já está no plano grátis
-      toast.info("Você já está no plano Grátis!");
+  const handleSubscribe = async (plan: typeof plans[0]) => {
+    if (plan.name === currentPlan) return;
+    if (plan.price === 0) {
+      toast.info("Você já pode usar o plano Grátis!");
+      return;
+    }
+    setSubscribing(plan.name);
+    try {
+      await createSubscription.mutateAsync("pix");
+      toast.success(`Solicitação para o plano ${plan.name} enviada! Aguarde a confirmação.`);
+    } catch {
+      toast.error("Erro ao solicitar assinatura.");
+    } finally {
+      setSubscribing(null);
     }
   };
 
-  const handleSubscribe = () => {
-    // TODO: Integração com gateway de pagamento para assinatura
-    console.log("TODO: Chamar endpoint de pagamento para subscription Premium");
-    toast.info("Funcionalidade em desenvolvimento. Em breve você poderá assinar o plano Premium.");
-    setShowPaymentModal(false);
-  };
-
   return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Planos do Fornecedor</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Escolha o melhor plano para o seu negócio
-        </p>
+        <h1 className="text-2xl sm:text-3xl font-bold">Planos</h1>
+        <p className="text-muted-foreground text-sm mt-1">Escolha o melhor plano para o seu negócio</p>
       </div>
 
-      {/* Cards de Planos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-        {/* Plano Grátis */}
-        <Card className={`relative overflow-hidden transition-all ${currentPlan === "free" ? "ring-2 ring-primary" : "hover:shadow-lg"}`}>
-          {currentPlan === "free" && (
-            <Badge className="absolute top-4 right-4 bg-primary">Plano Atual</Badge>
-          )}
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-blue-600" />
-              Plano Grátis
-            </CardTitle>
-            <div className="mt-4">
-              <span className="text-4xl font-bold">R$ 0</span>
-              <span className="text-muted-foreground">/mês</span>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Sem mensalidade. Comissão de 7,5% por venda + taxa do processador por transação. Ideal para testar.
-            </p>
-            
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Cadastro de produtos ilimitados
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Recebimento via Pix
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Chat com clientes
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Painel de estatísticas básico
-              </li>
-              <li className="flex items-center gap-2 text-sm text-orange-600">
-                <span className="h-4 w-4 flex items-center justify-center">•</span>
-                Comissão de 7,5% por venda
-              </li>
-            </ul>
-
-            <Button 
-              variant={currentPlan === "free" ? "secondary" : "outline"} 
-              className="w-full"
-              disabled={currentPlan === "free"}
-              onClick={() => handleSelectPlan("free")}
+      <div className="flex gap-4 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0 snap-x snap-mandatory">
+        {plans.map((plan) => {
+          const Icon = plan.icon;
+          const isCurrent = plan.name === currentPlan;
+          return (
+            <Card
+              key={plan.name}
+              className={`relative min-w-[260px] max-w-[300px] flex-shrink-0 snap-center transition-all ${plan.border} ${isCurrent ? "ring-2 ring-primary shadow-lg" : "hover:shadow-md"} ${plan.popular ? "border-2" : ""}`}
             >
-              {currentPlan === "free" ? "Plano Atual" : "Escolher Plano Grátis"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Plano Premium */}
-        <Card className={`relative overflow-hidden transition-all border-2 border-purple-200 dark:border-purple-800 ${currentPlan === "premium" ? "ring-2 ring-purple-600" : "hover:shadow-lg hover:border-purple-400"}`}>
-          {currentPlan === "premium" && (
-            <Badge className="absolute top-4 right-4 bg-purple-600">Plano Atual</Badge>
-          )}
-          <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-purple-500 text-white text-xs px-3 py-1 rounded-bl-lg">
-            Recomendado
-          </div>
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-purple-600" />
-              Plano Premium
-            </CardTitle>
-            <div className="mt-4">
-              <span className="text-4xl font-bold text-purple-600">R$ 79</span>
-              <span className="text-muted-foreground">/mês</span>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              R$79/mês. Sem comissão da plataforma. Apenas taxa do processador por transação. Ideal para alto volume.
-            </p>
-            
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Tudo do plano Grátis
-              </li>
-              <li className="flex items-center gap-2 text-sm font-medium text-purple-600">
-                <CheckCircle2 className="h-4 w-4 text-purple-600" />
-                0% de comissão da plataforma
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Destaque nos resultados de busca
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Relatórios avançados
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                Suporte prioritário
-              </li>
-            </ul>
-
-            <Button 
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              disabled={currentPlan === "premium"}
-              onClick={() => handleSelectPlan("premium")}
-            >
-              {currentPlan === "premium" ? "Plano Atual" : "Assinar Premium"}
-            </Button>
-          </CardContent>
-        </Card>
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-purple-600 text-white text-[10px] px-2">Mais Popular</Badge>
+                </div>
+              )}
+              {isCurrent && (
+                <Badge className="absolute top-3 right-3 bg-primary text-[10px]">Atual</Badge>
+              )}
+              <CardContent className="p-5 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon className={`h-5 w-5 ${plan.color}`} />
+                  <span className="font-bold text-lg">{plan.name}</span>
+                </div>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold">
+                    {plan.price === 0 ? "Grátis" : `R$ ${plan.price.toFixed(2).replace(".", ",")}`}
+                  </span>
+                  {plan.price > 0 && <span className="text-muted-foreground text-sm">/mês</span>}
+                </div>
+                <div className="mb-4">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {plan.maxProducts ? `Até ${plan.maxProducts} produtos` : "Produtos ilimitados"}
+                  </span>
+                </div>
+                <ul className="space-y-2 flex-1 mb-4">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className="w-full"
+                  variant={isCurrent ? "secondary" : plan.popular ? "default" : "outline"}
+                  disabled={isCurrent || subscribing === plan.name}
+                  onClick={() => handleSubscribe(plan)}
+                >
+                  {isCurrent ? "Plano Atual" : subscribing === plan.name ? "Enviando..." : `Assinar ${plan.name}`}
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
-
-      {/* Seção: Como funcionam os pagamentos */}
-      <Card className="max-w-4xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HelpCircle className="h-5 w-5 text-primary" />
-            Como funcionam os pagamentos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
-          <p>
-            Na Nellor, os pagamentos são acordados diretamente entre fornecedor e cliente. 
-            Não há processamento de pagamentos pela plataforma.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-            <div className="bg-muted/50 p-4 rounded-lg">
-              <h4 className="font-medium text-foreground mb-2">Plano Grátis - Exemplo:</h4>
-              <ul className="space-y-1 text-xs">
-                <li>Venda: R$ 100,00</li>
-                <li>Comissão plataforma (7,5%): - R$ 7,50</li>
-                <li>Taxa processador (~3,49%): - R$ 3,49</li>
-                <li className="font-bold text-foreground pt-1 border-t">Você recebe: R$ 89,01</li>
-              </ul>
-            </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
-              <h4 className="font-medium text-foreground mb-2">Plano Premium - Exemplo:</h4>
-              <ul className="space-y-1 text-xs">
-                <li>Venda: R$ 100,00</li>
-                <li>Comissão plataforma (0%): - R$ 0,00</li>
-                <li>Taxa processador (~3,49%): - R$ 3,49</li>
-                <li className="font-bold text-purple-600 pt-1 border-t border-purple-300">Você recebe: R$ 96,51</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Modal de Pagamento Premium */}
-      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-purple-600" />
-              Assinar Plano Premium
-            </DialogTitle>
-            <DialogDescription>
-              R$79/mês - Cancele quando quiser
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">O que você ganha:</h4>
-              <ul className="text-sm space-y-2">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-purple-600" />
-                  0% de comissão em todas as vendas
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-purple-600" />
-                  Destaque nos resultados de busca
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-purple-600" />
-                  Relatórios e análises avançadas
-                </li>
-              </ul>
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              O pagamento será processado de forma segura. Você pode cancelar sua assinatura a qualquer momento.
-            </p>
-
-            <Button 
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              onClick={handleSubscribe}
-              data-test="subscribe-premium-btn"
-            >
-              Assinar por R$79/mês
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
