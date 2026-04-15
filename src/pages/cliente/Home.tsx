@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
@@ -67,14 +67,22 @@ const ClienteHome = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const { startTour } = useClientOnboardingTour();
   const { profile } = useSupabaseAuth();
+  const tourStartedRef = useRef(false);
 
-  // Auto-start tour for first-time clients
+  // Auto-start tour for first-time clients (once per session)
   useEffect(() => {
-    if (profile && profile.tipo === 'cliente' && profile.client_onboarding_completed === false) {
-      const t = setTimeout(() => startTour(), 1000);
+    if (
+      profile &&
+      profile.tipo === 'cliente' &&
+      profile.client_onboarding_completed === false &&
+      !tourStartedRef.current &&
+      !sessionStorage.getItem('nellor_tour_done')
+    ) {
+      tourStartedRef.current = true;
+      const t = setTimeout(() => startTour(), 800);
       return () => clearTimeout(t);
     }
-  }, [profile, startTour]);
+  }, [profile]);
 
   useEffect(() => {
     if (searchParams.get("stripe_return") === "1") {

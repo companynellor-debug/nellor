@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 interface ClientOnboardingTourContextType {
   shouldShowTour: boolean;
@@ -14,15 +14,15 @@ export const ClientOnboardingTourProvider = ({ children }: { children: ReactNode
   const [shouldShowTour, setShouldShowTour] = useState(false);
   const [forceRestart, setForceRestart] = useState(false);
 
-  const startTour = () => setShouldShowTour(true);
-  const endTour = () => {
+  const startTour = useCallback(() => setShouldShowTour(true), []);
+  const endTour = useCallback(() => {
     setShouldShowTour(false);
     setForceRestart(false);
-  };
-  const triggerRestart = () => {
+  }, []);
+  const triggerRestart = useCallback(() => {
     setForceRestart(true);
     setShouldShowTour(true);
-  };
+  }, []);
 
   return (
     <ClientOnboardingTourContext.Provider value={{ shouldShowTour, startTour, endTour, forceRestart, triggerRestart }}>
