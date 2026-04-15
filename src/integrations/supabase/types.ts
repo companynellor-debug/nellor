@@ -1553,6 +1553,48 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_payment_methods: {
+        Row: {
+          created_at: string
+          details: Json | null
+          enabled: boolean
+          id: string
+          method: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          enabled?: boolean
+          id?: string
+          method: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          enabled?: boolean
+          id?: string
+          method?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payment_methods_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_payment_methods_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_shipping_config: {
         Row: {
           created_at: string
@@ -1602,6 +1644,48 @@ export type Database = {
             foreignKeyName: "supplier_shipping_config_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: true
+            referencedRelation: "public_supplier_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_shipping_methods: {
+        Row: {
+          created_at: string
+          details: Json | null
+          enabled: boolean
+          id: string
+          method: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          enabled?: boolean
+          id?: string
+          method: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          enabled?: boolean
+          id?: string
+          method?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_shipping_methods_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_shipping_methods_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
             referencedRelation: "public_supplier_profiles"
             referencedColumns: ["id"]
           },
@@ -1669,6 +1753,7 @@ export type Database = {
           created_at: string | null
           expires_at: string | null
           id: string
+          max_products: number | null
           notes: string | null
           payment_confirmed_by: string | null
           payment_method: string | null
@@ -1682,6 +1767,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          max_products?: number | null
           notes?: string | null
           payment_confirmed_by?: string | null
           payment_method?: string | null
@@ -1695,6 +1781,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          max_products?: number | null
           notes?: string | null
           payment_confirmed_by?: string | null
           payment_method?: string | null
