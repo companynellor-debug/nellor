@@ -318,7 +318,7 @@ const Dashboard = () => {
               <Package className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
               <p className="text-sm text-muted-foreground">Nenhum produto nesta categoria</p>
               <Button onClick={() => navigate("/fornecedor/produtos?novo=1")} className="mt-4 rounded-full">
-                <Plus className="h-4 w-4 mr-1" /> Criar produto
+                Criar produto
               </Button>
             </CardContent>
           </Card>
