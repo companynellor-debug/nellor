@@ -214,60 +214,67 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* HERO BANNER */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-violet-800 text-white shadow-xl">
-        <div className="relative z-10 flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:gap-8">
+      {/* HERO BANNER - cor sólida #4621af */}
+      <section
+        className="relative overflow-hidden rounded-3xl text-white shadow-xl"
+        style={{ backgroundColor: "#4621af" }}
+      >
+        <div className="relative z-10 flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-center lg:gap-8">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
-              Bem-vindo de volta, {firstName}! <span className="inline-block">👋</span>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+              Olá, {firstName}! <span className="inline-block">👋</span>
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-purple-100/90 max-w-xl">
-              Gerencie seus produtos, converse com compradores e aumente suas vendas todos os dias.
-            </p>
+            <p className="mt-1 text-sm text-white/80">Vamos vender hoje?</p>
 
-            {/* KPI cards inside hero */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <KpiCard
-                icon={DollarSign}
-                label="Vendas esse mês"
-                value={loading ? null : formatCurrency(kpis.monthRevenue)}
-                change={kpis.revenueChange}
-              />
-              <KpiCard
-                icon={ShoppingBag}
-                label="Pedidos esse mês"
-                value={loading ? null : String(kpis.monthOrders)}
-                change={kpis.ordersChange}
-              />
-              <KpiCard
-                icon={Star}
-                label="Avaliação média"
-                value={loading ? null : `${kpis.avgRating.toFixed(1)} ★`}
-                subtitle={`Baseado em ${kpis.reviewsCount} avaliações`}
-              />
+            {/* Resumo do mês */}
+            <div className="mt-5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold">Resumo do mês</p>
+                <button
+                  onClick={() => navigate("/fornecedor/estatisticas")}
+                  className="text-xs font-medium text-white/80 hover:text-white"
+                >
+                  Ver detalhes
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <HeroStat
+                  value={loading ? null : formatCurrency(kpis.monthRevenue)}
+                  label="Vendas"
+                  change={kpis.revenueChange}
+                />
+                <HeroStat
+                  value={loading ? null : String(kpis.monthOrders)}
+                  label="Pedidos"
+                  change={kpis.ordersChange}
+                />
+                <HeroStat
+                  value={loading ? null : `${kpis.avgRating.toFixed(1)} ★`}
+                  label="Avaliação"
+                  subtitle={`${kpis.reviewsCount} avaliações`}
+                />
+              </div>
             </div>
           </div>
 
           <div className="hidden lg:flex shrink-0 items-center justify-center">
-            <img src={heroStore} alt="" className="h-48 w-48 object-contain drop-shadow-2xl" loading="lazy" width={192} height={192} />
+            <img src={heroStore} alt="" className="h-44 w-44 object-contain drop-shadow-2xl" loading="lazy" width={176} height={176} />
           </div>
         </div>
-        {/* decorative blur */}
         <div className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -left-10 -bottom-10 h-56 w-56 rounded-full bg-violet-400/20 blur-3xl" />
       </section>
 
-      {/* QUICK ACTIONS */}
+      {/* AÇÕES RÁPIDAS - ícones coloridos sem card */}
       <section>
-        <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Gestão rápida</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <QuickAction icon={Plus} title="Novo produto" subtitle="Anuncie um produto" accent onClick={() => navigate("/fornecedor/produtos?novo=1")} />
-          <QuickAction icon={ShoppingBag} title="Ver pedidos" subtitle="Acompanhe pedidos" badge={activeNegCount > 0 ? activeNegCount : undefined} onClick={() => navigate("/fornecedor/negociacoes")} />
-          <QuickAction icon={MessageSquare} title="Conversas" subtitle="Responda compradores" badge={unreadMessages > 0 ? unreadMessages : undefined} onClick={() => navigate("/fornecedor/chat")} />
-          <QuickAction icon={Users} title="Compradores" subtitle="Veja seus clientes" onClick={() => navigate("/fornecedor/negociacoes")} />
-          <QuickAction icon={BarChart3} title="Relatórios" subtitle="Acompanhe resultados" onClick={() => navigate("/fornecedor/estatisticas")} />
+        <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Ações rápidas</h2>
+        <div className="grid grid-cols-4 gap-3 sm:gap-4">
+          <QuickIcon icon={ShoppingBag} label="Pedidos" badge={activeNegCount > 0 ? activeNegCount : undefined} onClick={() => navigate("/fornecedor/negociacoes")} />
+          <QuickIcon icon={MessageSquare} label="Conversas" badge={unreadMessages > 0 ? unreadMessages : undefined} onClick={() => navigate("/fornecedor/chat")} />
+          <QuickIcon icon={BarChart3} label="Relatórios" onClick={() => navigate("/fornecedor/estatisticas")} />
+          <QuickIcon icon={Users} label="Compradores" onClick={() => navigate("/fornecedor/negociacoes")} />
         </div>
       </section>
+
 
       {/* MEUS PRODUTOS */}
       <section>
