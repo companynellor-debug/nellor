@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Plus, ShoppingBag, MessageSquare, Users, BarChart3, TrendingUp, TrendingDown,
-  DollarSign, Package, Star, Eye, Heart, ChevronRight, Hand,
+  ShoppingBag, MessageSquare, Users, BarChart3, TrendingUp, TrendingDown,
+  Package, Eye, Heart, ChevronRight, Hand,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
