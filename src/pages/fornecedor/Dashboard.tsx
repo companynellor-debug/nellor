@@ -1,317 +1,516 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Bell, Handshake, MessageSquare, Truck, CheckCircle, Star, Package, DollarSign, Eye } from "lucide-react";
-import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Plus, ShoppingBag, MessageSquare, Users, BarChart3, TrendingUp, TrendingDown,
+  DollarSign, Package, Star, Eye, Heart, ChevronRight, Hand,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
-import { useSupplierProducts } from "@/hooks/useSupplierProducts";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { showPushNotification, getNotificationPermission, requestNotificationPermission } from "@/utils/pushNotifications";
-import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/utils/formatCurrency";
+import heroStore from "@/assets/dashboard-hero-store.png";
 
-const StatCard = ({ title, value, subtitle, icon, borderColor, wide }: {
-  title: string; value: number | string; subtitle: string;
-  icon: React.ElementType; borderColor: string; wide?: boolean;
-}) => (
-  <Card className={`rounded-2xl shadow-sm overflow-hidden border-2 ${borderColor}`}>
-    <CardContent className={wide ? "p-6" : "p-5"}>
-      {wide ? (
-        <div className="flex items-center gap-5">
-          <DarkGlassIcon icon={icon} size="md" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-muted-foreground">{title}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
-          </div>
-          <span className="text-4xl font-bold text-foreground">{value}</span>
-        </div>
-      ) : (
-        <>
-          <div className="flex items-center justify-between mb-3">
-            <DarkGlassIcon icon={icon} size="md" />
-            <span className="text-3xl font-bold">{value}</span>
-          </div>
-          <p className="text-sm font-semibold text-foreground">{title}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
-        </>
-      )}
-    </CardContent>
-  </Card>
-);
+type ProductRow = {
+  id: string;
+  nome: string;
+  preco: number;
+  estoque: number;
+  ativo: boolean;
+  imagens: string[] | null;
+  vendas_count: number | null;
+  rating_medio: number | null;
+  total_reviews: number | null;
+  created_at: string;
+};
+
+type NegotiationRow = {
+  id: string;
+  product_id: string | null;
+  product_name: string;
+  buyer_id: string;
+  agreed_price: number;
+  quantity: number;
+  status: string;
+  created_at: string;
+};
+
+type ProductTab = "todos" | "ativos" | "pausados";
+
+const statusBadge = (status: string) => {
+  const map: Record<string, { label: string; className: string }> = {
+    delivered: { label: "Pago", className: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100" },
+    shipped: { label: "Enviado", className: "bg-violet-100 text-violet-700 hover:bg-violet-100" },
+    accepted: { label: "Aceita", className: "bg-blue-100 text-blue-700 hover:bg-blue-100" },
+    pending: { label: "Pendente", className: "bg-amber-100 text-amber-700 hover:bg-amber-100" },
+    cancelled: { label: "Cancelada", className: "bg-rose-100 text-rose-700 hover:bg-rose-100" },
+  };
+  const v = map[status] ?? { label: status, className: "bg-muted text-muted-foreground" };
+  return <Badge variant="secondary" className={`rounded-full font-medium ${v.className}`}>{v.label}</Badge>;
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useSupabaseAuth();
-  const { products } = useSupplierProducts();
-  const [testingNotification, setTestingNotification] = useState(false);
-  const { toast } = useToast();
 
-  const handleTestNotification = async () => {
-    setTestingNotification(true);
-    try {
-      const permission = getNotificationPermission();
-      if (permission !== 'granted') {
-        const granted = await requestNotificationPermission();
-        if (!granted) {
-          toast({ title: '❌ Permissão negada', description: 'Ative as notificações nas configurações do navegador/app', variant: 'destructive' });
-          setTestingNotification(false);
-          return;
-        }
-      }
-      await showPushNotification('💰 Teste de Notificação!', {
-        body: `Notificação de teste enviada com sucesso!`,
-        tag: `test-${Date.now()}`,
-        data: { url: '/fornecedor/dashboard' },
-      });
-      toast({ title: '✅ Notificação enviada!', description: 'Verifique se apareceu na barra de notificações.' });
-    } catch (error) {
-      console.error('Error testing notification:', error);
-      toast({ title: '❌ Erro', description: 'Não foi possível enviar a notificação de teste.', variant: 'destructive' });
-    } finally {
-      setTestingNotification(false);
-    }
-  };
-
-  const [totalConversations, setTotalConversations] = useState(0);
-  const [totalReviews, setTotalReviews] = useState(0);
-  const [negotiations, setNegotiations] = useState<any[]>([]);
-  const [totalViews, setTotalViews] = useState(0);
-  const [viewsLast30, setViewsLast30] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [negotiations, setNegotiations] = useState<NegotiationRow[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [productViews, setProductViews] = useState<Record<string, number>>({});
+  const [productNegotiationsCount, setProductNegotiationsCount] = useState<Record<string, number>>({});
+  const [productFavorites, setProductFavorites] = useState<Record<string, number>>({});
+  const [buyersMap, setBuyersMap] = useState<Record<string, { nome: string; foto: string | null }>>({});
+  const [activeTab, setActiveTab] = useState<ProductTab>("todos");
 
   useEffect(() => {
-    const fetchMetrics = async () => {
-      if (!profile?.id) return;
+    if (!profile?.id) return;
+    let cancelled = false;
 
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('from_user, to_user')
-        .or(`from_user.eq.${profile.id},to_user.eq.${profile.id}`);
-      
-      if (msgs) {
-        const uniqueUsers = new Set(msgs.map(m => m.from_user === profile.id ? m.to_user : m.from_user));
-        setTotalConversations(uniqueUsers.size);
+    (async () => {
+      setLoading(true);
+      try {
+        const supplierId = profile.id;
+        const now = new Date();
+        const startCurrent = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const startPrev = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+        const endPrev = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
+
+        const [
+          { data: prods },
+          { data: negs },
+          { count: unread },
+        ] = await Promise.all([
+          supabase
+            .from("products")
+            .select("id, nome, preco, estoque, ativo, imagens, vendas_count, rating_medio, total_reviews, created_at")
+            .eq("supplier_id", supplierId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("negotiations")
+            .select("id, product_id, product_name, buyer_id, agreed_price, quantity, status, created_at")
+            .eq("supplier_id", supplierId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("messages")
+            .select("id", { count: "exact", head: true })
+            .eq("to_user", supplierId)
+            .eq("read", false),
+        ]);
+
+        if (cancelled) return;
+
+        const productList = (prods || []) as ProductRow[];
+        const negotiationList = (negs || []) as NegotiationRow[];
+        setProducts(productList);
+        setNegotiations(negotiationList);
+        setUnreadMessages(unread || 0);
+
+        // Buyer profiles for recent orders
+        const buyerIds = Array.from(new Set(negotiationList.slice(0, 10).map(n => n.buyer_id))).filter(Boolean);
+        if (buyerIds.length) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("id, nome, foto_perfil_url")
+            .in("id", buyerIds);
+          const map: Record<string, { nome: string; foto: string | null }> = {};
+          (profs || []).forEach((p: any) => { map[p.id] = { nome: p.nome, foto: p.foto_perfil_url }; });
+          if (!cancelled) setBuyersMap(map);
+        }
+
+        // Per-product metrics
+        const productIds = productList.map(p => p.id);
+        if (productIds.length) {
+          const [{ data: views }, { data: favs }] = await Promise.all([
+            supabase.from("product_views").select("product_id").in("product_id", productIds),
+            supabase.from("collection_items" as any).select("reference_id").in("reference_id", productIds).eq("type", "product" as any),
+          ]);
+          if (!cancelled) {
+            const v: Record<string, number> = {};
+            (views || []).forEach((row: any) => { v[row.product_id] = (v[row.product_id] || 0) + 1; });
+            setProductViews(v);
+
+            const f: Record<string, number> = {};
+            (favs || []).forEach((row: any) => { f[row.reference_id] = (f[row.reference_id] || 0) + 1; });
+            setProductFavorites(f);
+          }
+        }
+
+        // Negotiations count per product
+        const negCount: Record<string, number> = {};
+        negotiationList.forEach(n => {
+          if (n.product_id) negCount[n.product_id] = (negCount[n.product_id] || 0) + 1;
+        });
+        if (!cancelled) setProductNegotiationsCount(negCount);
+      } catch (err) {
+        console.error("Dashboard load error:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+    })();
 
-      const { count: reviewCount } = await supabase
-        .from('reviews' as any)
-        .select('*', { count: 'exact', head: true })
-        .eq('supplier_id', profile.id);
-      setTotalReviews(reviewCount || 0);
-
-      const { data: negData } = await supabase
-        .from('negotiations' as any)
-        .select('*')
-        .eq('supplier_id', profile.id)
-        .order('created_at', { ascending: false });
-      setNegotiations((negData || []) as any[]);
-
-      // Fetch product views
-      const { data: viewsData } = await supabase.rpc('get_supplier_product_views', { _supplier_id: profile.id });
-      if (viewsData && Array.isArray(viewsData) && viewsData.length > 0) {
-        setTotalViews(Number(viewsData[0].total_views) || 0);
-        setViewsLast30(Number(viewsData[0].views_last_30_days) || 0);
-      } else if (viewsData && !Array.isArray(viewsData)) {
-        setTotalViews(Number((viewsData as any).total_views) || 0);
-        setViewsLast30(Number((viewsData as any).views_last_30_days) || 0);
-      }
-    };
-
-    fetchMetrics();
+    return () => { cancelled = true; };
   }, [profile?.id]);
 
-  const pendingNegotiations = negotiations.filter(n => n.status === 'pending').length;
-  const acceptedNegotiations = negotiations.filter(n => n.status === 'accepted').length;
-  const shippedNegotiations = negotiations.filter(n => n.status === 'shipped').length;
-  const deliveredNegotiations = negotiations.filter(n => n.status === 'delivered').length;
-
-  // Faturamento: soma de agreed_price * quantity das negociações entregues
-  const faturamento = negotiations
-    .filter(n => n.status === 'delivered')
-    .reduce((sum, n) => sum + (Number(n.agreed_price) * Number(n.quantity)), 0);
-
-  const activityData = (() => {
-    const monthsData: Record<string, number> = {};
+  // KPIs
+  const kpis = useMemo(() => {
     const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = date.toLocaleDateString('pt-BR', { month: 'short' });
-      monthsData[monthKey] = 0;
-    }
-    negotiations.forEach(neg => {
-      const negDate = new Date(neg.created_at);
-      const monthKey = negDate.toLocaleDateString('pt-BR', { month: 'short' });
-      if (monthsData.hasOwnProperty(monthKey)) {
-        monthsData[monthKey] += 1;
-      }
-    });
-    return Object.entries(monthsData).map(([month, value]) => ({ month, negociacoes: value }));
-  })();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-  // Split stats for desktop layout
-  const faturamentoCard = { title: "Faturamento", value: `R$ ${faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, subtitle: "Total entregue", icon: DollarSign, borderColor: "border-emerald-500" };
-  const mainStats = [
-    { title: "Negociações", value: negotiations.length, subtitle: `${pendingNegotiations} pendentes`, icon: Handshake, borderColor: "border-blue-500" },
-    { title: "Avaliações", value: totalReviews, subtitle: "Feedback recebido", icon: Star, borderColor: "border-yellow-500" },
-    { title: "Produtos", value: products.length, subtitle: "Ativos no catálogo", icon: Package, borderColor: "border-cyan-500" },
-  ];
-  const secondaryStats = [
-    { title: "Visitas", value: totalViews, subtitle: `${viewsLast30} nos últimos 30 dias`, icon: Eye, borderColor: "border-indigo-500" },
-    { title: "Conversas", value: totalConversations, subtitle: "Compradores interessados", icon: MessageSquare, borderColor: "border-purple-500" },
-    { title: "Em Envio", value: acceptedNegotiations + shippedNegotiations, subtitle: "Aceitas ou enviadas", icon: Truck, borderColor: "border-orange-500" },
-    { title: "Entregues", value: deliveredNegotiations, subtitle: "Concluídas", icon: CheckCircle, borderColor: "border-green-500" },
-  ];
+    const inRange = (d: Date, a: Date, b: Date) => d >= a && d <= b;
 
-  const allStats = [faturamentoCard, ...mainStats, ...secondaryStats];
+    const paid = negotiations.filter(n => n.status === "delivered" || n.status === "shipped");
+    const monthRevenue = paid
+      .filter(n => new Date(n.created_at) >= monthStart)
+      .reduce((s, n) => s + Number(n.agreed_price || 0), 0);
+    const prevRevenue = paid
+      .filter(n => inRange(new Date(n.created_at), prevStart, prevEnd))
+      .reduce((s, n) => s + Number(n.agreed_price || 0), 0);
+
+    const monthOrders = negotiations.filter(n => new Date(n.created_at) >= monthStart).length;
+    const prevOrders = negotiations.filter(n => inRange(new Date(n.created_at), prevStart, prevEnd)).length;
+
+    const reviewsCount = products.reduce((s, p) => s + Number(p.total_reviews || 0), 0);
+    const avgRating = (() => {
+      const weighted = products.reduce((s, p) => s + Number(p.rating_medio || 0) * Number(p.total_reviews || 0), 0);
+      return reviewsCount > 0 ? weighted / reviewsCount : 0;
+    })();
+
+    const pct = (curr: number, prev: number) => {
+      if (prev === 0) return curr > 0 ? 100 : 0;
+      return Math.round(((curr - prev) / prev) * 100);
+    };
+
+    return {
+      monthRevenue,
+      revenueChange: pct(monthRevenue, prevRevenue),
+      monthOrders,
+      ordersChange: pct(monthOrders, prevOrders),
+      avgRating,
+      reviewsCount,
+    };
+  }, [negotiations, products]);
+
+  const counts = useMemo(() => ({
+    todos: products.length,
+    ativos: products.filter(p => p.ativo).length,
+    pausados: products.filter(p => !p.ativo).length,
+  }), [products]);
+
+  const filteredProducts = useMemo(() => {
+    if (activeTab === "ativos") return products.filter(p => p.ativo);
+    if (activeTab === "pausados") return products.filter(p => !p.ativo);
+    return products;
+  }, [products, activeTab]);
+
+  const recentOrders = negotiations.slice(0, 6);
+  const activeNegCount = negotiations.filter(n => ["pending", "accepted", "shipped"].includes(n.status)).length;
+
+  const firstName = profile?.nome?.split(" ")[0] || "Fornecedor";
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Visão geral do seu desempenho</p>
-        </div>
-        <Button variant="outline" onClick={handleTestNotification} disabled={testingNotification} size="sm" className="text-xs h-8 rounded-full border-primary/30 text-primary hover:bg-primary/10 self-start">
-          {testingNotification ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Bell className="h-3 w-3 mr-1" />}
-          Testar Push
-        </Button>
-      </div>
+    <div className="space-y-6">
+      {/* HERO BANNER */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-violet-800 text-white shadow-xl">
+        <div className="relative z-10 flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:gap-8">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+              Bem-vindo de volta, {firstName}! <span className="inline-block">👋</span>
+            </h1>
+            <p className="mt-2 text-sm sm:text-base text-purple-100/90 max-w-xl">
+              Gerencie seus produtos, converse com compradores e aumente suas vendas todos os dias.
+            </p>
 
-      {/* Stats Cards - 1 per row on mobile */}
-      <div className="grid grid-cols-1 gap-3 md:hidden">
-        {allStats.map((card) => (
-          <StatCard key={card.title} {...card} />
-        ))}
-      </div>
-
-      {/* Desktop: Faturamento hero + grid */}
-      <div className="hidden md:flex md:flex-col gap-3">
-        <StatCard {...faturamentoCard} wide />
-        <div className="grid grid-cols-3 gap-3">
-          {mainStats.map((card) => (
-            <StatCard key={card.title} {...card} />
-          ))}
-        </div>
-        <div className="grid grid-cols-4 gap-3">
-          {secondaryStats.map((card) => (
-            <StatCard key={card.title} {...card} />
-          ))}
-        </div>
-      </div>
-
-      {/* Recent Negotiations - shown FIRST on mobile */}
-      <div className="md:hidden">
-        <Card className="rounded-2xl border-0 shadow-md overflow-hidden">
-          <CardHeader className="p-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold">🤝 Negociações Recentes</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => navigate('/fornecedor/negociacoes')} className="text-xs rounded-full">
-                Ver Todas
-              </Button>
+            {/* KPI cards inside hero */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <KpiCard
+                icon={DollarSign}
+                label="Vendas esse mês"
+                value={loading ? null : formatCurrency(kpis.monthRevenue)}
+                change={kpis.revenueChange}
+              />
+              <KpiCard
+                icon={ShoppingBag}
+                label="Pedidos esse mês"
+                value={loading ? null : String(kpis.monthOrders)}
+                change={kpis.ordersChange}
+              />
+              <KpiCard
+                icon={Star}
+                label="Avaliação média"
+                value={loading ? null : `${kpis.avgRating.toFixed(1)} ★`}
+                subtitle={`Baseado em ${kpis.reviewsCount} avaliações`}
+              />
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {negotiations.length === 0 ? (
-                <div className="p-8 text-center">
-                  <Handshake className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-30" />
-                  <p className="text-muted-foreground text-sm">Nenhuma negociação registrada</p>
-                </div>
-              ) : negotiations.slice(0, 5).map(neg => (
-                <div key={neg.id} className="p-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <DarkGlassIcon icon={Handshake} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{neg.product_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(neg.created_at).toLocaleDateString('pt-BR')} • Qtd: {neg.quantity}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-sm whitespace-nowrap text-primary">R$ {Number(neg.agreed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                      <Badge variant={neg.status === 'delivered' ? 'default' : neg.status === 'cancelled' ? 'destructive' : 'secondary'} className="text-[10px] mt-1 rounded-full">
-                        {neg.status === 'pending' ? 'Pendente' : neg.status === 'accepted' ? 'Aceita' : neg.status === 'shipped' ? 'Enviada' : neg.status === 'delivered' ? 'Entregue' : neg.status === 'cancelled' ? 'Cancelada' : neg.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Chart - desktop only */}
-      <Card className="rounded-2xl border-0 shadow-md overflow-hidden hidden md:block">
-        <CardHeader className="p-4 sm:p-5">
-          <CardTitle className="text-sm sm:text-base font-bold">📈 Atividade de Negociações</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-5 pt-0">
-          {activityData.some(d => d.negociacoes > 0) ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={activityData}>
-                <defs>
-                  <linearGradient id="colorNeg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="month" className="fill-muted-foreground" tick={{ fontSize: 11 }} />
-                <YAxis className="fill-muted-foreground" tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="negociacoes" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorNeg)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[220px] flex items-center justify-center">
-              <p className="text-muted-foreground text-xs sm:text-sm">Nenhuma negociação registrada ainda</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Recent Negotiations - desktop only (mobile version is above chart) */}
-      <Card className="rounded-2xl border-0 shadow-md overflow-hidden hidden md:block">
-        <CardHeader className="p-4 sm:p-5">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm sm:text-base font-bold">🤝 Negociações Recentes</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => navigate('/fornecedor/negociacoes')} className="text-xs rounded-full">
-              Ver Todas
-            </Button>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {negotiations.length === 0 ? (
-              <div className="p-8 text-center">
-                <Handshake className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-30" />
-                <p className="text-muted-foreground text-sm">Nenhuma negociação registrada</p>
-              </div>
-            ) : negotiations.slice(0, 5).map(neg => (
-              <div key={neg.id} className="p-4 sm:p-5 hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-3">
-                   <DarkGlassIcon icon={Handshake} size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{neg.product_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(neg.created_at).toLocaleDateString('pt-BR')} • Qtd: {neg.quantity}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-sm whitespace-nowrap text-primary">R$ {Number(neg.agreed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <Badge variant={neg.status === 'delivered' ? 'default' : neg.status === 'cancelled' ? 'destructive' : 'secondary'} className="text-[10px] mt-1 rounded-full">
-                      {neg.status === 'pending' ? 'Pendente' : neg.status === 'accepted' ? 'Aceita' : neg.status === 'shipped' ? 'Enviada' : neg.status === 'delivered' ? 'Entregue' : neg.status === 'cancelled' ? 'Cancelada' : neg.status}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
+
+          <div className="hidden lg:flex shrink-0 items-center justify-center">
+            <img src={heroStore} alt="" className="h-48 w-48 object-contain drop-shadow-2xl" loading="lazy" width={192} height={192} />
+          </div>
+        </div>
+        {/* decorative blur */}
+        <div className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -left-10 -bottom-10 h-56 w-56 rounded-full bg-violet-400/20 blur-3xl" />
+      </section>
+
+      {/* QUICK ACTIONS */}
+      <section>
+        <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Gestão rápida</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <QuickAction icon={Plus} title="Novo produto" subtitle="Anuncie um produto" accent onClick={() => navigate("/fornecedor/produtos?novo=1")} />
+          <QuickAction icon={ShoppingBag} title="Ver pedidos" subtitle="Acompanhe pedidos" badge={activeNegCount > 0 ? activeNegCount : undefined} onClick={() => navigate("/fornecedor/negociacoes")} />
+          <QuickAction icon={MessageSquare} title="Conversas" subtitle="Responda compradores" badge={unreadMessages > 0 ? unreadMessages : undefined} onClick={() => navigate("/fornecedor/chat")} />
+          <QuickAction icon={Users} title="Compradores" subtitle="Veja seus clientes" onClick={() => navigate("/fornecedor/negociacoes")} />
+          <QuickAction icon={BarChart3} title="Relatórios" subtitle="Acompanhe resultados" onClick={() => navigate("/fornecedor/estatisticas")} />
+        </div>
+      </section>
+
+      {/* MEUS PRODUTOS */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base sm:text-lg font-bold text-foreground">Meus produtos</h2>
+          <button onClick={() => navigate("/fornecedor/produtos")} className="text-xs sm:text-sm font-medium text-primary hover:underline">
+            Ver todos os produtos
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+          {([
+            { key: "todos", label: `Todos (${counts.todos})` },
+            { key: "ativos", label: `Ativos (${counts.ativos})` },
+            { key: "pausados", label: `Pausados (${counts.pausados})` },
+          ] as { key: ProductTab; label: string }[]).map(t => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                activeTab === t.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-64 rounded-2xl" />
             ))}
           </div>
-        </CardContent>
-      </Card>
+        ) : filteredProducts.length === 0 ? (
+          <Card className="rounded-2xl">
+            <CardContent className="p-10 text-center">
+              <Package className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+              <p className="text-sm text-muted-foreground">Nenhum produto nesta categoria</p>
+              <Button onClick={() => navigate("/fornecedor/produtos?novo=1")} className="mt-4 rounded-full">
+                <Plus className="h-4 w-4 mr-1" /> Criar produto
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {filteredProducts.slice(0, 5).map(p => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                views={productViews[p.id] || 0}
+                favorites={productFavorites[p.id] || 0}
+                onClick={() => navigate("/fornecedor/produtos")}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* PEDIDOS RECENTES */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base sm:text-lg font-bold text-foreground">Pedidos recentes</h2>
+          <button onClick={() => navigate("/fornecedor/negociacoes")} className="text-xs sm:text-sm font-medium text-primary hover:underline">
+            Ver todos os pedidos
+          </button>
+        </div>
+
+        <Card className="rounded-2xl border-border overflow-hidden">
+          {loading ? (
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : recentOrders.length === 0 ? (
+            <div className="p-10 text-center">
+              <Hand className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+              <p className="text-sm text-muted-foreground">Nenhuma negociação ainda</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-border bg-muted/30">
+                    <tr className="text-left text-xs font-semibold text-muted-foreground">
+                      <th className="px-5 py-3">Pedido</th>
+                      <th className="px-5 py-3">Comprador</th>
+                      <th className="px-5 py-3">Produto</th>
+                      <th className="px-5 py-3">Valor</th>
+                      <th className="px-5 py-3">Status</th>
+                      <th className="px-5 py-3">Data</th>
+                      <th className="px-5 py-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentOrders.map(n => {
+                      const buyer = buyersMap[n.buyer_id];
+                      return (
+                        <tr key={n.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
+                          onClick={() => navigate("/fornecedor/negociacoes")}>
+                          <td className="px-5 py-3 font-medium text-primary">#{n.id.slice(0, 5).toUpperCase()}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-full bg-muted overflow-hidden flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                                {buyer?.foto ? <img src={buyer.foto} alt="" className="h-full w-full object-cover" /> : (buyer?.nome?.[0] || "?")}
+                              </div>
+                              <span className="text-foreground">{buyer?.nome || "Comprador"}</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 text-foreground truncate max-w-[200px]">{n.product_name}</td>
+                          <td className="px-5 py-3 font-semibold text-foreground">{formatCurrency(n.agreed_price)}</td>
+                          <td className="px-5 py-3">{statusBadge(n.status)}</td>
+                          <td className="px-5 py-3 text-muted-foreground">{new Date(n.created_at).toLocaleDateString("pt-BR")}</td>
+                          <td className="px-5 py-3 text-right"><ChevronRight className="h-4 w-4 text-muted-foreground inline" /></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile list */}
+              <div className="md:hidden divide-y divide-border">
+                {recentOrders.map(n => {
+                  const buyer = buyersMap[n.buyer_id];
+                  return (
+                    <button key={n.id} onClick={() => navigate("/fornecedor/negociacoes")}
+                      className="w-full p-4 flex items-center gap-3 hover:bg-muted/20 transition-colors text-left">
+                      <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center text-xs font-semibold text-muted-foreground shrink-0">
+                        {buyer?.foto ? <img src={buyer.foto} alt="" className="h-full w-full object-cover" /> : (buyer?.nome?.[0] || "?")}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-primary">#{n.id.slice(0, 5).toUpperCase()}</span>
+                          <span className="text-xs text-muted-foreground truncate">{buyer?.nome}</span>
+                        </div>
+                        <p className="text-sm font-medium truncate">{n.product_name}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleDateString("pt-BR")}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="text-sm font-bold">{formatCurrency(n.agreed_price)}</span>
+                        {statusBadge(n.status)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </Card>
+      </section>
     </div>
   );
 };
+
+// ---------- Sub-components ----------
+
+const KpiCard = ({ icon: Icon, label, value, change, subtitle }: {
+  icon: React.ElementType; label: string; value: string | null;
+  change?: number; subtitle?: string;
+}) => (
+  <div className="rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 p-4">
+    <div className="flex items-start gap-3">
+      <div className="h-9 w-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+        <Icon className="h-4.5 w-4.5 text-white" />
+      </div>
+      <div className="min-w-0 flex-1">
+        {value === null ? (
+          <Skeleton className="h-7 w-24 bg-white/20" />
+        ) : (
+          <p className="text-xl sm:text-2xl font-bold leading-tight truncate">{value}</p>
+        )}
+        <p className="text-[11px] text-purple-100/80 mt-0.5">{label}</p>
+        {typeof change === "number" && (
+          <div className={`flex items-center gap-1 mt-1 text-[11px] font-medium ${change >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+            {change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+            <span>{change >= 0 ? "+" : ""}{change}% vs mês passado</span>
+          </div>
+        )}
+        {subtitle && <p className="text-[10px] text-purple-100/70 mt-1">{subtitle}</p>}
+      </div>
+    </div>
+  </div>
+);
+
+const QuickAction = ({ icon: Icon, title, subtitle, accent, badge, onClick }: {
+  icon: React.ElementType; title: string; subtitle: string;
+  accent?: boolean; badge?: number; onClick: () => void;
+}) => (
+  <button onClick={onClick}
+    className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left hover:border-primary/40 hover:shadow-md transition-all">
+    <div className={`relative h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+      accent ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+    }`}>
+      <Icon className="h-5 w-5" />
+      {badge !== undefined && (
+        <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
+    </div>
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-semibold text-foreground truncate">{title}</p>
+      <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
+    </div>
+  </button>
+);
+
+const ProductCard = ({ product, views, favorites, onClick }: {
+  product: ProductRow; views: number; favorites: number; onClick: () => void;
+}) => {
+  const img = product.imagens?.[0];
+  return (
+    <button onClick={onClick}
+      className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden text-left hover:shadow-lg hover:border-primary/40 transition-all">
+      <div className="relative aspect-square bg-muted overflow-hidden">
+        {img ? (
+          <img src={img} alt={product.nome} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center">
+            <Package className="h-10 w-10 text-muted-foreground/40" />
+          </div>
+        )}
+        <Badge variant="secondary" className={`absolute top-2 left-2 rounded-md text-[10px] font-medium ${
+          product.ativo ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+        }`}>
+          {product.ativo ? "Ativo" : "Pausado"}
+        </Badge>
+      </div>
+      <div className="p-3 flex flex-col gap-1.5">
+        <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 leading-tight min-h-[2.4em]">{product.nome}</p>
+        <p className="text-sm font-bold text-foreground">{formatCurrency(product.preco)}</p>
+        <p className="text-[11px] text-muted-foreground">Estoque: {product.estoque} un.</p>
+        <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1 border-t border-border mt-1">
+          <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {views}</span>
+          <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> {favorites}</span>
+        </div>
+      </div>
+    </button>
+  );
+};
+
 export default Dashboard;
