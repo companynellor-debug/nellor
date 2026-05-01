@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Plus, ShoppingBag, MessageSquare, Users, BarChart3, TrendingUp, TrendingDown,
-  DollarSign, Package, Star, Eye, Heart, ChevronRight, Hand,
+  ShoppingBag, MessageSquare, Users, BarChart3, TrendingUp, TrendingDown,
+  Package, Eye, Heart, ChevronRight, Hand,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -214,60 +214,67 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* HERO BANNER */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-violet-800 text-white shadow-xl">
-        <div className="relative z-10 flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:gap-8">
+      {/* HERO BANNER - cor sólida #4621af */}
+      <section
+        className="relative overflow-hidden rounded-3xl text-white shadow-xl"
+        style={{ backgroundColor: "#4621af" }}
+      >
+        <div className="relative z-10 flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-center lg:gap-8">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
-              Bem-vindo de volta, {firstName}! <span className="inline-block">👋</span>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+              Olá, {firstName}! <span className="inline-block">👋</span>
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-purple-100/90 max-w-xl">
-              Gerencie seus produtos, converse com compradores e aumente suas vendas todos os dias.
-            </p>
+            <p className="mt-1 text-sm text-white/80">Vamos vender hoje?</p>
 
-            {/* KPI cards inside hero */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <KpiCard
-                icon={DollarSign}
-                label="Vendas esse mês"
-                value={loading ? null : formatCurrency(kpis.monthRevenue)}
-                change={kpis.revenueChange}
-              />
-              <KpiCard
-                icon={ShoppingBag}
-                label="Pedidos esse mês"
-                value={loading ? null : String(kpis.monthOrders)}
-                change={kpis.ordersChange}
-              />
-              <KpiCard
-                icon={Star}
-                label="Avaliação média"
-                value={loading ? null : `${kpis.avgRating.toFixed(1)} ★`}
-                subtitle={`Baseado em ${kpis.reviewsCount} avaliações`}
-              />
+            {/* Resumo do mês */}
+            <div className="mt-5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold">Resumo do mês</p>
+                <button
+                  onClick={() => navigate("/fornecedor/estatisticas")}
+                  className="text-xs font-medium text-white/80 hover:text-white"
+                >
+                  Ver detalhes
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <HeroStat
+                  value={loading ? null : formatCurrency(kpis.monthRevenue)}
+                  label="Vendas"
+                  change={kpis.revenueChange}
+                />
+                <HeroStat
+                  value={loading ? null : String(kpis.monthOrders)}
+                  label="Pedidos"
+                  change={kpis.ordersChange}
+                />
+                <HeroStat
+                  value={loading ? null : `${kpis.avgRating.toFixed(1)} ★`}
+                  label="Avaliação"
+                  subtitle={`${kpis.reviewsCount} avaliações`}
+                />
+              </div>
             </div>
           </div>
 
           <div className="hidden lg:flex shrink-0 items-center justify-center">
-            <img src={heroStore} alt="" className="h-48 w-48 object-contain drop-shadow-2xl" loading="lazy" width={192} height={192} />
+            <img src={heroStore} alt="" className="h-44 w-44 object-contain drop-shadow-2xl" loading="lazy" width={176} height={176} />
           </div>
         </div>
-        {/* decorative blur */}
         <div className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -left-10 -bottom-10 h-56 w-56 rounded-full bg-violet-400/20 blur-3xl" />
       </section>
 
-      {/* QUICK ACTIONS */}
+      {/* AÇÕES RÁPIDAS - ícones coloridos sem card */}
       <section>
-        <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Gestão rápida</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <QuickAction icon={Plus} title="Novo produto" subtitle="Anuncie um produto" accent onClick={() => navigate("/fornecedor/produtos?novo=1")} />
-          <QuickAction icon={ShoppingBag} title="Ver pedidos" subtitle="Acompanhe pedidos" badge={activeNegCount > 0 ? activeNegCount : undefined} onClick={() => navigate("/fornecedor/negociacoes")} />
-          <QuickAction icon={MessageSquare} title="Conversas" subtitle="Responda compradores" badge={unreadMessages > 0 ? unreadMessages : undefined} onClick={() => navigate("/fornecedor/chat")} />
-          <QuickAction icon={Users} title="Compradores" subtitle="Veja seus clientes" onClick={() => navigate("/fornecedor/negociacoes")} />
-          <QuickAction icon={BarChart3} title="Relatórios" subtitle="Acompanhe resultados" onClick={() => navigate("/fornecedor/estatisticas")} />
+        <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Ações rápidas</h2>
+        <div className="grid grid-cols-4 gap-3 sm:gap-4">
+          <QuickIcon icon={ShoppingBag} label="Pedidos" badge={activeNegCount > 0 ? activeNegCount : undefined} onClick={() => navigate("/fornecedor/negociacoes")} />
+          <QuickIcon icon={MessageSquare} label="Conversas" badge={unreadMessages > 0 ? unreadMessages : undefined} onClick={() => navigate("/fornecedor/chat")} />
+          <QuickIcon icon={BarChart3} label="Relatórios" onClick={() => navigate("/fornecedor/estatisticas")} />
+          <QuickIcon icon={Users} label="Compradores" onClick={() => navigate("/fornecedor/negociacoes")} />
         </div>
       </section>
+
 
       {/* MEUS PRODUTOS */}
       <section>
@@ -311,7 +318,7 @@ const Dashboard = () => {
               <Package className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
               <p className="text-sm text-muted-foreground">Nenhum produto nesta categoria</p>
               <Button onClick={() => navigate("/fornecedor/produtos?novo=1")} className="mt-4 rounded-full">
-                <Plus className="h-4 w-4 mr-1" /> Criar produto
+                Criar produto
               </Button>
             </CardContent>
           </Card>
@@ -428,54 +435,39 @@ const Dashboard = () => {
 
 // ---------- Sub-components ----------
 
-const KpiCard = ({ icon: Icon, label, value, change, subtitle }: {
-  icon: React.ElementType; label: string; value: string | null;
-  change?: number; subtitle?: string;
+const HeroStat = ({ value, label, change, subtitle }: {
+  value: string | null; label: string; change?: number; subtitle?: string;
 }) => (
-  <div className="rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 p-4">
-    <div className="flex items-start gap-3">
-      <div className="h-9 w-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-        <Icon className="h-4.5 w-4.5 text-white" />
+  <div className="min-w-0">
+    {value === null ? (
+      <Skeleton className="h-6 w-20 bg-white/20" />
+    ) : (
+      <p className="text-base sm:text-xl font-bold leading-tight truncate">{value}</p>
+    )}
+    <p className="text-[11px] text-white/70 mt-0.5">{label}</p>
+    {typeof change === "number" && (
+      <div className={`flex items-center gap-0.5 mt-0.5 text-[10px] font-medium ${change >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+        {change >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+        <span>{change >= 0 ? "+" : ""}{change}%</span>
       </div>
-      <div className="min-w-0 flex-1">
-        {value === null ? (
-          <Skeleton className="h-7 w-24 bg-white/20" />
-        ) : (
-          <p className="text-xl sm:text-2xl font-bold leading-tight truncate">{value}</p>
-        )}
-        <p className="text-[11px] text-purple-100/80 mt-0.5">{label}</p>
-        {typeof change === "number" && (
-          <div className={`flex items-center gap-1 mt-1 text-[11px] font-medium ${change >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-            {change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-            <span>{change >= 0 ? "+" : ""}{change}% vs mês passado</span>
-          </div>
-        )}
-        {subtitle && <p className="text-[10px] text-purple-100/70 mt-1">{subtitle}</p>}
-      </div>
-    </div>
+    )}
+    {subtitle && <p className="text-[10px] text-white/60 mt-0.5 truncate">{subtitle}</p>}
   </div>
 );
 
-const QuickAction = ({ icon: Icon, title, subtitle, accent, badge, onClick }: {
-  icon: React.ElementType; title: string; subtitle: string;
-  accent?: boolean; badge?: number; onClick: () => void;
+const QuickIcon = ({ icon: Icon, label, badge, onClick }: {
+  icon: React.ElementType; label: string; badge?: number; onClick: () => void;
 }) => (
-  <button onClick={onClick}
-    className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left hover:border-primary/40 hover:shadow-md transition-all">
-    <div className={`relative h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
-      accent ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-    }`}>
-      <Icon className="h-5 w-5" />
+  <button onClick={onClick} className="group flex flex-col items-center gap-2 text-center">
+    <div className="relative h-14 w-14 rounded-full flex items-center justify-center bg-primary/10 group-hover:bg-primary/20 transition-colors">
+      <Icon className="h-6 w-6" style={{ color: "#4621af" }} strokeWidth={2.2} />
       {badge !== undefined && (
-        <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
           {badge > 99 ? "99+" : badge}
         </span>
       )}
     </div>
-    <div className="min-w-0 flex-1">
-      <p className="text-sm font-semibold text-foreground truncate">{title}</p>
-      <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
-    </div>
+    <span className="text-xs font-medium text-foreground">{label}</span>
   </button>
 );
 
