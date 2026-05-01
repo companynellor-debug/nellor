@@ -435,54 +435,39 @@ const Dashboard = () => {
 
 // ---------- Sub-components ----------
 
-const KpiCard = ({ icon: Icon, label, value, change, subtitle }: {
-  icon: React.ElementType; label: string; value: string | null;
-  change?: number; subtitle?: string;
+const HeroStat = ({ value, label, change, subtitle }: {
+  value: string | null; label: string; change?: number; subtitle?: string;
 }) => (
-  <div className="rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 p-4">
-    <div className="flex items-start gap-3">
-      <div className="h-9 w-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-        <Icon className="h-4.5 w-4.5 text-white" />
+  <div className="min-w-0">
+    {value === null ? (
+      <Skeleton className="h-6 w-20 bg-white/20" />
+    ) : (
+      <p className="text-base sm:text-xl font-bold leading-tight truncate">{value}</p>
+    )}
+    <p className="text-[11px] text-white/70 mt-0.5">{label}</p>
+    {typeof change === "number" && (
+      <div className={`flex items-center gap-0.5 mt-0.5 text-[10px] font-medium ${change >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+        {change >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+        <span>{change >= 0 ? "+" : ""}{change}%</span>
       </div>
-      <div className="min-w-0 flex-1">
-        {value === null ? (
-          <Skeleton className="h-7 w-24 bg-white/20" />
-        ) : (
-          <p className="text-xl sm:text-2xl font-bold leading-tight truncate">{value}</p>
-        )}
-        <p className="text-[11px] text-purple-100/80 mt-0.5">{label}</p>
-        {typeof change === "number" && (
-          <div className={`flex items-center gap-1 mt-1 text-[11px] font-medium ${change >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-            {change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-            <span>{change >= 0 ? "+" : ""}{change}% vs mês passado</span>
-          </div>
-        )}
-        {subtitle && <p className="text-[10px] text-purple-100/70 mt-1">{subtitle}</p>}
-      </div>
-    </div>
+    )}
+    {subtitle && <p className="text-[10px] text-white/60 mt-0.5 truncate">{subtitle}</p>}
   </div>
 );
 
-const QuickAction = ({ icon: Icon, title, subtitle, accent, badge, onClick }: {
-  icon: React.ElementType; title: string; subtitle: string;
-  accent?: boolean; badge?: number; onClick: () => void;
+const QuickIcon = ({ icon: Icon, label, badge, onClick }: {
+  icon: React.ElementType; label: string; badge?: number; onClick: () => void;
 }) => (
-  <button onClick={onClick}
-    className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left hover:border-primary/40 hover:shadow-md transition-all">
-    <div className={`relative h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
-      accent ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-    }`}>
-      <Icon className="h-5 w-5" />
+  <button onClick={onClick} className="group flex flex-col items-center gap-2 text-center">
+    <div className="relative h-14 w-14 rounded-full flex items-center justify-center bg-primary/10 group-hover:bg-primary/20 transition-colors">
+      <Icon className="h-6 w-6" style={{ color: "#4621af" }} strokeWidth={2.2} />
       {badge !== undefined && (
-        <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
           {badge > 99 ? "99+" : badge}
         </span>
       )}
     </div>
-    <div className="min-w-0 flex-1">
-      <p className="text-sm font-semibold text-foreground truncate">{title}</p>
-      <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
-    </div>
+    <span className="text-xs font-medium text-foreground">{label}</span>
   </button>
 );
 
