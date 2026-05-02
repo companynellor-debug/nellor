@@ -459,15 +459,15 @@ const QuickIcon = ({ icon: Icon, label, badge, onClick }: {
   icon: React.ElementType; label: string; badge?: number; onClick: () => void;
 }) => (
   <button onClick={onClick} className="group flex flex-col items-center gap-2 text-center">
-    <div className="relative h-14 w-14 rounded-full flex items-center justify-center bg-primary/10 group-hover:bg-primary/20 transition-colors">
-      <Icon className="h-6 w-6" style={{ color: "#4621af" }} strokeWidth={2.2} />
+    <div className="relative h-14 w-14 flex items-center justify-center transition-transform group-hover:scale-110">
+      <Icon className="h-8 w-8" style={{ color: "#4621af" }} strokeWidth={2.5} />
       {badge !== undefined && (
-        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+        <span className="absolute top-0 right-0 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center px-1 border-2 border-background">
           {badge > 99 ? "99+" : badge}
         </span>
       )}
     </div>
-    <span className="text-xs font-medium text-foreground">{label}</span>
+    <span className="text-[11px] font-semibold text-foreground/90">{label}</span>
   </button>
 );
 
