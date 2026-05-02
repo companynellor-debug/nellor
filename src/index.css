@@ -17,16 +17,16 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 280 100% 15%;
 
-    /* Roxo escuro principal - #4B0082 */
-    --primary: 280 100% 25%;
+    /* NELOR primary - #4621af */
+    --primary: 252 73% 48%;
     --primary-foreground: 0 0% 100%;
-    
-    /* Roxo médio de destaque - #6A0DAD */
-    --secondary: 280 88% 36%;
+
+    /* Roxo médio de destaque */
+    --secondary: 252 73% 58%;
     --secondary-foreground: 0 0% 100%;
 
     /* Roxo claro para acentos */
-    --accent: 280 100% 40%;
+    --accent: 252 73% 65%;
     --accent-foreground: 0 0% 100%;
 
     /* Cinza lilás suave - #F6F0FF */

@@ -1,48 +1,94 @@
-import { Home, Handshake, MessageSquare, Tag, Bell, Store, BarChart3, BookOpen, CreditCard, Settings } from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  MessageSquare,
+  Handshake,
+  Wallet,
+  Star,
+  BarChart3,
+  Settings,
+  Lightbulb,
+} from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
+import { useSupplierOrders } from "@/hooks/useSupplierOrders";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
-import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
+import logo from "@/assets/nellor-logo.png";
 
-const menuItems = [
-  { title: "Dashboard", url: "/fornecedor/dashboard", icon: Home },
-  { title: "Negociações", url: "/fornecedor/negociacoes", icon: Handshake },
-  { title: "Chat", url: "/fornecedor/chat", icon: MessageSquare },
-  { title: "Produtos", url: "/fornecedor/produtos", icon: Tag },
-  { title: "Estatísticas", url: "/fornecedor/estatisticas", icon: BarChart3 },
-  { title: "Notificações", url: "/fornecedor/notificacoes", icon: Bell },
-  { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
-  { title: "Planos", url: "/fornecedor/planos", icon: CreditCard },
+type Item = {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  badgeKey?: "orders" | "messages";
+};
+
+const menuItems: Item[] = [
+  { title: "Painel", url: "/fornecedor/dashboard", icon: LayoutDashboard },
+  { title: "Produtos", url: "/fornecedor/produtos", icon: Package },
+  { title: "Pedidos", url: "/fornecedor/negociacoes", icon: ShoppingBag, badgeKey: "orders" },
+  { title: "Conversas", url: "/fornecedor/chat", icon: MessageSquare, badgeKey: "messages" },
+  { title: "Negociações", url: "/fornecedor/recebimentos", icon: Handshake },
+  { title: "Financeiro", url: "/fornecedor/financeiro", icon: Wallet },
+  { title: "Avaliações", url: "/fornecedor/notificacoes", icon: Star },
+  { title: "Relatórios", url: "/fornecedor/estatisticas", icon: BarChart3 },
   { title: "Configurações", url: "/fornecedor/configuracoes", icon: Settings },
-  { title: "Como Usar", url: "/fornecedor/como-usar", icon: BookOpen },
 ];
 
 export function SupplierSidebar() {
   const location = useLocation();
-  const { unreadCount } = useSupabaseNotifications();
+  const { profile } = useSupabaseAuth();
+  const { unreadCount: messagesUnread } = useSupabaseNotifications();
+  const { orders } = useSupplierOrders();
   const { triggerRestart } = useOnboardingTour();
 
+  const pendingOrders = (orders || []).filter((o: any) =>
+    ["pending", "accepted", "shipped"].includes(o?.status)
+  ).length;
+
+  const badges: Record<string, number> = {
+    orders: pendingOrders,
+    messages: messagesUnread,
+  };
+
   return (
-    <aside className="w-64 h-screen fixed left-0 top-0 bg-gradient-to-b from-purple-950 to-violet-950 text-white shadow-2xl border-r border-purple-800/30 flex flex-col">
-      <div className="p-6 border-b border-purple-800/30">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-200 to-violet-200 bg-clip-text text-transparent">NELLOR</h1>
-        <p className="text-xs text-purple-300 mt-1">Painel Fornecedor</p>
+    <aside className="w-64 h-screen fixed left-0 top-0 bg-card text-foreground border-r border-border flex flex-col">
+      <div className="px-5 py-5 border-b border-border flex items-center gap-3">
+        <img src={logo} alt="Nelor" className="h-9 w-9 object-contain" />
+        <div className="leading-tight">
+          <p className="text-sm font-extrabold tracking-tight">PLATAFORMA</p>
+          <p className="text-[10px] font-semibold text-muted-foreground tracking-wider">DE NEGOCIAÇÕES</p>
+        </div>
       </div>
 
-      <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
+      <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.url;
+          const isActive = location.pathname.startsWith(item.url);
+          const Icon = item.icon;
+          const badge = item.badgeKey ? badges[item.badgeKey] : 0;
           return (
-            <NavLink key={item.url} to={item.url} className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm relative",
-              isActive ? "bg-purple-600/40 text-white shadow-lg shadow-purple-500/20 border border-purple-500/30" : "text-purple-200 hover:bg-purple-800/30 hover:text-white"
-            )}>
-              <DarkGlassIcon icon={item.icon} size="xs" />
-              <span className="font-medium">{item.title}</span>
-              {item.title === "Notificações" && unreadCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
+            <NavLink
+              key={item.url}
+              to={item.url}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-foreground/80 hover:bg-muted"
+              )}
+            >
+              <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={isActive ? 2.4 : 2} />
+              <span className="flex-1 truncate">{item.title}</span>
+              {badge > 0 && (
+                <span
+                  className={cn(
+                    "ml-auto min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center",
+                    isActive ? "bg-white/25 text-white" : "bg-primary/10 text-primary"
+                  )}
+                >
+                  {badge > 99 ? "99+" : badge}
                 </span>
               )}
             </NavLink>
@@ -50,10 +96,36 @@ export function SupplierSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-purple-800/30">
-        <button onClick={triggerRestart} className="flex items-center gap-2 text-xs text-purple-400 hover:text-purple-200 transition-colors w-full px-4 py-2">
-          🔄 Ver tutorial novamente
-        </button>
+      <div className="p-3 border-t border-border space-y-3">
+        <div className="rounded-2xl bg-primary/5 border border-primary/10 p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Lightbulb className="h-4 w-4 text-primary" />
+            <p className="text-xs font-semibold text-foreground">Dica de hoje</p>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            Mantenha seus produtos atualizados e responda rápido às mensagens para vender mais.
+          </p>
+          <button
+            onClick={triggerRestart}
+            className="mt-2 w-full text-[11px] font-semibold text-primary hover:underline text-left"
+          >
+            Ver tutorial novamente
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 px-1">
+          <div className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center text-xs font-semibold text-muted-foreground shrink-0">
+            {profile?.foto_perfil_url ? (
+              <img src={profile.foto_perfil_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              (profile?.nome?.[0] || "F").toUpperCase()
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold truncate">{profile?.nome || "Fornecedor"}</p>
+            <p className="text-[10px] text-muted-foreground">Vendedor</p>
+          </div>
+        </div>
       </div>
     </aside>
   );
