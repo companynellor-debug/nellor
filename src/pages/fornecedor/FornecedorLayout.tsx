@@ -6,7 +6,8 @@ import { NotificationPermissionBanner } from "@/components/fornecedor/Notificati
 import { SubscriptionBanner } from "@/components/fornecedor/SubscriptionBanner";
 import { RevenueGoalBar } from "@/components/fornecedor/RevenueGoalBar";
 import { MonthlyAchievements } from "@/components/fornecedor/MonthlyAchievements";
-import { Bell, LogOut, Moon, Sun } from "lucide-react";
+import { Bell, LogOut, Moon, Sun, Search, Plus, MessageSquare } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -67,30 +68,60 @@ const FornecedorLayoutContent = () => {
         
         <div className="min-w-0 max-w-full flex-1 md:ml-64">
           <div className="flex min-h-screen min-w-0 max-w-full flex-col overflow-x-hidden">
-            <header className="sticky top-0 z-40 flex h-14 w-full max-w-full items-center gap-2 overflow-hidden border-b border-border bg-card px-3 shadow-sm sm:px-4 md:px-6">
-              <div className="flex min-w-0 flex-1 items-center md:hidden">
-                <img src={logo} alt="Nellor" className="h-7 w-auto max-w-[108px] object-contain object-left sm:h-8 sm:max-w-[140px]" />
+            <header className="sticky top-0 z-40 flex h-16 w-full max-w-full items-center gap-3 border-b border-border bg-card px-3 shadow-sm sm:px-4 md:px-6">
+              <div className="flex min-w-0 flex-1 items-center gap-3 md:hidden">
+                <img src={logo} alt="Nelor" className="h-7 w-auto max-w-[108px] object-contain object-left" />
               </div>
+
+              <div className="hidden md:flex flex-1 max-w-xl relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar produtos, pedidos ou compradores..."
+                  className="pl-9 h-10 rounded-xl bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                />
+              </div>
+
+              <Button
+                onClick={() => navigate('/fornecedor/produtos?novo=1')}
+                className="hidden md:inline-flex h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Anunciar produto
+              </Button>
+
               <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-                <div className="hidden sm:flex items-center gap-2 mr-2">
+                <div className="hidden lg:flex items-center gap-2 mr-1">
                   <Sun className="h-4 w-4 text-muted-foreground" />
                   <Switch checked={darkMode} onCheckedChange={setDarkMode} />
                   <Moon className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="h-8 w-8 shrink-0 sm:hidden">
-                  {darkMode ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
+                <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="h-9 w-9 shrink-0 lg:hidden">
+                  {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => navigate('/fornecedor/notificacoes')} className="relative h-8 w-8 shrink-0 sm:h-9 sm:w-9">
-                  <Bell className="h-4 w-4 text-foreground" />
+                <Button variant="ghost" size="icon" onClick={() => navigate('/fornecedor/chat')} className="h-9 w-9 shrink-0">
+                  <MessageSquare className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => navigate('/fornecedor/notificacoes')} className="relative h-9 w-9 shrink-0">
+                  <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    <span className="absolute -top-0.5 -right-0.5 bg-destructive text-destructive-foreground text-[10px] rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center font-bold">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
                 </Button>
-                <Button variant="ghost" onClick={handleLogout} size="icon" className="h-8 w-8 shrink-0 sm:h-9 sm:w-auto sm:px-3">
-                  <LogOut className="h-4 w-4 text-foreground" />
-                  <span className="hidden sm:inline ml-2 text-foreground">Sair</span>
+                <button
+                  onClick={() => navigate('/fornecedor/configuracoes')}
+                  className="h-9 w-9 rounded-full bg-muted overflow-hidden shrink-0 flex items-center justify-center text-xs font-semibold text-muted-foreground"
+                  aria-label="Perfil"
+                >
+                  {profile?.foto_perfil_url ? (
+                    <img src={profile.foto_perfil_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    (profile?.nome?.[0] || "F").toUpperCase()
+                  )}
+                </button>
+                <Button variant="ghost" onClick={handleLogout} size="icon" className="h-9 w-9 shrink-0" aria-label="Sair">
+                  <LogOut className="h-4 w-4" />
                 </Button>
               </div>
             </header>
