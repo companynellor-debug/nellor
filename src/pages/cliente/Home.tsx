@@ -69,16 +69,18 @@ const ClienteHome = () => {
   const { profile } = useSupabaseAuth();
   const tourStartedRef = useRef(false);
 
-  // Auto-start tour for first-time clients (once per session)
+  // Auto-start tour ONLY for users who just signed up (flag set in Login)
   useEffect(() => {
     if (
       profile &&
       profile.tipo === 'cliente' &&
       profile.client_onboarding_completed === false &&
       !tourStartedRef.current &&
-      !sessionStorage.getItem('nellor_tour_done')
+      !sessionStorage.getItem('nellor_tour_done') &&
+      sessionStorage.getItem('nellor_just_signed_up') === '1'
     ) {
       tourStartedRef.current = true;
+      sessionStorage.removeItem('nellor_just_signed_up');
       const t = setTimeout(() => startTour(), 800);
       return () => clearTimeout(t);
     }
