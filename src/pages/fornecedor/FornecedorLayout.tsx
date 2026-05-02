@@ -96,7 +96,6 @@ const FornecedorLayoutContent = () => {
             </header>
 
             <NotificationPermissionBanner />
-            <SubscriptionBanner />
             <RevenueGoalBar />
 
             <main className="flex-1 min-w-0 overflow-x-hidden p-3 pb-20 sm:p-4 md:p-6 md:pb-6">
