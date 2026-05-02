@@ -1,109 +1,109 @@
 
+# Reestruturação completa: Fornecedor + Admin + Login + Negociações
 
-## Plano: Sistema de Planos, Conquistas Mensais, Meta de Faturamento e Métodos de Pagamento/Envio do Fornecedor
+Vou aplicar a estética das referências (NELOR, roxo `#4621af`, cards limpos, ícones lineares com badges) ao painel do fornecedor, admin, login, e ajustar regras de negócio (prazos e onboarding).
 
-Este plano cobre 4 grandes funcionalidades solicitadas. A implementação será dividida em etapas claras.
+## 1. Sidebar e Bottom Nav do Fornecedor (estilo referência)
+
+**`src/components/fornecedor/SupplierSidebar.tsx`** — reescrita completa:
+- Fundo branco (light) / `bg-card` (dark), texto `text-foreground`, **não mais gradiente roxo**.
+- Logo NELOR + subtítulo "PLATAFORMA DE NEGOCIAÇÕES".
+- Itens (apenas os que existem na plataforma — sem "Anúncios", sem "Compradores" como seção fake):
+  - Painel, Produtos, Pedidos (badge), Conversas (badge), Negociações, Financeiro, Avaliações, Relatórios, Configurações.
+- Item ativo: pílula roxa `#4621af` com texto branco e ícone branco (não DarkGlassIcon).
+- Card "Dica de hoje" no rodapé com botão "Ver dicas" → abre o tour novamente.
+- Footer: avatar + nome + "Vendedor" puxados de `profile`.
+
+**`src/components/fornecedor/BottomNav.tsx`** — 5 itens conforme mockup mobile:
+Painel, Produtos, **Anunciar (botão central roxo flutuante → abre ProductModal)**, Conversas (badge), Perfil (→ `/fornecedor/configuracoes`). Glassmorphism, safe-area inset.
+
+## 2. Header desktop do Fornecedor
+
+**`src/pages/fornecedor/FornecedorLayout.tsx`**:
+- Adicionar header com: barra de busca global (produtos/pedidos/compradores), botão "+ Anunciar produto" roxo, ícone de mensagens, ícone de sino com badge, avatar do usuário.
+- Remover qualquer barra antiga conflitante.
+
+## 3. Configurações do Fornecedor — dados reais
+
+**`src/pages/fornecedor/Configuracoes.tsx`**:
+- Remover valores hard-coded (`'Minha Loja Premium'`, `'11999999999'`, etc).
+- Carregar do `profiles` do usuário logado: `nome` (loja), `telefone`, `endereco_principal`, `email`.
+- Usar `useStoreProfile` ou query direta no `profiles` por `auth.uid()`.
+- `handleSave` faz `update` real no `profiles` (não só toast).
+- Manter abas: Informações da loja, Métodos de pagamento, Formas de envio, Segurança (alterar senha via `supabase.auth.updateUser`), Excluir conta.
+
+## 4. Onboarding cliente — apenas no signup
+
+**`src/hooks/useClientOnboardingTour.tsx`** (e `ClienteLayout.tsx`):
+- Não disparar baseado apenas em `client_onboarding_completed = false` para todos os usuários antigos.
+- Disparar somente quando `profiles.created_at` for recente (< 5 min) **OU** quando há flag `nellor_just_signed_up` em `sessionStorage` (setada no `Login.tsx` no caminho de signup).
+- Após concluir/pular, sempre `update profiles set client_onboarding_completed = true`.
+- Manter o botão flutuante de ajuda para reabrir manualmente.
+
+## 5. Tela de Login (estilo referência foto 5)
+
+**`src/pages/Login.tsx`** — split-screen desktop, single-column mobile:
+- **Esquerda (desktop)**: fundo `#1a1340` / roxo escuro, logo NELOR grande, título "Seu marketplace de negociações", 3 features com ícones (2.000+ usuários, Negociação direta no chat, R$5M+ movimentados), ilustração 3D no rodapé.
+- **Direita / mobile**: card branco com "Bem-vindo de volta!", inputs e-mail/senha com ícones, link "Esqueci minha senha", botão "Entrar" roxo `#4621af`, separador "ou continue com sua conta", botão secundário "Continuar com sua conta", link "Criar conta".
+- Manter: 5 cliques na logo abre dialog admin, lógica de signup só para `cliente`, set `nellor_just_signed_up` no signup.
+
+## 6. Painel Admin — visual moderno
+
+**`src/pages/admin/AdminLayout.tsx`** + **`src/components/admin/AdminSidebar.tsx`**:
+- Sidebar branca/card (mesma linguagem do fornecedor) em vez de gradiente roxo intenso.
+- Itens: Dashboard, Usuários, Fornecedores, Solicitações, Assinaturas, Produtos (via Categorias/Banners), Negociações, Disputas, Suporte, Relatórios, Configurações.
+- Header desktop com busca + notificações + toggle dark + avatar admin.
+- Mantém gate de senha (5 cliques + senha) intacto.
+
+## 7. Bug: aprovar assinatura
+
+**Investigação**: o RPC `admin_confirm_subscription` existe (migrações `20260406193708` e `20260407190942`). Como há duas versões, `CREATE OR REPLACE` da segunda é o que está ativo. Provavelmente o erro vem de:
+- `subscriptions.status` aceitando apenas valores específicos (CHECK constraint), ou
+- falta de `SECURITY DEFINER` / search_path, ou
+- assinatura criada sem `started_at`/`expires_at` permitidos.
+
+**Plano**:
+1. Ler a versão atual do RPC + tabela `subscriptions` via `supabase--read_query` ao entrar no modo build.
+2. Reproduzir clicando "Confirmar Pagamento" no preview e capturar erro do console.
+3. Criar nova migration corrigindo o RPC (garantindo `SECURITY DEFINER`, `set search_path = public`, validação de admin via `has_role`, set `status='active'`, `started_at = now()`, `expires_at = now() + interval '30 days'`, gravar `confirmed_by`/`notes`).
+4. Notificar o fornecedor por `notifications` insert na mesma transação.
+
+## 8. Prazos de negociação → 5 minutos
+
+Substituir todos os limites de tempo (1h aceitar, 24h enviar, 48h entregar) por **5 minutos**:
+
+- **`supabase/functions/check-delivery-dates/index.ts`**: trocar comparação por `expected_delivery <= now() - interval '5 minutes'` (campo passa a ser timestamp lógico de 5 min após criação/aceite).
+- **Migration nova**: atualizar triggers `validate_negotiation_transition` e quaisquer RPCs/cron jobs que usem `1 hour`, `24 hours`, `48 hours` → `5 minutes`. Buscar nas migrações por essas constantes e regenerar funções afetadas.
+- **`src/components/chat/NegotiationForm.tsx`** e telas de negociação: trocar textos "1h para aceitar / 24h para enviar / 48h para entregar" por "5 minutos".
+- Revisar `useNegotiations` / componentes que mostram countdown.
+
+## 9. Limpezas
+
+- Remover do código rotas/componentes "Anúncios", "Compradores" (lista de clientes fake), "Drop", "Wallets" se ainda houver referências.
+- Garantir que apenas abas/itens com função real apareçam em sidebars e bottom navs.
 
 ---
 
-### 1. Novos Planos de Assinatura (5 tiers)
+## Detalhes técnicos
 
-**Database**: Migration para atualizar `supplier_subscriptions` com campo `max_products` e atualizar a RPC `get_supplier_subscription` para retornar o plano com limite de produtos.
+**Cores e tokens** (atualizar `src/index.css` se necessário):
+- `--primary: 252 73% 48%` (~ `#4621af`).
+- Sidebars: `bg-card border-r border-border`, item ativo `bg-primary text-primary-foreground rounded-xl`.
 
-| Plano | Produtos | Preço |
-|-------|----------|-------|
-| Grátis | 10 | R$ 0 |
-| Inicial | 50 | R$ 39,90 |
-| Intermediário | 170 | R$ 67,90 |
-| Avançado | 500 | R$ 149,00 |
-| Ultra | Ilimitado | R$ 249,00 |
+**Onboarding gating SQL**: usar `created_at > now() - interval '5 minutes'` na lógica do hook (client-side com `Date.parse`).
 
-**Arquivos**:
-- `src/pages/fornecedor/Planos.tsx` — Reescrever com 5 cards horizontais (scroll no mobile), cada um com nome, preço, limite de produtos e benefícios
-- `src/hooks/useSupplierSubscription.tsx` — Atualizar interface para incluir `max_products`, `plan_name` atualizado
-- `src/components/fornecedor/SubscriptionBanner.tsx` — Ajustar para novos nomes de plano
-- Adicionar rota `/fornecedor/planos` no `App.tsx` e link no `SupplierSidebar.tsx`
-- Enforcement: bloquear cadastro de produto quando atingir limite do plano
+**Dados reais Configurações**: `supabase.from('profiles').select('nome, telefone, email, endereco_principal, foto_perfil_url').eq('id', user.id).single()`.
 
-### 2. Card de Conquistas Mensais (End-of-Month Highlight)
+**Migrations a criar**:
+1. Fix `admin_confirm_subscription` RPC (após inspecionar erro real).
+2. Update triggers/funções de prazos para 5 min.
 
-**Componente novo**: `src/components/fornecedor/MonthlyAchievements.tsx`
+**Arquivos editados (resumo)**:
+- `SupplierSidebar.tsx`, `BottomNav.tsx` (fornecedor), `FornecedorLayout.tsx`, `Configuracoes.tsx`
+- `AdminLayout.tsx`, `AdminSidebar.tsx`
+- `Login.tsx`
+- `useClientOnboardingTour.tsx`, `ClienteLayout.tsx`
+- `NegotiationForm.tsx`, `check-delivery-dates/index.ts`
+- 2 novas migrations SQL
 
-- Overlay com backdrop-blur sobre o dashboard
-- Card centralizado estilo Apple com animações de entrada
-- Dados mostrados:
-  - Top 3 produtos mais negociados
-  - Visitas no perfil (product_views)
-  - Conversas iniciadas por clientes
-  - Negociações fechadas (delivered)
-  - Total vendido
-  - Total de visualizações nos status
-  - Comparação com mês anterior (setas verdes/vermelhas + %)
-- Rodapé: "E tudo isso pagando apenas **R$ X/mês**" com o valor do plano ativo
-- Lógica de exibição: mostrar uma vez por mês (salvar em `localStorage` a data do último dismiss)
-- Botão "Fechar" e "Compartilhar" (screenshot/share API)
-
-**Dados**: Query nas tabelas `negotiations`, `product_views`, `messages` filtrando por mês atual vs mês anterior
-
-### 3. Meta de Faturamento no Header (estilo Kiwify)
-
-**Componente novo**: `src/components/fornecedor/RevenueGoalBar.tsx`
-
-- Barra de progresso no header do `FornecedorLayout.tsx`, abaixo do header existente
-- Metas pré-definidas: R$ 500k, R$ 1M, R$ 2M, R$ 5M, R$ 10M, R$ 20M
-- Auto-seleciona a próxima meta acima do faturamento atual
-- Mostra: `R$ X / R$ Y` com barra animada e porcentagem
-- Faturamento = soma de `agreed_price * quantity` das negociações `delivered`
-- Clicável para alterar meta manualmente (salvar em `profiles` ou `localStorage`)
-
-### 4. Métodos de Pagamento e Formas de Envio do Fornecedor
-
-**Database**: Migration para criar duas novas tabelas:
-
-```sql
-CREATE TABLE supplier_payment_methods (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  supplier_id uuid NOT NULL,
-  method text NOT NULL, -- 'pix', 'transferencia', 'boleto', 'cartao_credito'
-  enabled boolean DEFAULT true,
-  details jsonb DEFAULT '{}',
-  created_at timestamptz DEFAULT now()
-);
-
-CREATE TABLE supplier_shipping_methods (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  supplier_id uuid NOT NULL,
-  method text NOT NULL, -- 'correios_pac', 'correios_sedex', 'transportadora_propria', 'fob'
-  enabled boolean DEFAULT true,
-  details jsonb DEFAULT '{}',
-  created_at timestamptz DEFAULT now()
-);
-```
-
-Com RLS para fornecedores gerenciarem os próprios e leitura pública.
-
-**Arquivos**:
-- `src/pages/fornecedor/Configuracoes.tsx` — Adicionar seções de "Métodos de Pagamento Aceitos" e "Formas de Envio" com checkboxes
-- `src/hooks/useSupplierPaymentMethods.tsx` — CRUD hook
-- `src/hooks/useSupplierShippingMethods.tsx` — CRUD hook
-- `src/components/chat/NegotiationForm.tsx` — Filtrar `paymentMethodOptions` para mostrar apenas os métodos aceitos pelo fornecedor. Adicionar seleção de forma de envio
-
-### Resumo de Arquivos
-
-| Ação | Arquivo |
-|------|---------|
-| Criar | `src/components/fornecedor/MonthlyAchievements.tsx` |
-| Criar | `src/components/fornecedor/RevenueGoalBar.tsx` |
-| Criar | `src/hooks/useSupplierPaymentMethods.tsx` |
-| Criar | `src/hooks/useSupplierShippingMethods.tsx` |
-| Reescrever | `src/pages/fornecedor/Planos.tsx` |
-| Editar | `src/hooks/useSupplierSubscription.tsx` |
-| Editar | `src/components/fornecedor/SubscriptionBanner.tsx` |
-| Editar | `src/pages/fornecedor/FornecedorLayout.tsx` |
-| Editar | `src/pages/fornecedor/Dashboard.tsx` |
-| Editar | `src/pages/fornecedor/Configuracoes.tsx` |
-| Editar | `src/components/fornecedor/SupplierSidebar.tsx` |
-| Editar | `src/components/chat/NegotiationForm.tsx` |
-| Editar | `src/App.tsx` |
-| Migration | Tabelas `supplier_payment_methods`, `supplier_shipping_methods` + update `supplier_subscriptions` |
-
+Posso prosseguir?
