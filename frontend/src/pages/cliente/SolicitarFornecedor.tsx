@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, User, Loader2, MapPin, FileText, Camera, CheckCircle, Clock, XCircle, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft, Building2, User, Loader2, MapPin, FileText, Camera, CheckCircle,
+  Clock, XCircle, ChevronRight, ShieldCheck, MessageSquare, TrendingUp, Sparkles,
+  Store, Wallet,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,7 +31,7 @@ const PRODUCT_CATEGORIES = [
   "Outros",
 ];
 
-type Step = "form" | "documents" | "waiting" | "status";
+type Step = "intro1" | "intro2" | "form" | "documents" | "waiting" | "status";
 
 export default function SolicitarFornecedor() {
   const navigate = useNavigate();
@@ -35,15 +39,15 @@ export default function SolicitarFornecedor() {
 
   // Determine current step based on application state
   const getCurrentStep = (): Step => {
-    if (!application) return "form";
+    if (!application) return "intro1";
     if (application.status === "pending") return "documents";
     if (application.status === "under_review") return "waiting";
     if (application.status === "approved") return "status";
-    if (application.status === "rejected") return canReapply ? "form" : "status";
-    return "form";
+    if (application.status === "rejected") return canReapply ? "intro1" : "status";
+    return "intro1";
   };
 
-  const [step, setStep] = useState<Step>("form");
+  const [step, setStep] = useState<Step>("intro1");
   const [businessType, setBusinessType] = useState<BusinessType>("individual");
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [loadingCep, setLoadingCep] = useState(false);
@@ -230,6 +234,94 @@ export default function SolicitarFornecedor() {
       </header>
 
       <main className="container mx-auto px-4 py-5 max-w-lg space-y-5">
+        {/* STEP 0: Intro 1 — Por que vender na Nellor */}
+        {step === "intro1" && (
+          <div className="space-y-6 py-4 animate-in fade-in duration-500">
+            <div className="text-center space-y-3">
+              <div className="mx-auto h-20 w-20 rounded-3xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl shadow-primary/30">
+                <Store className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-extrabold tracking-tight">Venda para milhares de revendedores</h2>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                A Nellor é o marketplace atacadista feito para fornecedores que querem escalar e revendedores que querem comprar bem.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Highlight icon={MessageSquare} title="Negociação direta no chat" desc="Converse e feche pedidos sem sair da plataforma." />
+              <Highlight icon={ShieldCheck} title="Compradores verificados" desc="Reduza inadimplência com nosso filtro de revenda." />
+              <Highlight icon={TrendingUp} title="Visibilidade real" desc="Apareça em buscas, listas curadas e categorias." />
+              <Highlight icon={Wallet} title="Recebimentos garantidos" desc="Pagamento liberado após confirmação de entrega." />
+            </div>
+
+            <Button
+              size="lg"
+              className="w-full rounded-full h-12 text-sm font-semibold"
+              onClick={() => setStep("intro2")}
+              data-testid="intro1-continue"
+            >
+              Quero saber mais <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="intro1-back"
+            >
+              Agora não
+            </button>
+          </div>
+        )}
+
+        {/* STEP 0.5: Intro 2 — Como funciona */}
+        {step === "intro2" && (
+          <div className="space-y-6 py-4 animate-in fade-in slide-in-from-right-2 duration-500">
+            <div className="text-center space-y-3">
+              <div className="mx-auto h-20 w-20 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-xl shadow-violet-500/30">
+                <Sparkles className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-extrabold tracking-tight">Em 3 passos você está vendendo</h2>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                Validamos sua conta com agilidade para garantir um marketplace seguro pra todo mundo.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <StepCard num={1} title="Cadastre seus dados" desc="Pessoa Física (CPF) ou Jurídica (CNPJ). Leva 2 minutos." />
+              <StepCard num={2} title="Envie seus documentos" desc="Foto do RG/CNH e selfie. Análise feita em até 24h." />
+              <StepCard num={3} title="Comece a vender!" desc="Loja liberada, produtos publicados, primeiras vendas." />
+            </div>
+
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-900 p-4 flex items-start gap-3">
+              <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">100% gratuito</p>
+                <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80 leading-snug mt-0.5">
+                  Sem mensalidade pra começar. Você só paga taxa de transação sobre vendas concluídas.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep("intro1")}
+                className="rounded-full"
+                data-testid="intro2-back"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                size="lg"
+                className="flex-1 rounded-full h-12 text-sm font-semibold"
+                onClick={() => setStep("form")}
+                data-testid="intro2-continue"
+              >
+                Começar cadastro <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Progress indicator */}
         {(step === "form" || step === "documents") && (
           <div className="flex items-center gap-2">
@@ -599,3 +691,32 @@ function FileUploadField({
     </div>
   );
 }
+
+function Highlight({ icon: Icon, title, desc }: { icon: any; title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-colors">
+      <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="text-xs text-muted-foreground leading-snug mt-0.5">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function StepCard({ num, title, desc }: { num: number; title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-2xl bg-card border border-border/50">
+      <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 text-white text-sm font-extrabold flex items-center justify-center shrink-0 shadow-md shadow-primary/20">
+        {num}
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="text-xs text-muted-foreground leading-snug mt-0.5">{desc}</p>
+      </div>
+    </div>
+  );
+}
+

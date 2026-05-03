@@ -3,8 +3,8 @@ import {
   LayoutGrid,
   Heart,
   MessageSquare,
-  ClipboardList,
   Bell,
+  User,
   Smartphone,
   Shirt,
   Sofa,
@@ -38,8 +38,8 @@ const mainItems: Item[] = [
   { title: "Categorias", url: "/cliente/produtos", icon: LayoutGrid },
   { title: "Favoritos", url: "/cliente/favoritos", icon: Heart },
   { title: "Mensagens", url: "/cliente/chat", icon: MessageSquare, badgeKey: "messages" },
-  { title: "Meus Pedidos", url: "/cliente/meus-pedidos", icon: ClipboardList },
   { title: "Notificações", url: "/cliente/notificacoes", icon: Bell, badgeKey: "notifications" },
+  { title: "Meu Perfil", url: "/cliente/perfil", icon: User },
 ];
 
 // Default category icon mapping (fallback if backend doesn't define)
@@ -83,14 +83,13 @@ export const ClientSidebar = () => {
 
   return (
     <aside
-      className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 bg-[#1d1442] text-white z-30 overflow-y-auto"
+      className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 text-white z-30 overflow-y-auto"
+      style={{ backgroundColor: "#3e199e" }}
       data-testid="client-sidebar"
     >
-      {/* Brand */}
+      {/* Brand — sem card atrás do logo */}
       <div className="px-5 py-6 flex items-center gap-3 border-b border-white/10">
-        <div className="h-11 w-11 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0">
-          <img src={logo} alt="Nellor" className="h-7 w-7 object-contain" />
-        </div>
+        <img src={logo} alt="Nellor" className="h-10 w-10 object-contain shrink-0" />
         <div className="leading-tight min-w-0">
           <p className="text-[11px] font-extrabold tracking-[0.18em] text-white">PLATAFORMA</p>
           <p className="text-[10px] font-semibold text-white/60 tracking-[0.14em]">DE NEGOCIAÇÕES</p>
@@ -110,7 +109,7 @@ export const ClientSidebar = () => {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
                 active
-                  ? "bg-white text-[#1d1442] shadow-sm"
+                  ? "bg-white text-[#3e199e] shadow-sm"
                   : "text-white/85 hover:bg-white/10"
               )}
               data-testid={`sidebar-link-${item.title.toLowerCase()}`}
@@ -121,7 +120,7 @@ export const ClientSidebar = () => {
                 <span
                   className={cn(
                     "ml-auto min-w-[22px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center",
-                    active ? "bg-[#1d1442] text-white" : "bg-white/20 text-white"
+                    active ? "bg-[#3e199e] text-white" : "bg-white/20 text-white"
                   )}
                 >
                   {badge > 99 ? "99+" : badge}

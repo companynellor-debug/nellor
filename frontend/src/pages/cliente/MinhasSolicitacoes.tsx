@@ -53,6 +53,9 @@ type Proposal = {
   supplier?: {
     nome: string | null;
     foto_perfil_url: string | null;
+    store_id?: string | null;
+    store_slug?: string | null;
+    store_name?: string | null;
   };
 };
 
@@ -135,14 +138,25 @@ const MinhasSolicitacoes = () => {
 
       const props = (data || []) as Proposal[];
       const supplierIds = Array.from(new Set(props.map((p) => p.supplier_id))).filter(Boolean);
-      let map: Record<string, { nome: string | null; foto_perfil_url: string | null }> = {};
+      let map: Record<string, NonNullable<Proposal["supplier"]>> = {};
       if (supplierIds.length) {
+        // Stores are profiles with tipo=fornecedor. Use the public view (RLS-safe for clients)
         const { data: profs } = await supabase
           .from("public_supplier_profiles")
-          .select("id, nome, foto_perfil_url")
+          .select("id, nome, foto_perfil_url, descricao_loja")
           .in("id", supplierIds);
         (profs || []).forEach((p: any) => {
-          map[p.id] = { nome: p.nome, foto_perfil_url: p.foto_perfil_url };
+          map[p.id] = {
+            nome: p.nome,
+            foto_perfil_url: p.foto_perfil_url,
+            store_id: p.id,
+            store_slug: null,
+            store_name: p.nome,
+          };
+        });
+        // Fallback: any supplier_id without a profile match still gets a store_id
+        supplierIds.forEach((sid) => {
+          if (!map[sid]) map[sid] = { nome: null, foto_perfil_url: null, store_id: sid, store_slug: null, store_name: null };
         });
       }
       setProposals(props.map((p) => ({ ...p, supplier: map[p.supplier_id] })));
@@ -226,8 +240,15 @@ const MinhasSolicitacoes = () => {
       if (rErr) throw rErr;
 
       toast.success("Proposta aceita! Inicie a conversa com o fornecedor.");
-      // Open chat with the supplier
-      navigate(`/cliente/chat?fornecedor=${proposal.supplier_id}`);
+      // Open chat directly with this supplier (Chat.tsx reads location.state.supplierId)
+      navigate("/cliente/chat", {
+        state: {
+          supplierId: proposal.supplier_id,
+          message: proposal.message
+            ? `Olá! Aceitei sua proposta para "${selectedRequest?.title || "minha solicitação"}". Vamos combinar os detalhes?`
+            : `Olá! Aceitei sua proposta. Vamos combinar os detalhes?`,
+        },
+      });
     } catch (err: any) {
       toast.error("Erro: " + err.message);
     }
@@ -480,7 +501,27 @@ const MinhasSolicitacoes = () => {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{p.supplier?.nome || "Fornecedor"}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => p.supplier?.store_id && navigate(`/cliente/loja/${p.supplier.store_id}`)}
+                            disabled={!p.supplier?.store_id}
+                            className="text-sm font-semibold truncate hover:text-primary hover:underline transition-colors disabled:no-underline disabled:hover:text-foreground"
+                            data-testid={`proposal-supplier-${p.id}`}
+                          >
+                            {p.supplier?.nome || "Fornecedor"}
+                          </button>
+                          {p.supplier?.store_id && (
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/cliente/loja/${p.supplier!.store_id}`)}
+                              className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors"
+                              data-testid={`view-store-${p.id}`}
+                            >
+                              Ver loja
+                            </button>
+                          )}
+                        </div>
                         <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-1">
                           <span>Unitário: <strong className="text-foreground">{formatCurrency(p.unit_price)}</strong></span>
                           {p.total_price && <span>Total: <strong className="text-foreground">{formatCurrency(p.total_price)}</strong></span>}

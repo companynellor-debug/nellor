@@ -1,61 +1,204 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card } from "@/components/ui/card";
-import { Handshake, TrendingUp, DollarSign, Loader2 } from "lucide-react";
-import { DarkGlassIcon } from "@/components/ui/dark-glass-icon";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  TrendingUp, DollarSign, Eye, Heart, Star, Package, ShoppingBag, MessageSquare,
+  Loader2, ArrowUpRight, Award, Users,
+} from "lucide-react";
+import {
+  ChartContainer, ChartTooltip, ChartTooltipContent,
+} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+
+type Stats = {
+  totalRevenue: number;
+  totalDelivered: number;
+  totalNegotiations: number;
+  conversionRate: number;
+  averageTicket: number;
+  totalViews: number;
+  totalFavorites: number;
+  productsActive: number;
+  averageRating: number;
+  ratingsCount: number;
+  uniqueBuyers: number;
+  monthlyData: { month: string; negociacoes: number; receita: number }[];
+  viewsLast30: { day: string; views: number }[];
+  topProducts: { id: string; nome: string; views: number; favorites: number }[];
+};
+
+const empty: Stats = {
+  totalRevenue: 0,
+  totalDelivered: 0,
+  totalNegotiations: 0,
+  conversionRate: 0,
+  averageTicket: 0,
+  totalViews: 0,
+  totalFavorites: 0,
+  productsActive: 0,
+  averageRating: 0,
+  ratingsCount: 0,
+  uniqueBuyers: 0,
+  monthlyData: [],
+  viewsLast30: [],
+  topProducts: [],
+};
+
+const fmtBRL = (v: number) =>
+  `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtNum = (v: number) => v.toLocaleString("pt-BR");
 
 const Estatisticas = () => {
   const [loading, setLoading] = useState(true);
-  const [totalNegotiated, setTotalNegotiated] = useState(0);
-  const [totalNegotiations, setTotalNegotiations] = useState(0);
-  const [averageTicket, setAverageTicket] = useState(0);
-  const [monthlyData, setMonthlyData] = useState<{ month: string; negociacoes: number }[]>([]);
+  const [s, setS] = useState<Stats>(empty);
 
-  const fetchStats = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: negotiations, error } = await supabase
-        .from('negotiations' as any)
-        .select('*')
-        .eq('supplier_id', user.id);
-
-      if (error) throw error;
+      // Fetch in parallel
+      const [
+        { data: negotiations },
+        { data: products },
+        { data: reviews },
+      ] = await Promise.all([
+        supabase.from("negotiations" as any).select("*").eq("supplier_id", user.id),
+        supabase.from("products").select("id, nome, status").eq("user_id", user.id),
+        supabase.from("product_reviews").select("rating").eq("supplier_id", user.id),
+      ]);
 
       const negs = (negotiations || []) as any[];
-      const delivered = negs.filter(n => n.status === 'delivered');
-      const totalVal = delivered.reduce((sum, n) => sum + Number(n.agreed_price) * (n.quantity || 1), 0);
-      const count = delivered.length;
+      const prods = (products || []) as any[];
+      const productIds = prods.map((p) => p.id).filter(Boolean);
+      const revs = (reviews || []) as any[];
 
-      setTotalNegotiated(totalVal);
-      setTotalNegotiations(negs.length);
-      setAverageTicket(count > 0 ? totalVal / count : 0);
+      // Views (last 30 days + total)
+      let totalViews = 0;
+      const viewsByDay: Record<string, number> = {};
+      const productViewsCount: Record<string, number> = {};
+      if (productIds.length) {
+        const since = new Date(); since.setDate(since.getDate() - 30);
+        const { data: views } = await supabase
+          .from("product_views")
+          .select("product_id, viewed_at")
+          .in("product_id", productIds);
+        const allViews = (views || []) as any[];
+        totalViews = allViews.length;
+        // Initialize last 30 days with zero
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date(); d.setDate(d.getDate() - i);
+          viewsByDay[d.toISOString().slice(5, 10)] = 0;
+        }
+        allViews.forEach((v) => {
+          const d = new Date(v.viewed_at);
+          if (d >= since) {
+            const k = d.toISOString().slice(5, 10);
+            if (k in viewsByDay) viewsByDay[k] += 1;
+          }
+          productViewsCount[v.product_id] = (productViewsCount[v.product_id] || 0) + 1;
+        });
+      }
 
+      // Favorites total + per-product
+      let totalFavorites = 0;
+      const productFavCount: Record<string, number> = {};
+      if (productIds.length) {
+        const { data: favs } = await (supabase.rpc(
+          "get_product_favorites_counts" as any,
+          { product_ids: productIds }
+        ) as any);
+        (favs || []).forEach((row: any) => {
+          productFavCount[row.product_id] = Number(row.count) || 0;
+          totalFavorites += Number(row.count) || 0;
+        });
+      }
+
+      // Negotiation metrics
+      const delivered = negs.filter((n) => n.status === "delivered");
+      const totalRevenue = delivered.reduce(
+        (sum, n) => sum + Number(n.agreed_price || 0) * (n.quantity || 1),
+        0
+      );
+      const totalNegotiations = negs.length;
+      const totalDelivered = delivered.length;
+      const conversionRate = totalNegotiations > 0
+        ? (totalDelivered / totalNegotiations) * 100
+        : 0;
+      const averageTicket = totalDelivered > 0 ? totalRevenue / totalDelivered : 0;
+      const uniqueBuyers = new Set(negs.map((n) => n.buyer_id)).size;
+
+      // Rating
+      const ratingsCount = revs.length;
+      const averageRating = ratingsCount > 0
+        ? revs.reduce((sum, r) => sum + Number(r.rating || 0), 0) / ratingsCount
+        : 0;
+
+      // Monthly data (last 6 months)
       const now = new Date();
-      const months: Record<string, number> = {};
+      const monthKeys: { key: string; label: string }[] = [];
       for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months[d.toLocaleDateString('pt-BR', { month: 'short' })] = 0;
+        monthKeys.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+          label: d.toLocaleDateString("pt-BR", { month: "short" }),
+        });
       }
-      negs.forEach(n => {
-        const key = new Date(n.created_at).toLocaleDateString('pt-BR', { month: 'short' });
-        if (months.hasOwnProperty(key)) months[key]++;
+      const monthlyMap: Record<string, { negociacoes: number; receita: number }> = {};
+      monthKeys.forEach((m) => {
+        monthlyMap[m.key] = { negociacoes: 0, receita: 0 };
       });
-      setMonthlyData(Object.entries(months).map(([month, negociacoes]) => ({ month, negociacoes })));
+      negs.forEach((n) => {
+        const d = new Date(n.created_at);
+        const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        if (k in monthlyMap) {
+          monthlyMap[k].negociacoes += 1;
+          if (n.status === "delivered") {
+            monthlyMap[k].receita += Number(n.agreed_price || 0) * (n.quantity || 1);
+          }
+        }
+      });
+
+      // Top products by views
+      const topProducts = prods
+        .map((p) => ({
+          id: p.id,
+          nome: p.nome,
+          views: productViewsCount[p.id] || 0,
+          favorites: productFavCount[p.id] || 0,
+        }))
+        .sort((a, b) => b.views + b.favorites - (a.views + a.favorites))
+        .slice(0, 5);
+
+      setS({
+        totalRevenue,
+        totalDelivered,
+        totalNegotiations,
+        conversionRate,
+        averageTicket,
+        totalViews,
+        totalFavorites,
+        productsActive: prods.filter((p) => p.status !== "paused").length,
+        averageRating,
+        ratingsCount,
+        uniqueBuyers,
+        monthlyData: monthKeys.map((m) => ({
+          month: m.label,
+          negociacoes: monthlyMap[m.key].negociacoes,
+          receita: monthlyMap[m.key].receita,
+        })),
+        viewsLast30: Object.entries(viewsByDay).map(([day, views]) => ({ day, views })),
+        topProducts,
+      });
     } catch (e) {
-      console.error('Error fetching stats:', e);
+      console.error("Error fetching stats:", e);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchStats(); }, [fetchStats]);
-
-  const fmt = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   if (loading) {
     return (
@@ -66,68 +209,143 @@ const Estatisticas = () => {
   }
 
   return (
-    <div className="space-y-5 pb-20 md:pb-6 w-full max-w-full overflow-x-hidden">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold mb-1">Estatísticas</h1>
-        <p className="text-sm text-muted-foreground">Análise do desempenho da sua loja</p>
-      </div>
-
-      <div className="rounded-3xl p-6 text-primary-foreground relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)))' }}>
-        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary-foreground/10 -translate-y-8 translate-x-8" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-1">
-            <DollarSign className="h-5 w-5 opacity-80" />
-            <span className="text-sm opacity-80 font-medium">Total Negociado (Entregues)</span>
-          </div>
-          <p className="text-4xl font-bold tracking-tight">{fmt(totalNegotiated)}</p>
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <TrendingUp className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold">Relatórios</h1>
+          <p className="text-sm text-muted-foreground">
+            Métricas em tempo real da sua loja
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Card className="p-5 rounded-2xl border-0 shadow-md">
-          <div className="flex items-center gap-3 mb-3">
-            <DarkGlassIcon icon={Handshake} size="sm" />
-            <span className="text-sm text-muted-foreground font-medium">Total de Negociações</span>
-          </div>
-          <p className="text-2xl md:text-3xl font-bold">{totalNegotiations}</p>
-          <p className="text-xs text-muted-foreground mt-1">Todas as negociações</p>
+      {/* KPI Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <KPI icon={DollarSign} label="Receita total" value={fmtBRL(s.totalRevenue)} accent="emerald" />
+        <KPI icon={ShoppingBag} label="Vendas concluídas" value={fmtNum(s.totalDelivered)} accent="violet" />
+        <KPI icon={MessageSquare} label="Negociações" value={fmtNum(s.totalNegotiations)} accent="blue" />
+        <KPI icon={ArrowUpRight} label="Taxa de conversão" value={`${s.conversionRate.toFixed(1)}%`} accent="amber" />
+        <KPI icon={Eye} label="Visualizações" value={fmtNum(s.totalViews)} accent="sky" />
+        <KPI icon={Heart} label="Favoritos" value={fmtNum(s.totalFavorites)} accent="rose" />
+        <KPI icon={Star} label="Avaliação média" value={s.ratingsCount ? s.averageRating.toFixed(1) : "—"} sub={s.ratingsCount ? `${s.ratingsCount} avaliações` : "Sem avaliações"} accent="yellow" />
+        <KPI icon={Users} label="Compradores únicos" value={fmtNum(s.uniqueBuyers)} accent="indigo" />
+        <KPI icon={Package} label="Produtos ativos" value={fmtNum(s.productsActive)} accent="teal" />
+        <KPI icon={Award} label="Ticket médio" value={fmtBRL(s.averageTicket)} accent="fuchsia" />
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-base">Receita & Negociações (últimos 6 meses)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              className="h-[260px]"
+              config={{
+                negociacoes: { label: "Negociações", color: "hsl(var(--primary))" },
+                receita: { label: "Receita", color: "#10b981" },
+              }}
+            >
+              <BarChart data={s.monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="negociacoes" fill="var(--color-negociacoes)" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
         </Card>
 
-        <Card className="p-5 rounded-2xl border-0 shadow-md">
-          <div className="flex items-center gap-3 mb-3">
-            <DarkGlassIcon icon={TrendingUp} size="sm" />
-            <span className="text-sm text-muted-foreground font-medium">Ticket Médio</span>
-          </div>
-          <p className="text-2xl md:text-3xl font-bold break-words">{fmt(averageTicket)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Valor médio por entrega</p>
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-base">Visualizações (últimos 30 dias)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={s.viewsLast30}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} interval={4} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <Line type="monotone" dataKey="views" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
       </div>
 
-      <Card className="p-4 md:p-6 rounded-2xl border-0 shadow-md">
-        <h2 className="text-base md:text-lg font-bold mb-4">Negociações por Mês</h2>
-        {monthlyData.some(d => d.negociacoes > 0) ? (
-          <div className="w-full overflow-hidden">
-            <ChartContainer
-              config={{ negociacoes: { label: "Negociações", color: "hsl(var(--primary))" } }}
-              className="h-[250px] md:h-[300px] w-full"
-            >
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="month" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="negociacoes" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ChartContainer>
-          </div>
-        ) : (
-          <div className="h-[250px] md:h-[300px] flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">Nenhuma negociação registrada ainda</p>
-          </div>
-        )}
+      {/* Top Products */}
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-base">Top 5 produtos mais visualizados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {s.topProducts.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Cadastre produtos para começar a coletar métricas
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {s.topProducts.map((p, idx) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 hover:bg-muted transition-colors"
+                  data-testid={`top-product-${p.id}`}
+                >
+                  <span className="h-8 w-8 rounded-lg bg-primary/15 text-primary text-sm font-bold flex items-center justify-center shrink-0">
+                    {idx + 1}
+                  </span>
+                  <p className="flex-1 text-sm font-medium truncate">{p.nome}</p>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Eye className="h-3 w-3" /> {p.views}
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Heart className="h-3 w-3" /> {p.favorites}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
 };
+
+const ACCENT_BG: Record<string, string> = {
+  emerald: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+  violet: "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400",
+  blue: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
+  amber: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+  sky: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400",
+  rose: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
+  yellow: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400",
+  indigo: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400",
+  teal: "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400",
+  fuchsia: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-950/40 dark:text-fuchsia-400",
+};
+
+const KPI = ({
+  icon: Icon, label, value, sub, accent,
+}: {
+  icon: typeof TrendingUp; label: string; value: string; sub?: string; accent: keyof typeof ACCENT_BG;
+}) => (
+  <Card className="rounded-2xl">
+    <CardContent className="p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${ACCENT_BG[accent]}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground font-medium">{label}</p>
+      <p className="text-xl font-bold mt-0.5 truncate">{value}</p>
+      {sub && <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{sub}</p>}
+    </CardContent>
+  </Card>
+);
 
 export default Estatisticas;

@@ -3,13 +3,14 @@ import {
   Package,
   ShoppingBag,
   MessageSquare,
-  Handshake,
   Wallet,
   Store,
   BarChart3,
   Settings,
   Lightbulb,
   FileText,
+  HelpCircle,
+  GraduationCap,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -30,12 +31,13 @@ const menuItems: Item[] = [
   { title: "Painel", url: "/fornecedor/dashboard", icon: LayoutDashboard },
   { title: "Produtos", url: "/fornecedor/produtos", icon: Package },
   { title: "Pedidos", url: "/fornecedor/negociacoes", icon: ShoppingBag, badgeKey: "orders" },
-  { title: "Conversas", url: "/fornecedor/chat", icon: MessageSquare, badgeKey: "messages" },
-  { title: "Negociações", url: "/fornecedor/recebimentos", icon: Handshake },
+  { title: "Negociações", url: "/fornecedor/chat", icon: MessageSquare, badgeKey: "messages" },
   { title: "Solicitações", url: "/fornecedor/solicitacoes", icon: FileText },
   { title: "Financeiro", url: "/fornecedor/financeiro", icon: Wallet },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
   { title: "Relatórios", url: "/fornecedor/estatisticas", icon: BarChart3 },
+  { title: "Como usar", url: "/fornecedor/como-usar", icon: GraduationCap },
+  { title: "Suporte", url: "/fornecedor/suporte", icon: HelpCircle },
   { title: "Configurações", url: "/fornecedor/configuracoes", icon: Settings },
 ];
 

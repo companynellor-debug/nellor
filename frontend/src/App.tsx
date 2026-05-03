@@ -87,6 +87,7 @@ const AdminDisputas = lazy(() => import("./pages/admin/Disputas"));
 const AdminAssinaturas = lazy(() => import("./pages/admin/Assinaturas"));
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 const SolicitacoesFornecedor = lazy(() => import("./pages/fornecedor/Solicitacoes"));
+const SuporteFornecedor = lazy(() => import("./pages/fornecedor/Suporte"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -185,6 +186,7 @@ const App = () => {
               <Route path="teste-notificacoes" element={<Suspense fallback={<PageSkeleton />}><TesteNotificacoes /></Suspense>} />
               <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><ConfiguracoesFornecedor /></Suspense>} />
               <Route path="solicitacoes" element={<Suspense fallback={<PageSkeleton />}><SolicitacoesFornecedor /></Suspense>} />
+              <Route path="suporte" element={<Suspense fallback={<PageSkeleton />}><SuporteFornecedor /></Suspense>} />
               
               <Route path="assinatura" element={<Suspense fallback={<PageSkeleton />}><AssinaturaFornecedor /></Suspense>} />
               <Route path="planos" element={<Suspense fallback={<PageSkeleton />}><PlanosFornecedor /></Suspense>} />
