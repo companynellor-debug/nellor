@@ -110,9 +110,9 @@ const FornecedorLayoutContent = () => {
                   )}
                 </Button>
                 <button
-                  onClick={() => navigate('/fornecedor/configuracoes')}
+                  onClick={() => navigate('/fornecedor/editar-loja')}
                   className="h-9 w-9 rounded-full bg-muted overflow-hidden shrink-0 flex items-center justify-center text-xs font-semibold text-muted-foreground"
-                  aria-label="Perfil"
+                  aria-label="Editar Loja"
                 >
                   {profile?.foto_perfil_url ? (
                     <img src={profile.foto_perfil_url} alt="" className="h-full w-full object-cover" />

@@ -273,7 +273,7 @@ const Dashboard = () => {
           <QuickIcon icon={ShoppingBag} label="Pedidos" badge={activeNegCount > 0 ? activeNegCount : undefined} onClick={() => navigate("/fornecedor/negociacoes")} />
           <QuickIcon icon={MessageSquare} label="Conversas" badge={unreadMessages > 0 ? unreadMessages : undefined} onClick={() => navigate("/fornecedor/chat")} />
           <QuickIcon icon={BarChart3} label="Relatórios" onClick={() => navigate("/fornecedor/estatisticas")} />
-          <QuickIcon icon={Users} label="Compradores" onClick={() => navigate("/fornecedor/negociacoes")} />
+          <QuickIcon icon={Users} label="Editar Loja" onClick={() => navigate("/fornecedor/editar-loja")} />
         </div>
       </section>
 

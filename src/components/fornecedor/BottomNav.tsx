@@ -14,7 +14,7 @@ export const BottomNavFornecedor = () => {
   ];
   const right = [
     { icon: MessageSquare, label: "Conversas", path: "/fornecedor/chat", badge: unreadCount },
-    { icon: User, label: "Perfil", path: "/fornecedor/configuracoes" },
+    { icon: User, label: "Loja", path: "/fornecedor/editar-loja" },
   ];
 
   const isActive = (p: string) => location.pathname.startsWith(p);
