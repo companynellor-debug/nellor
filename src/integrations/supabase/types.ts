@@ -1341,6 +1341,107 @@ export type Database = {
           },
         ]
       }
+      quotation_proposals: {
+        Row: {
+          created_at: string
+          delivery_days: number | null
+          id: string
+          message: string | null
+          request_id: string
+          status: string
+          supplier_id: string
+          total_price: number | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_days?: number | null
+          id?: string
+          message?: string | null
+          request_id: string
+          status?: string
+          supplier_id: string
+          total_price?: number | null
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_days?: number | null
+          id?: string
+          message?: string | null
+          request_id?: string
+          status?: string
+          supplier_id?: string
+          total_price?: number | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_proposals_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "quotation_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotation_requests: {
+        Row: {
+          budget_max: number | null
+          buyer_id: string
+          category: string | null
+          city: string | null
+          closed_at: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          proposals_count: number
+          quantity: number
+          state: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget_max?: number | null
+          buyer_id: string
+          category?: string | null
+          city?: string | null
+          closed_at?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          proposals_count?: number
+          quantity?: number
+          state?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget_max?: number | null
+          buyer_id?: string
+          category?: string | null
+          city?: string | null
+          closed_at?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          proposals_count?: number
+          quantity?: number
+          state?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
@@ -2225,6 +2326,14 @@ export type Database = {
           banner_loja_url: string
           created_at: string
           descricao_loja: string
+          foto_perfil_url: string
+          id: string
+          nome: string
+        }[]
+      }
+      get_quotation_buyer_info: {
+        Args: { _buyer_ids: string[] }
+        Returns: {
           foto_perfil_url: string
           id: string
           nome: string

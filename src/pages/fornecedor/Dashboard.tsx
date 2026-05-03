@@ -125,7 +125,9 @@ const Dashboard = () => {
         if (productIds.length) {
           const [{ data: views }, { data: favs }] = await Promise.all([
             supabase.from("product_views").select("product_id").in("product_id", productIds),
-            supabase.from("collection_items" as any).select("reference_id").in("reference_id", productIds).eq("type", "product" as any),
+            (supabase.from("collection_items" as any).select("reference_id, type") as any)
+              .in("reference_id", productIds)
+              .eq("type", "product"),
           ]);
           if (!cancelled) {
             const v: Record<string, number> = {};
