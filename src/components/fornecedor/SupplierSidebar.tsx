@@ -41,11 +41,11 @@ export function SupplierSidebar() {
   const location = useLocation();
   const { profile } = useSupabaseAuth();
   const { unreadCount: messagesUnread } = useSupabaseNotifications();
-  const { orders } = useSupplierOrders();
+  const { negotiations } = useNegotiations(profile?.id);
   const { triggerRestart } = useOnboardingTour();
 
-  const pendingOrders = (orders || []).filter((o: any) =>
-    ["pending", "accepted", "shipped"].includes(o?.status)
+  const pendingOrders = (negotiations || []).filter((n: any) =>
+    ["pending", "accepted", "shipped"].includes(n?.status)
   ).length;
 
   const badges: Record<string, number> = {
