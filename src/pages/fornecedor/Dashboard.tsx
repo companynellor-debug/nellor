@@ -125,7 +125,9 @@ const Dashboard = () => {
         if (productIds.length) {
           const [{ data: views }, { data: favs }] = await Promise.all([
             supabase.from("product_views").select("product_id").in("product_id", productIds),
-            supabase.from("collection_items" as any).select("reference_id").in("reference_id", productIds).eq("type", "product" as any),
+            (supabase.from("collection_items" as any).select("reference_id, type") as any)
+              .in("reference_id", productIds)
+              .eq("type", "product"),
           ]);
           if (!cancelled) {
             const v: Record<string, number> = {};
@@ -271,7 +273,7 @@ const Dashboard = () => {
           <QuickIcon icon={ShoppingBag} label="Pedidos" badge={activeNegCount > 0 ? activeNegCount : undefined} onClick={() => navigate("/fornecedor/negociacoes")} />
           <QuickIcon icon={MessageSquare} label="Conversas" badge={unreadMessages > 0 ? unreadMessages : undefined} onClick={() => navigate("/fornecedor/chat")} />
           <QuickIcon icon={BarChart3} label="Relatórios" onClick={() => navigate("/fornecedor/estatisticas")} />
-          <QuickIcon icon={Users} label="Compradores" onClick={() => navigate("/fornecedor/negociacoes")} />
+          <QuickIcon icon={Users} label="Editar Loja" onClick={() => navigate("/fornecedor/editar-loja")} />
         </div>
       </section>
 

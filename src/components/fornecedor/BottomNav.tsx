@@ -14,7 +14,7 @@ export const BottomNavFornecedor = () => {
   ];
   const right = [
     { icon: MessageSquare, label: "Conversas", path: "/fornecedor/chat", badge: unreadCount },
-    { icon: User, label: "Perfil", path: "/fornecedor/configuracoes" },
+    { icon: User, label: "Loja", path: "/fornecedor/editar-loja" },
   ];
 
   const isActive = (p: string) => location.pathname.startsWith(p);
@@ -45,7 +45,7 @@ export const BottomNavFornecedor = () => {
             <span className="-mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_6px_20px_hsl(var(--primary)/0.4)]">
               <Plus className="h-6 w-6" strokeWidth={2.6} />
             </span>
-            <span className="text-[10px] font-medium text-foreground/80 mt-0.5">Anunciar</span>
+            <span className="text-[10px] font-semibold text-foreground/80 mt-0.5">Vender</span>
           </button>
 
           {right.map((item) => {

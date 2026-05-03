@@ -14,7 +14,7 @@ const tutorialCards = [
   { icon: FileText, title: "Registrar Negociação", desc: "Formalize o acordo dentro do chat.", detail: "Após combinar os detalhes, clique em 'Registrar Negociação' dentro do chat. Preencha produto, quantidade, valor e forma de pagamento. Isso cria um registro oficial." },
   { icon: FileText, title: "Gerar PDF do Acordo", desc: "Crie um documento com todos os detalhes.", detail: "Após registrar a negociação, clique em 'Gerar PDF do Acordo'. O documento é gerado automaticamente e pode ser salvo ou enviado ao fornecedor como comprovante." },
   { icon: Star, title: "Avaliar Fornecedor", desc: "Deixe sua avaliação após receber o pedido.", detail: "Após confirmar o recebimento na negociação, um formulário de avaliação aparece automaticamente. Dê de 1 a 5 estrelas e deixe um comentário." },
-  { icon: AlertTriangle, title: "Reportar Problema", desc: "Abra uma disputa se algo deu errado.", detail: "Na negociação, clique em 'Reportar Problema'. Descreva o ocorrido e a Nellor abrirá uma disputa, notificando o fornecedor que tem 48h para responder." },
+  { icon: AlertTriangle, title: "Reportar Problema", desc: "Abra uma disputa se algo deu errado.", detail: "Na negociação, clique em 'Reportar Problema'. Descreva o ocorrido e a Nellor abrirá uma disputa, notificando o fornecedor que tem 5 minutos para responder." },
 ];
 
 const faqCategories = [
@@ -52,7 +52,7 @@ const faqCategories = [
       { q: "Como confirmo que recebi meu pedido?", a: "Acesse suas negociações, encontre o pedido e clique em Confirmar Recebimento. Isso libera a avaliação do fornecedor." },
       { q: "Como avalio um fornecedor?", a: "Após confirmar o recebimento, um formulário de avaliação aparece automaticamente. Dê uma nota de 1 a 5 estrelas e deixe um comentário." },
       { q: "O que faço se não recebi o produto?", a: "Na negociação, clique em Reportar Problema. Descreva o ocorrido e a Nellor abrirá uma disputa notificando o fornecedor." },
-      { q: "Em quanto tempo o fornecedor precisa responder uma disputa?", a: "O fornecedor tem 48 horas para responder. Se não responder, a Nellor analisa o caso com base no histórico de chat." },
+      { q: "Em quanto tempo o fornecedor precisa responder uma disputa?", a: "O fornecedor tem 5 minutos para responder. Se não responder, a Nellor analisa o caso com base no histórico de chat." },
     ],
   },
   {

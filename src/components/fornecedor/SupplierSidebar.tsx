@@ -5,10 +5,11 @@ import {
   MessageSquare,
   Handshake,
   Wallet,
-  Star,
+  Store,
   BarChart3,
   Settings,
   Lightbulb,
+  FileText,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -31,8 +32,9 @@ const menuItems: Item[] = [
   { title: "Pedidos", url: "/fornecedor/negociacoes", icon: ShoppingBag, badgeKey: "orders" },
   { title: "Conversas", url: "/fornecedor/chat", icon: MessageSquare, badgeKey: "messages" },
   { title: "Negociações", url: "/fornecedor/recebimentos", icon: Handshake },
+  { title: "Solicitações", url: "/fornecedor/solicitacoes", icon: FileText },
   { title: "Financeiro", url: "/fornecedor/financeiro", icon: Wallet },
-  { title: "Avaliações", url: "/fornecedor/notificacoes", icon: Star },
+  { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
   { title: "Relatórios", url: "/fornecedor/estatisticas", icon: BarChart3 },
   { title: "Configurações", url: "/fornecedor/configuracoes", icon: Settings },
 ];

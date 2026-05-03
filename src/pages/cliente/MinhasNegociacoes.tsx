@@ -533,7 +533,7 @@ const MinhasNegociacoes = () => {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Descreva o que aconteceu. O fornecedor terá 48 horas para responder e um administrador irá mediar a situação.
+              Descreva o que aconteceu. O fornecedor terá 5 minutos para responder e um administrador irá mediar a situação.
             </p>
             <Textarea
               value={disputeDescription}
