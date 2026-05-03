@@ -49,6 +49,7 @@ const ConfiguracoesNotificacoes = lazy(() => import("./pages/cliente/Configuraco
 const SolicitarFornecedor = lazy(() => import("./pages/cliente/SolicitarFornecedor"));
 const MinhasNegociacoes = lazy(() => import("./pages/cliente/MinhasNegociacoes"));
 const Ajuda = lazy(() => import("./pages/cliente/Ajuda"));
+const MinhasSolicitacoes = lazy(() => import("./pages/cliente/MinhasSolicitacoes"));
 
 // Lazy load fornecedor pages
 const Dashboard = lazy(() => import("./pages/fornecedor/Dashboard"));
@@ -158,6 +159,7 @@ const App = () => {
               <Route path="solicitar-fornecedor" element={<Suspense fallback={<PageSkeleton />}><SolicitarFornecedor /></Suspense>} />
               <Route path="negociacoes" element={<Suspense fallback={<PageSkeleton />}><MinhasNegociacoes /></Suspense>} />
               <Route path="ajuda" element={<Suspense fallback={<PageSkeleton />}><Ajuda /></Suspense>} />
+              <Route path="minhas-solicitacoes" element={<Suspense fallback={<PageSkeleton />}><MinhasSolicitacoes /></Suspense>} />
             </Route>
 
             <Route

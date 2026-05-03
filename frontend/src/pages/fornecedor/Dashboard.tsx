@@ -125,9 +125,7 @@ const Dashboard = () => {
         if (productIds.length) {
           const [{ data: views }, { data: favs }] = await Promise.all([
             supabase.from("product_views").select("product_id").in("product_id", productIds),
-            (supabase.from("collection_items" as any).select("reference_id, type") as any)
-              .in("reference_id", productIds)
-              .eq("type", "product"),
+            (supabase.rpc("get_product_favorites_counts" as any, { product_ids: productIds }) as any),
           ]);
           if (!cancelled) {
             const v: Record<string, number> = {};
@@ -135,7 +133,7 @@ const Dashboard = () => {
             setProductViews(v);
 
             const f: Record<string, number> = {};
-            (favs || []).forEach((row: any) => { f[row.reference_id] = (f[row.reference_id] || 0) + 1; });
+            (favs || []).forEach((row: any) => { f[row.product_id] = Number(row.count) || 0; });
             setProductFavorites(f);
           }
         }

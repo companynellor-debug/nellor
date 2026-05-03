@@ -59,7 +59,7 @@ const faqCategories = [
     name: "Segurança",
     items: [
       { q: "Como identifico um fornecedor suspeito?", a: "Desconfie de fornecedores sem badge verificado, sem avaliações, com preços muito abaixo do mercado ou que pedem pagamento fora da plataforma antes de qualquer conversa." },
-      { q: "Como reporto um golpe?", a: "Acesse o perfil do fornecedor e clique em Denunciar. Descreva o problema com detalhes. Nossa equipe analisa em até 24 horas." },
+      { q: "Como reporto um golpe?", a: "Acesse o perfil do fornecedor e clique em Denunciar. Descreva o problema com detalhes. Nossa equipe analisa em até 5 minutos." },
       { q: "Minhas conversas são privadas?", a: "Suas conversas são privadas entre você e o fornecedor. A Nellor acessa apenas em caso de disputa ou denúncia, conforme nossa política de privacidade." },
     ],
   },

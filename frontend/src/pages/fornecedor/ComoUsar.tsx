@@ -42,7 +42,7 @@ const guides = [
     gradient: "bg-gradient-to-br from-blue-400 to-indigo-600",
     title: "Como negociar pelo chat",
     steps: [
-      { icon: Clock, text: "Responda rápido! Fornecedores que respondem em até 1 hora têm 3x mais chances de fechar negócio." },
+      { icon: Clock, text: "Responda rápido! Fornecedores que respondem em até 5 minutos têm 3x mais chances de fechar negócio." },
       { icon: MessageSquare, text: "Seja claro sobre prazos de entrega, formas de pagamento aceitas e condições de frete." },
       { icon: ThumbsUp, text: "Faça contra-propostas quando necessário. Negocie quantidade x preço para incentivar pedidos maiores." },
       { icon: Lightbulb, text: "Envie fotos adicionais e vídeos dos produtos quando o cliente pedir. Isso gera confiança." },

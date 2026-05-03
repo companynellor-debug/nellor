@@ -1,141 +1,125 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import logo from '@/assets/logo.png';
-import { Loader2, Mail, CheckCircle } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-
-const FloatingParticles = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {[...Array(18)].map((_, i) => (
-      <div
-        key={i}
-        className="absolute rounded-full bg-white/20"
-        style={{
-          width: `${4 + Math.random() * 8}px`,
-          height: `${4 + Math.random() * 8}px`,
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          animation: `floatParticle ${6 + Math.random() * 8}s ease-in-out infinite`,
-          animationDelay: `${Math.random() * 5}s`,
-        }}
-      />
-    ))}
-  </div>
-);
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Loader2,
+  Mail,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Lock,
+  User as UserIcon,
+  Users,
+  MessageCircle,
+  TrendingUp,
+} from "lucide-react";
+import logo from "@/assets/nellor-logo.png";
+import heroLogin from "@/assets/login-hero-3d.png";
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const modoParam = searchParams.get('modo');
-  const [isLogin, setIsLogin] = useState(modoParam !== 'cadastro');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [nome, setNome] = useState('');
-  const [sobrenome, setSobrenome] = useState('');
-  const [tipo] = useState<'cliente' | 'fornecedor'>('cliente');
+  const modoParam = searchParams.get("modo");
+  const nextParam = searchParams.get("next");
+
+  const { user, signIn, signUp, isAuthenticated, profile, loading } = useSupabaseAuth();
+
+  const [isSignup, setIsSignup] = useState(modoParam === "cadastro");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [logoClickCount, setLogoClickCount] = useState(0);
-  const [showAdminDialog, setShowAdminDialog] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
+  const [formData, setFormData] = useState({
+    nome: "",
+    sobrenome: "",
+    email: "",
+    password: "",
+  });
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const {
-    user,
-    signIn,
-    signUp,
-    isAuthenticated,
-    profile,
-    loading,
-  } = useSupabaseAuth();
-  const navigate = useNavigate();
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
 
-  const nextParam = searchParams.get('next');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
-    if (nextParam) {
-      localStorage.setItem('nellor_post_auth_redirect', nextParam);
-    }
+    if (nextParam) localStorage.setItem("nellor_post_auth_redirect", nextParam);
   }, [nextParam]);
 
   useEffect(() => {
     if (!loading && isAuthenticated && profile) {
-      const next = localStorage.getItem('nellor_post_auth_redirect');
-      if (next && profile.tipo === 'cliente') {
-        localStorage.removeItem('nellor_post_auth_redirect');
+      const next = localStorage.getItem("nellor_post_auth_redirect");
+      if (next && profile.tipo === "cliente") {
+        localStorage.removeItem("nellor_post_auth_redirect");
         navigate(next, { replace: true });
         return;
       }
-
-      if (profile.tipo === 'fornecedor' && !profile.onboarding_completed) {
-        navigate('/fornecedor/onboarding', { replace: true });
-      } else if (profile.tipo === 'fornecedor') {
-        navigate('/fornecedor/dashboard', { replace: true });
-      } else if (profile.tipo === 'admin') {
-        navigate('/admin', { replace: true });
+      if (profile.tipo === "fornecedor" && !profile.onboarding_completed) {
+        navigate("/fornecedor/onboarding", { replace: true });
+      } else if (profile.tipo === "fornecedor") {
+        navigate("/fornecedor/dashboard", { replace: true });
+      } else if (profile.tipo === "admin") {
+        navigate("/admin", { replace: true });
       } else {
-        navigate('/cliente', { replace: true });
+        navigate("/cliente", { replace: true });
       }
     }
   }, [isAuthenticated, profile, loading, navigate]);
 
-
   if (loading || (isAuthenticated && profile)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(263,70%,10%)] via-[hsl(263,84%,30%)] to-[hsl(263,84%,42%)]">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   const handleLogoClick = () => {
-    setLogoClickCount(prev => {
-      const newCount = prev + 1;
-      if (newCount === 5) {
-        setShowAdminDialog(true);
-        return 0;
-      }
-      return newCount;
-    });
-    setTimeout(() => setLogoClickCount(0), 2000);
+    const newCount = logoClicks + 1;
+    setLogoClicks(newCount);
+    if (newCount === 5) {
+      setShowAdminDialog(true);
+      setLogoClicks(0);
+    }
+    setTimeout(() => setLogoClicks(0), 2500);
   };
 
   const handleAdminAccess = () => {
-    if (!adminPassword) {
-      toast.error('Digite a senha de administrador.');
-      return;
-    }
-    if (adminPassword.trim() === 'admin123') {
-      sessionStorage.setItem('nellor_admin_access', 'true');
-      toast.success('Acesso admin liberado!');
+    if (!adminPassword) return toast.error("Digite a senha!");
+    if (adminPassword.trim() === "admin123") {
+      sessionStorage.setItem("nellor_admin_access", "true");
+      toast.success("Acesso admin liberado!");
       setShowAdminDialog(false);
-      setAdminPassword('');
+      setAdminPassword("");
       if (user) {
-        import('@/hooks/useActivityLog').then(({ logActivity }) => {
-          logActivity(user.id, 'admin_access', 'Acesso ao painel admin via senha');
+        import("@/hooks/useActivityLog").then(({ logActivity }) => {
+          logActivity(user.id, "admin_access", "Acesso ao painel admin via senha");
         });
       }
-      navigate('/admin');
+      navigate("/admin");
     } else {
-      toast.error('Senha incorreta!');
-      setAdminPassword('');
+      toast.error("Senha incorreta!");
+      setAdminPassword("");
     }
   };
 
   const handleForgotPassword = async () => {
-    if (!resetEmail.trim()) {
-      toast.error('Digite seu e-mail');
-      return;
-    }
+    if (!resetEmail.trim()) return toast.error("Digite seu e-mail");
     setResetLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
@@ -144,7 +128,7 @@ const Auth = () => {
       if (error) throw error;
       setResetSent(true);
     } catch (error: any) {
-      toast.error('Erro ao enviar: ' + error.message);
+      toast.error("Erro ao enviar: " + error.message);
     } finally {
       setResetLoading(false);
     }
@@ -152,20 +136,21 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isSignup && !formData.email) return toast.error("Digite seu e-mail");
+    if (!formData.password) return toast.error("Digite sua senha");
+    if (isSignup && !termsAccepted) return toast.error("Aceite os termos para continuar");
+
     setSubmitting(true);
     try {
-      if (isLogin) {
-        const { error, redirectTo } = await signIn(email, password);
-        if (!error && redirectTo) {
-          navigate(redirectTo, { replace: true });
-        }
-      } else {
-        await signUp(email, password, {
-          nome: `${nome} ${sobrenome}`.trim(),
-          tipo
+      if (isSignup) {
+        await signUp(formData.email, formData.password, {
+          nome: `${formData.nome} ${formData.sobrenome}`.trim(),
+          tipo: "cliente",
         });
-        setEmail(email);
-        setIsLogin(true);
+        setIsSignup(false);
+      } else {
+        const { error, redirectTo } = await signIn(formData.email, formData.password);
+        if (!error && redirectTo) navigate(redirectTo, { replace: true });
       }
     } finally {
       setSubmitting(false);
@@ -173,221 +158,335 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(263,70%,10%)] via-[hsl(263,84%,30%)] to-[hsl(263,84%,42%)] px-4 relative overflow-hidden">
-      {/* Animated floating particles */}
-      <FloatingParticles />
+    <>
+      <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background">
+        {/* LEFT - Brand panel (desktop) */}
+        <div
+          className="hidden lg:flex flex-col justify-between p-12 text-white relative overflow-hidden"
+          style={{ background: "linear-gradient(160deg, #14093a 0%, #1a1340 50%, #2a1d6b 100%)" }}
+          data-testid="auth-brand-panel"
+        >
+          <div className="relative z-10">
+            <div
+              onClick={handleLogoClick}
+              className="cursor-pointer inline-flex items-center gap-3 select-none"
+              data-testid="auth-logo-secret"
+            >
+              <img src={logo} alt="Nellor" className="h-14 w-14 object-contain" draggable={false} />
+              <span className="text-xl font-extrabold tracking-tight text-white">Nellor</span>
+            </div>
 
-      {/* Glassmorphism card */}
-      <div className="relative w-full max-w-[420px] rounded-[2.5rem] overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)] animate-scale-in">
-        {/* Top purple area with logo */}
-        <div className="relative bg-gradient-to-br from-[hsl(263,84%,42%)] to-[hsl(271,81%,56%)] px-8 pt-10 pb-8 flex flex-col items-center">
-          <FloatingParticles />
-          <div
-            onClick={handleLogoClick}
-            className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center mb-4 cursor-pointer hover:scale-105 transition-transform shadow-lg"
-          >
-            <img src={logo} alt="Nellor" className="w-12 h-12 object-contain" />
+            <h1 className="mt-12 text-5xl font-extrabold leading-[1.05] tracking-tight">
+              Seu marketplace
+              <br />
+              <span style={{ color: "#a78bfa" }}>de negociações</span>
+            </h1>
+            <p className="mt-5 text-base text-white/70 max-w-md leading-relaxed">
+              Conecte-se com milhares de compradores, negocie no chat e feche os melhores
+              negócios todos os dias.
+            </p>
+
+            <div className="mt-12 space-y-4 max-w-md">
+              <Feature icon={Users} title="Mais de 2.000+ usuários ativos" sub="Compradores negociando todos os dias." />
+              <Feature icon={MessageCircle} title="Negociação direta no chat" sub="Converse, negocie e feche negócio." />
+              <Feature icon={TrendingUp} title="R$5M+ movimentados por mês" sub="Resultados reais para quem vende." />
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            {isLogin ? 'Bem-vindo' : 'Criar conta'}
-          </h1>
-          <p className="text-white/60 text-sm mt-1 mb-4">
-            {isLogin ? 'Entre na sua conta Nellor' : 'Crie sua conta gratuitamente'}
-          </p>
-          <p className="text-white/80 text-xs text-center leading-relaxed max-w-[280px] mb-3">
-            O marketplace atacadista que conecta você aos melhores fornecedores
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {["Fornecedores Verificados", "Negociação Direta", "Atacado Seguro", "Sem Intermediários"].map((tag) => (
-              <span key={tag} className="text-[10px] font-medium text-white/90 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/20">
-                {tag}
-              </span>
-            ))}
+
+          <div className="relative z-10 mt-8 flex justify-start">
+            <img
+              src={heroLogin}
+              alt=""
+              className="h-56 w-auto object-contain drop-shadow-[0_20px_60px_rgba(167,139,250,0.4)]"
+              loading="lazy"
+            />
           </div>
+
+          <div className="pointer-events-none absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
+          <div className="pointer-events-none absolute top-20 right-10 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
         </div>
 
-        {/* Glass form area */}
-        <div className="backdrop-blur-xl bg-white/80 px-8 py-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
-              <>
-                <div className="relative">
-                  <span className="absolute -top-2.5 left-4 px-1.5 text-xs text-muted-foreground bg-white/90 rounded z-10">
-                    Nome
-                  </span>
-                  <Input
-                    type="text"
-                    value={nome}
-                    onChange={e => setNome(e.target.value)}
-                    required={!isLogin}
-                    className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
-                  />
-                </div>
-                <div className="relative">
-                  <span className="absolute -top-2.5 left-4 px-1.5 text-xs text-muted-foreground bg-white/90 rounded z-10">
-                    Sobrenome
-                  </span>
-                  <Input
-                    type="text"
-                    value={sobrenome}
-                    onChange={e => setSobrenome(e.target.value)}
-                    className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="relative">
-              <span className="absolute -top-2.5 left-4 px-1.5 text-xs text-muted-foreground bg-white/90 rounded z-10">
-                Email
-              </span>
-              <Input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                autoComplete={isLogin ? "username" : "email"}
-                className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
-              />
+        {/* RIGHT - Form panel */}
+        <div className="flex flex-col justify-center px-6 py-10 sm:px-12 lg:px-20 bg-background min-h-screen">
+          {/* Mobile branding */}
+          <div className="lg:hidden flex flex-col items-center mb-8">
+            <div onClick={handleLogoClick} className="cursor-pointer select-none" data-testid="auth-logo-secret-mobile">
+              <img src={logo} alt="Nellor" className="h-16 w-16 object-contain" draggable={false} />
             </div>
-
-            <div className="relative">
-              <span className="absolute -top-2.5 left-4 px-1.5 text-xs text-muted-foreground bg-white/90 rounded z-10">
-                Senha
-              </span>
-              <Input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-                autoComplete={isLogin ? "current-password" : "new-password"}
-                data-1p-ignore="true"
-                data-lpignore="true"
-                data-form-type="other"
-                className="h-12 bg-white/60 border border-border/50 text-foreground rounded-2xl px-5 focus:border-primary focus:ring-primary backdrop-blur-sm"
-              />
-            </div>
-
-            {isLogin && (
-              <div className="text-right -mt-2">
-                <button
-                  type="button"
-                  onClick={() => { setShowForgotPassword(true); setResetEmail(email); setResetSent(false); }}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Esqueci minha senha
-                </button>
-              </div>
-            )}
-
-            {!isLogin && (
-              <div className="flex items-start gap-2">
-                <Checkbox
-                  id="terms"
-                  checked={termsAccepted}
-                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                  className="mt-0.5"
-                />
-                <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                  Li e concordo com os{' '}
-                  <a href="/termos-de-uso" target="_blank" className="text-primary font-medium hover:underline">
-                    Termos de Uso
-                  </a>{' '}
-                  da plataforma Nellor
-                </label>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={submitting || (!isLogin && !termsAccepted)}
-              className="w-full h-12 bg-[hsl(263,70%,35%)] hover:bg-[hsl(263,70%,28%)] text-white font-semibold rounded-2xl mt-2 shadow-lg text-base tracking-wide"
-            >
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'ENTRAR' : 'CRIAR CONTA'}
-            </Button>
-          </form>
-
-          <div className="text-center mt-6">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:text-primary/80 font-semibold uppercase text-sm tracking-wide transition-colors"
-            >
-              {isLogin ? 'CRIAR CONTA' : 'ENTRAR'}
-            </button>
+            <h1 className="mt-4 text-2xl font-extrabold text-center text-foreground">Seu marketplace</h1>
+            <p className="text-2xl font-extrabold text-primary text-center">de negociações</p>
+            <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">
+              Conecte-se com milhares de compradores, negocie no chat e feche os melhores negócios todos os dias.
+            </p>
           </div>
 
-          <div className="text-center mt-3 pb-2">
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+          <div className="max-w-md w-full mx-auto">
+            <h2 className="hidden lg:block text-3xl font-bold text-foreground" data-testid="auth-title">
+              {isSignup ? "Crie sua conta!" : "Bem-vindo de volta!"}
+            </h2>
+            <p className="hidden lg:block mt-1 text-sm text-muted-foreground">
+              {isSignup ? "Cadastre-se para começar a negociar" : "Faça login para acessar sua conta"}
+            </p>
+
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+              {isSignup && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">Nome</label>
+                    <div className="relative">
+                      <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Seu nome"
+                        value={formData.nome}
+                        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                        required
+                        className="pl-10 h-12 rounded-xl"
+                        data-testid="auth-input-nome"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">Sobrenome</label>
+                    <Input
+                      type="text"
+                      placeholder="Sobrenome"
+                      value={formData.sobrenome}
+                      onChange={(e) => setFormData({ ...formData, sobrenome: e.target.value })}
+                      className="h-12 rounded-xl"
+                      data-testid="auth-input-sobrenome"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">E-mail ou usuário</label>
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="Digite seu e-mail ou usuário"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    autoComplete={isSignup ? "email" : "username"}
+                    className="pl-10 h-12 rounded-xl"
+                    data-testid="auth-input-email"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Senha</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Digite sua senha"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                    minLength={6}
+                    autoComplete={isSignup ? "new-password" : "current-password"}
+                    className="pl-10 pr-10 h-12 rounded-xl"
+                    data-testid="auth-input-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    tabIndex={-1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    data-testid="auth-toggle-password"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {!isSignup && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(true);
+                      setResetEmail(formData.email);
+                      setResetSent(false);
+                    }}
+                    className="text-sm font-medium text-primary hover:underline"
+                    data-testid="auth-forgot-password"
+                  >
+                    Esqueci minha senha
+                  </button>
+                </div>
+              )}
+
+              {isSignup && (
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="terms"
+                    checked={termsAccepted}
+                    onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                    className="mt-0.5"
+                    data-testid="auth-terms-checkbox"
+                  />
+                  <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                    Li e concordo com os{" "}
+                    <a href="/termos-de-uso" target="_blank" className="text-primary font-medium hover:underline">
+                      Termos de Uso
+                    </a>{" "}
+                    da plataforma Nellor
+                  </label>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-base font-semibold"
+                data-testid="auth-submit-btn"
+              >
+                {submitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : isSignup ? (
+                  "Criar conta"
+                ) : (
+                  "Entrar"
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground">ou continue com sua conta</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <Link
+              to="/?modo=login"
+              className="mt-4 flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-border hover:bg-muted transition-colors"
+              data-testid="auth-continue-account"
             >
-              ← Voltar
-            </button>
+              <img src={logo} alt="" className="h-5 w-5 object-contain" />
+              <span className="text-sm font-semibold text-foreground">Continuar com sua conta</span>
+            </Link>
+
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+              {isSignup ? "Já tem uma conta? " : "Ainda não tem uma conta? "}
+              <button
+                onClick={() => setIsSignup(!isSignup)}
+                className="font-semibold text-primary hover:underline"
+                data-testid="auth-toggle-mode"
+              >
+                {isSignup ? "Entrar" : "Criar conta"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Admin Dialog */}
       <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
-        <DialogContent className="bg-white">
+        <DialogContent className="sm:max-w-md bg-card">
           <DialogHeader>
-            <DialogTitle>Acesso Admin</DialogTitle>
-            <DialogDescription>Digite a senha de administrador.</DialogDescription>
+            <DialogTitle className="text-center text-xl font-bold text-primary">
+              Acesso Administrativo
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Digite a senha de acesso ao painel admin
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Input type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAdminAccess()} placeholder="Senha" className="rounded-full" />
-            <Button onClick={handleAdminAccess} className="w-full bg-[hsl(263,84%,42%)] hover:bg-[hsl(263,70%,35%)] rounded-full">Acessar</Button>
+            <Input
+              type="password"
+              placeholder="Senha administrativa"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAdminAccess()}
+              className="text-center"
+              data-testid="auth-admin-password"
+            />
+            <Button onClick={handleAdminAccess} className="w-full" data-testid="auth-admin-submit">
+              Acessar Painel Admin
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Forgot Password Dialog */}
       <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
-        <DialogContent className="bg-white sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-card">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-primary" />
-              Recuperar Senha
+              <Mail className="h-5 w-5 text-primary" /> Recuperar Senha
             </DialogTitle>
           </DialogHeader>
           {resetSent ? (
             <div className="text-center py-6 space-y-4">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              <h3 className="text-lg font-semibold text-foreground">E-mail enviado!</h3>
-              <p className="text-sm text-muted-foreground">Verifique sua caixa de entrada para redefinir sua senha.</p>
-              <Button onClick={() => setShowForgotPassword(false)} className="w-full bg-[hsl(263,70%,35%)] hover:bg-[hsl(263,70%,28%)] rounded-full">Voltar ao Login</Button>
+              <h3 className="text-lg font-semibold">E-mail enviado!</h3>
+              <p className="text-sm text-muted-foreground">
+                Verifique seu e-mail para redefinir sua senha.
+              </p>
+              <Button onClick={() => setShowForgotPassword(false)} className="w-full">
+                Voltar ao Login
+              </Button>
             </div>
           ) : (
             <>
               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">Digite seu e-mail e enviaremos um link para redefinir sua senha.</p>
-                <Input type="email" placeholder="seu@email.com" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleForgotPassword()} className="rounded-full" />
+                <p className="text-sm text-muted-foreground">
+                  Digite seu e-mail e enviaremos um link para redefinir sua senha.
+                </p>
+                <Input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
+                />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowForgotPassword(false)} className="rounded-full">Cancelar</Button>
-                <Button onClick={handleForgotPassword} disabled={resetLoading} className="bg-[hsl(263,70%,35%)] hover:bg-[hsl(263,70%,28%)] rounded-full">
-                  {resetLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</> : 'Enviar link'}
+                <Button variant="outline" onClick={() => setShowForgotPassword(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleForgotPassword} disabled={resetLoading}>
+                  {resetLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    "Enviar link de recuperação"
+                  )}
                 </Button>
               </DialogFooter>
             </>
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Particle animation keyframes */}
-      <style>{`
-        @keyframes floatParticle {
-          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
-          25% { transform: translateY(-20px) translateX(10px); opacity: 0.5; }
-          50% { transform: translateY(-10px) translateX(-10px); opacity: 0.3; }
-          75% { transform: translateY(-30px) translateX(5px); opacity: 0.6; }
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
+
+const Feature = ({
+  icon: Icon,
+  title,
+  sub,
+}: {
+  icon: typeof Users;
+  title: string;
+  sub: string;
+}) => (
+  <div className="flex items-start gap-3">
+    <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 ring-1 ring-white/15">
+      <Icon className="h-5 w-5 text-white" />
+    </div>
+    <div className="min-w-0">
+      <p className="text-sm font-semibold text-white">{title}</p>
+      <p className="text-xs text-white/60">{sub}</p>
+    </div>
+  </div>
+);
 
 export default Auth;

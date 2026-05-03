@@ -151,6 +151,7 @@ const Perfil = () => {
             <div className="space-y-1">
               {[
                 { icon: Handshake, label: "Minhas Negociações", route: "/cliente/negociacoes" },
+                { icon: FileText, label: "Minhas Solicitações", route: "/cliente/minhas-solicitacoes" },
                 { icon: MapPin, label: "Meus Endereços", route: "/cliente/enderecos" },
                 { icon: CreditCard, label: "Métodos de Pagamento", route: "/cliente/metodos-pagamento" },
                 { icon: Shield, label: "Segurança", route: "/cliente/seguranca" },

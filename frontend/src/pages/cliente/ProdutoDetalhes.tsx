@@ -159,7 +159,12 @@ const ProdutoDetalhes = () => {
   );
 
   const store = product ? stores.find((s) => s.id === (product as any).storeId) : undefined;
-  const productId = legacyProductId ?? 0;
+  // Prefer Supabase UUID so favorites persist remotely; fall back to legacy numeric id for offline products
+  const productId: string | number =
+    (supabaseProductById?.id as string | undefined) ||
+    ((legacyProduct as any)?.supplierUuid as string | undefined) ||
+    legacyProductId ||
+    0;
   const isProductFavorite = isFavorite(productId);
   const realRating = supabaseProductById?.rating_medio ?? (legacyProduct as any)?.rating ?? 0;
   const realReviewCount = supabaseProductById?.total_reviews ?? (legacyProduct as any)?.reviews ?? 0;

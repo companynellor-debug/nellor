@@ -1,11 +1,12 @@
 import { ParticlesBackground } from "@/components/cliente/ParticlesBackground";
 import { BottomNav } from "@/components/cliente/BottomNav";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Heart, Store } from "lucide-react";
+import { ArrowLeft, Heart, Package, Store } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useStoresFavorites } from "@/hooks/useStoresFavorites";
 import { useSupabaseStores } from "@/hooks/useSupabaseStores";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import { useProducts } from "@/hooks/useProducts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -14,10 +15,15 @@ const Favoritos = () => {
   const { favorites, removeFavorite } = useFavorites();
   const { favoriteStores, removeFavoriteStore } = useStoresFavorites();
   const { stores } = useSupabaseStores();
-  const { products } = useProducts();
+  const { products: legacyProducts } = useProducts();
+  const { products: supabaseProducts } = useSupabaseProducts();
 
-  const favoriteProducts = products.filter((product) => favorites.includes(product.id));
+  // Merge Supabase + legacy favorites by id
+  const supabaseFavorites = supabaseProducts.filter((p) => favorites.includes(p.id));
+  const legacyFavorites = legacyProducts.filter((p) => favorites.includes(p.id));
   const favoriteStoresList = stores.filter((store) => favoriteStores.includes(store.id));
+
+  const totalFavorites = supabaseFavorites.length + legacyFavorites.length;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -36,12 +42,12 @@ const Favoritos = () => {
       <main className="container mx-auto px-4 py-6 relative z-10">
         <Tabs defaultValue="produtos" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="produtos">Produtos ({favoriteProducts.length})</TabsTrigger>
+            <TabsTrigger value="produtos">Produtos ({totalFavorites})</TabsTrigger>
             <TabsTrigger value="lojas">Lojas ({favoriteStoresList.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="produtos">
-            {favoriteProducts.length === 0 ? (
+            {totalFavorites === 0 ? (
               <div className="text-center py-20">
                 <Heart className="h-20 w-20 mx-auto mb-4 text-muted-foreground" />
                 <h2 className="text-xl font-bold mb-2">Nenhum produto favorito ainda</h2>
@@ -51,8 +57,41 @@ const Favoritos = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {favoriteProducts.map((product) => (
-                  <Card key={product.id} className="bg-white border shadow-sm overflow-hidden relative group">
+                {supabaseFavorites.map((product) => (
+                  <Card key={product.id} className="bg-white border shadow-sm overflow-hidden relative group" data-testid={`favorite-product-${product.id}`}>
+                    <div
+                      className="aspect-square overflow-hidden cursor-pointer bg-muted"
+                      onClick={() => navigate(`/cliente/produto/${product.id}`)}
+                    >
+                      {product.imagens?.[0] ? (
+                        <img src={product.imagens[0]} alt={product.nome} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center"><Package className="h-10 w-10 text-muted-foreground/40" /></div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => removeFavorite(product.id)}
+                      className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+                      data-testid={`remove-favorite-${product.id}`}
+                    >
+                      <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+                    </button>
+                    <div className="p-3">
+                      <h3 className="font-medium text-sm mb-2 line-clamp-2">{product.nome}</h3>
+                      <div className="flex items-center justify-between">
+                        <p className="text-primary font-bold">R$ {Number(product.preco).toFixed(2).replace('.', ',')}</p>
+                        {product.rating_medio ? (
+                          <div className="flex items-center gap-1 text-xs">
+                            <span className="text-yellow-500">★</span>
+                            <span>{Number(product.rating_medio).toFixed(1)}</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                {legacyFavorites.map((product) => (
+                  <Card key={`legacy-${product.id}`} className="bg-white border shadow-sm overflow-hidden relative group">
                     <div
                       className="aspect-square overflow-hidden cursor-pointer"
                       onClick={() => navigate(`/cliente/produto/${product.id}`)}
@@ -70,7 +109,7 @@ const Favoritos = () => {
                       <div className="flex items-center justify-between">
                         <p className="text-primary font-bold">{product.price}</p>
                         <div className="flex items-center gap-1 text-xs">
-                          <span className="text-yellow-500">⭐</span>
+                          <span className="text-yellow-500">★</span>
                           <span>{product.rating}</span>
                         </div>
                       </div>
