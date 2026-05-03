@@ -2,114 +2,355 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    margin: 0;
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
 
-code {
-    font-family:
-        source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 280 100% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 280 100% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 280 100% 15%;
+
+    /* NELOR primary - #4621af */
+    --primary: 252 73% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Roxo médio de destaque */
+    --secondary: 252 73% 58%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Roxo claro para acentos */
+    --accent: 252 73% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Cinza lilás suave - #F6F0FF */
+    --muted: 270 100% 97%;
+    --muted-foreground: 280 20% 45%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 50% 90%;
+    --input: 270 50% 90%;
+    --ring: 280 100% 25%;
+
+    --radius: 1.5rem;
+
+    /* Gradientes roxos */
+    --gradient-hero: linear-gradient(135deg, hsl(280 100% 25%), hsl(280 88% 36%));
+    --gradient-cta: linear-gradient(90deg, hsl(280 88% 36%), hsl(280 100% 40%));
+    --gradient-card: linear-gradient(145deg, hsl(280 100% 25% / 0.03), hsl(280 88% 36% / 0.05));
+    
+    /* Sombras roxas */
+    --shadow-card: 0 8px 32px hsla(280 100% 25% / 0.12);
+    --shadow-hover: 0 16px 48px hsla(280 88% 36% / 0.25);
+    --shadow-purple-glow: 0 0 40px hsla(280 100% 50% / 0.3);
+    
+    /* Transições */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Cliente Panel Theme - Roxo escuro #3B006A */
+    --cliente-bg: 276 100% 21%;
+    --cliente-surface: 276 60% 25%;
+    --cliente-accent: 280 100% 75%;
+    --cliente-text: 0 0% 100%;
+    --cliente-text-muted: 0 0% 70%;
+    
+    /* Nellor Drop Theme - Dark Teal/Cyan SaaS (similar to supplier but cyan accent) */
+    --drop-bg: 200 50% 4%;
+    --drop-surface: 200 40% 8%;
+    --drop-surface-hover: 200 35% 12%;
+    --drop-card: 200 35% 10%;
+    --drop-card-hover: 200 30% 14%;
+    --drop-border: 200 30% 16%;
+    --drop-accent: 175 80% 45%;
+    --drop-accent-soft: 175 50% 20%;
+    --drop-success: 142 76% 46%;
+    --drop-warning: 38 92% 50%;
+    --drop-text: 0 0% 98%;
+    --drop-text-muted: 200 15% 55%;
+    --drop-gradient: linear-gradient(135deg, hsl(200 50% 6%), hsl(200 40% 10%));
+    --drop-gradient-card: linear-gradient(145deg, hsl(200 35% 12% / 0.6), hsl(200 40% 8% / 0.9));
+    --drop-glow: 0 0 60px hsla(175 80% 45% / 0.15);
+  }
+
+  .dark {
+    --background: 270 20% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 270 15% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 270 15% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Mantém roxo no dark mode */
+    --primary: 280 100% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 280 50% 25%;
+    --secondary-foreground: 0 0% 98%;
+
+    --accent: 280 80% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 270 15% 18%;
+    --muted-foreground: 270 10% 70%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 20% 25%;
+    --input: 270 20% 20%;
+    --ring: 280 100% 60%;
+
+    /* Gradientes para dark mode */
+    --gradient-hero: linear-gradient(135deg, hsl(280 60% 35%), hsl(280 50% 25%));
+    --gradient-card: linear-gradient(145deg, hsl(280 30% 15% / 0.5), hsl(280 20% 12% / 0.8));
+    
+    /* Sombras para dark mode */
+    --shadow-card: 0 8px 32px hsla(280 100% 10% / 0.4);
+    --shadow-hover: 0 16px 48px hsla(280 100% 60% / 0.2);
+    
+    /* Cliente Panel Theme - Roxo escuro */
+    --cliente-bg: 276 100% 21%;
+    --cliente-surface: 276 60% 25%;
+    --cliente-accent: 280 100% 75%;
+    --cliente-text: 0 0% 100%;
+    --cliente-text-muted: 0 0% 70%;
+    
+    /* Nellor Drop Theme - Dark Teal/Cyan SaaS (same in dark mode) */
+    --drop-bg: 200 50% 4%;
+    --drop-surface: 200 40% 8%;
+    --drop-surface-hover: 200 35% 12%;
+    --drop-card: 200 35% 10%;
+    --drop-card-hover: 200 30% 14%;
+    --drop-border: 200 30% 16%;
+    --drop-accent: 175 80% 45%;
+    --drop-accent-soft: 175 50% 20%;
+    --drop-success: 142 76% 46%;
+    --drop-warning: 38 92% 50%;
+    --drop-text: 0 0% 98%;
+    --drop-text-muted: 200 15% 55%;
+    --drop-gradient: linear-gradient(135deg, hsl(200 50% 6%), hsl(200 40% 10%));
+    --drop-gradient-card: linear-gradient(145deg, hsl(200 35% 12% / 0.6), hsl(200 40% 8% / 0.9));
+    --drop-glow: 0 0 60px hsla(175 80% 45% / 0.15);
+  }
 }
 
 @layer base {
-    :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
-        --radius: 0.5rem;
-    }
-    .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
-    }
+  * {
+    @apply border-border;
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 700;
+  }
+  
+  h1 {
+    font-weight: 800;
+  }
+  
+  p {
+    line-height: 1.6;
+  }
 }
 
-@layer base {
-    * {
-        @apply border-border;
+@layer utilities {
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .gradient-cta {
+    background: var(--gradient-cta);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-hover {
+    box-shadow: var(--shadow-hover);
+  }
+  
+  .shadow-purple-glow {
+    box-shadow: var(--shadow-purple-glow);
+  }
+  
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .particles-bg {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .particles-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 50%, hsla(280 100% 50% / 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, hsla(280 88% 36% / 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 40% 20%, hsla(280 100% 60% / 0.08) 0%, transparent 50%);
+    animation: particles-float 20s ease-in-out infinite;
+    pointer-events: none;
+  }
+  
+  .particles-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(2px 2px at 20% 30%, hsla(280 100% 70% / 0.3), transparent),
+      radial-gradient(2px 2px at 60% 70%, hsla(280 88% 50% / 0.3), transparent),
+      radial-gradient(1px 1px at 50% 50%, hsla(280 100% 60% / 0.3), transparent),
+      radial-gradient(1px 1px at 80% 10%, hsla(280 88% 70% / 0.3), transparent),
+      radial-gradient(2px 2px at 90% 60%, hsla(280 100% 50% / 0.3), transparent),
+      radial-gradient(1px 1px at 33% 80%, hsla(280 88% 60% / 0.3), transparent);
+    background-size: 200% 200%;
+    background-position: 0% 0%;
+    animation: particles-move 15s linear infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes particles-float {
+    0%, 100% {
+      transform: translate(0, 0);
     }
-    body {
-        @apply bg-background text-foreground;
+    25% {
+      transform: translate(2%, -2%);
     }
-}
+    50% {
+      transform: translate(-1%, 3%);
+    }
+    75% {
+      transform: translate(-2%, -1%);
+    }
+  }
+  
+  @keyframes particles-move {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 100% 100%;
+    }
+  }
+  
+  .glass-effect {
+    background: hsla(0 0% 100% / 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid hsla(280 100% 90% / 0.3);
+  }
+  
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+  }
+  
+  .btn-glow {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-glow::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: hsla(0 0% 100% / 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  .btn-glow:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 
-@layer base {
-    [data-debug-wrapper="true"] {
-        display: contents !important;
+  @keyframes scroll-up {
+    0% {
+      transform: translateY(0);
     }
+    100% {
+      transform: translateY(-50%);
+    }
+  }
+  
+  .animate-scroll-up {
+    animation: scroll-up 15s linear infinite;
+  }
 
-    [data-debug-wrapper="true"] > * {
-        margin-left: inherit;
-        margin-right: inherit;
-        margin-top: inherit;
-        margin-bottom: inherit;
-        padding-left: inherit;
-        padding-right: inherit;
-        padding-top: inherit;
-        padding-bottom: inherit;
-        column-gap: inherit;
-        row-gap: inherit;
-        gap: inherit;
-        border-left-width: inherit;
-        border-right-width: inherit;
-        border-top-width: inherit;
-        border-bottom-width: inherit;
-        border-left-style: inherit;
-        border-right-style: inherit;
-        border-top-style: inherit;
-        border-bottom-style: inherit;
-        border-left-color: inherit;
-        border-right-color: inherit;
-        border-top-color: inherit;
-        border-bottom-color: inherit;
+  @keyframes screen-shine {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
     }
+    100% {
+      transform: translateX(200%) skewX(-15deg);
+    }
+  }
+  
+  .animate-screen-shine {
+    animation: screen-shine 4s ease-in-out infinite;
+    animation-delay: 1s;
+  }
+
+  @keyframes tour-step-enter {
+    0% {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-tour-step-enter {
+    animation: tour-step-enter 280ms ease-out both;
+  }
 }
