@@ -27,7 +27,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import logo from "@/assets/nellor-logo.png";
-import heroLogin from "@/assets/login-hero-3d.png";
+import heroLogin from "@/assets/login-hero-bag.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -163,20 +163,26 @@ const Auth = () => {
         {/* LEFT - Brand panel (desktop) */}
         <div
           className="hidden lg:flex flex-col justify-between p-12 text-white relative overflow-hidden"
-          style={{ background: "linear-gradient(160deg, #14093a 0%, #1a1340 50%, #2a1d6b 100%)" }}
+          style={{
+            background:
+              "radial-gradient(ellipse at 30% 0%, #2a1d6b 0%, #14093a 55%, #0a0420 100%)",
+          }}
           data-testid="auth-brand-panel"
         >
-          <div className="relative z-10">
+          {/* Subtle decorative bg shapes */}
+          <div className="pointer-events-none absolute -top-20 -right-32 h-[420px] w-[420px] rounded-full bg-[#3e199e]/30 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-1/3 h-[360px] w-[360px] rounded-full bg-[#7c3aed]/15 blur-3xl" />
+
+          <div className="relative z-10 max-w-md">
             <div
               onClick={handleLogoClick}
-              className="cursor-pointer inline-flex items-center gap-3 select-none"
+              className="cursor-pointer inline-flex items-center gap-3 select-none mb-12"
               data-testid="auth-logo-secret"
             >
               <img src={logo} alt="Nellor" className="h-14 w-14 object-contain" draggable={false} />
-              <span className="text-xl font-extrabold tracking-tight text-white">Nellor</span>
             </div>
 
-            <h1 className="mt-12 text-5xl font-extrabold leading-[1.05] tracking-tight">
+            <h1 className="text-[2.85rem] font-extrabold leading-[1.05] tracking-tight">
               Seu marketplace
               <br />
               <span style={{ color: "#a78bfa" }}>de negociações</span>
@@ -186,24 +192,23 @@ const Auth = () => {
               negócios todos os dias.
             </p>
 
-            <div className="mt-12 space-y-4 max-w-md">
-              <Feature icon={Users} title="Mais de 2.000+ usuários ativos" sub="Compradores negociando todos os dias." />
+            <div className="mt-10 space-y-4 max-w-md">
+              <Feature icon={Users} title="Os melhores fornecedores" sub="Catálogo curado, vendedores verificados." />
               <Feature icon={MessageCircle} title="Negociação direta no chat" sub="Converse, negocie e feche negócio." />
-              <Feature icon={TrendingUp} title="R$5M+ movimentados por mês" sub="Resultados reais para quem vende." />
+              <Feature icon={TrendingUp} title="Cresça sua revenda" sub="Resultados reais para quem vende." />
             </div>
           </div>
 
-          <div className="relative z-10 mt-8 flex justify-start">
+          {/* 3D hero illustration */}
+          <div className="relative z-10 -ml-2 -mb-4 flex justify-start pointer-events-none">
             <img
               src={heroLogin}
               alt=""
-              className="h-56 w-auto object-contain drop-shadow-[0_20px_60px_rgba(167,139,250,0.4)]"
+              className="h-64 w-auto object-contain drop-shadow-[0_30px_80px_rgba(124,58,237,0.55)]"
               loading="lazy"
+              draggable={false}
             />
           </div>
-
-          <div className="pointer-events-none absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
-          <div className="pointer-events-none absolute top-20 right-10 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
         </div>
 
         {/* RIGHT - Form panel */}
@@ -358,17 +363,17 @@ const Auth = () => {
 
             <div className="mt-6 flex items-center gap-3">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground">ou continue com sua conta</span>
+              <span className="text-xs text-muted-foreground">ou continue como vendedor</span>
               <div className="flex-1 h-px bg-border" />
             </div>
 
             <Link
-              to="/?modo=login"
+              to="/auth?modo=login&perfil=fornecedor"
               className="mt-4 flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-border hover:bg-muted transition-colors"
               data-testid="auth-continue-account"
             >
               <img src={logo} alt="" className="h-5 w-5 object-contain" />
-              <span className="text-sm font-semibold text-foreground">Continuar com sua conta</span>
+              <span className="text-sm font-semibold text-foreground">Sou fornecedor</span>
             </Link>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">

@@ -38,11 +38,11 @@ export interface Negotiation {
   refund_state: 'none' | 'pending' | 'supplier_confirmed' | 'buyer_confirmed' | 'buyer_denied';
 }
 
-// Minimum time intervals (in ms) for anti-fraud
+// Minimum time intervals (in ms) for anti-fraud — 5 minutos em todas as transições
 const MIN_INTERVALS = {
-  pending_to_accepted: 60 * 60 * 1000,
-  accepted_to_shipped: 24 * 60 * 60 * 1000,
-  shipped_to_delivered: 48 * 60 * 60 * 1000,
+  pending_to_accepted: 5 * 60 * 1000,
+  accepted_to_shipped: 5 * 60 * 1000,
+  shipped_to_delivered: 5 * 60 * 1000,
 };
 
 export function getTimeUntilAllowed(neg: Negotiation): { allowed: boolean; remainingMs: number; label: string } {
