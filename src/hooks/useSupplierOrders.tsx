@@ -123,10 +123,16 @@ export const SupplierOrdersProvider = ({ children }: { children: ReactNode }) =>
   );
 };
 
+const noopOrdersContext: SupplierOrdersContextType = {
+  orders: [],
+  updateOrderStatus: () => {},
+  addPaymentProof: () => {},
+  updateTrackingCode: () => {},
+  addTag: () => {},
+  removeTag: () => {},
+};
+
 export const useSupplierOrders = () => {
   const context = useContext(SupplierOrdersContext);
-  if (context === undefined) {
-    throw new Error('useSupplierOrders must be used within SupplierOrdersProvider');
-  }
-  return context;
+  return context ?? noopOrdersContext;
 };
