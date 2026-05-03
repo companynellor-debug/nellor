@@ -14,7 +14,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
-import { useSupplierOrders } from "@/hooks/useSupplierOrders";
+import { useNegotiations } from "@/hooks/useNegotiations";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import logo from "@/assets/nellor-logo.png";
 
