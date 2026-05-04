@@ -58,21 +58,28 @@ const Estatisticas = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch in parallel
+      // Fetch products first; reviews depend on product_ids
       const [
         { data: negotiations },
         { data: products },
-        { data: reviews },
       ] = await Promise.all([
         supabase.from("negotiations" as any).select("*").eq("supplier_id", user.id),
         supabase.from("products").select("id, nome, ativo, vendas_count").eq("supplier_id", user.id),
-        supabase.from("product_reviews").select("rating").eq("supplier_id", user.id),
       ]);
 
       const negs = (negotiations || []) as any[];
       const prods = (products || []) as any[];
       const productIds = prods.map((p) => p.id).filter(Boolean);
-      const revs = (reviews || []) as any[];
+
+      // Reviews: table is `reviews` (no supplier_id). Filter by product_id IN supplier products.
+      let revs: any[] = [];
+      if (productIds.length) {
+        const { data: rev } = await supabase
+          .from("reviews" as any)
+          .select("rating")
+          .in("product_id", productIds);
+        revs = (rev || []) as any[];
+      }
 
       // Views (last 30 days + total)
       let totalViews = 0;
@@ -82,7 +89,7 @@ const Estatisticas = () => {
         const since = new Date(); since.setDate(since.getDate() - 30);
         const { data: views } = await supabase
           .from("product_views")
-          .select("product_id, viewed_at")
+          .select("product_id, created_at")
           .in("product_id", productIds);
         const allViews = (views || []) as any[];
         totalViews = allViews.length;
@@ -92,7 +99,7 @@ const Estatisticas = () => {
           viewsByDay[d.toISOString().slice(5, 10)] = 0;
         }
         allViews.forEach((v) => {
-          const d = new Date(v.viewed_at);
+          const d = new Date(v.created_at);
           if (d >= since) {
             const k = d.toISOString().slice(5, 10);
             if (k in viewsByDay) viewsByDay[k] += 1;
