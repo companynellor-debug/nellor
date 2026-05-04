@@ -15,6 +15,7 @@ import { useSupplierNotifications } from "@/hooks/useSupplierNotifications";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { FornecedorPrefetchProvider } from "@/hooks/useFornecedorPrefetch";
 import { OnboardingTourProvider, useOnboardingTour } from "@/hooks/useOnboardingTour";
+import { FirstSaleCelebration } from "@/components/fornecedor/FirstSaleCelebration";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 

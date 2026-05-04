@@ -113,6 +113,18 @@ const Auth = () => {
         setAdminPassword("");
         return;
       }
+      // Also fetch admin Edge Function token (for admin-support-action and other privileged ops)
+      try {
+        const { data: edgeData } = await supabase.functions.invoke("admin-grant-role", {
+          body: { password: adminPassword.trim() },
+        });
+        if (edgeData?.adminToken) {
+          const { storeAdminAccess } = await import("@/lib/adminAccess");
+          storeAdminAccess(edgeData.adminToken);
+        }
+      } catch (e) {
+        console.warn("[admin] grant-role edge function unavailable", e);
+      }
       sessionStorage.setItem("nellor_admin_access", "true");
       toast.success("Acesso admin liberado!");
       setShowAdminDialog(false);

@@ -343,27 +343,42 @@ const Negociacoes = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Negociações</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gerencie suas negociações com compradores</p>
-        </div>
+    <div className="space-y-5 w-full max-w-full overflow-x-hidden">
+      <div className="flex items-baseline gap-3 flex-wrap">
+        <h1 className="text-2xl font-bold tracking-tight">Vendas</h1>
+        <p className="text-sm text-muted-foreground">
+          {statusCounts.all} negociações · {statusCounts.delivered} concluídas · {statusCounts.pending} pendentes
+        </p>
       </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar por produto ou comprador..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+        <Input
+          placeholder="Buscar por produto ou comprador..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="pl-10 h-11 rounded-full border-border/60"
+        />
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <div className="w-full overflow-x-auto -mx-1 px-1">
-          <TabsList className="inline-flex w-auto min-w-full h-auto">
-            <TabsTrigger value="all" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Todas ({statusCounts.all})</TabsTrigger>
-            <TabsTrigger value="pending" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Pendentes ({statusCounts.pending})</TabsTrigger>
-            <TabsTrigger value="accepted" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Aceitas ({statusCounts.accepted})</TabsTrigger>
-            <TabsTrigger value="shipped" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Enviadas ({statusCounts.shipped})</TabsTrigger>
-            <TabsTrigger value="delivered" className="text-[10px] sm:text-xs py-2 px-2 sm:px-3 whitespace-nowrap">Entregues ({statusCounts.delivered})</TabsTrigger>
+          <TabsList className="inline-flex w-auto min-w-full h-auto bg-transparent gap-1.5 p-0">
+            {[
+              { v: "all", l: "Todas", n: statusCounts.all },
+              { v: "pending", l: "Pendentes", n: statusCounts.pending },
+              { v: "accepted", l: "Aceitas", n: statusCounts.accepted },
+              { v: "shipped", l: "Enviadas", n: statusCounts.shipped },
+              { v: "delivered", l: "Entregues", n: statusCounts.delivered },
+            ].map(({ v, l, n }) => (
+              <TabsTrigger
+                key={v}
+                value={v}
+                className="text-xs h-9 px-4 rounded-full border border-border/60 bg-background data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:border-foreground whitespace-nowrap"
+              >
+                {l} <span className="ml-1.5 opacity-70">{n}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
 
