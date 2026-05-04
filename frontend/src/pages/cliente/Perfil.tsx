@@ -147,31 +147,28 @@ const Perfil = () => {
             </Card>
 
 
-            {/* Menu principal */}
-            <div className="space-y-1">
-              {[
-                { icon: Handshake, label: "Minhas Negociações", route: "/cliente/negociacoes" },
-                { icon: FileText, label: "Minhas Solicitações", route: "/cliente/minhas-solicitacoes" },
-                { icon: MapPin, label: "Meus Endereços", route: "/cliente/enderecos" },
-                { icon: CreditCard, label: "Métodos de Pagamento", route: "/cliente/metodos-pagamento" },
-                { icon: Shield, label: "Segurança", route: "/cliente/seguranca" },
-                { icon: Bell, label: "Notificações", route: "/cliente/notificacoes" },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
+            {/* Menu principal — sem ícones, só bordas/divisor */}
+            <Card className="border-border/60 shadow-sm overflow-hidden">
+              <div className="divide-y divide-border/60">
+                {[
+                  { label: "Minhas Negociações", route: "/cliente/negociacoes" },
+                  { label: "Minhas Solicitações", route: "/cliente/minhas-solicitacoes" },
+                  { label: "Meus Endereços", route: "/cliente/enderecos" },
+                  { label: "Métodos de Pagamento", route: "/cliente/metodos-pagamento" },
+                  { label: "Segurança", route: "/cliente/seguranca" },
+                  { label: "Notificações", route: "/cliente/notificacoes" },
+                ].map((item) => (
                   <button
                     key={item.label}
                     onClick={() => navigate(item.route)}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg hover:bg-muted/50 transition-colors"
-                    {...((item as any).tourId ? { "data-tour": (item as any).tourId } : {})}
+                    className="w-full flex items-center gap-3 px-4 py-4 hover:bg-muted/40 transition-colors text-left"
                   >
-                    <Icon className="h-5 w-5 text-primary" />
-                    <span className="flex-1 text-left text-sm font-medium">{item.label}</span>
+                    <span className="flex-1 text-sm font-medium">{item.label}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </button>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            </Card>
 
             {/* Quero Vender na Nellor */}
             <Card className="border shadow-sm overflow-hidden">

@@ -99,22 +99,27 @@ const Auth = () => {
     setTimeout(() => setLogoClicks(0), 2500);
   };
 
-  const handleAdminAccess = () => {
+  const handleAdminAccess = async () => {
     if (!adminPassword) return toast.error("Digite a senha!");
-    if (adminPassword.trim() === "admin123") {
+    setSubmitting(true);
+    try {
+      // Real Supabase admin login (admin@nellor.app + the password)
+      const { error } = await supabase.auth.signInWithPassword({
+        email: "admin@nellor.app",
+        password: adminPassword.trim(),
+      });
+      if (error) {
+        toast.error("Senha incorreta!");
+        setAdminPassword("");
+        return;
+      }
       sessionStorage.setItem("nellor_admin_access", "true");
       toast.success("Acesso admin liberado!");
       setShowAdminDialog(false);
       setAdminPassword("");
-      if (user) {
-        import("@/hooks/useActivityLog").then(({ logActivity }) => {
-          logActivity(user.id, "admin_access", "Acesso ao painel admin via senha");
-        });
-      }
       navigate("/admin");
-    } else {
-      toast.error("Senha incorreta!");
-      setAdminPassword("");
+    } finally {
+      setSubmitting(false);
     }
   };
 

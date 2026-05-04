@@ -33,7 +33,6 @@ const menuItems: Item[] = [
   { title: "Pedidos", url: "/fornecedor/negociacoes", icon: ShoppingBag, badgeKey: "orders" },
   { title: "Negociações", url: "/fornecedor/chat", icon: MessageSquare, badgeKey: "messages" },
   { title: "Solicitações", url: "/fornecedor/solicitacoes", icon: FileText },
-  { title: "Financeiro", url: "/fornecedor/financeiro", icon: Wallet },
   { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
   { title: "Relatórios", url: "/fornecedor/estatisticas", icon: BarChart3 },
   { title: "Como usar", url: "/fornecedor/como-usar", icon: GraduationCap },

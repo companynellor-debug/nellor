@@ -145,10 +145,10 @@ const Ajuda = () => {
           <Button
             variant="secondary"
             className="w-full rounded-full font-medium"
-            onClick={() => window.open("https://wa.me/5500000000000", "_blank")}
+            onClick={() => window.location.assign("/cliente/suporte")}
           >
             <HeadphonesIcon className="h-4 w-4 mr-2" />
-            Falar com o Suporte
+            Abrir chamado interno
           </Button>
           <p className="text-xs opacity-70 mt-3 text-center">
             O botão ? disponível em todas as telas também te direciona para cá.

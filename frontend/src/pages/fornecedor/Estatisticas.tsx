@@ -65,7 +65,7 @@ const Estatisticas = () => {
         { data: reviews },
       ] = await Promise.all([
         supabase.from("negotiations" as any).select("*").eq("supplier_id", user.id),
-        supabase.from("products").select("id, nome, status").eq("user_id", user.id),
+        supabase.from("products").select("id, nome, ativo, vendas_count").eq("supplier_id", user.id),
         supabase.from("product_reviews").select("rating").eq("supplier_id", user.id),
       ]);
 
@@ -115,12 +115,17 @@ const Estatisticas = () => {
         });
       }
 
-      // Negotiation metrics
+      // Negotiation metrics — agreed_price IS the deal total; do NOT multiply by quantity
+      // Fallback: if agreed_price missing, compute from unit_price * quantity
+      const dealValue = (n: any) => {
+        const ap = Number(n.agreed_price);
+        if (Number.isFinite(ap) && ap > 0) return ap;
+        const up = Number(n.unit_price || 0);
+        const qty = Number(n.quantity || 1);
+        return up * qty;
+      };
       const delivered = negs.filter((n) => n.status === "delivered");
-      const totalRevenue = delivered.reduce(
-        (sum, n) => sum + Number(n.agreed_price || 0) * (n.quantity || 1),
-        0
-      );
+      const totalRevenue = delivered.reduce((sum, n) => sum + dealValue(n), 0);
       const totalNegotiations = negs.length;
       const totalDelivered = delivered.length;
       const conversionRate = totalNegotiations > 0
@@ -155,7 +160,7 @@ const Estatisticas = () => {
         if (k in monthlyMap) {
           monthlyMap[k].negociacoes += 1;
           if (n.status === "delivered") {
-            monthlyMap[k].receita += Number(n.agreed_price || 0) * (n.quantity || 1);
+            monthlyMap[k].receita += dealValue(n);
           }
         }
       });
@@ -179,7 +184,7 @@ const Estatisticas = () => {
         averageTicket,
         totalViews,
         totalFavorites,
-        productsActive: prods.filter((p) => p.status !== "paused").length,
+        productsActive: prods.filter((p) => p.ativo !== false).length,
         averageRating,
         ratingsCount,
         uniqueBuyers,
@@ -210,30 +215,25 @@ const Estatisticas = () => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <TrendingUp className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Relatórios</h1>
-          <p className="text-sm text-muted-foreground">
-            Métricas em tempo real da sua loja
-          </p>
-        </div>
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-2xl font-bold tracking-tight">Relatórios</h1>
+        <p className="text-sm text-muted-foreground">
+          Métricas em tempo real da sua loja
+        </p>
       </div>
 
       {/* KPI Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        <KPI icon={DollarSign} label="Receita total" value={fmtBRL(s.totalRevenue)} accent="emerald" />
-        <KPI icon={ShoppingBag} label="Vendas concluídas" value={fmtNum(s.totalDelivered)} accent="violet" />
-        <KPI icon={MessageSquare} label="Negociações" value={fmtNum(s.totalNegotiations)} accent="blue" />
-        <KPI icon={ArrowUpRight} label="Taxa de conversão" value={`${s.conversionRate.toFixed(1)}%`} accent="amber" />
-        <KPI icon={Eye} label="Visualizações" value={fmtNum(s.totalViews)} accent="sky" />
-        <KPI icon={Heart} label="Favoritos" value={fmtNum(s.totalFavorites)} accent="rose" />
-        <KPI icon={Star} label="Avaliação média" value={s.ratingsCount ? s.averageRating.toFixed(1) : "—"} sub={s.ratingsCount ? `${s.ratingsCount} avaliações` : "Sem avaliações"} accent="yellow" />
-        <KPI icon={Users} label="Compradores únicos" value={fmtNum(s.uniqueBuyers)} accent="indigo" />
-        <KPI icon={Package} label="Produtos ativos" value={fmtNum(s.productsActive)} accent="teal" />
-        <KPI icon={Award} label="Ticket médio" value={fmtBRL(s.averageTicket)} accent="fuchsia" />
+        <KPI icon={DollarSign} label="Receita total" value={fmtBRL(s.totalRevenue)} />
+        <KPI icon={ShoppingBag} label="Vendas concluídas" value={fmtNum(s.totalDelivered)} />
+        <KPI icon={MessageSquare} label="Negociações" value={fmtNum(s.totalNegotiations)} />
+        <KPI icon={ArrowUpRight} label="Taxa de conversão" value={`${s.conversionRate.toFixed(1)}%`} />
+        <KPI icon={Eye} label="Visualizações" value={fmtNum(s.totalViews)} />
+        <KPI icon={Heart} label="Favoritos" value={fmtNum(s.totalFavorites)} />
+        <KPI icon={Star} label="Avaliação média" value={s.ratingsCount ? s.averageRating.toFixed(1) : "—"} sub={s.ratingsCount ? `${s.ratingsCount} avaliações` : "Sem avaliações"} />
+        <KPI icon={Users} label="Compradores únicos" value={fmtNum(s.uniqueBuyers)} />
+        <KPI icon={Package} label="Produtos ativos" value={fmtNum(s.productsActive)} />
+        <KPI icon={Award} label="Ticket médio" value={fmtBRL(s.averageTicket)} />
       </div>
 
       {/* Charts */}
@@ -330,19 +330,17 @@ const ACCENT_BG: Record<string, string> = {
 };
 
 const KPI = ({
-  icon: Icon, label, value, sub, accent,
+  icon: Icon, label, value, sub,
 }: {
-  icon: typeof TrendingUp; label: string; value: string; sub?: string; accent: keyof typeof ACCENT_BG;
+  icon: typeof TrendingUp; label: string; value: string; sub?: string; accent?: string;
 }) => (
-  <Card className="rounded-2xl">
+  <Card className="rounded-xl border-border/60 hover:border-foreground/20 transition-colors">
     <CardContent className="p-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${ACCENT_BG[accent]}`}>
-          <Icon className="h-4 w-4" />
-        </div>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground/70 stroke-[1.8]" />
+        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{label}</p>
       </div>
-      <p className="text-xs text-muted-foreground font-medium">{label}</p>
-      <p className="text-xl font-bold mt-0.5 truncate">{value}</p>
+      <p className="text-[1.65rem] font-bold leading-tight tracking-tight truncate">{value}</p>
       {sub && <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{sub}</p>}
     </CardContent>
   </Card>

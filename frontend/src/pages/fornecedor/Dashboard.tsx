@@ -108,13 +108,10 @@ const Dashboard = () => {
         setNegotiations(negotiationList);
         setUnreadMessages(unread || 0);
 
-        // Buyer profiles for recent orders
+        // Buyer profiles for recent orders (via SECURITY DEFINER RPC, RLS-safe)
         const buyerIds = Array.from(new Set(negotiationList.slice(0, 10).map(n => n.buyer_id))).filter(Boolean);
         if (buyerIds.length) {
-          const { data: profs } = await supabase
-            .from("profiles")
-            .select("id, nome, foto_perfil_url")
-            .in("id", buyerIds);
+          const { data: profs } = await (supabase.rpc("get_buyers_for_supplier" as any, { buyer_ids: buyerIds }) as any);
           const map: Record<string, { nome: string; foto: string | null }> = {};
           (profs || []).forEach((p: any) => { map[p.id] = { nome: p.nome, foto: p.foto_perfil_url }; });
           if (!cancelled) setBuyersMap(map);
@@ -375,6 +372,8 @@ const Dashboard = () => {
                   <tbody>
                     {recentOrders.map(n => {
                       const buyer = buyersMap[n.buyer_id];
+                      const prod = products.find(p => p.id === n.product_id);
+                      const prodImg = (prod as any)?.imagens?.[0] || null;
                       return (
                         <tr key={n.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
                           onClick={() => navigate("/fornecedor/negociacoes")}>
@@ -387,7 +386,14 @@ const Dashboard = () => {
                               <span className="text-foreground">{buyer?.nome || "Comprador"}</span>
                             </div>
                           </td>
-                          <td className="px-5 py-3 text-foreground truncate max-w-[200px]">{n.product_name}</td>
+                          <td className="px-5 py-3 text-foreground">
+                            <div className="flex items-center gap-2 max-w-[260px]">
+                              <div className="h-9 w-9 rounded-lg bg-muted overflow-hidden shrink-0 flex items-center justify-center">
+                                {prodImg ? <img src={prodImg} alt="" className="h-full w-full object-cover" /> : <Package className="h-4 w-4 text-muted-foreground/60" />}
+                              </div>
+                              <span className="truncate">{n.product_name}</span>
+                            </div>
+                          </td>
                           <td className="px-5 py-3 font-semibold text-foreground">{formatCurrency(n.agreed_price)}</td>
                           <td className="px-5 py-3">{statusBadge(n.status)}</td>
                           <td className="px-5 py-3 text-muted-foreground">{new Date(n.created_at).toLocaleDateString("pt-BR")}</td>
@@ -403,16 +409,21 @@ const Dashboard = () => {
               <div className="md:hidden divide-y divide-border">
                 {recentOrders.map(n => {
                   const buyer = buyersMap[n.buyer_id];
+                  const prod = products.find(p => p.id === n.product_id);
+                  const prodImg = (prod as any)?.imagens?.[0] || null;
                   return (
                     <button key={n.id} onClick={() => navigate("/fornecedor/negociacoes")}
                       className="w-full p-4 flex items-center gap-3 hover:bg-muted/20 transition-colors text-left">
-                      <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center text-xs font-semibold text-muted-foreground shrink-0">
-                        {buyer?.foto ? <img src={buyer.foto} alt="" className="h-full w-full object-cover" /> : (buyer?.nome?.[0] || "?")}
+                      <div className="h-10 w-10 rounded-lg bg-muted overflow-hidden flex items-center justify-center shrink-0">
+                        {prodImg ? <img src={prodImg} alt="" className="h-full w-full object-cover" /> : <Package className="h-4 w-4 text-muted-foreground/60" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-primary">#{n.id.slice(0, 5).toUpperCase()}</span>
-                          <span className="text-xs text-muted-foreground truncate">{buyer?.nome}</span>
+                          <div className="h-4 w-4 rounded-full bg-muted overflow-hidden flex items-center justify-center text-[8px] font-semibold text-muted-foreground shrink-0">
+                            {buyer?.foto ? <img src={buyer.foto} alt="" className="h-full w-full object-cover" /> : (buyer?.nome?.[0] || "?")}
+                          </div>
+                          <span className="text-xs text-muted-foreground truncate">{buyer?.nome || "Comprador"}</span>
                         </div>
                         <p className="text-sm font-medium truncate">{n.product_name}</p>
                         <p className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleDateString("pt-BR")}</p>
