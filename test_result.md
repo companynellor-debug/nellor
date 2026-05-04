@@ -150,3 +150,25 @@ agent_communication:
   - agent: "main"
     timestamp: "2026-05-04T22:32:00Z"
     message: "Projeto Nellor importado com sucesso do GitHub e todos os serviços iniciados. Frontend rodando em https://nellor-preview.preview.emergentagent.com. Aplicação pronta para desenvolvimento contínuo."
+  - agent: "main"
+    timestamp: "2026-05-04T22:45:00Z"
+    message: |
+      Correções implementadas com sucesso:
+      
+      1. ✅ Erro de Deploy no Vercel corrigido
+         - Simplificado vercel.json com buildCommand correto
+         - Removidas configurações desnecessárias que causavam conflito
+         
+      2. ✅ Contador de mensagens não lidas corrigido
+         - Adicionado método getTotalUnreadCount() no hook useSupabaseMessages
+         - Atualizado SupplierSidebar para usar contador correto de mensagens
+         - Atualizado ClientSidebar para usar contador correto de mensagens  
+         - Atualizado BottomNavFornecedor para usar contador correto
+         - Agora mostra apenas mensagens realmente não lidas, não notificações
+         
+      3. ✅ Card "Primeira Venda" corrigido
+         - Agora aparece apenas UMA VEZ quando fornecedor faz primeira venda
+         - Não aparece mais toda vez que fornecedor entra na conta
+         - Mantida lógica de celebração da primeira venda delivered
+         
+      Todos os arquivos modificados e testados. Build do frontend passou sem erros.

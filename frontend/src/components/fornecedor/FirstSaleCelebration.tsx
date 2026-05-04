@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { toast } from "sonner";
 
-const STORAGE_KEY = "nellor_first_sale_celebrated";
+const STORAGE_KEY_CELEBRATED = "nellor_first_sale_celebrated";
+const STORAGE_KEY_LAST_SALE = "nellor_last_sale_id";
 
 export const FirstSaleCelebration = () => {
   const { user, profile } = useSupabaseAuth();
@@ -15,27 +16,35 @@ export const FirstSaleCelebration = () => {
 
   useEffect(() => {
     if (!user?.id || profile?.tipo !== "fornecedor") return;
-    const key = `${STORAGE_KEY}_${user.id}`;
-    if (localStorage.getItem(key) === "1") return;
+
+    // Verificar se já celebrou a primeira venda
+    const keyCelebrated = `${STORAGE_KEY_CELEBRATED}_${user.id}`;
+    const hasAlreadyCelebrated = localStorage.getItem(keyCelebrated) === "1";
+    
+    if (hasAlreadyCelebrated) return; // Não mostrar mais se já celebrou
 
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
         .from("negotiations" as any)
-        .select("agreed_price, unit_price, quantity")
+        .select("id, agreed_price, unit_price, quantity, delivery_confirmed_at")
         .eq("supplier_id", user.id)
         .eq("status", "delivered")
         .order("delivery_confirmed_at", { ascending: true })
         .limit(1);
 
       if (cancelled || error || !data || data.length === 0) return;
-      const n: any = data[0];
-      const value = Number(n.agreed_price) > 0
-        ? Number(n.agreed_price)
-        : Number(n.unit_price || 0) * Number(n.quantity || 1);
+      
+      const firstSale: any = data[0];
+      const value = Number(firstSale.agreed_price) > 0
+        ? Number(firstSale.agreed_price)
+        : Number(firstSale.unit_price || 0) * Number(firstSale.quantity || 1);
+      
       setRevenue(value);
       setOpen(true);
-      localStorage.setItem(key, "1");
+      
+      // Marcar como celebrado para nunca mais aparecer
+      localStorage.setItem(keyCelebrated, "1");
     })();
 
     return () => { cancelled = true; };

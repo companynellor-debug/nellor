@@ -16,6 +16,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
+import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
 import { useNegotiations } from "@/hooks/useNegotiations";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import logo from "@/assets/nellor-logo.png";
@@ -43,13 +44,16 @@ const menuItems: Item[] = [
 export function SupplierSidebar() {
   const location = useLocation();
   const { profile } = useSupabaseAuth();
-  const { unreadCount: messagesUnread } = useSupabaseNotifications();
+  const { unreadCount: notificationsUnread } = useSupabaseNotifications();
+  const { getTotalUnreadCount } = useSupabaseMessages();
   const { negotiations } = useNegotiations(profile?.id);
   const { triggerRestart } = useOnboardingTour();
 
   const pendingOrders = (negotiations || []).filter((n: any) =>
     ["pending", "accepted", "shipped"].includes(n?.status)
   ).length;
+
+  const messagesUnread = getTotalUnreadCount();
 
   const badges: Record<string, number> = {
     orders: pendingOrders,

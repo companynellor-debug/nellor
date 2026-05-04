@@ -1,12 +1,13 @@
 import { LayoutDashboard, Package, MessageSquare, User, Plus } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
+import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
 
 export const BottomNavFornecedor = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { unreadCount } = useSupabaseNotifications();
+  const { getTotalUnreadCount } = useSupabaseMessages();
+  const unreadCount = getTotalUnreadCount();
 
   const left = [
     { icon: LayoutDashboard, label: "Painel", path: "/fornecedor/dashboard" },

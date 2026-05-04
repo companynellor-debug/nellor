@@ -206,6 +206,15 @@ export const useSupabaseMessages = (supplierId?: string) => {
     ).length;
   };
 
+  const getTotalUnreadCount = () => {
+    if (!user?.id) return 0;
+    
+    return messages.filter(msg => 
+      msg.to_user === user.id && 
+      !msg.read
+    ).length;
+  };
+
   return {
     messages,
     loading,
@@ -213,6 +222,7 @@ export const useSupabaseMessages = (supplierId?: string) => {
     getConversations,
     getMessagesByUser,
     markAsRead,
-    getUnreadCount
+    getUnreadCount,
+    getTotalUnreadCount
   };
 };

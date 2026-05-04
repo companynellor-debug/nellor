@@ -21,6 +21,7 @@ import {
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSupabaseNotifications } from "@/hooks/useSupabaseNotifications";
+import { useSupabaseMessages } from "@/hooks/useSupabaseMessages";
 import { useNegotiations } from "@/hooks/useNegotiations";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
@@ -64,7 +65,8 @@ const CATEGORY_ICON_MAP: Record<string, typeof Home> = {
 export const ClientSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { unreadCount: messagesUnread } = useSupabaseNotifications();
+  const { unreadCount: notificationsUnread } = useSupabaseNotifications();
+  const { getTotalUnreadCount } = useSupabaseMessages();
   const { negotiations } = useNegotiations();
   const { categories } = useSupabaseCategories();
   const { profile } = useSupabaseAuth();
@@ -73,6 +75,8 @@ export const ClientSidebar = () => {
   const pendingActions = (negotiations || []).filter((n: any) =>
     ["pending"].includes(n?.status)
   ).length;
+
+  const messagesUnread = getTotalUnreadCount();
 
   const badges: Record<string, number> = {
     messages: messagesUnread,
