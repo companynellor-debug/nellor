@@ -1,9 +1,15 @@
 {
   "framework": "vite",
-  "installCommand": "yarn install --frozen-lockfile",
+  "installCommand": "yarn install --frozen-lockfile --ignore-engines",
   "buildCommand": "yarn build",
   "outputDirectory": "dist",
+  "build": {
+    "env": {
+      "NPM_CONFIG_PRODUCTION": "false",
+      "YARN_PRODUCTION": "false"
+    }
+  },
   "rewrites": [
-    { "source": "/((?!assets/|.*\\.(?:js|css|png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot|json|map|txt|xml)$).*)", "destination": "/" }
+    { "source": "/((?!assets/|.*\\.(?:js|css|png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot|json|map|txt|xml|mjs|wasm|mp3|mp4)$).*)", "destination": "/" }
   ]
 }
