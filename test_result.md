@@ -101,3 +101,52 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Importar o projeto do GitHub: https://github.com/companynellor-debug/nellor.git"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+  project_status: "imported_and_running"
+  import_date: "2026-05-04"
+
+project_info:
+  name: "Nellor - Marketplace Atacadista Digital"
+  stack:
+    - "Vite + React 18 + TypeScript"
+    - "Tailwind CSS + shadcn/ui"
+    - "Supabase (auth, DB, storage, edge functions)"
+    - "React Router v6, React Query, PWA"
+  architecture: "Frontend-only with Supabase backend"
+  supabase_project: "juvywnnpcbhwarhwxcgc"
+  
+services:
+  - service: "frontend"
+    status: "running"
+    port: 3000
+    framework: "Vite + React"
+    url: "https://nellor-preview.preview.emergentagent.com"
+  - service: "backend"
+    status: "running"
+    note: "FastAPI template backend (not used by Nellor - uses Supabase)"
+    port: 8001
+  - service: "mongodb"
+    status: "running"
+    note: "Template MongoDB (not used by Nellor - uses Supabase)"
+
+test_credentials:
+  - role: "cliente"
+    email: "cliente.teste@nellor.app"
+    password: "Teste123!"
+  - role: "fornecedor"
+    email: "fornecedor.teste@nellor.app"
+    password: "Teste123!"
+  - role: "admin"
+    access: "5x clique no logo em /auth + senha admin123"
+
+agent_communication:
+  - agent: "main"
+    timestamp: "2026-05-04T22:32:00Z"
+    message: "Projeto Nellor importado com sucesso do GitHub e todos os serviços iniciados. Frontend rodando em https://nellor-preview.preview.emergentagent.com. Aplicação pronta para desenvolvimento contínuo."
