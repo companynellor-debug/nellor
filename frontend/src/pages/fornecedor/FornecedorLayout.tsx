@@ -139,6 +139,7 @@ const FornecedorLayoutContent = () => {
 
         <BottomNavFornecedor />
         <Suspense fallback={null}><OnboardingTourContent /></Suspense>
+        <FirstSaleCelebration />
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +10,8 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-display: 'Plus Jakarta Sans', 'Manrope', sans-serif;
     --background: 0 0% 100%;
     --foreground: 280 100% 15%;
 
@@ -153,19 +157,23 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01", "cv11";
+    letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
+    letter-spacing: -0.025em;
   }
-  
+
   h1 {
     font-weight: 800;
+    letter-spacing: -0.035em;
   }
-  
+
   p {
     line-height: 1.6;
   }

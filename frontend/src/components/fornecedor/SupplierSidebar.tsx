@@ -28,16 +28,16 @@ type Item = {
 };
 
 const menuItems: Item[] = [
-  { title: "Painel", url: "/fornecedor/dashboard", icon: LayoutDashboard },
-  { title: "Produtos", url: "/fornecedor/produtos", icon: Package },
-  { title: "Pedidos", url: "/fornecedor/negociacoes", icon: ShoppingBag, badgeKey: "orders" },
-  { title: "Negociações", url: "/fornecedor/chat", icon: MessageSquare, badgeKey: "messages" },
-  { title: "Solicitações", url: "/fornecedor/solicitacoes", icon: FileText },
-  { title: "Editar Loja", url: "/fornecedor/editar-loja", icon: Store },
-  { title: "Relatórios", url: "/fornecedor/estatisticas", icon: BarChart3 },
-  { title: "Como usar", url: "/fornecedor/como-usar", icon: GraduationCap },
+  { title: "Resumo", url: "/fornecedor/dashboard", icon: LayoutDashboard },
+  { title: "Anúncios", url: "/fornecedor/produtos", icon: Package },
+  { title: "Vendas", url: "/fornecedor/negociacoes", icon: ShoppingBag, badgeKey: "orders" },
+  { title: "Mensagens", url: "/fornecedor/chat", icon: MessageSquare, badgeKey: "messages" },
+  { title: "Cotações", url: "/fornecedor/solicitacoes", icon: FileText },
+  { title: "Minha loja", url: "/fornecedor/editar-loja", icon: Store },
+  { title: "Métricas", url: "/fornecedor/estatisticas", icon: BarChart3 },
+  { title: "Tutorial", url: "/fornecedor/como-usar", icon: GraduationCap },
   { title: "Suporte", url: "/fornecedor/suporte", icon: HelpCircle },
-  { title: "Configurações", url: "/fornecedor/configuracoes", icon: Settings },
+  { title: "Conta", url: "/fornecedor/configuracoes", icon: Settings },
 ];
 
 export function SupplierSidebar() {
