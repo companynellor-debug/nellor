@@ -65,15 +65,6 @@ const Dashboard = () => {
   const [buyersMap, setBuyersMap] = useState<Record<string, { nome: string; foto: string | null }>>({});
   const [activeTab, setActiveTab] = useState<ProductTab>("todos");
 
-  // Mostrar loading enquanto autenticação está carregando
-  if (authLoading || !profile) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   useEffect(() => {
     if (!profile?.id) return;
     let cancelled = false;
@@ -217,6 +208,15 @@ const Dashboard = () => {
   const activeNegCount = negotiations.filter(n => ["pending", "accepted", "shipped"].includes(n.status)).length;
 
   const firstName = profile?.nome?.split(" ")[0] || "Fornecedor";
+
+  // Mostrar loading enquanto autenticação está carregando
+  if (authLoading || !profile) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
