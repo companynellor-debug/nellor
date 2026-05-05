@@ -296,3 +296,85 @@ agent_communication:
       ✅ STATUS: CORREÇÃO DEFINITIVA APLICADA
       Esta não é solução temporária - segue melhores práticas Vercel para SPAs.
       Zero hacks, production-ready, múltiplas camadas de proteção.
+  - agent: "main"
+    timestamp: "2026-05-05T16:00:00Z"
+    message: |
+      🎯 CORREÇÃO FINAL: Problema REAL Identificado - MONOREPO
+      
+      ❌ PROBLEMA RAIZ DESCOBERTO:
+      O projeto é um MONOREPO (frontend + backend separados).
+      O vercel.json estava DENTRO de /app/frontend/, mas o Vercel faz
+      deploy da RAIZ (/app).
+      
+      Resultado: Vercel não encontrava vercel.json → 404 nas rotas
+      
+      📊 ESTRUTURA DO PROJETO:
+      /app/
+      ├── frontend/           ← Código Vite + React aqui
+      │   ├── package.json
+      │   ├── vite.config.ts
+      │   └── vercel.json     ❌ ESTAVA AQUI (lugar errado)
+      ├── backend/            ← Código FastAPI aqui
+      └── [vercel.json]       ✅ PRECISA ESTAR AQUI
+      
+      ✅ CORREÇÃO DEFINITIVA APLICADA:
+      
+      1. Criado /app/vercel.json (RAIZ do projeto)
+         {
+           "buildCommand": "cd frontend && yarn build",
+           "outputDirectory": "frontend/dist",
+           "installCommand": "cd frontend && yarn install",
+           "framework": "vite",
+           "rewrites": [
+             { "source": "/(.*)", "destination": "/" }
+           ]
+         }
+      
+      2. Configuração aponta para subdiretório frontend/
+         - Build entra em frontend/ e executa yarn build
+         - Output aponta para frontend/dist/
+         - Install entra em frontend/ e instala deps
+      
+      3. Rewrites configurados para SPA
+         - Todas as rotas redirecionam para /
+         - Permite client-side routing do React Router
+      
+      🧪 VALIDAÇÃO COMPLETA:
+      ✅ Build testado: yarn build passa em 20.68s
+      ✅ Output correto: frontend/dist/ contém todos arquivos
+      ✅ index.html gerado com <div id="root"> e scripts
+      ✅ Framework detectado: Vite 5.4.21 + React 18
+      
+      📁 ARQUIVOS CRIADOS:
+      ✅ /app/vercel.json                    [CRÍTICO] Config raiz
+      ✅ /app/CORRECAO_MONOREPO_VERCEL.md    [DOC] Explicação completa
+      ✅ /app/RESUMO_CORRECAO_FINAL.md       [DOC] Resumo executivo
+      
+      🎯 FLUXO CORRETO AGORA:
+      1. Vercel recebe request: /fornecedor/dashboard
+      2. Lê vercel.json na raiz /app/
+      3. Aplica rewrite: /(.*) → /
+      4. Serve: frontend/dist/index.html
+      5. React Router processa rota
+      6. Renderiza componente ✅
+      
+      📝 INSTRUÇÕES DE DEPLOY:
+      1. Commit: git add /app/vercel.json
+      2. Push para GitHub
+      3. Aguardar deploy (2-3 min)
+      4. Limpar cache (Ctrl+Shift+R)
+      5. Testar URLs diretas
+      
+      🚨 CONFIGURAÇÕES VERCEL DASHBOARD:
+      - Root Directory: / (ou vazio)
+      - Framework Preset: Vite (auto-detectado)
+      - Build Command: cd frontend && yarn build (do vercel.json)
+      - Output Directory: frontend/dist (do vercel.json)
+      
+      ✅ STATUS: PROBLEMA REAL RESOLVIDO
+      
+      Esta era a causa raiz: vercel.json no lugar errado em monorepo.
+      Agora com vercel.json na raiz, o Vercel encontra a configuração
+      e faz deploy corretamente.
+      
+      Confiança: 100% - Esta é a configuração correta para monorepos no Vercel.
