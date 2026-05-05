@@ -31,8 +31,14 @@ export const useSupabaseMessages = (supplierId?: string) => {
     fetchMessages();
 
     // Realtime subscription - subscribe to ALL messages changes and filter client-side
+    const channelName = `messages_${user.id}`;
+    
+    // Remove existing channel with same name before creating new one
+    const existingChannel = supabase.channel(channelName);
+    supabase.removeChannel(existingChannel);
+    
     const channel = supabase
-      .channel(`messages_${user.id}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
