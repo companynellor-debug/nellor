@@ -22,6 +22,20 @@ export default defineConfig(({ mode }) => ({
     strictPort: true,
     allowedHosts: true,
   },
+  build: {
+    sourcemap: mode === 'development',
+    minify: 'terser',
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'supabase': ['@supabase/supabase-js'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+        }
+      }
+    }
+  },
   plugins: [
     react(), 
     mode === "development" && componentTagger(),

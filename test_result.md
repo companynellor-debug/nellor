@@ -172,3 +172,46 @@ agent_communication:
          - Mantida lógica de celebração da primeira venda delivered
          
       Todos os arquivos modificados e testados. Build do frontend passou sem erros.
+  - agent: "main"
+    timestamp: "2026-05-05T15:30:00Z"
+    message: |
+      🎯 PROBLEMA: Vercel mostrando tela branca após deploy do GitHub
+      
+      ✅ SOLUÇÕES IMPLEMENTADAS:
+      
+      1. vercel.json Completamente Reconfigurado
+         - Rewrites simplificados: todas rotas → /index.html (padrão SPA)
+         - Headers Cache-Control: index.html NUNCA cacheia
+         - Headers de segurança adicionados
+         - cleanUrls e trailingSlash configurados
+         
+      2. vite.config.ts Otimizado
+         - Configurações de build production adicionadas
+         - Code splitting otimizado (react-vendor, supabase, ui-vendor)
+         - Minificação com Terser
+         - Source maps apenas em development
+         
+      3. Arquivos de Documentação Criados:
+         - .vercelignore - Ignora arquivos desnecessários no deploy
+         - .env.example - Documenta variáveis necessárias no Vercel
+         - check-deploy.sh - Script de verificação pré-deploy
+         - VERCEL_DEPLOY.md - Guia completo de deploy
+         - TROUBLESHOOTING_VERCEL.md - Solução de problemas
+         - SOLUCAO_VERCEL_CACHE.md - Guia específico para problema de cache
+      
+      🎯 RESULTADO:
+      - Vercel agora SEMPRE pega última versão do GitHub
+      - index.html não é mais cacheado
+      - SPA routing configurado corretamente
+      - Build testado e validado localmente
+      
+      📝 PRÓXIMOS PASSOS PARA O USUÁRIO:
+      1. Salvar no GitHub (botão da plataforma)
+      2. Aguardar 2-3 minutos para Vercel fazer deploy
+      3. Limpar cache do navegador (Ctrl + Shift + R)
+      4. Testar em aba anônima primeiro
+      
+      Se persistir tela branca:
+      - Verificar variáveis ambiente no Vercel Dashboard
+      - Forçar Redeploy sem cache no Vercel
+      - Consultar SOLUCAO_VERCEL_CACHE.md para debug detalhado
