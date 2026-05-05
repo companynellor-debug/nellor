@@ -125,8 +125,13 @@ export const useAdminNotifications = () => {
     const isAdmin = profile?.tipo === 'admin';
     if (!user?.id || !isAdmin) return;
 
+    // Remove existing channels before creating new ones
+    const channelName = `admin-orders-notify-${user.id}`;
+    const existingChannel = supabase.channel(channelName);
+    supabase.removeChannel(existingChannel);
+
     const ordersChannel = supabase
-      .channel(`admin-orders-notify-${user.id}`)
+      .channel(channelName)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' },
         async (payload) => {
           const order = payload.new as any;
