@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ShoppingBag, MessageSquare, Users, BarChart3, TrendingUp, TrendingDown,
-  Package, Eye, Heart, ChevronRight, Hand,
+  Package, Eye, Heart, ChevronRight, Hand, Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -53,7 +53,7 @@ const statusBadge = (status: string) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { profile } = useSupabaseAuth();
+  const { profile, loading: authLoading } = useSupabaseAuth();
 
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductRow[]>([]);
@@ -64,6 +64,15 @@ const Dashboard = () => {
   const [productFavorites, setProductFavorites] = useState<Record<string, number>>({});
   const [buyersMap, setBuyersMap] = useState<Record<string, { nome: string; foto: string | null }>>({});
   const [activeTab, setActiveTab] = useState<ProductTab>("todos");
+
+  // Mostrar loading enquanto autenticação está carregando
+  if (authLoading || !profile) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!profile?.id) return;
