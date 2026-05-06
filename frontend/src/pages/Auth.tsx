@@ -378,21 +378,6 @@ const Auth = () => {
               </Button>
             </form>
 
-            <div className="mt-6 flex items-center gap-3">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground">ou continue como vendedor</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-
-            <Link
-              to="/auth?modo=login&perfil=fornecedor"
-              className="mt-4 flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-border hover:bg-muted transition-colors"
-              data-testid="auth-continue-account"
-            >
-              <img src={logo} alt="" className="h-5 w-5 object-contain" />
-              <span className="text-sm font-semibold text-foreground">Sou fornecedor</span>
-            </Link>
-
             <div className="mt-6 text-center text-sm text-muted-foreground">
               {isSignup ? "Já tem uma conta? " : "Ainda não tem uma conta? "}
               <button
