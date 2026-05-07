@@ -181,7 +181,7 @@ const Auth = () => {
         <div
           className="hidden lg:flex flex-col justify-center items-center p-16 text-white relative overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: "linear-gradient(160deg, #11001e 0%, #2d0060 40%, #7c3aed 80%, #a78bfa 100%)",
           }}
           data-testid="auth-brand-panel"
         >
