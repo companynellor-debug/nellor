@@ -177,78 +177,86 @@ const Auth = () => {
   return (
     <>
       <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background">
-        {/* LEFT - Brand panel (desktop) */}
+        {/* LEFT - Brand panel (desktop) - Big Tech Style */}
         <div
-          className="hidden lg:flex flex-col justify-between p-12 text-white relative overflow-hidden"
+          className="hidden lg:flex flex-col justify-center items-center p-16 text-white relative overflow-hidden"
           style={{
-            background:
-              "radial-gradient(ellipse at 30% 0%, #2a1d6b 0%, #14093a 55%, #0a0420 100%)",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           }}
           data-testid="auth-brand-panel"
         >
-          {/* Subtle decorative bg shapes */}
-          <div className="pointer-events-none absolute -top-20 -right-32 h-[420px] w-[420px] rounded-full bg-[#3e199e]/30 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 left-1/3 h-[360px] w-[360px] rounded-full bg-[#7c3aed]/15 blur-3xl" />
-
-          <div className="relative z-10 max-w-md">
+          <div className="relative z-10 w-full max-w-lg">
             <div
               onClick={handleLogoClick}
-              className="cursor-pointer inline-flex items-center gap-3 select-none mb-12"
+              className="cursor-pointer select-none mb-16"
               data-testid="auth-logo-secret"
             >
-              <img src={logo} alt="Nellor" className="h-14 w-14 object-contain" draggable={false} />
+              <img src={logo} alt="Nellor" className="h-12 w-12 object-contain mb-6" draggable={false} />
+              <h1 className="text-5xl font-bold tracking-tight">
+                Nellor
+              </h1>
             </div>
 
-            <h1 className="text-[2.85rem] font-extrabold leading-[1.05] tracking-tight">
-              Seu marketplace
-              <br />
-              <span style={{ color: "#a78bfa" }}>de negociações</span>
-            </h1>
-            <p className="mt-5 text-base text-white/70 max-w-md leading-relaxed">
-              Conecte-se com milhares de compradores, negocie no chat e feche os melhores
-              negócios todos os dias.
-            </p>
+            <div className="space-y-12">
+              <div>
+                <h2 className="text-3xl font-semibold mb-4 leading-tight">
+                  Seu marketplace<br/>de negociações B2B
+                </h2>
+                <p className="text-lg text-white/80 leading-relaxed">
+                  Conecte-se com milhares de compradores e fornecedores. 
+                  Negocie diretamente e feche os melhores negócios.
+                </p>
+              </div>
 
-            <div className="mt-10 space-y-4 max-w-md">
-              <Feature icon={Users} title="Os melhores fornecedores" sub="Catálogo curado, vendedores verificados." />
-              <Feature icon={MessageCircle} title="Negociação direta no chat" sub="Converse, negocie e feche negócio." />
-              <Feature icon={TrendingUp} title="Cresça sua revenda" sub="Resultados reais para quem vende." />
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-1 h-12 bg-white/30 rounded-full"></div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1">Fornecedores verificados</h3>
+                    <p className="text-white/70">Catálogo curado com os melhores vendedores do mercado</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-1 h-12 bg-white/30 rounded-full"></div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1">Negociação em tempo real</h3>
+                    <p className="text-white/70">Chat integrado para fechar negócios rapidamente</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-1 h-12 bg-white/30 rounded-full"></div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1">Cresça seu negócio</h3>
+                    <p className="text-white/70">Ferramentas completas para alavancar suas vendas</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* 3D hero illustration */}
-          <div className="relative z-10 -ml-2 -mb-4 flex justify-start pointer-events-none">
-            <img
-              src={heroLogin}
-              alt=""
-              className="h-64 w-auto object-contain drop-shadow-[0_30px_80px_rgba(124,58,237,0.55)]"
-              loading="lazy"
-              draggable={false}
-            />
           </div>
         </div>
 
-        {/* RIGHT - Form panel */}
+        {/* RIGHT - Form panel - Big Tech Style */}
         <div className="flex flex-col justify-center px-6 py-10 sm:px-12 lg:px-20 bg-background min-h-screen">
           {/* Mobile branding */}
           <div className="lg:hidden flex flex-col items-center mb-8">
             <div onClick={handleLogoClick} className="cursor-pointer select-none" data-testid="auth-logo-secret-mobile">
               <img src={logo} alt="Nellor" className="h-16 w-16 object-contain" draggable={false} />
             </div>
-            <h1 className="mt-4 text-2xl font-extrabold text-center text-foreground">Seu marketplace</h1>
-            <p className="text-2xl font-extrabold text-primary text-center">de negociações</p>
-            <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">
-              Conecte-se com milhares de compradores, negocie no chat e feche os melhores negócios todos os dias.
-            </p>
+            <h1 className="mt-4 text-2xl font-extrabold text-center text-foreground">Nellor</h1>
+            <p className="text-lg text-primary text-center">Marketplace B2B</p>
           </div>
 
           <div className="max-w-md w-full mx-auto">
-            <h2 className="hidden lg:block text-3xl font-bold text-foreground" data-testid="auth-title">
-              {isSignup ? "Crie sua conta!" : "Bem-vindo de volta!"}
-            </h2>
-            <p className="hidden lg:block mt-1 text-sm text-muted-foreground">
-              {isSignup ? "Cadastre-se para começar a negociar" : "Faça login para acessar sua conta"}
-            </p>
+            <div className="mb-10">
+              <h2 className="text-4xl font-bold text-foreground mb-3" data-testid="auth-title">
+                {isSignup ? "Criar conta" : "Entrar"}
+              </h2>
+              <p className="text-base text-muted-foreground">
+                {isSignup ? "Comece a negociar hoje mesmo" : "Acesse sua conta"}
+              </p>
+            </div>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               {isSignup && (
