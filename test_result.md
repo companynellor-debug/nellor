@@ -127,7 +127,7 @@ services:
     status: "running"
     port: 3000
     framework: "Vite + React"
-    url: "https://nellor-preview.preview.emergentagent.com"
+    url: "https://nellor-db-editor.preview.emergentagent.com"
   - service: "backend"
     status: "running"
     note: "FastAPI template backend (not used by Nellor - uses Supabase)"
@@ -149,7 +149,7 @@ test_credentials:
 agent_communication:
   - agent: "main"
     timestamp: "2026-05-04T22:32:00Z"
-    message: "Projeto Nellor importado com sucesso do GitHub e todos os serviços iniciados. Frontend rodando em https://nellor-preview.preview.emergentagent.com. Aplicação pronta para desenvolvimento contínuo."
+    message: "Projeto Nellor importado com sucesso do GitHub e todos os serviços iniciados. Frontend rodando em https://nellor-db-editor.preview.emergentagent.com. Aplicação pronta para desenvolvimento contínuo."
   - agent: "main"
     timestamp: "2026-05-04T22:45:00Z"
     message: |

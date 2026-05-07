@@ -158,7 +158,7 @@ if (authLoading || !profile) {
 
 ```bash
 # Acesse no navegador
-https://nellor-preview.preview.emergentagent.com/fornecedor/dashboard
+https://nellor-db-editor.preview.emergentagent.com/fornecedor/dashboard
 ```
 
 **Resultado Esperado**:

@@ -69,6 +69,6 @@ Importação do repo GitHub `companynellor-debug/nellor` (Lovable). Edição con
 - Admin: 5x logo `/auth` + `admin123`
 
 ## Status
-- Frontend rodando em https://nellor-preview.preview.emergentagent.com
+- Frontend rodando em https://nellor-db-editor.preview.emergentagent.com
 - TypeScript build limpo (`tsc --noEmit` passa)
 - Hot reload Vite ativo
