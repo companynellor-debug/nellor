@@ -63,10 +63,19 @@ Importação do repo GitHub `companynellor-debug/nellor` (Lovable). Edição con
 - **Cards de produto na Home** — refinar para match exato com foto 2
 - **Profile cliente** — UX/visual mais polido (atualmente funcional mas básico)
 
+## Migração para novo Supabase (13/05/2026)
+- Banco anterior `juvywnnpcbhwarhwxcgc` esgotado → migrado para **`bqobvpeggordtwbvmdgr`** (sa-east-1)
+- Rodadas 131 migrations (130 existentes + 1 patch `20251108000000_patch_missing_tables.sql` para tabelas `collections`, `collection_items`, `collection_members`, `price_history` que originalmente foram criadas via Lovable UI)
+- Migration `20251217014315` ajustada para ser idempotente (era hardcode de grant admin pra UUID inexistente)
+- 7 buckets criados via migrations existentes
+- 7 edge functions deployadas com secrets (VAPID + ADMIN_PANEL_PASSWORD)
+- VAPID keys novas geradas em 13/05 (salvas em `/app/memory/test_credentials.md`)
+- Users seed: cliente/fornecedor/admin (Trigger `on_auth_user_created` cria profile+role automático)
+
 ## Test credentials
 - Cliente: `cliente.teste@nellor.app` / `Teste123!`
 - Fornecedor: `fornecedor.teste@nellor.app` / `Teste123!`
-- Admin: 5x logo `/auth` + `admin123`
+- Admin: `admin@nellor.app` / `admin123` (ou 5x logo `/auth` + `admin123`)
 
 ## Status
 - Frontend rodando em https://nellor-db-editor.preview.emergentagent.com
