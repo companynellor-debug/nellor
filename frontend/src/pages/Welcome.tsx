@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import logo from '@/assets/nellor-logo.png';
+import logo from '@/assets/nellor-logo-3d.png';
 import heroImage from '@/assets/hero-welcome.png';
 
 import { Loader2 } from 'lucide-react';

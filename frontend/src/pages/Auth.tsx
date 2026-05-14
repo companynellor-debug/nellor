@@ -27,6 +27,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import logo from "@/assets/nellor-logo.png";
+import logo3d from "@/assets/nellor-logo-3d.png";
 import heroLogin from "@/assets/login-hero-bag.png";
 
 const Auth = () => {
@@ -191,7 +192,7 @@ const Auth = () => {
               className="cursor-pointer select-none mb-16"
               data-testid="auth-logo-secret"
             >
-              <img src={logo} alt="Nellor" className="h-12 w-12 object-contain mb-6" draggable={false} />
+              <img src={logo3d} alt="Nellor" className="h-12 w-12 object-contain mb-6" draggable={false} />
               <h1 className="text-5xl font-bold tracking-tight">
                 Nellor
               </h1>
