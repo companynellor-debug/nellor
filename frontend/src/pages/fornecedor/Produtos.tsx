@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, FileEdit, Monitor } from "lucide-react";
+import { Plus, Edit, Trash2, FileEdit, Monitor, Upload } from "lucide-react";
 import { useSupplierProducts, SupplierProduct } from "@/hooks/useSupplierProducts";
 import { useSupabaseCategories } from "@/hooks/useSupabaseCategories";
 import { useSupplierCategories } from "@/hooks/useSupplierCategories";
@@ -13,6 +13,8 @@ import { useProductDrafts } from "@/hooks/useProductDrafts";
 import { toast } from "sonner";
 import { formatCurrencyFromDecimal } from "@/utils/currency";
 import ProductModal from "@/components/fornecedor/product-modal/ProductModal";
+import ImportCatalogModal from "@/components/fornecedor/catalog-import/ImportCatalogModal";
+import ImportHistory from "@/components/fornecedor/catalog-import/ImportHistory";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -33,6 +35,7 @@ const Produtos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SupplierProduct | null>(null);
   const [showMobileWarning, setShowMobileWarning] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const handleOpenModal = (product?: SupplierProduct) => {
@@ -95,9 +98,14 @@ const Produtos = () => {
     <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <h1 className="text-2xl sm:text-3xl font-bold">Produtos</h1>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="h-4 w-4 mr-2" />Adicionar Produto
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsImportOpen(true)} className="gap-1">
+            <Upload className="h-4 w-4" />Importar Catálogo
+          </Button>
+          <Button onClick={() => handleOpenModal()}>
+            <Plus className="h-4 w-4 mr-2" />Adicionar Produto
+          </Button>
+        </div>
       </div>
 
       {/* Draft resume card */}
@@ -163,6 +171,17 @@ const Produtos = () => {
         customCategories={customCategories}
         onSubmit={handleSubmit}
       />
+
+      <ImportCatalogModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        onImportComplete={() => {
+          window.location.reload();
+        }}
+      />
+
+      {/* Import History */}
+      {user?.id && <ImportHistory supplierId={user.id} />}
 
       {/* Mobile Warning Dialog */}
       <Dialog open={showMobileWarning} onOpenChange={setShowMobileWarning}>
