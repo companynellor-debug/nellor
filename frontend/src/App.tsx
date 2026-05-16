@@ -70,20 +70,14 @@ const PlanosFornecedor = lazy(() => import("./pages/fornecedor/Planos"));
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
-const AdminIndicadores = lazy(() => import("./pages/admin/Indicadores"));
 const AdminUsuarios = lazy(() => import("./pages/admin/Usuarios"));
 const AdminFornecedores = lazy(() => import("./pages/admin/Fornecedores"));
 const AdminVendas = lazy(() => import("./pages/admin/Vendas"));
-const AdminRelatorios = lazy(() => import("./pages/admin/Relatorios"));
-const AdminAlertas = lazy(() => import("./pages/admin/Alertas"));
 const AdminConfiguracoes = lazy(() => import("./pages/admin/Configuracoes"));
 const AdminSuporteAdmin = lazy(() => import("./pages/admin/SuporteAdmin"));
 const AdminCategorias = lazy(() => import("./pages/admin/Categorias"));
 const AdminBanners = lazy(() => import("./pages/admin/Banners"));
-const AdminNotificacoes = lazy(() => import("./pages/admin/NotificacoesAdmin"));
 const AdminSolicitacoesFornecedor = lazy(() => import("./pages/admin/SolicitacoesFornecedor"));
-const AdminConversas = lazy(() => import("./pages/admin/Conversas"));
-const AdminDisputas = lazy(() => import("./pages/admin/Disputas"));
 const AdminAssinaturas = lazy(() => import("./pages/admin/Assinaturas"));
 const ConfiguracoesFornecedor = lazy(() => import("./pages/fornecedor/Configuracoes"));
 const SolicitacoesFornecedor = lazy(() => import("./pages/fornecedor/Solicitacoes"));
@@ -202,20 +196,14 @@ const App = () => {
             >
               <Route index element={<Suspense fallback={<PageSkeleton />}><AdminDashboard /></Suspense>} />
               <Route path="dashboard" element={<Suspense fallback={<PageSkeleton />}><AdminDashboard /></Suspense>} />
-              <Route path="indicadores" element={<Suspense fallback={<PageSkeleton />}><AdminIndicadores /></Suspense>} />
               <Route path="usuarios" element={<Suspense fallback={<PageSkeleton />}><AdminUsuarios /></Suspense>} />
               <Route path="fornecedores" element={<Suspense fallback={<PageSkeleton />}><AdminFornecedores /></Suspense>} />
               <Route path="vendas" element={<Suspense fallback={<PageSkeleton />}><AdminVendas /></Suspense>} />
-              <Route path="relatorios" element={<Suspense fallback={<PageSkeleton />}><AdminRelatorios /></Suspense>} />
-              <Route path="alertas" element={<Suspense fallback={<PageSkeleton />}><AdminAlertas /></Suspense>} />
               <Route path="configuracoes" element={<Suspense fallback={<PageSkeleton />}><AdminConfiguracoes /></Suspense>} />
               <Route path="suporte" element={<Suspense fallback={<PageSkeleton />}><AdminSuporteAdmin /></Suspense>} />
               <Route path="categorias" element={<Suspense fallback={<PageSkeleton />}><AdminCategorias /></Suspense>} />
               <Route path="banners" element={<Suspense fallback={<PageSkeleton />}><AdminBanners /></Suspense>} />
-              <Route path="notificacoes" element={<Suspense fallback={<PageSkeleton />}><AdminNotificacoes /></Suspense>} />
               <Route path="solicitacoes-fornecedor" element={<Suspense fallback={<PageSkeleton />}><AdminSolicitacoesFornecedor /></Suspense>} />
-              <Route path="conversas" element={<Suspense fallback={<PageSkeleton />}><AdminConversas /></Suspense>} />
-              <Route path="disputas" element={<Suspense fallback={<PageSkeleton />}><AdminDisputas /></Suspense>} />
               <Route path="assinaturas" element={<Suspense fallback={<PageSkeleton />}><AdminAssinaturas /></Suspense>} />
             </Route>
 

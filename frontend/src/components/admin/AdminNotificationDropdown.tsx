@@ -213,7 +213,7 @@ const AdminNotificationDropdown = () => {
 
         <div className="p-2 border-t border-border">
           <Link 
-            to="/admin/notificacoes" 
+            to="/admin" 
             onClick={() => setOpen(false)}
             className="flex items-center justify-center gap-1 text-xs text-primary hover:underline py-1"
           >

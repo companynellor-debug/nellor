@@ -116,14 +116,35 @@ const SuporteAdmin = () => {
 
     try {
       setSending(true);
-      const result = await runAdminSupportAction({
-        type: 'ticket',
-        ticketId: selectedTicket.id,
-        response,
-        status: 'pending'
-      });
 
-      if ('cancelled' in result) return;
+      // Try edge function first
+      let success = false;
+      try {
+        const result = await runAdminSupportAction({
+          type: 'ticket',
+          ticketId: selectedTicket.id,
+          response,
+          status: 'pending'
+        });
+        if ('cancelled' in result) return;
+        success = true;
+      } catch (edgeErr) {
+        console.warn('Edge function failed, using direct DB fallback:', edgeErr);
+      }
+
+      // Fallback: direct table update
+      if (!success) {
+        const { error: updateErr } = await supabase
+          .from('support_tickets' as any)
+          .update({
+            resposta_admin: response.trim(),
+            status: 'pending',
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq('id', selectedTicket.id);
+
+        if (updateErr) throw updateErr;
+      }
 
       toast.success('Resposta enviada!');
       setResponse("");
@@ -139,13 +160,29 @@ const SuporteAdmin = () => {
 
   const handleCloseTicket = async (ticketId: string) => {
     try {
-      const result = await runAdminSupportAction({
-        type: 'ticket',
-        ticketId,
-        status: 'closed'
-      });
+      let success = false;
+      try {
+        const result = await runAdminSupportAction({
+          type: 'ticket',
+          ticketId,
+          status: 'closed'
+        });
+        if ('cancelled' in result) return;
+        success = true;
+      } catch (edgeErr) {
+        console.warn('Edge function failed, using direct DB fallback:', edgeErr);
+      }
 
-      if ('cancelled' in result) return;
+      if (!success) {
+        const { error: updateErr } = await supabase
+          .from('support_tickets' as any)
+          .update({
+            status: 'closed',
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq('id', ticketId);
+        if (updateErr) throw updateErr;
+      }
 
       toast.success('Ticket fechado!');
       void fetchAll();

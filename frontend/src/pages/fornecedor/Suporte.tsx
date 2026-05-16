@@ -25,7 +25,7 @@ type Ticket = {
 
 const statusInfo = (s: string) => {
   if (s === "open" || s === "aberto") return { label: "Aberto", icon: Clock, cls: "bg-amber-100 text-amber-700" };
-  if (s === "answered" || s === "respondido") return { label: "Respondido", icon: CheckCircle2, cls: "bg-emerald-100 text-emerald-700" };
+  if (s === "pending" || s === "answered" || s === "respondido") return { label: "Respondido", icon: CheckCircle2, cls: "bg-emerald-100 text-emerald-700" };
   if (s === "closed" || s === "fechado") return { label: "Fechado", icon: CheckCircle2, cls: "bg-muted text-muted-foreground" };
   return { label: s, icon: AlertCircle, cls: "bg-blue-100 text-blue-700" };
 };
@@ -71,7 +71,7 @@ const SuporteFornecedor = () => {
         user_id: user.id,
         assunto: form.assunto.trim(),
         mensagem: form.mensagem.trim(),
-        status: "aberto",
+        status: "open",
       } as any);
       if (error) throw error;
       toast.success("Chamado enviado! Nosso time responde em até 5 minutos.");

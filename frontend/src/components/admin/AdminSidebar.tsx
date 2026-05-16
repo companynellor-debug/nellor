@@ -4,19 +4,14 @@ import {
   Users,
   Store,
   ShoppingCart,
-  BarChart3,
-  Bell,
-  Settings,
   MessageCircle,
-  Package,
-  Image,
-  PieChart,
-  ClipboardList,
-  MessagesSquare,
-  AlertTriangle,
-  CreditCard,
-  ShieldCheck,
+  Settings,
   Tag,
+  Image,
+  CreditCard,
+  ClipboardList,
+  ShieldCheck,
+  HeadphonesIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/nellor-logo.png";
@@ -30,8 +25,6 @@ const sections: Section[] = [
     title: "VISÃO GERAL",
     items: [
       { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-      { icon: PieChart, label: "Indicadores", path: "/admin/indicadores" },
-      { icon: BarChart3, label: "Relatórios", path: "/admin/relatorios" },
     ],
   },
   {
@@ -39,16 +32,15 @@ const sections: Section[] = [
     items: [
       { icon: Users, label: "Usuários", path: "/admin/usuarios" },
       { icon: Store, label: "Fornecedores", path: "/admin/fornecedores" },
-      { icon: ClipboardList, label: "Solic. Fornecedor", path: "/admin/solicitacoes-fornecedor" },
+      { icon: ClipboardList, label: "Solicitações", path: "/admin/solicitacoes-fornecedor" },
     ],
   },
   {
     title: "OPERAÇÕES",
     items: [
       { icon: ShoppingCart, label: "Vendas & Pedidos", path: "/admin/vendas" },
-      { icon: MessagesSquare, label: "Conversas", path: "/admin/conversas" },
-      { icon: AlertTriangle, label: "Disputas", path: "/admin/disputas" },
-      { icon: MessageCircle, label: "Suporte", path: "/admin/suporte" },
+      { icon: HeadphonesIcon, label: "Suporte", path: "/admin/suporte" },
+      { icon: CreditCard, label: "Assinaturas", path: "/admin/assinaturas" },
     ],
   },
   {
@@ -56,13 +48,11 @@ const sections: Section[] = [
     items: [
       { icon: Tag, label: "Categorias", path: "/admin/categorias" },
       { icon: Image, label: "Banners", path: "/admin/banners" },
-      { icon: CreditCard, label: "Assinaturas", path: "/admin/assinaturas" },
     ],
   },
   {
     title: "SISTEMA",
     items: [
-      { icon: Bell, label: "Notificações", path: "/admin/notificacoes" },
       { icon: Settings, label: "Configurações", path: "/admin/configuracoes" },
     ],
   },
@@ -100,7 +90,7 @@ const AdminSidebar = ({ onNavigate }: AdminSidebarProps) => {
             </p>
             <div className="space-y-0.5">
               {section.items.map((item) => {
-                const isActive = location.pathname === item.path;
+                const isActive = location.pathname === item.path || (item.path === '/admin' && location.pathname === '/admin/dashboard');
                 const Icon = item.icon;
                 return (
                   <Link
